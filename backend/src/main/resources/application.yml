@@ -1,0 +1,16 @@
+spring:
+  application:
+    name: dxos-backend
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+    jmx:
+      exposure:
+        exclude: '*'
+  endpoint:
+    health:
+      show-details: never
+      show-components: never
