@@ -5,6 +5,7 @@ import com.tricore.dxos.request.domain.RequestAction;
 import com.tricore.dxos.request.domain.RequestNotFoundException;
 import com.tricore.dxos.request.domain.RequestStatus;
 import com.tricore.dxos.request.dto.RequestResponse;
+import com.tricore.dxos.request.dto.RequestHistoryResponse;
 import com.tricore.dxos.request.service.RequestWorkflowService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,9 +16,11 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.Instant;
 import java.util.UUID;
+import java.util.List;
 
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(RequestWorkflowController.class)
@@ -111,6 +114,25 @@ class RequestWorkflowControllerTest {
                         .content("{\"resolution\":\" \"}"))
                 .andExpect(status().isBadRequest()).andExpect(jsonPath("$.errors.resolution").exists());
         verifyNoInteractions(service);
+    }
+
+    @Test
+    void returnsHistoryDtos() throws Exception {
+        when(service.history(id)).thenReturn(List.of(new RequestHistoryResponse(
+                RequestStatus.NEW, RequestStatus.ASSIGNED, RequestAction.ASSIGN, timestamp)));
+        mvc.perform(get("/api/v1/requests/" + id + "/history"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].fromStatus").value("NEW"))
+                .andExpect(jsonPath("$[0].toStatus").value("ASSIGNED"))
+                .andExpect(jsonPath("$[0].action").value("ASSIGN"))
+                .andExpect(jsonPath("$[0].changedAt").value(timestamp.toString()));
+    }
+
+    @Test
+    void missingRequestHistoryReturns404() throws Exception {
+        when(service.history(id)).thenThrow(new RequestNotFoundException(id));
+        mvc.perform(get("/api/v1/requests/" + id + "/history"))
+                .andExpect(status().isNotFound()).andExpect(jsonPath("$.code").value("REQUEST_NOT_FOUND"));
     }
 
     private RequestResponse response(RequestStatus status) {

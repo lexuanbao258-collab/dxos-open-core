@@ -7,6 +7,7 @@ import com.tricore.dxos.request.domain.RequestNotFoundException;
 import com.tricore.dxos.request.domain.RequestStatus;
 import com.tricore.dxos.request.domain.RequestStatusHistory;
 import com.tricore.dxos.request.dto.RequestResponse;
+import com.tricore.dxos.request.dto.RequestHistoryResponse;
 import com.tricore.dxos.request.repository.RequestRepository;
 import com.tricore.dxos.request.repository.RequestStatusHistoryRepository;
 import org.junit.jupiter.api.Test;
@@ -129,6 +130,37 @@ class RequestWorkflowServiceTest {
         assertThat(request.getResolution()).isNull();
         assertThat(request.getUpdatedAt()).isEqualTo(previous);
         verify(requests, never()).saveAndFlush(any());
+        verifyNoInteractions(history);
+    }
+
+    @Test
+    void historyUsesDeterministicQueryAndMapsChronologicalResults() {
+        Request request = newRequest();
+        Instant firstAt = Instant.parse("2026-10-04T01:00:00Z");
+        Instant secondAt = firstAt.plusSeconds(1);
+        when(requests.findById(id)).thenReturn(Optional.of(request));
+        when(history.findAllByRequestIdOrderByChangedAtAscIdAsc(id)).thenReturn(List.of(
+                new RequestStatusHistory(id, RequestStatus.NEW, RequestStatus.ASSIGNED, RequestAction.ASSIGN, firstAt),
+                new RequestStatusHistory(id, RequestStatus.ASSIGNED, RequestStatus.IN_PROGRESS, RequestAction.START, secondAt)));
+
+        assertThat(service.history(id)).containsExactly(
+                new RequestHistoryResponse(RequestStatus.NEW, RequestStatus.ASSIGNED, RequestAction.ASSIGN, firstAt),
+                new RequestHistoryResponse(RequestStatus.ASSIGNED, RequestStatus.IN_PROGRESS, RequestAction.START, secondAt));
+        verify(history).findAllByRequestIdOrderByChangedAtAscIdAsc(id);
+        verify(requests, never()).saveAndFlush(any());
+    }
+
+    @Test
+    void existingRequestWithNoTransitionsHasEmptyHistory() {
+        when(requests.findById(id)).thenReturn(Optional.of(newRequest()));
+        when(history.findAllByRequestIdOrderByChangedAtAscIdAsc(id)).thenReturn(List.of());
+        assertThat(service.history(id)).isEmpty();
+    }
+
+    @Test
+    void historyOfMissingRequestReturnsNotFound() {
+        when(requests.findById(id)).thenReturn(Optional.empty());
+        assertThatThrownBy(() -> service.history(id)).isInstanceOf(RequestNotFoundException.class);
         verifyNoInteractions(history);
     }
 

@@ -6,12 +6,14 @@ import com.tricore.dxos.request.domain.RequestNotFoundException;
 import com.tricore.dxos.request.domain.RequestStatus;
 import com.tricore.dxos.request.domain.RequestStatusHistory;
 import com.tricore.dxos.request.dto.RequestResponse;
+import com.tricore.dxos.request.dto.RequestHistoryResponse;
 import com.tricore.dxos.request.repository.RequestRepository;
 import com.tricore.dxos.request.repository.RequestStatusHistoryRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
+import java.util.List;
 
 @Service
 public class RequestWorkflowService {
@@ -61,6 +63,13 @@ public class RequestWorkflowService {
         RequestStatus from = request.getStatus();
         request.close();
         return persistTransition(request, from, RequestAction.CLOSE);
+    }
+
+    @Transactional(readOnly = true)
+    public List<RequestHistoryResponse> history(UUID id) {
+        load(id);
+        return history.findAllByRequestIdOrderByChangedAtAscIdAsc(id).stream()
+                .map(RequestHistoryResponse::from).toList();
     }
 
     private Request load(UUID id) {
