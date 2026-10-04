@@ -41,6 +41,16 @@ class RequestControllerTest {
             "Printer is offline", "IT_SUPPORT", RequestStatus.NEW, null, null, 0L, timestamp, timestamp);
 
     @Test
+    void forwardsOptionalActorHeader() throws Exception {
+        when(service.create(new CreateRequestDto("Printer", "Offline", "IT_SUPPORT"), "user-001")).thenReturn(response);
+        mvc.perform(post("/api/v1/requests").header("X-Actor-Id", "user-001")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"title\":\"Printer\",\"description\":\"Offline\",\"requestType\":\"IT_SUPPORT\"}"))
+                .andExpect(status().isCreated());
+        verify(service).create(new CreateRequestDto("Printer", "Offline", "IT_SUPPORT"), "user-001");
+    }
+
+    @Test
     void createsRequestWithLocationAndResponseDto() throws Exception {
         CreateRequestDto input = new CreateRequestDto("Repair printer", "Printer is offline", "IT_SUPPORT");
         when(service.create(input, "anonymous")).thenReturn(response);

@@ -80,6 +80,20 @@ class RequestWorkflowTransactionTest {
     }
 
     @Test
+    void auditFailureRollsBackRequestAndHistoryTransaction() {
+        Request request = requestBefore(RequestAction.ASSIGN);
+        when(requests.findById(id)).thenReturn(Optional.of(request));
+        when(requests.saveAndFlush(request)).thenReturn(request);
+        doThrow(new DataIntegrityViolationException("audit failure")).when(audit)
+                .record(eq(id), any(), eq("user-001"), isNull(), any());
+        assertThatThrownBy(() -> service.assign(id, "it-user-001", "user-001"))
+                .isInstanceOf(DataIntegrityViolationException.class);
+        verify(history).save(any());
+        verify(transactionManager).rollback(transaction);
+        verify(transactionManager, never()).commit(any());
+    }
+
+    @Test
     void historyInsertFailureRollsBackTransactionAfterRequestFlush() {
         Request request = requestBefore(RequestAction.ASSIGN);
         when(requests.findById(id)).thenReturn(Optional.of(request));

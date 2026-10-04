@@ -34,6 +34,23 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 
 @WebMvcTest(RequestWorkflowController.class)
 class RequestWorkflowControllerTest {
+    @ParameterizedTest
+    @EnumSource(RequestAction.class)
+    void forwardsActorForEveryWorkflowAction(RequestAction action) throws Exception {
+        var request = post("/api/v1/requests/" + id + "/" + action.name().toLowerCase(java.util.Locale.ROOT))
+                .header("X-Actor-Id", "user-001");
+        if (action == RequestAction.ASSIGN) request.contentType(MediaType.APPLICATION_JSON).content("{\"assigneeId\":\"it-user-001\"}");
+        if (action == RequestAction.RESOLVE) request.contentType(MediaType.APPLICATION_JSON).content("{\"resolution\":\"Fixed printer\"}");
+        mvc.perform(request).andExpect(status().isOk());
+        switch (action) {
+            case ASSIGN -> verify(service).assign(id, "it-user-001", "user-001");
+            case START -> verify(service).start(id, "user-001");
+            case RESOLVE -> verify(service).resolve(id, "Fixed printer", "user-001");
+            case CONFIRM -> verify(service).confirm(id, "user-001");
+            case CLOSE -> verify(service).close(id, "user-001");
+        }
+    }
+
     @Autowired private MockMvc mvc;
     @MockitoBean private RequestWorkflowService service;
     private final UUID id = UUID.randomUUID();
