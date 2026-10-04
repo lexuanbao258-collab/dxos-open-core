@@ -1,4 +1,8 @@
 spring:
+  servlet:
+    multipart:
+      max-file-size: ${ATTACHMENT_MAX_FILE_SIZE:10MB}
+      max-request-size: ${ATTACHMENT_MAX_REQUEST_SIZE:11MB}
   application:
     name: dxos-backend
   datasource:
@@ -9,6 +13,11 @@ spring:
     open-in-view: false
     hibernate:
       ddl-auto: none
+
+dxos:
+  attachments:
+    storage-path: ${ATTACHMENT_STORAGE_PATH:${java.io.tmpdir}/dxos-attachments}
+    max-file-size: ${ATTACHMENT_MAX_FILE_SIZE:10MB}
 
 management:
   endpoints:
