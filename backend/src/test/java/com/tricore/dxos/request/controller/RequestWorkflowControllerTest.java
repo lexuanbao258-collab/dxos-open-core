@@ -41,7 +41,7 @@ class RequestWorkflowControllerTest {
 
     @Test
     void assignsRequest() throws Exception {
-        when(service.assign(id, "it-user-001")).thenReturn(response(RequestStatus.ASSIGNED));
+        when(service.assign(id, "it-user-001", "anonymous")).thenReturn(response(RequestStatus.ASSIGNED));
 
         mvc.perform(post("/api/v1/requests/" + id + "/assign").contentType(MediaType.APPLICATION_JSON)
                         .content("{\"assigneeId\":\"it-user-001\"}"))
@@ -49,7 +49,7 @@ class RequestWorkflowControllerTest {
                 .andExpect(jsonPath("$.status").value("ASSIGNED"))
                 .andExpect(jsonPath("$.assigneeId").value("it-user-001"))
                 .andExpect(jsonPath("$.version").value(1));
-        verify(service).assign(id, "it-user-001");
+        verify(service).assign(id, "it-user-001", "anonymous");
     }
 
     @Test
@@ -63,7 +63,7 @@ class RequestWorkflowControllerTest {
 
     @Test
     void missingRequestReturns404() throws Exception {
-        when(service.assign(id, "it-user-001")).thenThrow(new RequestNotFoundException(id));
+        when(service.assign(id, "it-user-001", "anonymous")).thenThrow(new RequestNotFoundException(id));
         mvc.perform(post("/api/v1/requests/" + id + "/assign").contentType(MediaType.APPLICATION_JSON)
                         .content("{\"assigneeId\":\"it-user-001\"}"))
                 .andExpect(status().isNotFound())
@@ -72,7 +72,7 @@ class RequestWorkflowControllerTest {
 
     @Test
     void invalidTransitionReturns409() throws Exception {
-        when(service.assign(id, "it-user-001"))
+        when(service.assign(id, "it-user-001", "anonymous"))
                 .thenThrow(new InvalidRequestTransitionException(RequestStatus.CLOSED, RequestAction.ASSIGN));
         mvc.perform(post("/api/v1/requests/" + id + "/assign").contentType(MediaType.APPLICATION_JSON)
                         .content("{\"assigneeId\":\"it-user-001\"}"))
@@ -83,38 +83,38 @@ class RequestWorkflowControllerTest {
 
     @Test
     void startsAssignedRequestWithoutBody() throws Exception {
-        when(service.start(id)).thenReturn(response(RequestStatus.IN_PROGRESS));
+        when(service.start(id, "anonymous")).thenReturn(response(RequestStatus.IN_PROGRESS));
         mvc.perform(post("/api/v1/requests/" + id + "/start"))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.status").value("IN_PROGRESS"));
-        verify(service).start(id);
+        verify(service).start(id, "anonymous");
     }
 
     @Test
     void resolvesRequest() throws Exception {
-        when(service.resolve(id, "Restarted print service")).thenReturn(new RequestResponse(
+        when(service.resolve(id, "Restarted print service", "anonymous")).thenReturn(new RequestResponse(
                 id, "Printer", "Offline", "IT_SUPPORT", RequestStatus.RESOLVED,
                 "it-user-001", "Restarted print service", 3L, timestamp, timestamp));
         mvc.perform(post("/api/v1/requests/" + id + "/resolve").contentType(MediaType.APPLICATION_JSON)
                         .content("{\"resolution\":\"Restarted print service\"}"))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.status").value("RESOLVED"))
                 .andExpect(jsonPath("$.resolution").value("Restarted print service"));
-        verify(service).resolve(id, "Restarted print service");
+        verify(service).resolve(id, "Restarted print service", "anonymous");
     }
 
     @Test
     void confirmsResolvedRequestWithoutBody() throws Exception {
-        when(service.confirm(id)).thenReturn(response(RequestStatus.CONFIRMED));
+        when(service.confirm(id, "anonymous")).thenReturn(response(RequestStatus.CONFIRMED));
         mvc.perform(post("/api/v1/requests/" + id + "/confirm"))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.status").value("CONFIRMED"));
-        verify(service).confirm(id);
+        verify(service).confirm(id, "anonymous");
     }
 
     @Test
     void closesConfirmedRequestWithoutBody() throws Exception {
-        when(service.close(id)).thenReturn(response(RequestStatus.CLOSED));
+        when(service.close(id, "anonymous")).thenReturn(response(RequestStatus.CLOSED));
         mvc.perform(post("/api/v1/requests/" + id + "/close"))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.status").value("CLOSED"));
-        verify(service).close(id);
+        verify(service).close(id, "anonymous");
     }
 
     @Test
@@ -147,7 +147,7 @@ class RequestWorkflowControllerTest {
     @ParameterizedTest
     @MethodSource("optimisticConflicts")
     void optimisticConflictReturns409(RuntimeException conflict) throws Exception {
-        when(service.start(id)).thenThrow(conflict);
+        when(service.start(id, "anonymous")).thenThrow(conflict);
         mvc.perform(post("/api/v1/requests/" + id + "/start"))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.status").value(409))
@@ -228,11 +228,11 @@ class RequestWorkflowControllerTest {
 
     private void stubFailure(RequestAction action, RuntimeException failure) {
         switch (action) {
-            case ASSIGN -> when(service.assign(id, "it-user-001")).thenThrow(failure);
-            case START -> when(service.start(id)).thenThrow(failure);
-            case RESOLVE -> when(service.resolve(id, "Restarted print service")).thenThrow(failure);
-            case CONFIRM -> when(service.confirm(id)).thenThrow(failure);
-            case CLOSE -> when(service.close(id)).thenThrow(failure);
+            case ASSIGN -> when(service.assign(id, "it-user-001", "anonymous")).thenThrow(failure);
+            case START -> when(service.start(id, "anonymous")).thenThrow(failure);
+            case RESOLVE -> when(service.resolve(id, "Restarted print service", "anonymous")).thenThrow(failure);
+            case CONFIRM -> when(service.confirm(id, "anonymous")).thenThrow(failure);
+            case CLOSE -> when(service.close(id, "anonymous")).thenThrow(failure);
         }
     }
 

@@ -2,6 +2,7 @@ package com.tricore.dxos.request.service;
 
 import com.tricore.dxos.request.domain.InvalidRequestTransitionException;
 import com.tricore.dxos.request.domain.Request;
+import com.tricore.dxos.request.audit.service.RequestAuditService;
 import com.tricore.dxos.request.domain.RequestAction;
 import com.tricore.dxos.request.domain.RequestStatus;
 import com.tricore.dxos.request.dto.RequestResponse;
@@ -36,6 +37,7 @@ import static org.mockito.Mockito.*;
 // Exercises Spring transaction advice with mocks; PostgreSQL rollback/concurrency remain runtime checks.
 @ExtendWith(MockitoExtension.class)
 class RequestWorkflowTransactionTest {
+    @Mock private RequestAuditService audit;
     @Mock private RequestRepository requests;
     @Mock private RequestStatusHistoryRepository history;
     @Mock private PlatformTransactionManager transactionManager;
@@ -46,7 +48,7 @@ class RequestWorkflowTransactionTest {
     @BeforeEach
     void proxyRealServiceWithSpringTransactionAdvice() {
         when(transactionManager.getTransaction(any())).thenReturn(transaction);
-        ProxyFactory factory = new ProxyFactory(new RequestWorkflowService(requests, history));
+        ProxyFactory factory = new ProxyFactory(new RequestWorkflowService(requests, history, audit));
         factory.setProxyTargetClass(true);
         TransactionInterceptor interceptor = new TransactionInterceptor();
         interceptor.setTransactionManager(transactionManager);
@@ -64,12 +66,13 @@ class RequestWorkflowTransactionTest {
 
         invoke(action);
 
-        var calls = inOrder(transactionManager, requests, history);
+        var calls = inOrder(transactionManager, requests, history, audit);
         ArgumentCaptor<TransactionDefinition> definition = ArgumentCaptor.forClass(TransactionDefinition.class);
         calls.verify(transactionManager).getTransaction(definition.capture());
         calls.verify(requests).findById(id);
         calls.verify(requests).saveAndFlush(request);
         calls.verify(history).save(any());
+        calls.verify(audit).record(eq(id), any(), eq("anonymous"), isNull(), any());
         calls.verify(transactionManager).commit(transaction);
         assertThat(definition.getValue().isReadOnly()).isFalse();
         assertThat(definition.getValue().getPropagationBehavior()).isEqualTo(TransactionDefinition.PROPAGATION_REQUIRED);
@@ -83,7 +86,7 @@ class RequestWorkflowTransactionTest {
         when(requests.saveAndFlush(request)).thenReturn(request);
         when(history.save(any())).thenThrow(new DataIntegrityViolationException("history insert failed"));
 
-        assertThatThrownBy(() -> service.assign(id, "it-user-001")).isInstanceOf(DataIntegrityViolationException.class);
+        assertThatThrownBy(() -> service.assign(id, "it-user-001", "anonymous")).isInstanceOf(DataIntegrityViolationException.class);
         verify(requests).saveAndFlush(request);
         verify(transactionManager).rollback(transaction);
         verify(transactionManager, never()).commit(any());
@@ -94,10 +97,10 @@ class RequestWorkflowTransactionTest {
         Request request = requestBefore(RequestAction.ASSIGN);
         when(requests.findById(id)).thenReturn(Optional.of(request));
 
-        assertThatThrownBy(() -> service.close(id)).isInstanceOf(InvalidRequestTransitionException.class);
+        assertThatThrownBy(() -> service.close(id, "anonymous")).isInstanceOf(InvalidRequestTransitionException.class);
         assertThat(request.getStatus()).isEqualTo(RequestStatus.NEW);
         verify(requests, never()).saveAndFlush(any());
-        verifyNoInteractions(history);
+        verifyNoInteractions(history, audit);
         verify(transactionManager).rollback(transaction);
         verify(transactionManager, never()).commit(any());
     }
@@ -108,9 +111,9 @@ class RequestWorkflowTransactionTest {
         when(requests.findById(id)).thenReturn(Optional.of(request));
         when(requests.saveAndFlush(request)).thenThrow(new ObjectOptimisticLockingFailureException(Request.class, id));
 
-        assertThatThrownBy(() -> service.assign(id, "it-user-001"))
+        assertThatThrownBy(() -> service.assign(id, "it-user-001", "anonymous"))
                 .isInstanceOf(ObjectOptimisticLockingFailureException.class);
-        verifyNoInteractions(history);
+        verifyNoInteractions(history, audit);
         verify(transactionManager).rollback(transaction);
         verify(transactionManager, never()).commit(any());
     }
@@ -130,11 +133,11 @@ class RequestWorkflowTransactionTest {
 
     private RequestResponse invoke(RequestAction action) {
         return switch (action) {
-            case ASSIGN -> service.assign(id, "it-user-001");
-            case START -> service.start(id);
-            case RESOLVE -> service.resolve(id, "Restarted print service");
-            case CONFIRM -> service.confirm(id);
-            case CLOSE -> service.close(id);
+            case ASSIGN -> service.assign(id, "it-user-001", "anonymous");
+            case START -> service.start(id, "anonymous");
+            case RESOLVE -> service.resolve(id, "Restarted print service", "anonymous");
+            case CONFIRM -> service.confirm(id, "anonymous");
+            case CLOSE -> service.close(id, "anonymous");
         };
     }
 

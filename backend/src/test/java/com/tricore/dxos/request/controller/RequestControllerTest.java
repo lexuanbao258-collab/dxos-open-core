@@ -43,7 +43,7 @@ class RequestControllerTest {
     @Test
     void createsRequestWithLocationAndResponseDto() throws Exception {
         CreateRequestDto input = new CreateRequestDto("Repair printer", "Printer is offline", "IT_SUPPORT");
-        when(service.create(input)).thenReturn(response);
+        when(service.create(input, "anonymous")).thenReturn(response);
 
         mvc.perform(post("/api/v1/requests").contentType(MediaType.APPLICATION_JSON).content("""
                 {"title":"Repair printer","description":"Printer is offline","requestType":"IT_SUPPORT"}
@@ -55,7 +55,7 @@ class RequestControllerTest {
                 .andExpect(jsonPath("$.status").value("NEW"))
                 .andExpect(jsonPath("$.createdAt").value(timestamp.toString()))
                 .andExpect(jsonPath("$.updatedAt").value(timestamp.toString()));
-        verify(service).create(input);
+        verify(service).create(input, "anonymous");
     }
 
     @Test
@@ -182,11 +182,11 @@ class RequestControllerTest {
     @Test
     void acceptsMaximumFieldLengths() throws Exception {
         CreateRequestDto input = new CreateRequestDto("a".repeat(200), "Details", "b".repeat(100));
-        when(service.create(input)).thenReturn(response);
+        when(service.create(input, "anonymous")).thenReturn(response);
 
         mvc.perform(post("/api/v1/requests").contentType(MediaType.APPLICATION_JSON)
                         .content("{\"title\":\"" + input.title() + "\",\"description\":\"Details\",\"requestType\":\"" + input.requestType() + "\"}"))
                 .andExpect(status().isCreated());
-        verify(service).create(input);
+        verify(service).create(input, "anonymous");
     }
 }

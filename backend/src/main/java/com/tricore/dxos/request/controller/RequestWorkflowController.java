@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -26,28 +27,33 @@ public class RequestWorkflowController {
     }
 
     @PostMapping("/assign")
-    public RequestResponse assign(@PathVariable UUID id, @Valid @RequestBody AssignRequestDto input) {
-        return service.assign(id, input.assigneeId());
+    public RequestResponse assign(@PathVariable UUID id, @Valid @RequestBody AssignRequestDto input,
+            @RequestHeader(value = "X-Actor-Id", defaultValue = "anonymous") String actorRef) {
+        return service.assign(id, input.assigneeId(), actorRef);
     }
 
     @PostMapping("/start")
-    public RequestResponse start(@PathVariable UUID id) {
-        return service.start(id);
+    public RequestResponse start(@PathVariable UUID id,
+            @RequestHeader(value = "X-Actor-Id", defaultValue = "anonymous") String actorRef) {
+        return service.start(id, actorRef);
     }
 
     @PostMapping("/resolve")
-    public RequestResponse resolve(@PathVariable UUID id, @Valid @RequestBody ResolveRequestDto input) {
-        return service.resolve(id, input.resolution());
+    public RequestResponse resolve(@PathVariable UUID id, @Valid @RequestBody ResolveRequestDto input,
+            @RequestHeader(value = "X-Actor-Id", defaultValue = "anonymous") String actorRef) {
+        return service.resolve(id, input.resolution(), actorRef);
     }
 
     @PostMapping("/confirm")
-    public RequestResponse confirm(@PathVariable UUID id) {
-        return service.confirm(id);
+    public RequestResponse confirm(@PathVariable UUID id,
+            @RequestHeader(value = "X-Actor-Id", defaultValue = "anonymous") String actorRef) {
+        return service.confirm(id, actorRef);
     }
 
     @PostMapping("/close")
-    public RequestResponse close(@PathVariable UUID id) {
-        return service.close(id);
+    public RequestResponse close(@PathVariable UUID id,
+            @RequestHeader(value = "X-Actor-Id", defaultValue = "anonymous") String actorRef) {
+        return service.close(id, actorRef);
     }
 
     @GetMapping("/history")

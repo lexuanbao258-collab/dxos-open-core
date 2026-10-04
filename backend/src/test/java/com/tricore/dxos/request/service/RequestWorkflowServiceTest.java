@@ -2,6 +2,8 @@ package com.tricore.dxos.request.service;
 
 import com.tricore.dxos.request.domain.InvalidRequestTransitionException;
 import com.tricore.dxos.request.domain.Request;
+import com.tricore.dxos.request.audit.service.RequestAuditService;
+import com.tricore.dxos.request.audit.domain.RequestAuditAction;
 import com.tricore.dxos.request.domain.RequestAction;
 import com.tricore.dxos.request.domain.RequestNotFoundException;
 import com.tricore.dxos.request.domain.RequestStatus;
@@ -30,6 +32,7 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class RequestWorkflowServiceTest {
+    @Mock private RequestAuditService audit;
     @Mock private RequestRepository requests;
     @Mock private RequestStatusHistoryRepository history;
     @InjectMocks private RequestWorkflowService service;
@@ -43,7 +46,7 @@ class RequestWorkflowServiceTest {
         when(requests.saveAndFlush(request)).thenReturn(request);
         Instant previous = request.getUpdatedAt();
 
-        RequestResponse response = service.assign(id, "it-user-001");
+        RequestResponse response = service.assign(id, "it-user-001", "anonymous");
 
         assertThat(response.id()).isEqualTo(id);
         assertThat(response.status()).isEqualTo(RequestStatus.ASSIGNED);
@@ -67,21 +70,21 @@ class RequestWorkflowServiceTest {
         Instant previous = request.getUpdatedAt();
         when(requests.findById(id)).thenReturn(Optional.of(request));
 
-        assertThatThrownBy(() -> service.assign(id, "second-user"))
+        assertThatThrownBy(() -> service.assign(id, "second-user", "anonymous"))
                 .isInstanceOf(InvalidRequestTransitionException.class);
         assertThat(request.getAssigneeId()).isEqualTo("first-user");
         assertThat(request.getUpdatedAt()).isEqualTo(previous);
         verify(requests, never()).saveAndFlush(any());
-        verifyNoInteractions(history);
+        verifyNoInteractions(history, audit);
     }
 
     @Test
     void missingRequestCreatesNoHistory() {
         when(requests.findById(id)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> service.assign(id, "it-user-001")).isInstanceOf(RequestNotFoundException.class);
+        assertThatThrownBy(() -> service.assign(id, "it-user-001", "anonymous")).isInstanceOf(RequestNotFoundException.class);
         verify(requests, never()).saveAndFlush(any());
-        verifyNoInteractions(history);
+        verifyNoInteractions(history, audit);
     }
 
     @Test
@@ -90,11 +93,11 @@ class RequestWorkflowServiceTest {
         when(requests.findById(id)).thenReturn(Optional.of(request));
         when(requests.saveAndFlush(request)).thenReturn(request);
 
-        service.assign(id, "it-user-001");
-        service.start(id);
-        RequestResponse resolved = service.resolve(id, "Restarted print service");
-        service.confirm(id);
-        RequestResponse closed = service.close(id);
+        service.assign(id, "it-user-001", "anonymous");
+        service.start(id, "anonymous");
+        RequestResponse resolved = service.resolve(id, "Restarted print service", "anonymous");
+        service.confirm(id, "anonymous");
+        RequestResponse closed = service.close(id, "anonymous");
 
         assertThat(resolved.status()).isEqualTo(RequestStatus.RESOLVED);
         assertThat(resolved.resolution()).isEqualTo("Restarted print service");
@@ -106,6 +109,9 @@ class RequestWorkflowServiceTest {
         verify(requests, times(5)).saveAndFlush(request);
         verify(history, times(5)).save(entries.capture());
         List<RequestStatusHistory> records = entries.getAllValues();
+        ArgumentCaptor<RequestAuditAction> auditActions = ArgumentCaptor.forClass(RequestAuditAction.class);
+        verify(audit, times(5)).record(eq(id), auditActions.capture(), eq("anonymous"), isNull(), any());
+        assertThat(auditActions.getAllValues()).containsExactly(RequestAuditAction.REQUEST_ASSIGNED, RequestAuditAction.REQUEST_STARTED, RequestAuditAction.REQUEST_RESOLVED, RequestAuditAction.REQUEST_CONFIRMED, RequestAuditAction.REQUEST_CLOSED);
         assertThat(records).extracting(RequestStatusHistory::getAction)
                 .containsExactly(RequestAction.ASSIGN, RequestAction.START, RequestAction.RESOLVE,
                         RequestAction.CONFIRM, RequestAction.CLOSE);
@@ -126,12 +132,12 @@ class RequestWorkflowServiceTest {
         when(requests.findById(id)).thenReturn(Optional.of(request));
         Instant previous = request.getUpdatedAt();
 
-        assertThatThrownBy(() -> service.resolve(id, "Restarted print service"))
+        assertThatThrownBy(() -> service.resolve(id, "Restarted print service", "anonymous"))
                 .isInstanceOf(InvalidRequestTransitionException.class);
         assertThat(request.getResolution()).isNull();
         assertThat(request.getUpdatedAt()).isEqualTo(previous);
         verify(requests, never()).saveAndFlush(any());
-        verifyNoInteractions(history);
+        verifyNoInteractions(history, audit);
     }
 
     @Test
@@ -162,7 +168,7 @@ class RequestWorkflowServiceTest {
     void historyOfMissingRequestReturnsNotFound() {
         when(requests.findById(id)).thenReturn(Optional.empty());
         assertThatThrownBy(() -> service.history(id)).isInstanceOf(RequestNotFoundException.class);
-        verifyNoInteractions(history);
+        verifyNoInteractions(history, audit);
     }
 
     @Test
@@ -171,9 +177,9 @@ class RequestWorkflowServiceTest {
         when(requests.findById(id)).thenReturn(Optional.of(request));
         when(requests.saveAndFlush(request)).thenThrow(new ObjectOptimisticLockingFailureException(Request.class, id));
 
-        assertThatThrownBy(() -> service.assign(id, "it-user-001"))
+        assertThatThrownBy(() -> service.assign(id, "it-user-001", "anonymous"))
                 .isInstanceOf(ObjectOptimisticLockingFailureException.class);
-        verifyNoInteractions(history);
+        verifyNoInteractions(history, audit);
     }
 
     @Test
@@ -185,7 +191,7 @@ class RequestWorkflowServiceTest {
             ReflectionTestUtils.setField(request, "version", 1L);
             return request;
         });
-        assertThat(service.assign(id, "it-user-001").version()).isEqualTo(1L);
+        assertThat(service.assign(id, "it-user-001", "anonymous").version()).isEqualTo(1L);
     }
 
     private Request newRequest() {

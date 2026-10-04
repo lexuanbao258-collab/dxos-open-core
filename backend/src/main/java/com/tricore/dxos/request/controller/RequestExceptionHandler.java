@@ -1,6 +1,7 @@
 package com.tricore.dxos.request.controller;
 
 import com.tricore.dxos.common.error.ApiError;
+import com.tricore.dxos.request.audit.domain.InvalidAuditActorException;
 import com.tricore.dxos.request.domain.RequestNotFoundException;
 import com.tricore.dxos.request.domain.InvalidRequestTransitionException;
 import jakarta.persistence.OptimisticLockException;
@@ -18,6 +19,10 @@ import java.util.TreeMap;
 
 @RestControllerAdvice(basePackageClasses = RequestController.class)
 public class RequestExceptionHandler {
+    @ExceptionHandler(InvalidAuditActorException.class)
+    public ResponseEntity<ApiError> invalidActor(InvalidAuditActorException exception) {
+        return ResponseEntity.badRequest().body(new ApiError(400, "INVALID_ACTOR", exception.getMessage(), Map.of()));
+    }
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiError> validation(MethodArgumentNotValidException exception) {
         Map<String, String> errors = new TreeMap<>();

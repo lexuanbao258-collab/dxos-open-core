@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -26,8 +27,9 @@ public class RequestController {
     }
 
     @PostMapping
-    public ResponseEntity<RequestResponse> create(@Valid @RequestBody CreateRequestDto input) {
-        RequestResponse response = service.create(input);
+    public ResponseEntity<RequestResponse> create(@Valid @RequestBody CreateRequestDto input,
+            @RequestHeader(value = "X-Actor-Id", defaultValue = "anonymous") String actorRef) {
+        RequestResponse response = service.create(input, actorRef);
         return ResponseEntity.created(URI.create("/api/v1/requests/" + response.id())).body(response);
     }
 

@@ -1,6 +1,8 @@
 package com.tricore.dxos.request.service;
 
 import com.tricore.dxos.request.domain.Request;
+import com.tricore.dxos.request.audit.service.RequestAuditService;
+import com.tricore.dxos.request.audit.domain.RequestAuditAction;
 import com.tricore.dxos.request.domain.RequestNotFoundException;
 import com.tricore.dxos.request.domain.RequestStatus;
 import com.tricore.dxos.request.dto.CreateRequestDto;
@@ -29,6 +31,9 @@ class RequestServiceTest {
     @Mock
     private RequestRepository repository;
 
+    @Mock
+    private RequestAuditService audit;
+
     @InjectMocks
     private RequestService service;
 
@@ -43,11 +48,12 @@ class RequestServiceTest {
         });
 
         RequestResponse result = service.create(
-                new CreateRequestDto("Repair printer", "Printer is offline", "IT_SUPPORT"));
+                new CreateRequestDto("Repair printer", "Printer is offline", "IT_SUPPORT"), "anonymous");
 
         ArgumentCaptor<Request> captured = ArgumentCaptor.forClass(Request.class);
         verify(repository).save(captured.capture());
         Request saved = captured.getValue();
+        verify(audit).record(id, RequestAuditAction.REQUEST_CREATED, "anonymous", null, saved.getCreatedAt());
         assertThat(saved.getTitle()).isEqualTo("Repair printer");
         assertThat(saved.getDescription()).isEqualTo("Printer is offline");
         assertThat(saved.getRequestType()).isEqualTo("IT_SUPPORT");
