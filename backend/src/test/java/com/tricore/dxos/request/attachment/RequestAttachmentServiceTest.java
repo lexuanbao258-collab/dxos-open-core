@@ -24,6 +24,9 @@ import org.springframework.util.unit.DataSize;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.UUID;
+import java.util.List;
+import java.time.Instant;
+import com.tricore.dxos.request.attachment.dto.AttachmentResponse;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
@@ -92,6 +95,23 @@ class RequestAttachmentServiceTest {
         assertThatThrownBy(() -> service.upload(requestId, empty, null)).isInstanceOf(AttachmentException.class)
                 .extracting("code").isEqualTo("ATTACHMENT_EMPTY");
         verifyNoInteractions(storage, attachments, audit, manager);
+    }
+
+    @Test
+    void listingUsesChronologicalQueryAndMapsMetadataOnly() {
+        when(requests.existsById(requestId)).thenReturn(true);
+        Instant at = Instant.parse("2026-10-04T01:00:00Z");
+        var first = new RequestAttachment(UUID.randomUUID(), requestId, "first.txt", null, 1, "private-key-1", at);
+        var second = new RequestAttachment(UUID.randomUUID(), requestId, "second.txt", "text/plain", 2, "private-key-2", at.plusSeconds(1));
+        when(attachments.findAllByRequestIdOrderByUploadedAtAscIdAsc(requestId)).thenReturn(List.of(first, second));
+        assertThat(service.list(requestId)).containsExactly(AttachmentResponse.from(first), AttachmentResponse.from(second));
+        verifyNoInteractions(storage, audit);
+    }
+
+    @Test
+    void listingMissingRequestFailsBeforeAttachmentQuery() {
+        assertThatThrownBy(() -> service.list(requestId)).isInstanceOf(RequestNotFoundException.class);
+        verifyNoInteractions(attachments, storage, audit);
     }
 
     @Test

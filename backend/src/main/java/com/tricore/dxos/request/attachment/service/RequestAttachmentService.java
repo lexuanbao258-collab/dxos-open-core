@@ -17,12 +17,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.support.TransactionTemplate;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.UUID;
+import java.util.List;
 
 @Service
 public class RequestAttachmentService {
@@ -75,6 +77,13 @@ public class RequestAttachmentService {
             if (failure instanceof RequestNotFoundException missing) throw missing;
             throw new AttachmentException(500, "ATTACHMENT_PERSISTENCE_ERROR", "Unable to register attachment", failure);
         }
+    }
+
+    @Transactional(readOnly = true)
+    public List<AttachmentResponse> list(UUID requestId) {
+        requireRequest(requestId);
+        return attachments.findAllByRequestIdOrderByUploadedAtAscIdAsc(requestId).stream()
+                .map(AttachmentResponse::from).toList();
     }
 
     private void requireRequest(UUID id) {

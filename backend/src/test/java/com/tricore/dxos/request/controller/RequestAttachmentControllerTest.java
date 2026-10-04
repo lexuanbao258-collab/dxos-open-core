@@ -11,8 +11,10 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import java.time.Instant;
 import java.util.UUID;
+import java.util.List;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(RequestAttachmentController.class)
@@ -43,6 +45,22 @@ class RequestAttachmentControllerTest {
         mvc.perform(multipart("/api/v1/requests/{id}/attachments", id)).andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("ATTACHMENT_FILE_REQUIRED"));
         verifyNoInteractions(service);
+    }
+
+    @Test
+    void listingReturnsMetadataWithoutStoragePath() throws Exception {
+        when(service.list(id)).thenReturn(List.of(new AttachmentResponse(UUID.randomUUID(), id, "report.txt", null, 1, Instant.now())));
+        mvc.perform(get("/api/v1/requests/{id}/attachments", id)).andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].originalFilename").value("report.txt"))
+                .andExpect(jsonPath("$[0].size").value(1))
+                .andExpect(jsonPath("$[0].storageKey").doesNotExist());
+    }
+
+    @Test
+    void listingMissingRequestReturns404() throws Exception {
+        when(service.list(id)).thenThrow(new RequestNotFoundException(id));
+        mvc.perform(get("/api/v1/requests/{id}/attachments", id)).andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("REQUEST_NOT_FOUND"));
     }
 
     @Test
