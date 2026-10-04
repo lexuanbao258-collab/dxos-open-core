@@ -13,4 +13,15 @@ class RequestTest {
         assertThat(request.getCreatedAt()).isNotNull();
         assertThat(request.getUpdatedAt()).isEqualTo(request.getCreatedAt());
     }
+
+    @Test
+    void definesTheEstablishedLifecycleStatuses() {
+        assertThat(RequestStatus.values()).containsExactly(
+                RequestStatus.NEW,
+                RequestStatus.ASSIGNED,
+                RequestStatus.IN_PROGRESS,
+                RequestStatus.RESOLVED,
+                RequestStatus.CONFIRMED,
+                RequestStatus.CLOSED);
+    }
 }

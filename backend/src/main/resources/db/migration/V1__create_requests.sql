@@ -9,6 +9,6 @@ CREATE TABLE requests (
     CONSTRAINT requests_title_not_blank CHECK (title ~ '[^[:space:]]'),
     CONSTRAINT requests_description_not_blank CHECK (description ~ '[^[:space:]]'),
     CONSTRAINT requests_type_not_blank CHECK (request_type ~ '[^[:space:]]'),
-    CONSTRAINT requests_status_valid CHECK (status = 'NEW'),
+    CONSTRAINT requests_status_valid CHECK (status IN ('NEW', 'ASSIGNED', 'IN_PROGRESS', 'RESOLVED', 'CONFIRMED', 'CLOSED')),
     CONSTRAINT requests_timestamps_valid CHECK (updated_at >= created_at)
 );
