@@ -8,6 +8,10 @@ import com.tricore.dxos.request.dto.RequestResponse;
 import com.tricore.dxos.request.dto.RequestHistoryResponse;
 import com.tricore.dxos.request.service.RequestWorkflowService;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
+import jakarta.persistence.OptimisticLockException;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
@@ -17,6 +21,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.time.Instant;
 import java.util.UUID;
 import java.util.List;
+import java.util.stream.Stream;
 
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -133,6 +138,22 @@ class RequestWorkflowControllerTest {
         when(service.history(id)).thenThrow(new RequestNotFoundException(id));
         mvc.perform(get("/api/v1/requests/" + id + "/history"))
                 .andExpect(status().isNotFound()).andExpect(jsonPath("$.code").value("REQUEST_NOT_FOUND"));
+    }
+
+    @ParameterizedTest
+    @MethodSource("optimisticConflicts")
+    void optimisticConflictReturns409(RuntimeException conflict) throws Exception {
+        when(service.start(id)).thenThrow(conflict);
+        mvc.perform(post("/api/v1/requests/" + id + "/start"))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.status").value(409))
+                .andExpect(jsonPath("$.code").value("REQUEST_CONFLICT"))
+                .andExpect(jsonPath("$.message").value("Request was updated concurrently; reload it and retry"));
+    }
+
+    static Stream<RuntimeException> optimisticConflicts() {
+        return Stream.of(new ObjectOptimisticLockingFailureException("Request", UUID.randomUUID()),
+                new OptimisticLockException("Internal persistence detail"));
     }
 
     private RequestResponse response(RequestStatus status) {

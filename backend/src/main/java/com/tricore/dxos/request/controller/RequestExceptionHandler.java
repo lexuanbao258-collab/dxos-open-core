@@ -3,6 +3,8 @@ package com.tricore.dxos.request.controller;
 import com.tricore.dxos.common.error.ApiError;
 import com.tricore.dxos.request.domain.RequestNotFoundException;
 import com.tricore.dxos.request.domain.InvalidRequestTransitionException;
+import jakarta.persistence.OptimisticLockException;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -41,6 +43,12 @@ public class RequestExceptionHandler {
     public ResponseEntity<ApiError> invalidTransition(InvalidRequestTransitionException exception) {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(new ApiError(409,
                 "INVALID_REQUEST_TRANSITION", exception.getMessage(), Map.of()));
+    }
+
+    @ExceptionHandler({OptimisticLockingFailureException.class, OptimisticLockException.class})
+    public ResponseEntity<ApiError> optimisticConflict() {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(new ApiError(409, "REQUEST_CONFLICT",
+                "Request was updated concurrently; reload it and retry", Map.of()));
     }
 
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)

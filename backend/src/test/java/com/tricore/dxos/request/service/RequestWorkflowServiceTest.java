@@ -17,6 +17,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 
 import java.time.Instant;
 import java.util.List;
@@ -162,6 +163,29 @@ class RequestWorkflowServiceTest {
         when(requests.findById(id)).thenReturn(Optional.empty());
         assertThatThrownBy(() -> service.history(id)).isInstanceOf(RequestNotFoundException.class);
         verifyNoInteractions(history);
+    }
+
+    @Test
+    void optimisticConflictPropagatesWithoutInsertingHistory() {
+        Request request = newRequest();
+        when(requests.findById(id)).thenReturn(Optional.of(request));
+        when(requests.saveAndFlush(request)).thenThrow(new ObjectOptimisticLockingFailureException(Request.class, id));
+
+        assertThatThrownBy(() -> service.assign(id, "it-user-001"))
+                .isInstanceOf(ObjectOptimisticLockingFailureException.class);
+        verifyNoInteractions(history);
+    }
+
+    @Test
+    void responseMapsVersionAfterRepositoryFlush() {
+        Request request = newRequest();
+        when(requests.findById(id)).thenReturn(Optional.of(request));
+        when(requests.saveAndFlush(request)).thenAnswer(invocation -> {
+            // Simulate a flushed repository result, not a concurrency test.
+            ReflectionTestUtils.setField(request, "version", 1L);
+            return request;
+        });
+        assertThat(service.assign(id, "it-user-001").version()).isEqualTo(1L);
     }
 
     private Request newRequest() {
