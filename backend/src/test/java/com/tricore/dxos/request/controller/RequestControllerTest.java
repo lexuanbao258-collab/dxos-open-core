@@ -38,7 +38,7 @@ class RequestControllerTest {
     private final UUID id = UUID.fromString("f3bf54b7-fdab-4b45-85dd-94cbd8587a9d");
     private final Instant timestamp = Instant.parse("2026-10-04T01:00:00Z");
     private final RequestResponse response = new RequestResponse(id, "Repair printer",
-            "Printer is offline", "IT_SUPPORT", RequestStatus.NEW, timestamp, timestamp);
+            "Printer is offline", "IT_SUPPORT", RequestStatus.NEW, null, null, 0L, timestamp, timestamp);
 
     @Test
     void createsRequestWithLocationAndResponseDto() throws Exception {
@@ -111,6 +111,16 @@ class RequestControllerTest {
                 """))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("INVALID_BODY"));
+        verifyNoInteractions(service);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"resolution", "assigneeId", "version"})
+    void creationRejectsWorkflowControlledFields(String field) throws Exception {
+        mvc.perform(post("/api/v1/requests").contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"title\":\"Printer\",\"description\":\"Offline\",\"requestType\":\"IT_SUPPORT\",\""
+                                + field + "\":\"client-value\"}"))
+                .andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("INVALID_BODY"));
         verifyNoInteractions(service);
     }
 

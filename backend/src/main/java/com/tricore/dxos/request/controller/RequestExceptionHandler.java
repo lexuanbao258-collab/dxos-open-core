@@ -2,6 +2,9 @@ package com.tricore.dxos.request.controller;
 
 import com.tricore.dxos.common.error.ApiError;
 import com.tricore.dxos.request.domain.RequestNotFoundException;
+import com.tricore.dxos.request.domain.InvalidRequestTransitionException;
+import jakarta.persistence.OptimisticLockException;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -33,7 +36,19 @@ public class RequestExceptionHandler {
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ApiError> unreadableBody() {
         return ResponseEntity.badRequest().body(new ApiError(400, "INVALID_BODY",
-                "Body must be valid JSON containing only title, description and requestType", Map.of()));
+                "Body must be valid JSON containing only fields accepted by this endpoint", Map.of()));
+    }
+
+    @ExceptionHandler(InvalidRequestTransitionException.class)
+    public ResponseEntity<ApiError> invalidTransition(InvalidRequestTransitionException exception) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(new ApiError(409,
+                "INVALID_REQUEST_TRANSITION", exception.getMessage(), Map.of()));
+    }
+
+    @ExceptionHandler({OptimisticLockingFailureException.class, OptimisticLockException.class})
+    public ResponseEntity<ApiError> optimisticConflict() {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(new ApiError(409, "REQUEST_CONFLICT",
+                "Request was updated concurrently; reload it and retry", Map.of()));
     }
 
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)

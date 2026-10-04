@@ -1,6 +1,7 @@
 package com.tricore.dxos.request.domain;
 
 import org.junit.jupiter.api.Test;
+import jakarta.persistence.Version;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -23,5 +24,12 @@ class RequestTest {
                 RequestStatus.RESOLVED,
                 RequestStatus.CONFIRMED,
                 RequestStatus.CLOSED);
+    }
+
+    @Test
+    void mapsLongVersionForJpaOptimisticLocking() throws Exception {
+        var versionField = Request.class.getDeclaredField("version");
+        assertThat(versionField.getType()).isEqualTo(Long.class);
+        assertThat(versionField.isAnnotationPresent(Version.class)).isTrue();
     }
 }

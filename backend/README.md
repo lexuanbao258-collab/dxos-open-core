@@ -3,7 +3,7 @@
 Nền backend cho Internal Service Portal của TRICORE, theo kiến trúc Modular
 Monolith. Base package: `com.tricore.dxos`. Core cung cấp cơ chế; application
 sở hữu ngữ nghĩa nghiệp vụ. Issue #1 tạo nền dự án và health API;
-Issue #5 bổ sung tạo, danh sách và chi tiết Request.
+Issue #5 bổ sung tạo, danh sách và chi tiết Request; Issue #7 bổ sung workflow IT Support.
 
 ## Yêu cầu
 
@@ -115,8 +115,7 @@ PostgreSQL. Không expose `env`, `beans`, `metrics` hoặc endpoint quản trị
 
 Module `request` dùng luồng controller → service → repository → PostgreSQL.
 REST nhận/trả DTO riêng; service quản lý transaction và backend luôn gán `NEW`
-khi tạo. Chưa có chuyển trạng thái hay danh mục loại yêu cầu; `requestType` là
-chuỗi do application cung cấp.
+khi tạo. `requestType` là chuỗi do application cung cấp; chưa có danh mục loại yêu cầu.
 
 | Endpoint | Kết quả |
 | --- | --- |
@@ -133,16 +132,19 @@ Body tạo Request:
 Cả ba trường bắt buộc và không được chỉ chứa khoảng trắng. `title` tối đa 200
 ký tự; `requestType` tối đa 100 ký tự. Body có trường khác (kể cả `status`) bị
 từ chối. Response gồm `id` (UUID), `title`, `description`, `requestType`,
-`status`, `createdAt`, `updatedAt` (thời gian UTC). List chưa phân trang và
+`status`, `assigneeId`, `resolution`, `version`, `createdAt`, `updatedAt` (thời gian UTC).
+Request mới có `assigneeId`/`resolution` null và version 0. List chưa phân trang và
 không cam kết thứ tự.
 
 Lỗi JSON có `status`, `code`, `message`, `errors` (map tên trường → thông báo).
 Validation trả `400 VALIDATION_FAILED`; JSON/body sai trả `400 INVALID_BODY`;
 UUID sai trả `400 INVALID_ID`; không tìm thấy trả `404 REQUEST_NOT_FOUND`.
 
-Flyway tự chạy `db/migration/V1__create_requests.sql` trước JPA khi khởi động,
-dùng cùng datasource `DB_*`. Migration tạo bảng `requests` với UUID primary
-key, `timestamptz`, các trường bắt buộc và CHECK chỉ cho phép `NEW`.
+Flyway tự chạy các migration trong `db/migration` trước JPA khi khởi động,
+dùng cùng datasource `DB_*`. V1 tạo bảng `requests` với UUID primary key,
+`timestamptz`, các trường bắt buộc và CHECK cho sáu trạng thái lifecycle.
+V1 đã merge và không được sửa. V2 thêm `assignee_id` (100 ký tự), `resolution`
+(4000 ký tự), `version` (BIGINT, mặc định 0 cho dữ liệu M1), và bảng history.
 Hibernate vẫn dùng `ddl-auto: none`. Môi trường Issue #3 cần cung cấp database
 và tài khoản có quyền tạo bảng/schema history để migration chạy lần đầu.
 
@@ -151,6 +153,53 @@ Test domain, service (mock repository) và MVC (mock service) chạy bằng
 migration/JPA hoạt động trên PostgreSQL thật. Khi có môi trường Issue #3,
 cần xác minh startup, migration và cả ba endpoint, bao gồm dữ liệu còn tồn tại
 sau khi khởi động lại ứng dụng.
+
+## IT Support workflow API
+
+Chỉ có lifecycle `NEW → ASSIGNED → IN_PROGRESS → RESOLVED → CONFIRMED → CLOSED`.
+`CLOSED` là trạng thái cuối. Các method domain kiểm tra trạng thái trước khi đổi
+dữ liệu; action không hợp lệ không đổi Request hoặc timestamp.
+
+Tất cả endpoint dưới đây có prefix `/api/v1/requests/{id}`:
+
+| Endpoint | Body | Transition/action |
+| --- | --- | --- |
+| `POST /assign` | `{"assigneeId":"it-user-001"}` | `NEW → ASSIGNED`, `ASSIGN` |
+| `POST /start` | Không cần | `ASSIGNED → IN_PROGRESS`, `START` |
+| `POST /resolve` | `{"resolution":"Restarted print service"}` | `IN_PROGRESS → RESOLVED`, `RESOLVE` |
+| `POST /confirm` | Không cần | `RESOLVED → CONFIRMED`, `CONFIRM` |
+| `POST /close` | Không cần | `CONFIRMED → CLOSED`, `CLOSE` |
+| `GET /history` | Không cần | Mảng history DTO theo `changedAt ASC, id ASC` |
+
+Action thành công trả `200 OK` với RequestResponse. `assigneeId` bắt buộc,
+nonblank và tối đa 100 ký tự; `resolution` bắt buộc, nonblank và tối đa 4000.
+Body assignment/resolve từ chối trường ngoài contract. API tạo Request từ chối
+`status`, `assigneeId`, `resolution`, `version` do client gửi.
+
+Mỗi action chạy trong một Spring transaction: load → kiểm tra domain → cập nhật
+Request/`updatedAt` → flush Request → insert đúng một history entry → commit.
+Request và history cùng rollback khi có lỗi. History lưu `request_id`,
+`from_status`, `to_status`, `action`, `changed_at` (bằng `updatedAt` mới), có FK
+đến Request, CHECK cặp transition/action hợp lệ và index `(request_id, changed_at, id)`.
+History DTO chỉ gồm `fromStatus`, `toStatus`, `action`, `changedAt`.
+Request tồn tại chưa có action trả `[]`; Request không tồn tại trả `404`.
+
+`@Version` kiểm tra optimistic locking khi update; DTO trả version sau flush.
+Transition không hợp lệ trả `409 INVALID_REQUEST_TRANSITION` kèm trạng thái/action.
+Conflict đồng thời trả `409 REQUEST_CONFLICT`; client cần reload trước khi thử lại.
+Validation/JSON/UUID sai vẫn trả `400`, không tìm thấy trả `404` theo ApiError.
+
+Test bao phủ lifecycle, mọi action sai, history, DTO/validation/errors,
+`@Version` mapping và Spring transaction advice. Transaction manager/repository
+được mock trong các test này; chúng chưa chứng minh rollback hay concurrency
+trên PostgreSQL thật. Không cần database local hoặc H2 để chạy test.
+
+Khi process có đủ `DB_*`, cần chạy ứng dụng, kiểm tra Flyway V2 thành công,
+tạo Request rồi lần lượt assign/start/resolve/confirm/close, và lấy history
+(đúng năm entry). Thử action sai phải trả `409`, detail/history không đổi.
+Khởi động lại rồi GET cùng UUID để xác minh persistence. Kiểm chứng đồng thời
+hai transaction đọc cùng version và rollback khi history insert lỗi vẫn cần
+thực hiện với PostgreSQL thật. Không ghi credentials vào source hoặc log.
 
 ## Phụ thuộc Issue #3 và giới hạn xác minh
 
