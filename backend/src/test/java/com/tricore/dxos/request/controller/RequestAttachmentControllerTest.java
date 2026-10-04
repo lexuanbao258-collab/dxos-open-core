@@ -1,6 +1,10 @@
 package com.tricore.dxos.request.controller;
 
 import com.tricore.dxos.request.attachment.dto.AttachmentResponse;
+import com.tricore.dxos.request.attachment.domain.AttachmentException;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import com.tricore.dxos.request.attachment.service.RequestAttachmentService;
 import com.tricore.dxos.request.domain.RequestNotFoundException;
 import org.junit.jupiter.api.Test;
@@ -61,6 +65,23 @@ class RequestAttachmentControllerTest {
         when(service.list(id)).thenThrow(new RequestNotFoundException(id));
         mvc.perform(get("/api/v1/requests/{id}/attachments", id)).andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.code").value("REQUEST_NOT_FOUND"));
+    }
+
+    @Test
+    void servletUploadLimitUsesConsistent413Error() throws Exception {
+        when(service.upload(id, file, "anonymous")).thenThrow(new MaxUploadSizeExceededException(10));
+        mvc.perform(multipart("/api/v1/requests/{id}/attachments", id).file(file)).andExpect(status().isPayloadTooLarge())
+                .andExpect(jsonPath("$.code").value("ATTACHMENT_TOO_LARGE"));
+    }
+
+    @ParameterizedTest
+    @CsvSource({"400,ATTACHMENT_EMPTY", "400,ATTACHMENT_INVALID_FILENAME", "413,ATTACHMENT_TOO_LARGE", "500,ATTACHMENT_STORAGE_ERROR", "500,ATTACHMENT_PERSISTENCE_ERROR"})
+    void attachmentErrorsUseApiErrorAndDoNotExposeCause(int statusCode, String code) throws Exception {
+        when(service.upload(id, file, "anonymous")).thenThrow(new AttachmentException(statusCode, code,
+                "Safe attachment error", new java.io.IOException("private filesystem path")));
+        mvc.perform(multipart("/api/v1/requests/{id}/attachments", id).file(file)).andExpect(status().is(statusCode))
+                .andExpect(jsonPath("$.code").value(code)).andExpect(jsonPath("$.message").value("Safe attachment error"))
+                .andExpect(jsonPath("$.cause").doesNotExist()).andExpect(jsonPath("$.trace").doesNotExist());
     }
 
     @Test

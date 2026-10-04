@@ -26,6 +26,10 @@ import java.nio.file.Path;
 import java.util.UUID;
 import java.util.List;
 import java.time.Instant;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.transaction.TransactionSystemException;
 import com.tricore.dxos.request.attachment.dto.AttachmentResponse;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -112,6 +116,94 @@ class RequestAttachmentServiceTest {
     void listingMissingRequestFailsBeforeAttachmentQuery() {
         assertThatThrownBy(() -> service.list(requestId)).isInstanceOf(RequestNotFoundException.class);
         verifyNoInteractions(attachments, storage, audit);
+    }
+
+    @Test
+    void commitFailureAlsoCleansStoredFile() throws Exception {
+        when(requests.existsById(requestId)).thenReturn(true);
+        when(manager.getTransaction(any())).thenReturn(transaction);
+        when(attachments.save(any())).thenAnswer(call -> call.getArgument(0));
+        doThrow(new TransactionSystemException("commit failure")).when(manager).commit(transaction);
+        assertThatThrownBy(() -> service.upload(requestId, file, null)).isInstanceOf(AttachmentException.class)
+                .extracting("code").isEqualTo("ATTACHMENT_PERSISTENCE_ERROR");
+        verify(storage).delete(any());
+        verify(audit).record(eq(requestId), eq(RequestAuditAction.ATTACHMENT_ADDED), eq("anonymous"), anyString(), any());
+    }
+
+    @Test
+    void auditFailureRollsBackMetadataAndCleansFile() throws Exception {
+        when(requests.existsById(requestId)).thenReturn(true);
+        when(manager.getTransaction(any())).thenReturn(transaction);
+        when(attachments.save(any())).thenAnswer(call -> call.getArgument(0));
+        doThrow(new DataIntegrityViolationException("audit failure")).when(audit).record(any(), any(), any(), any(), any());
+        assertThatThrownBy(() -> service.upload(requestId, file, null)).isInstanceOf(AttachmentException.class);
+        verify(manager).rollback(transaction);
+        verify(manager, never()).commit(any());
+        verify(storage).delete(any());
+    }
+
+    @Test
+    void cleanupFailureDoesNotMaskDatabaseFailure() throws Exception {
+        when(requests.existsById(requestId)).thenReturn(true);
+        when(manager.getTransaction(any())).thenReturn(transaction);
+        var failure = new DataIntegrityViolationException("database failure");
+        when(attachments.save(any())).thenThrow(failure);
+        doThrow(new IOException("cleanup failure")).when(storage).delete(any());
+        assertThatThrownBy(() -> service.upload(requestId, file, null)).isInstanceOf(AttachmentException.class)
+                .hasCause(failure).hasMessage("Unable to register attachment");
+        verify(manager).rollback(transaction);
+    }
+
+    @Test
+    void storageFailureDoesNotStartDatabaseTransaction() throws Exception {
+        when(requests.existsById(requestId)).thenReturn(true);
+        doThrow(new IOException("private storage detail")).when(storage).store(any(), any());
+        assertThatThrownBy(() -> service.upload(requestId, file, null)).isInstanceOf(AttachmentException.class)
+                .hasMessage("Unable to store attachment");
+        verifyNoInteractions(attachments, audit, manager);
+    }
+
+    @Test
+    void requestDisappearingAfterStoreTriggersCleanupAnd404() throws Exception {
+        when(requests.existsById(requestId)).thenReturn(true, false);
+        when(manager.getTransaction(any())).thenReturn(transaction);
+        assertThatThrownBy(() -> service.upload(requestId, file, null)).isInstanceOf(RequestNotFoundException.class);
+        verify(manager).rollback(transaction);
+        verify(storage).delete(any());
+        verifyNoInteractions(attachments, audit);
+    }
+
+    @Test
+    void oversizedFileIsRejectedBeforeOpeningStream() throws Exception {
+        when(requests.existsById(requestId)).thenReturn(true);
+        var oversized = mock(MultipartFile.class);
+        when(oversized.getSize()).thenReturn(DataSize.ofMegabytes(10).toBytes() + 1);
+        assertThatThrownBy(() -> service.upload(requestId, oversized, null)).isInstanceOf(AttachmentException.class)
+                .extracting("code").isEqualTo("ATTACHMENT_TOO_LARGE");
+        verify(oversized, never()).getInputStream();
+        verifyNoInteractions(storage, attachments, audit, manager);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"", " ", ".", "..", "folder/file.txt", "folder\\file.txt", "bad\nname.txt"})
+    void invalidFilenameCannotReachStorage(String filename) {
+        when(requests.existsById(requestId)).thenReturn(true);
+        var invalid = new MockMultipartFile("file", filename, null, new byte[]{1});
+        assertThatThrownBy(() -> service.upload(requestId, invalid, null)).isInstanceOf(AttachmentException.class)
+                .extracting("code").isEqualTo("ATTACHMENT_INVALID_FILENAME");
+        verifyNoInteractions(storage, attachments, audit, manager);
+    }
+
+    @Test
+    void excessivelyLongFilenameAndContentTypeAreRejected() {
+        when(requests.existsById(requestId)).thenReturn(true);
+        var invalidName = new MockMultipartFile("file", "x".repeat(256), null, new byte[]{1});
+        var invalidType = new MockMultipartFile("file", "report.txt", "x".repeat(256), new byte[]{1});
+        assertThatThrownBy(() -> service.upload(requestId, invalidName, null)).isInstanceOf(AttachmentException.class)
+                .extracting("code").isEqualTo("ATTACHMENT_INVALID_FILENAME");
+        assertThatThrownBy(() -> service.upload(requestId, invalidType, null)).isInstanceOf(AttachmentException.class)
+                .extracting("code").isEqualTo("ATTACHMENT_INVALID_CONTENT_TYPE");
+        verifyNoInteractions(storage, attachments, audit, manager);
     }
 
     @Test
