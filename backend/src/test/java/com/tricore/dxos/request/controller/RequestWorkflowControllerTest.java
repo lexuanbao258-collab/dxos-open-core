@@ -1,0 +1,76 @@
+package com.tricore.dxos.request.controller;
+
+import com.tricore.dxos.request.domain.InvalidRequestTransitionException;
+import com.tricore.dxos.request.domain.RequestAction;
+import com.tricore.dxos.request.domain.RequestNotFoundException;
+import com.tricore.dxos.request.domain.RequestStatus;
+import com.tricore.dxos.request.dto.RequestResponse;
+import com.tricore.dxos.request.service.RequestWorkflowService;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.http.MediaType;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.web.servlet.MockMvc;
+
+import java.time.Instant;
+import java.util.UUID;
+
+import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
+@WebMvcTest(RequestWorkflowController.class)
+class RequestWorkflowControllerTest {
+    @Autowired private MockMvc mvc;
+    @MockitoBean private RequestWorkflowService service;
+    private final UUID id = UUID.randomUUID();
+    private final Instant timestamp = Instant.parse("2026-10-04T01:00:00Z");
+
+    @Test
+    void assignsRequest() throws Exception {
+        when(service.assign(id, "it-user-001")).thenReturn(response(RequestStatus.ASSIGNED));
+
+        mvc.perform(post("/api/v1/requests/" + id + "/assign").contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"assigneeId\":\"it-user-001\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("ASSIGNED"))
+                .andExpect(jsonPath("$.assigneeId").value("it-user-001"))
+                .andExpect(jsonPath("$.version").value(1));
+        verify(service).assign(id, "it-user-001");
+    }
+
+    @Test
+    void rejectsBlankAssignee() throws Exception {
+        mvc.perform(post("/api/v1/requests/" + id + "/assign").contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"assigneeId\":\" \"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors.assigneeId").exists());
+        verifyNoInteractions(service);
+    }
+
+    @Test
+    void missingRequestReturns404() throws Exception {
+        when(service.assign(id, "it-user-001")).thenThrow(new RequestNotFoundException(id));
+        mvc.perform(post("/api/v1/requests/" + id + "/assign").contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"assigneeId\":\"it-user-001\"}"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("REQUEST_NOT_FOUND"));
+    }
+
+    @Test
+    void invalidTransitionReturns409() throws Exception {
+        when(service.assign(id, "it-user-001"))
+                .thenThrow(new InvalidRequestTransitionException(RequestStatus.CLOSED, RequestAction.ASSIGN));
+        mvc.perform(post("/api/v1/requests/" + id + "/assign").contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"assigneeId\":\"it-user-001\"}"))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("INVALID_REQUEST_TRANSITION"))
+                .andExpect(jsonPath("$.message").value("Cannot perform ASSIGN while Request status is CLOSED"));
+    }
+
+    private RequestResponse response(RequestStatus status) {
+        return new RequestResponse(id, "Printer", "Offline", "IT_SUPPORT", status,
+                "it-user-001", null, 1L, timestamp, timestamp);
+    }
+}
