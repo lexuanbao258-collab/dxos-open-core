@@ -2,7 +2,8 @@
 
 Nền backend cho Internal Service Portal của TRICORE, theo kiến trúc Modular
 Monolith. Base package: `com.tricore.dxos`. Core cung cấp cơ chế; application
-sở hữu ngữ nghĩa nghiệp vụ. Issue #1 chỉ tạo nền dự án và health API.
+sở hữu ngữ nghĩa nghiệp vụ. Issue #1 tạo nền dự án và health API;
+Issue #5 bổ sung tạo, danh sách và chi tiết Request.
 
 ## Yêu cầu
 
@@ -109,6 +110,47 @@ Actuator chỉ expose `/actuator/health` qua HTTP, không hiển thị details h
 components và không expose endpoint qua JMX. Health tổng hợp của Actuator
 có thể kiểm tra database và trả trạng thái khác health API tùy tình trạng
 PostgreSQL. Không expose `env`, `beans`, `metrics` hoặc endpoint quản trị khác.
+
+## Request API
+
+Module `request` dùng luồng controller → service → repository → PostgreSQL.
+REST nhận/trả DTO riêng; service quản lý transaction và backend luôn gán `NEW`
+khi tạo. Chưa có chuyển trạng thái hay danh mục loại yêu cầu; `requestType` là
+chuỗi do application cung cấp.
+
+| Endpoint | Kết quả |
+| --- | --- |
+| `POST /api/v1/requests` | `201 Created`, response DTO và header `Location` |
+| `GET /api/v1/requests` | `200 OK`, mảng response DTO; `[]` nếu chưa có dữ liệu |
+| `GET /api/v1/requests/{id}` | `200 OK`, response DTO; `404` nếu UUID không tồn tại |
+
+Body tạo Request:
+
+```json
+{"title":"Repair printer","description":"Printer is offline","requestType":"IT_SUPPORT"}
+```
+
+Cả ba trường bắt buộc và không được chỉ chứa khoảng trắng. `title` tối đa 200
+ký tự; `requestType` tối đa 100 ký tự. Body có trường khác (kể cả `status`) bị
+từ chối. Response gồm `id` (UUID), `title`, `description`, `requestType`,
+`status`, `createdAt`, `updatedAt` (thời gian UTC). List chưa phân trang và
+không cam kết thứ tự.
+
+Lỗi JSON có `status`, `code`, `message`, `errors` (map tên trường → thông báo).
+Validation trả `400 VALIDATION_FAILED`; JSON/body sai trả `400 INVALID_BODY`;
+UUID sai trả `400 INVALID_ID`; không tìm thấy trả `404 REQUEST_NOT_FOUND`.
+
+Flyway tự chạy `db/migration/V1__create_requests.sql` trước JPA khi khởi động,
+dùng cùng datasource `DB_*`. Migration tạo bảng `requests` với UUID primary
+key, `timestamptz`, các trường bắt buộc và CHECK chỉ cho phép `NEW`.
+Hibernate vẫn dùng `ddl-auto: none`. Môi trường Issue #3 cần cung cấp database
+và tài khoản có quyền tạo bảng/schema history để migration chạy lần đầu.
+
+Test domain, service (mock repository) và MVC (mock service) chạy bằng
+`.\gradlew.bat test`, không cần PostgreSQL hoặc H2. Chúng chưa chứng minh
+migration/JPA hoạt động trên PostgreSQL thật. Khi có môi trường Issue #3,
+cần xác minh startup, migration và cả ba endpoint, bao gồm dữ liệu còn tồn tại
+sau khi khởi động lại ứng dụng.
 
 ## Phụ thuộc Issue #3 và giới hạn xác minh
 
