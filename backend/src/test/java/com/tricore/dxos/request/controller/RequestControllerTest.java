@@ -6,6 +6,9 @@ import com.tricore.dxos.request.dto.CreateRequestDto;
 import com.tricore.dxos.request.dto.RequestResponse;
 import com.tricore.dxos.request.service.RequestService;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
@@ -13,8 +16,9 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.Instant;
-import java.util.UUID;
 import java.util.List;
+import java.util.UUID;
+import java.util.stream.Stream;
 
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -116,5 +120,63 @@ class RequestControllerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("INVALID_ID"));
         verifyNoInteractions(service);
+    }
+
+    @Test
+    void returnsEmptyJsonArrayWhenThereAreNoRequests() throws Exception {
+        when(service.list()).thenReturn(List.of());
+
+        mvc.perform(get("/api/v1/requests"))
+                .andExpect(status().isOk())
+                .andExpect(content().json("[]"));
+    }
+
+    @ParameterizedTest
+    @MethodSource("invalidInputs")
+    void rejectsMissingNullAndOversizedFields(String body) throws Exception {
+        mvc.perform(post("/api/v1/requests").contentType(MediaType.APPLICATION_JSON).content(body))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.code").value("VALIDATION_FAILED"));
+        verifyNoInteractions(service);
+    }
+
+    private static Stream<String> invalidInputs() {
+        return Stream.of(
+                "{}",
+                """
+                {"title":null,"description":null,"requestType":null}
+                """,
+                """
+                {"description":"Details","requestType":"IT_SUPPORT"}
+                """,
+                """
+                {"title":"Printer","requestType":"IT_SUPPORT"}
+                """,
+                """
+                {"title":"Printer","description":"Details"}
+                """,
+                "{\"title\":\"" + "a".repeat(201) + "\",\"description\":\"Details\",\"requestType\":\"IT_SUPPORT\"}",
+                "{\"title\":\"Printer\",\"description\":\"Details\",\"requestType\":\"" + "a".repeat(101) + "\"}");
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"{", "null", "", "[]"})
+    void rejectsMalformedOrMissingBody(String body) throws Exception {
+        mvc.perform(post("/api/v1/requests").contentType(MediaType.APPLICATION_JSON).content(body))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("INVALID_BODY"));
+        verifyNoInteractions(service);
+    }
+
+    @Test
+    void acceptsMaximumFieldLengths() throws Exception {
+        CreateRequestDto input = new CreateRequestDto("a".repeat(200), "Details", "b".repeat(100));
+        when(service.create(input)).thenReturn(response);
+
+        mvc.perform(post("/api/v1/requests").contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"title\":\"" + input.title() + "\",\"description\":\"Details\",\"requestType\":\"" + input.requestType() + "\"}"))
+                .andExpect(status().isCreated());
+        verify(service).create(input);
     }
 }
