@@ -69,6 +69,50 @@ class RequestWorkflowControllerTest {
                 .andExpect(jsonPath("$.message").value("Cannot perform ASSIGN while Request status is CLOSED"));
     }
 
+    @Test
+    void startsAssignedRequestWithoutBody() throws Exception {
+        when(service.start(id)).thenReturn(response(RequestStatus.IN_PROGRESS));
+        mvc.perform(post("/api/v1/requests/" + id + "/start"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.status").value("IN_PROGRESS"));
+        verify(service).start(id);
+    }
+
+    @Test
+    void resolvesRequest() throws Exception {
+        when(service.resolve(id, "Restarted print service")).thenReturn(new RequestResponse(
+                id, "Printer", "Offline", "IT_SUPPORT", RequestStatus.RESOLVED,
+                "it-user-001", "Restarted print service", 3L, timestamp, timestamp));
+        mvc.perform(post("/api/v1/requests/" + id + "/resolve").contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"resolution\":\"Restarted print service\"}"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.status").value("RESOLVED"))
+                .andExpect(jsonPath("$.resolution").value("Restarted print service"));
+        verify(service).resolve(id, "Restarted print service");
+    }
+
+    @Test
+    void confirmsResolvedRequestWithoutBody() throws Exception {
+        when(service.confirm(id)).thenReturn(response(RequestStatus.CONFIRMED));
+        mvc.perform(post("/api/v1/requests/" + id + "/confirm"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.status").value("CONFIRMED"));
+        verify(service).confirm(id);
+    }
+
+    @Test
+    void closesConfirmedRequestWithoutBody() throws Exception {
+        when(service.close(id)).thenReturn(response(RequestStatus.CLOSED));
+        mvc.perform(post("/api/v1/requests/" + id + "/close"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.status").value("CLOSED"));
+        verify(service).close(id);
+    }
+
+    @Test
+    void rejectsBlankResolution() throws Exception {
+        mvc.perform(post("/api/v1/requests/" + id + "/resolve").contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"resolution\":\" \"}"))
+                .andExpect(status().isBadRequest()).andExpect(jsonPath("$.errors.resolution").exists());
+        verifyNoInteractions(service);
+    }
+
     private RequestResponse response(RequestStatus status) {
         return new RequestResponse(id, "Printer", "Offline", "IT_SUPPORT", status,
                 "it-user-001", null, 1L, timestamp, timestamp);

@@ -31,6 +31,38 @@ public class RequestWorkflowService {
         return persistTransition(request, from, RequestAction.ASSIGN);
     }
 
+    @Transactional
+    public RequestResponse start(UUID id) {
+        Request request = load(id);
+        RequestStatus from = request.getStatus();
+        request.start();
+        return persistTransition(request, from, RequestAction.START);
+    }
+
+    @Transactional
+    public RequestResponse resolve(UUID id, String resolution) {
+        Request request = load(id);
+        RequestStatus from = request.getStatus();
+        request.resolve(resolution);
+        return persistTransition(request, from, RequestAction.RESOLVE);
+    }
+
+    @Transactional
+    public RequestResponse confirm(UUID id) {
+        Request request = load(id);
+        RequestStatus from = request.getStatus();
+        request.confirm();
+        return persistTransition(request, from, RequestAction.CONFIRM);
+    }
+
+    @Transactional
+    public RequestResponse close(UUID id) {
+        Request request = load(id);
+        RequestStatus from = request.getStatus();
+        request.close();
+        return persistTransition(request, from, RequestAction.CLOSE);
+    }
+
     private Request load(UUID id) {
         return requests.findById(id).orElseThrow(() -> new RequestNotFoundException(id));
     }

@@ -18,6 +18,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -77,6 +78,56 @@ class RequestWorkflowServiceTest {
         when(requests.findById(id)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> service.assign(id, "it-user-001")).isInstanceOf(RequestNotFoundException.class);
+        verify(requests, never()).saveAndFlush(any());
+        verifyNoInteractions(history);
+    }
+
+    @Test
+    void completesLifecycleSavingOneMatchingHistoryRecordPerAction() {
+        Request request = newRequest();
+        when(requests.findById(id)).thenReturn(Optional.of(request));
+        when(requests.saveAndFlush(request)).thenReturn(request);
+
+        service.assign(id, "it-user-001");
+        service.start(id);
+        RequestResponse resolved = service.resolve(id, "Restarted print service");
+        service.confirm(id);
+        RequestResponse closed = service.close(id);
+
+        assertThat(resolved.status()).isEqualTo(RequestStatus.RESOLVED);
+        assertThat(resolved.resolution()).isEqualTo("Restarted print service");
+        assertThat(closed.status()).isEqualTo(RequestStatus.CLOSED);
+        assertThat(closed.assigneeId()).isEqualTo("it-user-001");
+        assertThat(closed.resolution()).isEqualTo("Restarted print service");
+        assertThat(closed.version()).isEqualTo(request.getVersion());
+        ArgumentCaptor<RequestStatusHistory> entries = ArgumentCaptor.forClass(RequestStatusHistory.class);
+        verify(requests, times(5)).saveAndFlush(request);
+        verify(history, times(5)).save(entries.capture());
+        List<RequestStatusHistory> records = entries.getAllValues();
+        assertThat(records).extracting(RequestStatusHistory::getAction)
+                .containsExactly(RequestAction.ASSIGN, RequestAction.START, RequestAction.RESOLVE,
+                        RequestAction.CONFIRM, RequestAction.CLOSE);
+        assertThat(records).extracting(RequestStatusHistory::getFromStatus)
+                .containsExactly(RequestStatus.NEW, RequestStatus.ASSIGNED, RequestStatus.IN_PROGRESS,
+                        RequestStatus.RESOLVED, RequestStatus.CONFIRMED);
+        assertThat(records).extracting(RequestStatusHistory::getToStatus)
+                .containsExactly(RequestStatus.ASSIGNED, RequestStatus.IN_PROGRESS, RequestStatus.RESOLVED,
+                        RequestStatus.CONFIRMED, RequestStatus.CLOSED);
+        assertThat(records).allSatisfy(entry -> assertThat(entry.getRequestId()).isEqualTo(id));
+        assertThat(records).extracting(RequestStatusHistory::getChangedAt).isSorted();
+        assertThat(records.get(4).getChangedAt()).isEqualTo(closed.updatedAt());
+    }
+
+    @Test
+    void failedResolveSavesNothingAndDoesNotChangeTimestamp() {
+        Request request = newRequest();
+        when(requests.findById(id)).thenReturn(Optional.of(request));
+        Instant previous = request.getUpdatedAt();
+
+        assertThatThrownBy(() -> service.resolve(id, "Restarted print service"))
+                .isInstanceOf(InvalidRequestTransitionException.class);
+        assertThat(request.getResolution()).isNull();
+        assertThat(request.getUpdatedAt()).isEqualTo(previous);
         verify(requests, never()).saveAndFlush(any());
         verifyNoInteractions(history);
     }
