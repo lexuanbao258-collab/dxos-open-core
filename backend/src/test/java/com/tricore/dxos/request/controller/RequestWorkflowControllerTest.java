@@ -10,6 +10,9 @@ import com.tricore.dxos.request.service.RequestWorkflowService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.ValueSource;
 import jakarta.persistence.OptimisticLockException;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +30,7 @@ import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
 @WebMvcTest(RequestWorkflowController.class)
 class RequestWorkflowControllerTest {
@@ -154,6 +158,82 @@ class RequestWorkflowControllerTest {
     static Stream<RuntimeException> optimisticConflicts() {
         return Stream.of(new ObjectOptimisticLockingFailureException("Request", UUID.randomUUID()),
                 new OptimisticLockException("Internal persistence detail"));
+    }
+
+    @ParameterizedTest
+    @EnumSource(RequestAction.class)
+    void allActionsReturn404WhenRequestIsMissing(RequestAction action) throws Exception {
+        stubFailure(action, new RequestNotFoundException(id));
+        mvc.perform(actionRequest(action)).andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("REQUEST_NOT_FOUND"));
+    }
+
+    @ParameterizedTest
+    @EnumSource(RequestAction.class)
+    void allActionsReturn409WhenDomainRejectsTransition(RequestAction action) throws Exception {
+        stubFailure(action, new InvalidRequestTransitionException(RequestStatus.CLOSED, action));
+        mvc.perform(actionRequest(action)).andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("INVALID_REQUEST_TRANSITION"));
+    }
+
+    @ParameterizedTest
+    @MethodSource("invalidWorkflowInputs")
+    void rejectsMissingNullAndOversizedWorkflowInput(String route, String field, String body) throws Exception {
+        mvc.perform(post("/api/v1/requests/" + id + "/" + route).contentType(MediaType.APPLICATION_JSON).content(body))
+                .andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("VALIDATION_FAILED"))
+                .andExpect(jsonPath("$.errors." + field).exists());
+        verifyNoInteractions(service);
+    }
+
+    static Stream<Arguments> invalidWorkflowInputs() {
+        return Stream.of(
+                Arguments.of("assign", "assigneeId", "{}"),
+                Arguments.of("assign", "assigneeId", "{\"assigneeId\":null}"),
+                Arguments.of("assign", "assigneeId", "{\"assigneeId\":\"" + "a".repeat(101) + "\"}"),
+                Arguments.of("resolve", "resolution", "{}"),
+                Arguments.of("resolve", "resolution", "{\"resolution\":null}"),
+                Arguments.of("resolve", "resolution", "{\"resolution\":\"" + "a".repeat(4001) + "\"}"));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"assign", "resolve"})
+    void rejectsMalformedBodyAndClientStatus(String route) throws Exception {
+        mvc.perform(post("/api/v1/requests/" + id + "/" + route).contentType(MediaType.APPLICATION_JSON).content("{"))
+                .andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("INVALID_BODY"));
+        String field = route.equals("assign") ? "assigneeId" : "resolution";
+        mvc.perform(post("/api/v1/requests/" + id + "/" + route).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"" + field + "\":\"value\",\"status\":\"CLOSED\"}"))
+                .andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("INVALID_BODY"));
+        verifyNoInteractions(service);
+    }
+
+    @Test
+    void rejectsMalformedUuidAndReturnsEmptyHistoryArray() throws Exception {
+        mvc.perform(get("/api/v1/requests/not-a-uuid/history"))
+                .andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("INVALID_ID"));
+        verifyNoInteractions(service);
+        when(service.history(id)).thenReturn(List.of());
+        mvc.perform(get("/api/v1/requests/" + id + "/history"))
+                .andExpect(status().isOk()).andExpect(content().json("[]"));
+    }
+
+    private MockHttpServletRequestBuilder actionRequest(RequestAction action) {
+        var request = post("/api/v1/requests/" + id + "/" + action.name().toLowerCase(java.util.Locale.ROOT));
+        return switch (action) {
+            case ASSIGN -> request.contentType(MediaType.APPLICATION_JSON).content("{\"assigneeId\":\"it-user-001\"}");
+            case RESOLVE -> request.contentType(MediaType.APPLICATION_JSON).content("{\"resolution\":\"Restarted print service\"}");
+            default -> request;
+        };
+    }
+
+    private void stubFailure(RequestAction action, RuntimeException failure) {
+        switch (action) {
+            case ASSIGN -> when(service.assign(id, "it-user-001")).thenThrow(failure);
+            case START -> when(service.start(id)).thenThrow(failure);
+            case RESOLVE -> when(service.resolve(id, "Restarted print service")).thenThrow(failure);
+            case CONFIRM -> when(service.confirm(id)).thenThrow(failure);
+            case CLOSE -> when(service.close(id)).thenThrow(failure);
+        }
     }
 
     private RequestResponse response(RequestStatus status) {

@@ -114,6 +114,16 @@ class RequestControllerTest {
         verifyNoInteractions(service);
     }
 
+    @ParameterizedTest
+    @ValueSource(strings = {"resolution", "assigneeId", "version"})
+    void creationRejectsWorkflowControlledFields(String field) throws Exception {
+        mvc.perform(post("/api/v1/requests").contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"title\":\"Printer\",\"description\":\"Offline\",\"requestType\":\"IT_SUPPORT\",\""
+                                + field + "\":\"client-value\"}"))
+                .andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("INVALID_BODY"));
+        verifyNoInteractions(service);
+    }
+
     @Test
     void rejectsMalformedId() throws Exception {
         mvc.perform(get("/api/v1/requests/not-a-uuid"))

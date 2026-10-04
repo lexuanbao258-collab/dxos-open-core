@@ -49,7 +49,13 @@ class RequestWorkflowTest {
 
     static Stream<Arguments> invalidTransitions() {
         return Arrays.stream(RequestStatus.values()).flatMap(status -> Arrays.stream(RequestAction.values())
-                .filter(action -> status.ordinal() != action.ordinal())
+                .filter(action -> status != switch (action) {
+                    case ASSIGN -> RequestStatus.NEW;
+                    case START -> RequestStatus.ASSIGNED;
+                    case RESOLVE -> RequestStatus.IN_PROGRESS;
+                    case CONFIRM -> RequestStatus.RESOLVED;
+                    case CLOSE -> RequestStatus.CONFIRMED;
+                })
                 .map(action -> Arguments.of(status, action)));
     }
 
