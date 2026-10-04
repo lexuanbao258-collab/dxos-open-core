@@ -1,6 +1,10 @@
 package com.tricore.dxos.request.controller;
 
 import com.tricore.dxos.common.error.ApiError;
+import com.tricore.dxos.request.attachment.domain.AttachmentException;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.multipart.MultipartException;
+import org.springframework.web.multipart.support.MissingServletRequestPartException;
 import com.tricore.dxos.request.audit.domain.InvalidAuditActorException;
 import com.tricore.dxos.request.domain.RequestNotFoundException;
 import com.tricore.dxos.request.domain.InvalidRequestTransitionException;
@@ -19,6 +23,29 @@ import java.util.TreeMap;
 
 @RestControllerAdvice(basePackageClasses = RequestController.class)
 public class RequestExceptionHandler {
+    @ExceptionHandler(AttachmentException.class)
+    ResponseEntity<ApiError> attachment(AttachmentException exception) {
+        return ResponseEntity.status(exception.getStatus()).body(new ApiError(exception.getStatus(),
+                exception.getCode(), exception.getMessage(), Map.of()));
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    ResponseEntity<ApiError> oversizedAttachment() {
+        return ResponseEntity.status(413).body(new ApiError(413, "ATTACHMENT_TOO_LARGE",
+                "Attachment exceeds the configured size limit", Map.of()));
+    }
+
+    @ExceptionHandler(MissingServletRequestPartException.class)
+    ResponseEntity<ApiError> missingFile() {
+        return ResponseEntity.badRequest().body(new ApiError(400, "ATTACHMENT_FILE_REQUIRED",
+                "Multipart file field is required", Map.of()));
+    }
+
+    @ExceptionHandler(MultipartException.class)
+    ResponseEntity<ApiError> malformedMultipart() {
+        return ResponseEntity.badRequest().body(new ApiError(400, "INVALID_MULTIPART",
+                "Invalid multipart request", Map.of()));
+    }
     @ExceptionHandler(InvalidAuditActorException.class)
     public ResponseEntity<ApiError> invalidActor(InvalidAuditActorException exception) {
         return ResponseEntity.badRequest().body(new ApiError(400, "INVALID_ACTOR", exception.getMessage(), Map.of()));
