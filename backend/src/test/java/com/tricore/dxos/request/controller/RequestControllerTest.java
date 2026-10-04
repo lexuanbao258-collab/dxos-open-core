@@ -13,10 +13,12 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.Instant;
 import java.util.UUID;
+import java.util.List;
 
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(RequestController.class)
@@ -48,5 +50,27 @@ class RequestControllerTest {
                 .andExpect(jsonPath("$.createdAt").value(timestamp.toString()))
                 .andExpect(jsonPath("$.updatedAt").value(timestamp.toString()));
         verify(service).create(input);
+    }
+
+    @Test
+    void listsRequests() throws Exception {
+        when(service.list()).thenReturn(List.of(response));
+
+        mvc.perform(get("/api/v1/requests"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].id").value(id.toString()));
+    }
+
+    @Test
+    void returnsExistingRequest() throws Exception {
+        when(service.get(id)).thenReturn(response);
+
+        mvc.perform(get("/api/v1/requests/" + id))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(id.toString()))
+                .andExpect(jsonPath("$.title").value("Repair printer"))
+                .andExpect(jsonPath("$.description").value("Printer is offline"))
+                .andExpect(jsonPath("$.requestType").value("IT_SUPPORT"));
     }
 }
