@@ -1,6 +1,7 @@
 package com.tricore.dxos.request.controller;
 
 import com.tricore.dxos.request.domain.RequestStatus;
+import com.tricore.dxos.request.domain.RequestNotFoundException;
 import com.tricore.dxos.request.dto.CreateRequestDto;
 import com.tricore.dxos.request.dto.RequestResponse;
 import com.tricore.dxos.request.service.RequestService;
@@ -16,6 +17,7 @@ import java.util.UUID;
 import java.util.List;
 
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -72,5 +74,47 @@ class RequestControllerTest {
                 .andExpect(jsonPath("$.title").value("Repair printer"))
                 .andExpect(jsonPath("$.description").value("Printer is offline"))
                 .andExpect(jsonPath("$.requestType").value("IT_SUPPORT"));
+    }
+
+    @Test
+    void returns404ForMissingRequest() throws Exception {
+        when(service.get(id)).thenThrow(new RequestNotFoundException(id));
+
+        mvc.perform(get("/api/v1/requests/" + id))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.status").value(404))
+                .andExpect(jsonPath("$.code").value("REQUEST_NOT_FOUND"));
+    }
+
+    @Test
+    void rejectsBlankRequiredFields() throws Exception {
+        mvc.perform(post("/api/v1/requests").contentType(MediaType.APPLICATION_JSON).content("""
+                {"title":" ","description":"","requestType":" "}
+                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("VALIDATION_FAILED"))
+                .andExpect(jsonPath("$.errors.title").exists())
+                .andExpect(jsonPath("$.errors.description").exists())
+                .andExpect(jsonPath("$.errors.requestType").exists());
+        verifyNoInteractions(service);
+    }
+
+    @Test
+    void rejectsClientSuppliedStatus() throws Exception {
+        mvc.perform(post("/api/v1/requests").contentType(MediaType.APPLICATION_JSON).content("""
+                {"title":"Repair printer","description":"Printer is offline",
+                 "requestType":"IT_SUPPORT","status":"NEW"}
+                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("INVALID_BODY"));
+        verifyNoInteractions(service);
+    }
+
+    @Test
+    void rejectsMalformedId() throws Exception {
+        mvc.perform(get("/api/v1/requests/not-a-uuid"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("INVALID_ID"));
+        verifyNoInteractions(service);
     }
 }
