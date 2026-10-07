@@ -10,6 +10,11 @@
 - Base main commit: **`2b51a41fdb372edd9e00ac05dac8ccc9a52d738c`**.
 - Ngày kiểm tra GitHub và chạy verification: **2026-10-07**.
 
+**Publication status cập nhật:** branch `docs/session-1-homework` đã được push
+lên origin. [PR #17](https://github.com/lexuanbao258-collab/dxos-open-core/pull/17)
+đang **OPEN**, targets `main`, chứa `Closes #16`; Issue #16 vẫn **OPEN**.
+PR #17 **chưa merge**, nên tài liệu trên task branch chưa có trên main.
+
 Trước khi viết: cwd/root đúng repository, branch main, working tree sạch;
 `git fetch origin` thành công và `main...origin/main = 0 / 0`.
 Không có branch `docs/session-1-homework` local/remote; tạo branch từ main
@@ -35,7 +40,8 @@ Generated XML/HTML/JAR nằm trong build output local, không commit.
 ## Lecturer requirement coverage
 
 PASS trong bảng là coverage của **tài liệu và kiểm chứng local** tại task này,
-không có nghĩa tất cả capability đã triển khai hoặc tài liệu đã publish lên GitHub.
+không có nghĩa tất cả capability đã triển khai. Tài liệu đã publish lên GitHub
+trên task branch qua PR #17, nhưng chưa merge vào main.
 
 | Requirement | Evidence | Status |
 | --- | --- | --- |
@@ -51,7 +57,9 @@ không có nghĩa tất cả capability đã triển khai hoặc tài liệu đ�
 
 ## GitHub development planning — facts hiện tại
 
-Tại lần kiểm tra: #12/#14 OPEN, #13 CLOSED; không có PR OPEN trong repository.
+Tại lần kiểm tra ban đầu: #12/#14 OPEN, #13 CLOSED; chưa có PR OPEN trong repository.
+Sau khi publish task branch, PR #17 hiện OPEN; Issue #16 OPEN và được tham chiếu
+bằng `Closes #16`. Trạng thái mới không thay đổi ngày/kết quả verification ban đầu.
 Identity/Data trên main chỉ có package skeleton. Remote task branches #12/#14
 vẫn ở baseline trước Workflow merge (main ahead 4 commits, task branches không
 có commit riêng thêm khi so với main). Không suy diễn tiến độ ở checkout cá nhân.
@@ -134,32 +142,33 @@ So diff với base main xác nhận chỉ ba file tài liệu trong bảng scope
   Workflow orchestration, Data adapter/DB POC rồi nối Portal; chưa được chạy end-to-end.
 - Không chọn Keycloak/APISIX/MinIO/n8n/Flowable hoặc provider mới.
 
-## Local commit checkpoints của task Session 1
+## Commit checkpoints ban đầu của task Session 1
 
 | SHA / cách tra | Message | Files | Verification |
 | --- | --- | --- | --- |
 | 462658ed312c2ff03437057ad60b8dd122102185 | docs(readme): describe product problem and core architecture | README.md | Diff/scope/architecture review, git diff --check; Workflow/Request/full tests và build PASS |
 | 9fe85599b317dfee623fcc06944add8b945bd264 | docs(poc): document workflow core validation evidence | docs/poc/workflow-core-poc.md | Đối chiếu code/tests và actual XML results; git diff --check PASS |
-| Commit chứa evidence này; tra bằng lệnh dưới | docs(roadmap): document session 1 MVP roadmap and verification | docs/evidence/session-1-homework.md | Coverage/GitHub facts, local links, scope và git diff --check |
+| c81d84ac316bebb665fe9c7e7d5931dcb1692b80 | docs(roadmap): document session 1 MVP roadmap and verification | docs/evidence/session-1-homework.md | Coverage/GitHub facts, local links, scope và git diff --check |
 
-SHA của commit chứa chính file này được tra từ Git để không ghi một SHA tự
-tham chiếu hoặc bịa hash trước khi commit:
+Ba checkpoint ban đầu đã publish và có trong PR #17; giữ nguyên SHA/lịch sử.
+Tra riêng lịch sử ban đầu bằng:
 
 ```powershell
-git log -1 --format='%H %s' -- docs/evidence/session-1-homework.md
-git log --reverse --format='%H %s' 2b51a41fdb372edd9e00ac05dac8ccc9a52d738c..HEAD
+git show -s --format='%H %s' c81d84a
+git log --reverse --format='%H %s' 2b51a41fdb372edd9e00ac05dac8ccc9a52d738c..c81d84a
 ```
 
-Các commit trên chỉ local. Không push/merge, không amend/squash, không empty
-commit hoặc rewrite history. Old evidence vẫn giữ nguyên facts tại thời điểm
-được viết; tài liệu Session 1 này cung cấp snapshot mới.
+Ba commit trên đã push lên origin; PR #17 vẫn OPEN và chưa merge. Không
+amend/squash, không empty commit hoặc rewrite history. Bản cập nhật publication
+status này là một commit local bổ sung, chưa push; không thực hiện push/merge
+trong tác vụ cập nhật. Ngày và kết quả verification ban đầu được giữ nguyên.
 
 ## Explicit limitations và việc còn lại
 
-**REQUIRED BEFORE DEADLINE:** owner kiểm tra tài liệu local, sau đó publish
-task branch qua push/PR/review/merge khi được cho phép và nộp repository link
-theo yêu cầu lớp. Hiện GitHub main chưa có tài liệu Session 1 của các commit
-local này; không coi tài liệu đã được publish. Không thực hiện push/merge trong task.
+**REQUIRED BEFORE DEADLINE:** review PR #17; merge PR #17 vào main; pull latest
+main; nộp repository link theo yêu cầu lớp. PR #17 hiện chưa merge và GitHub
+main chưa chứa tài liệu Session 1 từ PR này. Không thực hiện push/merge trong
+tác vụ cập nhật evidence.
 
 **OPTIONAL AFTER DEADLINE:** hoàn thành #12/#14; Identity provider POC dựa trên
 contract/decision có bằng chứng; Gateway trusted-context integration; Workflow
