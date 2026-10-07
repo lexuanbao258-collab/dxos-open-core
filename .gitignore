@@ -3,6 +3,7 @@
 !.env.example
 **/.gradle/
 backend/build/
+/backend/bin/
 **/.idea/
 **/*.iml
 **/.classpath
