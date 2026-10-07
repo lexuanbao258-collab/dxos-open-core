@@ -2,8 +2,11 @@ package com.tricore.dxos.core.workflow;
 
 import org.junit.jupiter.api.Test;
 
-import java.time.Instant;
 import java.util.List;
+import java.util.Set;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import static com.tricore.dxos.core.workflow.WorkflowInstanceTest.*;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -98,6 +101,10 @@ class WorkflowPersistencePortTest {
                 new ResourceReference("other", "other"), "review", 1, WorkflowLifecycle.ACTIVE, NOW, NOW);
         assertError(() -> port.commitTransition(changedResource.transition(definition, command("publish", 1), NOW)),
                 WorkflowErrorCode.TRANSITION_NOT_ALLOWED);
+        WorkflowInstance changedSource = WorkflowInstance.restore("instance-1", definition, RESOURCE, "draft", 1,
+                WorkflowLifecycle.ACTIVE, NOW, NOW);
+        assertError(() -> port.commitTransition(changedSource.transition(definition, command("submit", 1), NOW)),
+                WorkflowErrorCode.TRANSITION_NOT_ALLOWED);
         assertThat(port.loadHistory("instance-1")).hasSize(1);
         // A structurally reconstituted, unchanged snapshot is usable by a real adapter.
         port.commitTransition(restored.transition(definition, command("publish", 1), NOW));
@@ -127,6 +134,74 @@ class WorkflowPersistencePortTest {
             assertThat(error.getMessage()).isEqualTo(code.name());
             assertThat(error.getCause()).isNull();
             assertThat(error.getStackTrace()).isEmpty();
+        }
+    }
+
+    @Test
+    void concurrentCommitsHaveExactlyOneWinner() throws Exception {
+        WorkflowDefinition definition = WorkflowDefinitionTest.approval();
+        InMemoryWorkflowPersistence port = seeded(definition);
+        WorkflowInstance original = port.loadInstance("instance-1");
+        TransitionResult first = original.transition(definition, command("submit", 0), NOW);
+        TransitionResult second = original.transition(definition,
+                new TransitionCommand("instance-1", "submit", new ActorReference("second"), 0), NOW);
+        CountDownLatch start = new CountDownLatch(1);
+        var executor = Executors.newFixedThreadPool(2);
+        try {
+            var one = executor.submit(() -> commitAfterSignal(port, first, start));
+            var two = executor.submit(() -> commitAfterSignal(port, second, start));
+            start.countDown();
+            assertThat(List.of(one.get(5, TimeUnit.SECONDS), two.get(5, TimeUnit.SECONDS)))
+                    .containsExactlyInAnyOrder("COMMITTED", "VERSION_CONFLICT");
+            assertThat(port.loadInstance("instance-1").runtimeVersion()).isEqualTo(1);
+            assertThat(port.loadHistory("instance-1")).hasSize(1);
+            assertThat(port.loadHistory("instance-1").getFirst().targetState())
+                    .isEqualTo(port.loadInstance("instance-1").currentState());
+        } finally {
+            executor.shutdownNow();
+        }
+    }
+
+    @Test
+    void failureOnLaterTransitionPreservesAlreadyCommittedHistory() {
+        WorkflowDefinition definition = WorkflowDefinitionTest.approval();
+        InMemoryWorkflowPersistence port = seeded(definition);
+        TransitionResult first = port.commitTransition(port.loadInstance("instance-1")
+                .transition(definition, command("submit", 0), NOW));
+        TransitionResult second = first.instance().transition(definition, command("publish", 1), NOW);
+        port.failNextCommit();
+        assertError(() -> port.commitTransition(second), WorkflowErrorCode.OPERATION_FAILURE);
+        assertThat(port.loadInstance("instance-1")).isSameAs(first.instance());
+        assertThat(port.loadHistory("instance-1")).containsExactly(first.record());
+    }
+
+    @Test
+    void portProtectsTerminalSnapshotEvenAgainstReconstitutedActiveProposal() {
+        WorkflowDefinition definition = WorkflowDefinitionTest.delivery();
+        InMemoryWorkflowPersistence port = seeded(definition);
+        port.commitTransition(port.loadInstance("instance-1").transition(definition, command("dispatch", 0), NOW));
+        // Deliberately break the immutable-definition-key assumption to exercise the persistence guard.
+        WorkflowDefinition altered = new WorkflowDefinition("delivery", 2, "queued", definition.states(),
+                Set.of(new WorkflowTransition("dispatch", "queued", "dispatched"),
+                        new WorkflowTransition("reopen", "dispatched", "queued")));
+        WorkflowInstance forged = WorkflowInstance.restore("instance-1", altered, RESOURCE, "dispatched", 1,
+                WorkflowLifecycle.ACTIVE, NOW, NOW);
+        assertError(() -> port.commitTransition(forged.transition(altered, command("reopen", 1), NOW)),
+                WorkflowErrorCode.INSTANCE_COMPLETED);
+        assertThat(port.loadInstance("instance-1").lifecycle()).isEqualTo(WorkflowLifecycle.COMPLETED);
+        assertThat(port.loadHistory("instance-1")).hasSize(1);
+    }
+
+    private static String commitAfterSignal(InMemoryWorkflowPersistence port, TransitionResult proposal,
+                                             CountDownLatch start) throws InterruptedException {
+        if (!start.await(5, TimeUnit.SECONDS)) {
+            throw new IllegalStateException("start signal timed out");
+        }
+        try {
+            port.commitTransition(proposal);
+            return "COMMITTED";
+        } catch (WorkflowException error) {
+            return error.code().name();
         }
     }
 
