@@ -19,6 +19,7 @@ The intended runtime dependency direction is:
 External/Application -> Gateway -> Identity
                            |
                            +-> Workflow
+```
 
 Gateway is the primary future runtime consumer of Identity.
 Workflow must not directly depend on Identity.
@@ -114,17 +115,20 @@ not remove or redesign the field.
 Both are distinct string-backed record types and reject null, empty and blank
 values with `IllegalArgumentException`.
 
-The constructors do not trim, case-fold or otherwise normalize values. Java record
-equality compares the stored string exactly, so case and retained whitespace are
-significant when the value objects themselves are compared. For example,
-`"request.read"`, `"REQUEST.READ"` and `" request.read "` remain distinct stored
-values. The current package contains no authorization operation that formally
-defines how an `Authority` is matched to a `RequiredAuthority`.
+The current contract uses exact authority-identifier matching:
+`Authority.satisfies(requiredAuthority)` returns true if and only if the two
+stored string values are exactly equal. Matching is case-sensitive and whitespace
+is significant. Constructors and matching do not trim, case-fold or normalize
+values. There is no wildcard, prefix or hierarchical matching. For example,
+`"WORKFLOW_APPROVE"` matches only `"WORKFLOW_APPROVE"`; it does not match
+`"workflow_approve"`, `" WORKFLOW_APPROVE"`, `"WORKFLOW_APPROVE "`,
+`"WORKFLOW_*"` or `"WORKFLOW_APPROVE_EXTRA"`.
 
-**REVIEW REQUIRED:** exact authority matching, case sensitivity, whitespace and
-normalization policy have not been formally frozen by repository documentation.
-Future reviewers must define that policy consistently without treating this
-description of current Java behavior as a new policy decision.
+This rule defines only whether one held authority identifier satisfies one
+required authority identifier. Business/resource authorization policy, ownership
+checks, workflow-state checks, authority hierarchy, wildcard policy, authority
+freshness/revocation and other future authorization concerns remain out of scope.
+Exact identifier matching is not the entire authorization policy.
 
 ## Authentication and authorization
 

@@ -7,4 +7,8 @@ public record Authority(String value) {
             throw new IllegalArgumentException("Authority value must not be blank");
         }
     }
+
+    public boolean satisfies(RequiredAuthority requiredAuthority) {
+        return value.equals(requiredAuthority.value());
+    }
 }

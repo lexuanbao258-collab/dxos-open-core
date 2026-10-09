@@ -43,6 +43,28 @@ class IdentityExceptionTest {
     }
 
     @Test
+    void shouldNotExposeStackTrace() {
+        IdentityException exception =
+                new IdentityException(
+                        IdentityErrorCode.AUTHENTICATION_FAILED
+                );
+
+        assertEquals(0, exception.getStackTrace().length);
+    }
+
+    @Test
+    void shouldDisableSuppression() {
+        IdentityException exception =
+                new IdentityException(
+                        IdentityErrorCode.AUTHENTICATION_FAILED
+                );
+
+        exception.addSuppressed(new RuntimeException("internal"));
+
+        assertEquals(0, exception.getSuppressed().length);
+    }
+
+    @Test
     void nullErrorCode_shouldBeRejected() {
         assertThrows(
                 NullPointerException.class,
