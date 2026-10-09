@@ -53,6 +53,18 @@ class AuthenticatedPrincipalTest {
                 )
         );
     }
+    @Test
+    void shouldRejectEmptySubjectId() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new AuthenticatedPrincipal(
+                        "",
+                        "Test User",
+                        Set.of(),
+                        true
+                )
+        );
+    }
 
     @Test
     void shouldRejectBlankSubjectId() {
@@ -75,6 +87,21 @@ class AuthenticatedPrincipalTest {
                         "subject-123",
                         "Test User",
                         null,
+                        true
+                )
+        );
+    }
+    @Test
+    void shouldRejectAuthoritiesContainingNull() {
+        Set<Authority> authorities = new HashSet<>();
+        authorities.add(null);
+
+        assertThrows(
+                NullPointerException.class,
+                () -> new AuthenticatedPrincipal(
+                        "subject-123",
+                        "Test User",
+                        authorities,
                         true
                 )
         );
