@@ -141,6 +141,7 @@ class WorkflowRuntimeTest {
         assertThatThrownBy(() -> runtime.executeTransition(null)).isInstanceOf(NullPointerException.class);
         assertThatThrownBy(() -> new TransitionCommand("instance-1", "submit", null, 0))
                 .isInstanceOf(NullPointerException.class);
+        verify(persistence, never()).loadInstance(any());
         verify(persistence, never()).createInstance(any());
     }
 
@@ -163,6 +164,66 @@ class WorkflowRuntimeTest {
                 new ResourceReference("other", "other")), WorkflowErrorCode.INSTANCE_ALREADY_EXISTS);
         assertThat(runtime.loadInstance("instance-1")).isSameAs(result.instance());
         assertThat(runtime.loadHistory("instance-1")).containsExactly(result.record());
+    }
+
+    @Test
+    void prioritizesDuplicateInstanceOverMissingDefinitionIdWithoutMutation() {
+        activate();
+        TransitionResult result = runtime.executeTransition(command("submit", 0));
+
+        assertError(() -> runtime.createInstance("instance-1", "missing", 7, RESOURCE),
+                WorkflowErrorCode.INSTANCE_ALREADY_EXISTS);
+
+        assertThat(runtime.loadInstance("instance-1")).isSameAs(result.instance());
+        assertThat(runtime.loadHistory("instance-1")).containsExactly(result.record());
+        verify(persistence, never()).loadDefinition("missing", 7);
+        verify(persistence, times(1)).createInstance(any());
+    }
+
+    @Test
+    void prioritizesDuplicateInstanceOverMissingDefinitionVersionWithoutMutation() {
+        activate();
+        TransitionResult result = runtime.executeTransition(command("submit", 0));
+
+        assertError(() -> runtime.createInstance("instance-1", DEFINITION.definitionId(), 8, RESOURCE),
+                WorkflowErrorCode.INSTANCE_ALREADY_EXISTS);
+
+        assertThat(runtime.loadInstance("instance-1")).isSameAs(result.instance());
+        assertThat(runtime.loadHistory("instance-1")).containsExactly(result.record());
+        verify(persistence, never()).loadDefinition(DEFINITION.definitionId(), 8);
+        verify(persistence, times(1)).createInstance(any());
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = WorkflowErrorCode.class, names = {"OPERATION_FAILURE", "COMMIT_OUTCOME_UNKNOWN"})
+    void propagatesCreationReadFailureUnchangedWithoutDefinitionLookupOrWrite(WorkflowErrorCode error) {
+        WorkflowException failure = new WorkflowException(error);
+        doThrow(failure).when(persistence).loadInstance("instance-1");
+
+        assertThatThrownBy(this::create).isSameAs(failure);
+
+        verify(persistence, times(1)).loadInstance("instance-1");
+        verify(persistence, never()).loadDefinition(DEFINITION.definitionId(), DEFINITION.definitionVersion());
+        verify(persistence, never()).createInstance(any());
+    }
+
+    @Test
+    void insertOnlyPersistenceRejectsConcurrentCreationAfterThePreliminaryRead() {
+        WorkflowInstance winner = WorkflowInstance.notStarted("instance-1", DEFINITION,
+                new ResourceReference("other", "winner"), NOW);
+        Clock racingClock = mock(Clock.class);
+        when(racingClock.instant()).thenAnswer(ignored -> {
+            persistence.createInstance(winner);
+            return NOW;
+        });
+        WorkflowRuntime racingRuntime = new WorkflowRuntime(persistence, racingClock);
+
+        assertError(() -> racingRuntime.createInstance("instance-1", DEFINITION.definitionId(), 7, RESOURCE),
+                WorkflowErrorCode.INSTANCE_ALREADY_EXISTS);
+
+        assertThat(runtime.loadInstance("instance-1")).isSameAs(winner);
+        assertThat(runtime.loadHistory("instance-1")).isEmpty();
+        verify(persistence, times(2)).createInstance(any());
     }
 
     @Test

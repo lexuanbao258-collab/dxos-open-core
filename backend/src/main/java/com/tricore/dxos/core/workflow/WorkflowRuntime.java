@@ -25,6 +25,15 @@ public final class WorkflowRuntime {
         WorkflowValues.text(definitionId, "definitionId");
         WorkflowValues.nonNegative(definitionVersion, "definitionVersion");
         Objects.requireNonNull(resourceReference, "resourceReference");
+        // Preserve error precedence; the insert still guards concurrent creation.
+        try {
+            persistence.loadInstance(instanceId);
+            throw new WorkflowException(WorkflowErrorCode.INSTANCE_ALREADY_EXISTS);
+        } catch (WorkflowException failure) {
+            if (failure.code() != WorkflowErrorCode.INSTANCE_NOT_FOUND) {
+                throw failure;
+            }
+        }
         WorkflowDefinition definition = persistence.loadDefinition(definitionId, definitionVersion);
         WorkflowInstance initial = WorkflowInstance.notStarted(instanceId, definition, resourceReference, clock.instant());
         return persistence.createInstance(initial);
