@@ -1,5 +1,7 @@
 package com.tricore.dxos.gateway.workflow.controller;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tricore.dxos.core.workflow.ActorReference;
 import com.tricore.dxos.core.workflow.ResourceReference;
 import com.tricore.dxos.core.workflow.TransitionCommand;
@@ -10,7 +12,15 @@ import com.tricore.dxos.core.workflow.WorkflowException;
 import com.tricore.dxos.core.workflow.WorkflowInstance;
 import com.tricore.dxos.core.workflow.WorkflowRuntime;
 import com.tricore.dxos.core.workflow.WorkflowTransition;
-import org.junit.jupiter.api.BeforeEach;
+import com.tricore.dxos.request.controller.RequestController;
+import com.tricore.dxos.request.dto.CreateRequestDto;
+import com.tricore.dxos.request.dto.RequestResponse;
+import com.tricore.dxos.request.domain.RequestStatus;
+import com.tricore.dxos.request.service.RequestService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -18,6 +28,7 @@ import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.context.annotation.Profile;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.bind.annotation.RestController;
@@ -26,16 +37,20 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Stream;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-import static org.springframework.test.web.servlet.setup.MockMvcBuilders.standaloneSetup;
 
+@WebMvcTest(controllers = {WorkflowControllerTest.TestController.class, RequestController.class})
+@ActiveProfiles("workflow-http-tests")
+@Import(WorkflowControllerTest.TestController.class)
 class WorkflowControllerTest {
     private static final String BASE = "/api/v1/workflow-instances";
     private static final String CREATE = """
@@ -63,8 +78,14 @@ class WorkflowControllerTest {
             WorkflowErrorCode.OPERATION_FAILURE, 500,
             WorkflowErrorCode.COMMIT_OUTCOME_UNKNOWN, 500);
 
-    private final WorkflowRuntime runtime = mock(WorkflowRuntime.class);
+    @MockitoBean
+    private WorkflowRuntime runtime;
+    @MockitoBean
+    private RequestService requestService;
+    @Autowired
     private MockMvc mvc;
+    @Autowired
+    private ObjectMapper objectMapper;
 
     // This registration exists only in tests, with no claim that requestAttr authenticates a caller.
     @RestController
@@ -73,12 +94,6 @@ class WorkflowControllerTest {
         TestController(WorkflowRuntime runtime) {
             super(runtime);
         }
-    }
-
-    @BeforeEach
-    void setUp() {
-        mvc = standaloneSetup(new TestController(runtime))
-                .setControllerAdvice(new WorkflowExceptionHandler()).build();
     }
 
     @Test
@@ -306,6 +321,72 @@ class WorkflowControllerTest {
                 .andExpect(status().isConflict());
         verify(runtime).executeTransition(command);
         verifyNoMoreInteractions(runtime);
+    }
+
+    @ParameterizedTest
+    @MethodSource("trailingContent")
+    void rejectsTrailingContentBeforeCallingRuntime(String suffix, String body, String trailing) throws Exception {
+        mvc.perform(post(BASE + suffix).contentType(MediaType.APPLICATION_JSON).content(body + " " + trailing)
+                        .requestAttr(WorkflowController.TRUSTED_ACTOR_ATTRIBUTE, ACTOR))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.code").value("INVALID_BODY"))
+                .andExpect(jsonPath("$.errors").isEmpty())
+                .andExpect(content().string(not(containsString("attacker"))))
+                .andExpect(content().string(not(containsString("evil"))));
+        verifyNoInteractions(runtime, requestService);
+    }
+
+    private static Stream<Arguments> trailingContent() {
+        return Stream.of(
+                new String[]{"", CREATE, "{\"actorId\":\"attacker\"}"},
+                new String[]{"/instance-1/activate", "{}", "{\"lifecycle\":\"COMPLETED\"}"},
+                new String[]{"/instance-1/transitions", TRANSITION, "{\"targetState\":\"evil\"}"})
+                .flatMap(input -> Stream.of(input[2], "[]", "null", "42", "true", "\"extra\"", "not-json")
+                        .map(trailing -> Arguments.of(input[0], input[1], trailing)));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"", "/instance-1/activate", "/instance-1/transitions"})
+    void rejectsTrailingContentForVendorJson(String suffix) throws Exception {
+        String body = suffix.isEmpty() ? CREATE : suffix.endsWith("activate") ? "{}" : TRANSITION;
+        mvc.perform(post(BASE + suffix).contentType("application/vnd.workflow+json").content(body + " null")
+                        .requestAttr(WorkflowController.TRUSTED_ACTOR_ATTRIBUTE, ACTOR))
+                .andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("INVALID_BODY"));
+        verifyNoInteractions(runtime);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"", "/instance-1/activate", "/instance-1/transitions"})
+    void acceptsTrailingJsonWhitespace(String suffix) throws Exception {
+        when(runtime.createInstance("instance-1", "publication", 7, RESOURCE)).thenReturn(initial());
+        when(runtime.activateInstance("instance-1")).thenReturn(initial().activate(DEFINITION, NOW));
+        when(runtime.executeTransition(any())).thenReturn(initial().activate(DEFINITION, NOW).transition(DEFINITION,
+                new TransitionCommand("instance-1", "submit", ACTOR, 0), NOW));
+        String body = suffix.isEmpty() ? CREATE : suffix.endsWith("activate") ? "{}" : TRANSITION;
+        mvc.perform(post(BASE + suffix).contentType(MediaType.APPLICATION_JSON).content(body + " \t\r\n")
+                        .requestAttr(WorkflowController.TRUSTED_ACTOR_ATTRIBUTE, ACTOR))
+                .andExpect(status().is(suffix.isEmpty() ? 201 : 200));
+        if (suffix.isEmpty()) verify(runtime).createInstance("instance-1", "publication", 7, RESOURCE);
+        else if (suffix.endsWith("activate")) verify(runtime).activateInstance("instance-1");
+        else verify(runtime).executeTransition(new TransitionCommand("instance-1", "submit", ACTOR, 0));
+        verifyNoMoreInteractions(runtime);
+    }
+
+    @Test
+    void leavesSharedMapperAndRequestMessageConversionUnchanged() throws Exception {
+        assertThat(objectMapper.isEnabled(DeserializationFeature.FAIL_ON_TRAILING_TOKENS)).isFalse();
+        CreateRequestDto input = new CreateRequestDto("Repair printer", "Printer is offline", "IT_SUPPORT");
+        UUID id = UUID.fromString("f3bf54b7-fdab-4b45-85dd-94cbd8587a9d");
+        when(requestService.create(input)).thenReturn(new RequestResponse(id, input.title(), input.description(),
+                input.requestType(), RequestStatus.NEW, null, null, 0L, NOW, NOW));
+        mvc.perform(post("/api/v1/requests").contentType(MediaType.APPLICATION_JSON).content("""
+                {"title":"Repair printer","description":"Printer is offline","requestType":"IT_SUPPORT"} {}
+                """))
+                .andExpect(status().isCreated()).andExpect(jsonPath("$.id").value(id.toString()));
+        verify(requestService).create(input);
+        verifyNoMoreInteractions(requestService);
+        verifyNoInteractions(runtime);
     }
 
     private WorkflowInstance initial() {

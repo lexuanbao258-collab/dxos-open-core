@@ -2,18 +2,24 @@ package com.tricore.dxos.core.workflow;
 
 import com.tricore.dxos.gateway.workflow.controller.WorkflowController;
 import com.tricore.dxos.gateway.workflow.controller.WorkflowExceptionHandler;
+import com.tricore.dxos.gateway.workflow.WorkflowJsonConfiguration;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.MediaType;
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.Clock;
 import java.time.ZoneOffset;
+import java.util.List;
+import java.util.stream.Stream;
 
 import static com.tricore.dxos.core.workflow.WorkflowInstanceTest.*;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -29,8 +35,8 @@ class WorkflowHttpRuntimeTest {
     private static final WorkflowDefinition DEFINITION = WorkflowDefinitionTest.approval();
     private static final String TRANSITION = "{\"transitionId\":\"submit\",\"expectedVersion\":0}";
     private final InMemoryWorkflowPersistence persistence = spy(new InMemoryWorkflowPersistence());
-    private final WorkflowRuntime runtime = new WorkflowRuntime(persistence,
-            Clock.fixed(NOW.plusNanos(123), ZoneOffset.UTC));
+    private final WorkflowRuntime runtime = spy(new WorkflowRuntime(persistence,
+            Clock.fixed(NOW.plusNanos(123), ZoneOffset.UTC)));
     private MockMvc mvc;
 
     @RestController
@@ -45,7 +51,10 @@ class WorkflowHttpRuntimeTest {
     void setUp() {
         persistence.provision(DEFINITION);
         persistence.provision(WorkflowDefinitionTest.delivery());
+        var converter = new MappingJackson2HttpMessageConverter();
+        new WorkflowJsonConfiguration().extendMessageConverters(List.of(converter));
         mvc = standaloneSetup(new TestController(runtime))
+                .setMessageConverters(converter)
                 .setControllerAdvice(new WorkflowExceptionHandler()).build();
     }
 
@@ -158,6 +167,33 @@ class WorkflowHttpRuntimeTest {
             assertThat(runtime.loadHistory("instance-1")).containsExactly(
                     new TransitionRecord("instance-1", "submit", "draft", "review", ACTOR, 1, stored.updatedAt()));
         }
+    }
+
+    @ParameterizedTest
+    @MethodSource("invalidWriteDocuments")
+    void rejectsWholeDocumentBeforeRuntimeOrPersistence(String suffix, String trailing) throws Exception {
+        WorkflowInstance before = runtime.createInstance("instance-1", DEFINITION.definitionId(), 7, RESOURCE);
+        if (suffix.endsWith("transitions")) before = runtime.activateInstance("instance-1");
+        var historyBefore = runtime.loadHistory("instance-1");
+        clearInvocations(runtime, persistence);
+        String body = suffix.isEmpty() ? createBody(DEFINITION.definitionId(), 7).replace("instance-1", "instance-2")
+                : suffix.endsWith("activate") ? "{}" : TRANSITION;
+
+        mvc.perform(post(BASE + suffix).contentType(MediaType.APPLICATION_JSON).content(body + " " + trailing)
+                        .requestAttr(WorkflowController.TRUSTED_ACTOR_ATTRIBUTE, ACTOR))
+                .andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("INVALID_BODY"));
+        verifyNoInteractions(runtime, persistence);
+        assertThat(persistence.loadInstance("instance-1")).isSameAs(before);
+        assertThat(persistence.loadHistory("instance-1")).isEqualTo(historyBefore);
+        assertError(() -> persistence.loadInstance("instance-2"), WorkflowErrorCode.INSTANCE_NOT_FOUND);
+        assertError(() -> persistence.loadHistory("instance-2"), WorkflowErrorCode.INSTANCE_NOT_FOUND);
+    }
+
+    private static Stream<Arguments> invalidWriteDocuments() {
+        return Stream.of("", "/instance-1/activate", "/instance-1/transitions")
+                .flatMap(suffix -> Stream.of("{\"actorId\":\"attacker\"}", "[]", "null", "42", "true",
+                                "\"extra\"", "not-json")
+                        .map(trailing -> Arguments.of(suffix, trailing)));
     }
 
     private WorkflowInstance activate() {
