@@ -14,6 +14,106 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class WorkflowPersistencePortTest {
     @Test
+    void unknownCreationOutcomeCanAlreadyHaveCommittedAndReplayIsStillRejected() {
+        WorkflowDefinition definition = WorkflowDefinitionTest.approval();
+        InMemoryWorkflowPersistence port = new InMemoryWorkflowPersistence();
+        port.provision(definition);
+        WorkflowInstance initial = WorkflowInstance.notStarted("instance-1", definition, RESOURCE, NOW.plusNanos(123));
+        port.loseNextCommitResponse();
+
+        assertError(() -> port.createInstance(initial), WorkflowErrorCode.COMMIT_OUTCOME_UNKNOWN);
+        assertThat(port.loadInstance("instance-1")).isSameAs(initial);
+        assertThat(port.loadInstance("instance-1").lifecycle()).isEqualTo(WorkflowLifecycle.NOT_STARTED);
+        assertThat(port.loadInstance("instance-1").runtimeVersion()).isZero();
+        assertThat(port.loadHistory("instance-1")).isEmpty();
+        assertError(() -> port.createInstance(initial), WorkflowErrorCode.INSTANCE_ALREADY_EXISTS);
+        assertThat(port.loadInstance("instance-1")).isSameAs(initial);
+    }
+
+    @Test
+    void unknownActivationOutcomeCanAlreadyHaveCommittedAtVersionZeroWithoutHistory() {
+        WorkflowDefinition definition = WorkflowDefinitionTest.approval();
+        InMemoryWorkflowPersistence port = new InMemoryWorkflowPersistence();
+        port.provision(definition);
+        WorkflowInstance initial = WorkflowInstance.notStarted("instance-1", definition, RESOURCE, NOW);
+        port.createInstance(initial);
+        WorkflowInstance activated = initial.activate(definition, NOW);
+        port.loseNextCommitResponse();
+
+        assertError(() -> port.commitActivation(initial, activated), WorkflowErrorCode.COMMIT_OUTCOME_UNKNOWN);
+        assertThat(port.loadInstance("instance-1")).isSameAs(activated);
+        assertThat(port.loadInstance("instance-1").lifecycle()).isEqualTo(WorkflowLifecycle.ACTIVE);
+        assertThat(port.loadInstance("instance-1").runtimeVersion()).isZero();
+        assertThat(port.loadHistory("instance-1")).isEmpty();
+        assertError(() -> port.commitActivation(initial, activated), WorkflowErrorCode.VERSION_CONFLICT);
+        TransitionResult next = port.loadInstance("instance-1").transition(definition, command("submit", 0), NOW);
+        port.commitTransition(next);
+        assertThat(port.loadHistory("instance-1")).containsExactly(next.record());
+    }
+
+    @Test
+    void unknownTransitionOutcomeCommitsInstanceAndHistoryTogetherAndRejectsReplay() {
+        WorkflowDefinition definition = WorkflowDefinitionTest.approval();
+        InMemoryWorkflowPersistence port = seeded(definition);
+        TransitionResult first = port.commitTransition(
+                port.loadInstance("instance-1").transition(definition, command("submit", 0), NOW));
+        List<TransitionRecord> earlierHistory = port.loadHistory("instance-1");
+        TransitionResult last = first.instance().transition(definition, command("publish", 1), NOW.plusNanos(321));
+        port.loseNextCommitResponse();
+
+        assertError(() -> port.commitTransition(last), WorkflowErrorCode.COMMIT_OUTCOME_UNKNOWN);
+        assertThat(port.loadInstance("instance-1")).isSameAs(last.instance());
+        assertThat(port.loadInstance("instance-1").lifecycle()).isEqualTo(WorkflowLifecycle.COMPLETED);
+        assertThat(port.loadInstance("instance-1").runtimeVersion()).isEqualTo(2);
+        assertThat(port.loadHistory("instance-1")).containsExactly(first.record(), last.record());
+        assertThat(port.loadHistory("instance-1").getLast().occurredAt())
+                .isEqualTo(port.loadInstance("instance-1").updatedAt());
+        assertThat(earlierHistory).containsExactly(first.record());
+        assertError(() -> port.commitTransition(last), WorkflowErrorCode.VERSION_CONFLICT);
+        assertThat(port.loadInstance("instance-1")).isSameAs(last.instance());
+        assertThat(port.loadHistory("instance-1")).containsExactly(first.record(), last.record());
+    }
+
+    @Test
+    void rejectsSameKeyForgedTransitionTargetsAndLifecyclesAgainstAuthoritativeDefinition() {
+        WorkflowDefinition definition = WorkflowDefinitionTest.approval();
+        InMemoryWorkflowPersistence port = seeded(definition);
+        WorkflowInstance original = port.loadInstance("instance-1");
+        List<WorkflowDefinition> altered = List.of(
+                new WorkflowDefinition(definition.definitionId(), definition.definitionVersion(),
+                        definition.initialState(), definition.states(),
+                        Set.of(new WorkflowTransition("submit", "draft", "published"))),
+                new WorkflowDefinition(definition.definitionId(), definition.definitionVersion(),
+                        definition.initialState(), definition.states(),
+                        Set.of(new WorkflowTransition("submit", "draft", "review"))));
+
+        for (WorkflowDefinition forged : altered) {
+            TransitionResult proposal = original.transition(forged, command("submit", 0), NOW);
+            assertError(() -> port.commitTransition(proposal), WorkflowErrorCode.TRANSITION_NOT_ALLOWED);
+            assertThat(port.loadInstance("instance-1")).isSameAs(original);
+            assertThat(port.loadHistory("instance-1")).isEmpty();
+        }
+        TransitionResult valid = original.transition(definition, command("submit", 0), NOW);
+        port.commitTransition(valid);
+        assertThat(port.loadInstance("instance-1")).isSameAs(valid.instance());
+        assertThat(port.loadHistory("instance-1")).containsExactly(valid.record());
+    }
+
+    @Test
+    void rejectsTransitionIdsMissingFromTheAuthoritativeSameKeyDefinition() {
+        WorkflowDefinition definition = WorkflowDefinitionTest.approval();
+        InMemoryWorkflowPersistence port = seeded(definition);
+        WorkflowInstance original = port.loadInstance("instance-1");
+        WorkflowDefinition forged = new WorkflowDefinition(definition.definitionId(), definition.definitionVersion(),
+                definition.initialState(), definition.states(), Set.of(new WorkflowTransition("skip", "draft", "published")));
+        TransitionResult proposal = original.transition(forged, command("skip", 0), NOW);
+
+        assertError(() -> port.commitTransition(proposal), WorkflowErrorCode.INVALID_TRANSITION);
+        assertThat(port.loadInstance("instance-1")).isSameAs(original);
+        assertThat(port.loadHistory("instance-1")).isEmpty();
+    }
+
+    @Test
     void commitsStateVersionAndExactlyOneMatchingHistoryRecord() {
         WorkflowDefinition definition = WorkflowDefinitionTest.approval();
         InMemoryWorkflowPersistence port = seeded(definition);

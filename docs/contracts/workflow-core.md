@@ -62,8 +62,8 @@ successful state transitions and starts at zero.
 `notStarted(...)` creates an initial snapshot with lifecycle NOT_STARTED and
 identical creation/update timestamps. `activate(exactDefinition, startedAt)`
 produces ACTIVE at the initial state, still version zero; activation is
-initialization, not a recorded transition. Creation and activation persistence
-are intentionally outside this transition-only port. Activation requires an
+initialization, not a recorded transition. The persistence port supports
+creation, activation and transition as separate writes. Activation requires an
 initial state with an outgoing transition. Definitions with a terminal initial
 state can be represented but cannot be activated in this baseline.
 
@@ -123,15 +123,68 @@ source state, lifecycle and timestamps against persisted data. An update must
 preserve binding, resource and createdAt. Concurrency control must occur at commit,
 not only during an earlier read. A version mismatch, including replay of a committed
 proposal, produces VERSION_CONFLICT and changes neither state nor history.
-Missing, terminal, inconsistent-origin or failed persistence operations must also
-leave both unchanged. There is no automatic retry or idempotent replay policy.
+Missing, terminal and inconsistent-origin rejections also make no changes. A provider
+failure guarantees no changes only when the adapter confirms that the write did not
+commit or was rolled back, as detailed below. There is no automatic retry or idempotent replay policy.
+
+After checking the proposal's origin, adapters must load the authoritative exact
+definition and rederive the transition from the persisted source, the record's
+transitionId/actorReference/occurredAt and expectedVersion. Compare the resulting
+snapshot and history record by value. A consumer's same-ID/version definition is
+not authoritative: a missing transitionId is INVALID_TRANSITION; a differing target
+state/lifecycle or history is TRANSITION_NOT_ALLOWED. Existing valid transitions
+retain their version, lifecycle and history semantics; authorization remains upstream.
 
 Each successful transition gets a unique, contiguous per-instance history version
 starting at one. `loadHistory` orders ascending by resultingRuntimeVersion;
 `TransitionRecord.BY_RUNTIME_VERSION` supplies that per-instance comparator.
-Timestamps are not ordering keys, so ties remain deterministic. Failed attempts
-are not history entries; security audit logging is a separate future concern.
+Timestamps are not ordering keys, so ties remain deterministic. Rejected or confirmed
+uncommitted attempts add no history. An unknown outcome may include a committed
+transition/history pair; security audit logging is a separate future concern.
 Separate instance/history reads do not promise a shared transactional snapshot.
+
+### Write outcomes and reconciliation
+
+The same four outcomes apply to createInstance, commitActivation and commitTransition:
+
+| Outcome | Contract |
+| --- | --- |
+| Validation/business/concurrency rejection | The rejected write makes no changes; retain its existing normalized error code. |
+| Provider failure with confirmed no commit or rollback | OPERATION_FAILURE; the write makes no changes. |
+| Confirmed successful durable commit | Return the committed snapshot/result. |
+| Commit outcome cannot be established | COMMIT_OUTCOME_UNKNOWN; the whole write may already be durable, or may not have committed. |
+
+A lost connection/response after COMMIT can leave the caller uncertain even when
+the database committed successfully. A provider exception does not prove rollback.
+Adapters must use COMMIT_OUTCOME_UNKNOWN whenever they cannot establish the write's
+outcome, rather than falsely promise no changes with OPERATION_FAILURE. These are
+normalized Workflow errors: never expose provider causes, SQL or credentials.
+Atomicity is unconditional: creation is complete or absent; activation never adds
+history; a transition's instance update and exactly one matching history record
+commit together or neither commits. Outcome uncertainty never permits partial writes.
+Other concurrent writers may advance the data even when this write was rejected.
+
+Never blindly automatically retry a write after an error. Keep the attempted source,
+proposal and record for reconciliation, then use authoritative loadInstance and
+loadHistory reads:
+
+- Creation: inspect instanceId, exact definition binding, resource, lifecycle/version
+  and timestamps. An existing identical snapshot does not prove which writer created
+  it; replay still yields INSTANCE_ALREADY_EXISTS, not idempotent success.
+- Activation: inspect lifecycle and the full snapshot, not version alone. It can have
+  committed at version zero without history, and later transitions may have advanced it.
+- Transition: find the exact proposed record at its resultingRuntimeVersion and compare
+  its contents with the authoritative instance/history. Later transitions may have
+  advanced the instance; they do not erase the earlier committed record.
+
+Separate reads are individually consistent, not a shared snapshot. Re-read if they
+straddle concurrent progress; a mismatched pair alone does not prove partial mutation.
+An old or absent snapshot while a transaction is unresolved does not prove rollback.
+If reads fail, conflict or cannot establish the outcome/writer, keep it unresolved
+and use adapter-owned recovery/operator reconciliation. Do not report success merely
+from an exception, a duplicate ID or an ambiguous read. An explicit retry requires
+the prior transaction to be settled, authoritative concurrency checks and an explicit
+application recovery decision; this port adds no operation receipts or automatic retries.
 
 ### Definition provisioning and ownership
 
@@ -161,8 +214,10 @@ An existing instanceId always produces INSTANCE_ALREADY_EXISTS, including an
 identical retry or a different definition/resource. Check duplicate ID before
 definition lookup. Concurrent writers for one ID have exactly one winner; all
 losers preserve the existing instance and history. Missing definition produces
-DEFINITION_NOT_FOUND. Provider failure produces OPERATION_FAILURE and inserts
-neither instance nor history. There is no implicit overwrite, upsert or idempotency.
+DEFINITION_NOT_FOUND. Confirmed no commit/rollback produces OPERATION_FAILURE and
+inserts neither instance nor history. COMMIT_OUTCOME_UNKNOWN may mean the initial
+instance is already durable with empty history; follow the reconciliation policy.
+There is no implicit overwrite, upsert or idempotency.
 
 ### Atomic activation and error precedence
 
@@ -188,7 +243,8 @@ Errors are checked in this order:
 5. Missing authoritative definition: DEFINITION_NOT_FOUND.
 6. A target differing from domain activation or a terminal initial state:
    TRANSITION_NOT_ALLOWED.
-7. Provider write failure: OPERATION_FAILURE.
+7. Provider write failure: OPERATION_FAILURE for confirmed no commit/rollback;
+   COMMIT_OUTCOME_UNKNOWN if the outcome cannot be established.
 
 Both version and lifecycle are mandatory compare-and-write predicates. Checking
 version alone cannot prevent competing activations because both start and finish
@@ -196,7 +252,8 @@ at version zero. Exactly one concurrent activation succeeds. Replay of its origi
 NOT_STARTED source produces VERSION_CONFLICT, even with unchanged timestamps.
 Attempting activation from the current ACTIVE snapshot produces TRANSITION_NOT_ALLOWED.
 The full comparison and update must be one atomic operation; a prior read is not
-a substitute. Any failure leaves the instance and all history unchanged.
+a substitute. Rejection and confirmed no commit/rollback make no changes. An unknown
+outcome may have committed the complete activation; it never adds transition history.
 
 ### PostgreSQL adapter handoff: time and storage
 
@@ -221,7 +278,8 @@ per-instance history-version constraints. Use a local transaction/conditional wr
 or row lock to protect activation and transition at the write boundary. Definition
 binding, resource and createdAt are immutable. Return successful results only after
 durable commit and normalize provider errors without exposing provider causes.
-Document uncertain commit outcomes and recovery; do not blindly retry a write.
+Apply the write-outcome and reconciliation policy above to lost COMMIT responses;
+never map an uncertain outcome to a rollback guarantee or blindly retry a write.
 Instance/history reads are individually consistent, not a shared snapshot.
 Milestone 1 changes no Request entities or Flyway V1/V2 and implements no adapter.
 
@@ -236,7 +294,8 @@ Milestone 1 changes no Request entities or Flyway V1/V2 and implements no adapte
 | TRANSITION_NOT_ALLOWED | Wrong source, not active, invalid activation or inconsistent proposal origin |
 | INSTANCE_COMPLETED | Terminal instance cannot transition or reactivate |
 | VERSION_CONFLICT | Expected runtime version differs; activation also compares lifecycle, including stale/replayed activation at version zero |
-| OPERATION_FAILURE | Persistence/operation failure or runtime-version overflow |
+| OPERATION_FAILURE | Operation/read failure or runtime-version overflow; provider write failure only with confirmed no commit/rollback |
+| COMMIT_OUTCOME_UNKNOWN | Adapter cannot establish whether an atomic write committed; it may already be durable; reconcile, never blindly retry |
 
 Adapters must translate provider exceptions into these codes. `WorkflowException`
 has a stable code-name message, no provider cause, suppressed exceptions or stack
@@ -256,7 +315,11 @@ command shape and history/result consistency.
 uses a single replacement of an immutable instance/history pair. Tests cover
 successful commits, stale/replayed proposals, two concurrent writers with one
 winner, immutable ordered history with tied timestamps, restored-origin rejection,
-terminal protection and injected operation failure with no partial change.
+terminal protection and injected operation failure with no partial change. The fake
+also commits before simulating a lost response for all three writes, throws
+COMMIT_OUTCOME_UNKNOWN and preserves the committed data. Tests verify creation
+replay rejection, version-zero activation, atomic transition/history and rejection
+of targets, lifecycles or transition IDs derived from forged same-key definitions.
 
 Commands run from `backend/`, with JDK 21:
 
@@ -288,7 +351,7 @@ prove PostgreSQL transactions, isolation, rollback, locking, process-crash recov
 or durable storage. Existing Request transaction tests also use mocks. A real
 adapter and PostgreSQL atomicity/concurrency POC remain required.
 
-### Milestone 1 verification (2026-10-10)
+### Milestone 1 verification (2026-10-10, reviewed head a75073c)
 
 Based on clean main/origin/main `775edae`. Verification used JDK 21.0.11 and
 the unchanged Gradle Wrapper 8.14.3 from `backend/`:

@@ -14,6 +14,7 @@ final class InMemoryWorkflowPersistence implements WorkflowPersistencePort {
     private final Map<DefinitionKey, WorkflowDefinition> definitions = new HashMap<>();
     private final Map<String, Stored> instances = new HashMap<>();
     private boolean failNextCommit;
+    private boolean loseNextCommitResponse;
 
     synchronized void provision(WorkflowDefinition definition) {
         Objects.requireNonNull(definition, "definition");
@@ -26,6 +27,10 @@ final class InMemoryWorkflowPersistence implements WorkflowPersistencePort {
 
     synchronized void failNextCommit() {
         failNextCommit = true;
+    }
+
+    synchronized void loseNextCommitResponse() {
+        loseNextCommitResponse = true;
     }
 
     @Override
@@ -104,6 +109,14 @@ final class InMemoryWorkflowPersistence implements WorkflowPersistencePort {
         if (!sameSnapshot(persisted, previous)) {
             throw new WorkflowException(WorkflowErrorCode.TRANSITION_NOT_ALLOWED);
         }
+        WorkflowDefinition definition = loadDefinition(persisted.definitionId(), persisted.definitionVersion());
+        TransitionRecord record = transition.record();
+        TransitionResult canonical = persisted.transition(definition,
+                new TransitionCommand(persisted.instanceId(), record.transitionId(), record.actorReference(),
+                        transition.expectedVersion()), record.occurredAt());
+        if (!sameSnapshot(transition.instance(), canonical.instance()) || !record.equals(canonical.record())) {
+            throw new WorkflowException(WorkflowErrorCode.TRANSITION_NOT_ALLOWED);
+        }
         List<TransitionRecord> nextHistory = new ArrayList<>(current.history());
         nextHistory.add(transition.record());
         nextHistory.sort(TransitionRecord.BY_RUNTIME_VERSION);
@@ -117,6 +130,10 @@ final class InMemoryWorkflowPersistence implements WorkflowPersistencePort {
             throw new WorkflowException(WorkflowErrorCode.OPERATION_FAILURE);
         }
         instances.put(instanceId, next);
+        if (loseNextCommitResponse) {
+            loseNextCommitResponse = false;
+            throw new WorkflowException(WorkflowErrorCode.COMMIT_OUTCOME_UNKNOWN);
+        }
     }
 
     private static boolean sameSnapshot(WorkflowInstance left, WorkflowInstance right) {
