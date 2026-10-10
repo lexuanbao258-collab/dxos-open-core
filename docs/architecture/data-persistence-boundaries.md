@@ -34,6 +34,15 @@ dependency on Identity. Gateway handles the gateway boundary, not persistence.
 
 ## Future adapter locations and errors
 
+The milestone 1 Workflow-owned port also requires authoritative exact-version
+definition loading, insert-only instance creation and atomic full-snapshot
+activation. Data provisions immutable definition versions outside the runtime
+port. Activation preserves runtime version zero, so lifecycle and all source
+fields must be compared at the write boundary, not just version. Creation never
+upserts. Transition/history contracts are unchanged; pagination is deferred.
+See [Workflow Core contract](../contracts/workflow-core.md#definition-provisioning-and-ownership)
+for provisioning, error precedence, timestamp precision and PostgreSQL handoff.
+
 - `com.tricore.dxos.infrastructure.storage`: future Object Storage adapters
   implement `ObjectStoragePort`. Provider configuration, namespace mapping,
   clients, SDK objects, stream wrappers and conditional writes stay here.
