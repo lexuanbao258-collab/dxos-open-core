@@ -1,0 +1,2 @@
+OIDC_ISSUER_URI: https://issuer.example.test
+OIDC_AUDIENCE: tricore-api
