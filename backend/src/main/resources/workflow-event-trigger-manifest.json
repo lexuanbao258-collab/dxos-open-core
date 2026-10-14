@@ -1,0 +1,540 @@
+{
+  "formatVersion": 1,
+  "helperEvidence": [
+    {
+      "eventContext": "ddl_command_end",
+      "observedOid": 4568,
+      "signature": "pg_catalog.pg_event_trigger_ddl_commands()"
+    },
+    {
+      "eventContext": "sql_drop",
+      "observedOid": 3566,
+      "signature": "pg_catalog.pg_event_trigger_dropped_objects()"
+    }
+  ],
+  "inventory": {
+    "functions": [
+      {
+        "acl": "{=X/supabase_admin,supabase_admin=X*/supabase_admin,dashboard_user=X/supabase_admin}",
+        "catalogDependencies": [
+          {
+            "catalog": "pg_language",
+            "identity": "plpgsql",
+            "kind": "n",
+            "routineReference": false,
+            "subId": 0
+          },
+          {
+            "catalog": "pg_namespace",
+            "identity": "extensions",
+            "kind": "n",
+            "routineReference": false,
+            "subId": 0
+          }
+        ],
+        "configurationKeys": [
+          "search_path"
+        ],
+        "configurationSha256": "99c2b17f468d69ed0479286a8ee075341561d84fb6d22add3f153b659b148fec",
+        "definitionSha256": "eb3fa2e82a0135bc04a6236f93331911861c91b45d72cba5d9c03c1be2c34b4c",
+        "effectiveAcl": [
+          {
+            "grantable": false,
+            "grantee": "PUBLIC",
+            "grantor": "supabase_admin",
+            "privilege": "EXECUTE"
+          },
+          {
+            "grantable": false,
+            "grantee": "dashboard_user",
+            "grantor": "supabase_admin",
+            "privilege": "EXECUTE"
+          },
+          {
+            "grantable": true,
+            "grantee": "supabase_admin",
+            "grantor": "supabase_admin",
+            "privilege": "EXECUTE"
+          }
+        ],
+        "identityArguments": "",
+        "language": "plpgsql",
+        "name": "grant_pg_cron_access",
+        "owner": "supabase_admin",
+        "ownerBypassRls": true,
+        "ownerCreateDb": true,
+        "ownerCreateRole": true,
+        "ownerInherit": true,
+        "ownerMemberships": [],
+        "ownerReplication": true,
+        "ownerSuperuser": true,
+        "routineKind": "f",
+        "schema": "extensions",
+        "searchPathConfigured": true,
+        "securityDefiner": false
+      },
+      {
+        "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,postgres=X*/supabase_admin}",
+        "catalogDependencies": [
+          {
+            "catalog": "pg_language",
+            "identity": "plpgsql",
+            "kind": "n",
+            "routineReference": false,
+            "subId": 0
+          },
+          {
+            "catalog": "pg_namespace",
+            "identity": "extensions",
+            "kind": "n",
+            "routineReference": false,
+            "subId": 0
+          }
+        ],
+        "configurationKeys": [
+          "search_path"
+        ],
+        "configurationSha256": "99c2b17f468d69ed0479286a8ee075341561d84fb6d22add3f153b659b148fec",
+        "definitionSha256": "9ec845adab4ba00bbf7740458b6c4461094697023f0f7adc693b373e2ea54f68",
+        "effectiveAcl": [
+          {
+            "grantable": false,
+            "grantee": "PUBLIC",
+            "grantor": "supabase_admin",
+            "privilege": "EXECUTE"
+          },
+          {
+            "grantable": true,
+            "grantee": "postgres",
+            "grantor": "supabase_admin",
+            "privilege": "EXECUTE"
+          },
+          {
+            "grantable": false,
+            "grantee": "supabase_admin",
+            "grantor": "supabase_admin",
+            "privilege": "EXECUTE"
+          }
+        ],
+        "identityArguments": "",
+        "language": "plpgsql",
+        "name": "grant_pg_graphql_access",
+        "owner": "supabase_admin",
+        "ownerBypassRls": true,
+        "ownerCreateDb": true,
+        "ownerCreateRole": true,
+        "ownerInherit": true,
+        "ownerMemberships": [],
+        "ownerReplication": true,
+        "ownerSuperuser": true,
+        "routineKind": "f",
+        "schema": "extensions",
+        "searchPathConfigured": true,
+        "securityDefiner": false
+      },
+      {
+        "acl": "{=X/supabase_admin,supabase_admin=X*/supabase_admin,dashboard_user=X/supabase_admin}",
+        "catalogDependencies": [
+          {
+            "catalog": "pg_language",
+            "identity": "plpgsql",
+            "kind": "n",
+            "routineReference": false,
+            "subId": 0
+          },
+          {
+            "catalog": "pg_namespace",
+            "identity": "extensions",
+            "kind": "n",
+            "routineReference": false,
+            "subId": 0
+          }
+        ],
+        "configurationKeys": [
+          "search_path"
+        ],
+        "configurationSha256": "99c2b17f468d69ed0479286a8ee075341561d84fb6d22add3f153b659b148fec",
+        "definitionSha256": "e38c4060751c9695123350596f1cb0d0c943015f3267a2a455d8efe02c711184",
+        "effectiveAcl": [
+          {
+            "grantable": false,
+            "grantee": "PUBLIC",
+            "grantor": "supabase_admin",
+            "privilege": "EXECUTE"
+          },
+          {
+            "grantable": false,
+            "grantee": "dashboard_user",
+            "grantor": "supabase_admin",
+            "privilege": "EXECUTE"
+          },
+          {
+            "grantable": true,
+            "grantee": "supabase_admin",
+            "grantor": "supabase_admin",
+            "privilege": "EXECUTE"
+          }
+        ],
+        "identityArguments": "",
+        "language": "plpgsql",
+        "name": "grant_pg_net_access",
+        "owner": "supabase_admin",
+        "ownerBypassRls": true,
+        "ownerCreateDb": true,
+        "ownerCreateRole": true,
+        "ownerInherit": true,
+        "ownerMemberships": [],
+        "ownerReplication": true,
+        "ownerSuperuser": true,
+        "routineKind": "f",
+        "schema": "extensions",
+        "searchPathConfigured": true,
+        "securityDefiner": false
+      },
+      {
+        "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,postgres=X*/supabase_admin}",
+        "catalogDependencies": [
+          {
+            "catalog": "pg_language",
+            "identity": "plpgsql",
+            "kind": "n",
+            "routineReference": false,
+            "subId": 0
+          },
+          {
+            "catalog": "pg_namespace",
+            "identity": "extensions",
+            "kind": "n",
+            "routineReference": false,
+            "subId": 0
+          }
+        ],
+        "configurationKeys": [
+          "search_path"
+        ],
+        "configurationSha256": "99c2b17f468d69ed0479286a8ee075341561d84fb6d22add3f153b659b148fec",
+        "definitionSha256": "2b4b5d702ddf70fbd1a05c9825f9f9016d5c0ef97dd3df5f5b012ea23d9b94b1",
+        "effectiveAcl": [
+          {
+            "grantable": false,
+            "grantee": "PUBLIC",
+            "grantor": "supabase_admin",
+            "privilege": "EXECUTE"
+          },
+          {
+            "grantable": true,
+            "grantee": "postgres",
+            "grantor": "supabase_admin",
+            "privilege": "EXECUTE"
+          },
+          {
+            "grantable": false,
+            "grantee": "supabase_admin",
+            "grantor": "supabase_admin",
+            "privilege": "EXECUTE"
+          }
+        ],
+        "identityArguments": "",
+        "language": "plpgsql",
+        "name": "pgrst_ddl_watch",
+        "owner": "supabase_admin",
+        "ownerBypassRls": true,
+        "ownerCreateDb": true,
+        "ownerCreateRole": true,
+        "ownerInherit": true,
+        "ownerMemberships": [],
+        "ownerReplication": true,
+        "ownerSuperuser": true,
+        "routineKind": "f",
+        "schema": "extensions",
+        "searchPathConfigured": true,
+        "securityDefiner": false
+      },
+      {
+        "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,postgres=X*/supabase_admin}",
+        "catalogDependencies": [
+          {
+            "catalog": "pg_language",
+            "identity": "plpgsql",
+            "kind": "n",
+            "routineReference": false,
+            "subId": 0
+          },
+          {
+            "catalog": "pg_namespace",
+            "identity": "extensions",
+            "kind": "n",
+            "routineReference": false,
+            "subId": 0
+          }
+        ],
+        "configurationKeys": [
+          "search_path"
+        ],
+        "configurationSha256": "99c2b17f468d69ed0479286a8ee075341561d84fb6d22add3f153b659b148fec",
+        "definitionSha256": "3a2696133853e17a0456cbfbb233a03815f50895492143e84df983b558d76593",
+        "effectiveAcl": [
+          {
+            "grantable": false,
+            "grantee": "PUBLIC",
+            "grantor": "supabase_admin",
+            "privilege": "EXECUTE"
+          },
+          {
+            "grantable": true,
+            "grantee": "postgres",
+            "grantor": "supabase_admin",
+            "privilege": "EXECUTE"
+          },
+          {
+            "grantable": false,
+            "grantee": "supabase_admin",
+            "grantor": "supabase_admin",
+            "privilege": "EXECUTE"
+          }
+        ],
+        "identityArguments": "",
+        "language": "plpgsql",
+        "name": "pgrst_drop_watch",
+        "owner": "supabase_admin",
+        "ownerBypassRls": true,
+        "ownerCreateDb": true,
+        "ownerCreateRole": true,
+        "ownerInherit": true,
+        "ownerMemberships": [],
+        "ownerReplication": true,
+        "ownerSuperuser": true,
+        "routineKind": "f",
+        "schema": "extensions",
+        "searchPathConfigured": true,
+        "securityDefiner": false
+      },
+      {
+        "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,postgres=X*/supabase_admin}",
+        "catalogDependencies": [
+          {
+            "catalog": "pg_language",
+            "identity": "plpgsql",
+            "kind": "n",
+            "routineReference": false,
+            "subId": 0
+          },
+          {
+            "catalog": "pg_namespace",
+            "identity": "extensions",
+            "kind": "n",
+            "routineReference": false,
+            "subId": 0
+          }
+        ],
+        "configurationKeys": [
+          "search_path"
+        ],
+        "configurationSha256": "99c2b17f468d69ed0479286a8ee075341561d84fb6d22add3f153b659b148fec",
+        "definitionSha256": "b0cadab880dc68f569b3e01057dc6f5acee9d05e122de6f4256130ae330bbcec",
+        "effectiveAcl": [
+          {
+            "grantable": false,
+            "grantee": "PUBLIC",
+            "grantor": "supabase_admin",
+            "privilege": "EXECUTE"
+          },
+          {
+            "grantable": true,
+            "grantee": "postgres",
+            "grantor": "supabase_admin",
+            "privilege": "EXECUTE"
+          },
+          {
+            "grantable": false,
+            "grantee": "supabase_admin",
+            "grantor": "supabase_admin",
+            "privilege": "EXECUTE"
+          }
+        ],
+        "identityArguments": "",
+        "language": "plpgsql",
+        "name": "set_graphql_placeholder",
+        "owner": "supabase_admin",
+        "ownerBypassRls": true,
+        "ownerCreateDb": true,
+        "ownerCreateRole": true,
+        "ownerInherit": true,
+        "ownerMemberships": [],
+        "ownerReplication": true,
+        "ownerSuperuser": true,
+        "routineKind": "f",
+        "schema": "extensions",
+        "searchPathConfigured": true,
+        "securityDefiner": false
+      },
+      {
+        "acl": null,
+        "catalogDependencies": [],
+        "configurationKeys": [],
+        "configurationSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "definitionSha256": "966199c887c74857ada90f24860cb7280c54c7c0905a213dfe6b4c0112439f37",
+        "effectiveAcl": [
+          {
+            "grantable": false,
+            "grantee": "PUBLIC",
+            "grantor": "supabase_admin",
+            "privilege": "EXECUTE"
+          },
+          {
+            "grantable": false,
+            "grantee": "supabase_admin",
+            "grantor": "supabase_admin",
+            "privilege": "EXECUTE"
+          }
+        ],
+        "identityArguments": "OUT classid oid, OUT objid oid, OUT objsubid integer, OUT command_tag text, OUT object_type text, OUT schema_name text, OUT object_identity text, OUT in_extension boolean, OUT command pg_ddl_command",
+        "language": "internal",
+        "name": "pg_event_trigger_ddl_commands",
+        "owner": "supabase_admin",
+        "ownerBypassRls": true,
+        "ownerCreateDb": true,
+        "ownerCreateRole": true,
+        "ownerInherit": true,
+        "ownerMemberships": [],
+        "ownerReplication": true,
+        "ownerSuperuser": true,
+        "routineKind": "f",
+        "schema": "pg_catalog",
+        "searchPathConfigured": false,
+        "securityDefiner": false
+      },
+      {
+        "acl": null,
+        "catalogDependencies": [],
+        "configurationKeys": [],
+        "configurationSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "definitionSha256": "2280caf0e6f0be70b5348a071f30e6a338da668b34053f790edabdc2b9ed8788",
+        "effectiveAcl": [
+          {
+            "grantable": false,
+            "grantee": "PUBLIC",
+            "grantor": "supabase_admin",
+            "privilege": "EXECUTE"
+          },
+          {
+            "grantable": false,
+            "grantee": "supabase_admin",
+            "grantor": "supabase_admin",
+            "privilege": "EXECUTE"
+          }
+        ],
+        "identityArguments": "OUT classid oid, OUT objid oid, OUT objsubid integer, OUT original boolean, OUT normal boolean, OUT is_temporary boolean, OUT object_type text, OUT schema_name text, OUT object_name text, OUT object_identity text, OUT address_names text[], OUT address_args text[]",
+        "language": "internal",
+        "name": "pg_event_trigger_dropped_objects",
+        "owner": "supabase_admin",
+        "ownerBypassRls": true,
+        "ownerCreateDb": true,
+        "ownerCreateRole": true,
+        "ownerInherit": true,
+        "ownerMemberships": [],
+        "ownerReplication": true,
+        "ownerSuperuser": true,
+        "routineKind": "f",
+        "schema": "pg_catalog",
+        "searchPathConfigured": false,
+        "securityDefiner": false
+      }
+    ],
+    "triggers": [
+      {
+        "enabledMode": "O",
+        "event": "sql_drop",
+        "functionName": "set_graphql_placeholder",
+        "functionSchema": "extensions",
+        "name": "issue_graphql_placeholder",
+        "owner": "supabase_admin",
+        "tags": [
+          "DROP EXTENSION"
+        ],
+        "tagsUnrestricted": false
+      },
+      {
+        "enabledMode": "O",
+        "event": "ddl_command_end",
+        "functionName": "grant_pg_cron_access",
+        "functionSchema": "extensions",
+        "name": "issue_pg_cron_access",
+        "owner": "supabase_admin",
+        "tags": [
+          "CREATE EXTENSION"
+        ],
+        "tagsUnrestricted": false
+      },
+      {
+        "enabledMode": "O",
+        "event": "ddl_command_end",
+        "functionName": "grant_pg_graphql_access",
+        "functionSchema": "extensions",
+        "name": "issue_pg_graphql_access",
+        "owner": "supabase_admin",
+        "tags": [
+          "CREATE EXTENSION"
+        ],
+        "tagsUnrestricted": false
+      },
+      {
+        "enabledMode": "O",
+        "event": "ddl_command_end",
+        "functionName": "grant_pg_net_access",
+        "functionSchema": "extensions",
+        "name": "issue_pg_net_access",
+        "owner": "supabase_admin",
+        "tags": [
+          "CREATE EXTENSION"
+        ],
+        "tagsUnrestricted": false
+      },
+      {
+        "enabledMode": "O",
+        "event": "ddl_command_end",
+        "functionName": "pgrst_ddl_watch",
+        "functionSchema": "extensions",
+        "name": "pgrst_ddl_watch",
+        "owner": "supabase_admin",
+        "tags": [],
+        "tagsUnrestricted": true
+      },
+      {
+        "enabledMode": "O",
+        "event": "sql_drop",
+        "functionName": "pgrst_drop_watch",
+        "functionSchema": "extensions",
+        "name": "pgrst_drop_watch",
+        "owner": "supabase_admin",
+        "tags": [],
+        "tagsUnrestricted": true
+      }
+    ]
+  },
+  "migrations": {
+    "V3__create_workflow_persistence.sql": "15d615162c09b0c843680cf0c3b9fe48b16cd637877eb91215d8698cd7bc4832",
+    "V4__seed_workflow_definitions.sql": "40ee5a6c3a357d7ebca6d198c9981760868fc872121e8caece6ae6e86634a3ef"
+  },
+  "reviewEvidence": {
+    "dependencyScope": "Two PostgREST watchers reach only the captured internal event helpers. Extension-watcher branches are excluded by the reviewed V3/V4 bundle; their dynamic SQL is not authorized.",
+    "localEmptyProfile": "Explicit WORKFLOW_EVENT_GUARD_LOCAL_DISPOSABLE=true plus a loopback endpoint and an empty complete event-trigger inventory.",
+    "nativeBinaryAttested": false,
+    "nativeCatalogSource": "https://github.com/postgres/postgres/blob/REL_17_11/src/include/catalog/pg_proc.dat",
+    "nativeSource": "https://github.com/postgres/postgres/blob/REL_17_11/src/backend/commands/event_trigger.c",
+    "nativeTrustAssumption": "The PostgreSQL provider and compiled built-ins are trusted; catalog fingerprints do not attest native machine code.",
+    "oidPolicy": "Resolve helper signatures live. Captured OIDs are reference evidence, never cross-version identifiers.",
+    "permittedSideEffects": [
+      "PostgREST schema-cache reload NOTIFY"
+    ],
+    "toctou": "Live checks cover each connection and Flyway execution callbacks, not an atomic lock against privileged concurrent DDL or filesystem mutation.",
+    "unsupportedCommands": [
+      "CREATE EXTENSION",
+      "ALTER EXTENSION",
+      "DROP EXTENSION"
+    ]
+  },
+  "reviewedSnapshotSha256": "bde29c37a8f0fadd62ea4442c022d76ebbb96f1a71fcc16a53ffadc331603e10",
+  "schema": "dxos_wf25_smoke_01",
+  "serverVersion": "17.11"
+}
