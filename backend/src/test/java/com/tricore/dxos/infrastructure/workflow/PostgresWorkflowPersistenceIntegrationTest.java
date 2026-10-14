@@ -1,6 +1,14 @@
 package com.tricore.dxos.infrastructure.workflow;
 
 import com.tricore.dxos.core.workflow.*;
+import com.tricore.dxos.request.domain.Request;
+import com.tricore.dxos.request.domain.RequestAction;
+import com.tricore.dxos.request.domain.RequestStatus;
+import com.tricore.dxos.request.dto.CreateRequestDto;
+import com.tricore.dxos.request.dto.RequestHistoryResponse;
+import com.tricore.dxos.request.repository.RequestRepository;
+import com.tricore.dxos.request.service.RequestService;
+import com.tricore.dxos.request.service.RequestWorkflowService;
 import org.flywaydb.core.Flyway;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -11,6 +19,14 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
+import org.springframework.boot.test.context.ConfigDataApplicationContextInitializer;
+import org.springframework.boot.autoconfigure.AutoConfigurations;
+import org.springframework.boot.autoconfigure.domain.EntityScan;
+import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration;
+import org.springframework.boot.autoconfigure.transaction.TransactionAutoConfiguration;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
+import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.jdbc.datasource.AbstractDataSource;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 
@@ -471,6 +487,82 @@ class PostgresWorkflowPersistenceIntegrationTest {
             assertThat(context).doesNotHaveBean(com.tricore.dxos.gateway.workflow.controller.WorkflowController.class);
         });
     }
+
+    @Test
+    void requestJpaUsesPublicWhileWorkflowKeepsPrivateSchema() throws Exception {
+        assertThat(scalar(admin, """
+                SELECT count(*) FROM pg_catalog.pg_class
+                WHERE relnamespace = 'public'::regnamespace
+                  AND relname IN ('requests', 'request_status_history')
+                """)).isZero();
+        // Model an existing V1/V2 database without moving Request into the Workflow schema.
+        sql(admin, "ALTER TABLE " + schema + ".requests SET SCHEMA public");
+        try {
+            sql(admin, "ALTER TABLE " + schema + ".request_status_history SET SCHEMA public");
+            String role = "\"" + required("WORKFLOW_TEST_DB_USER").replace("\"", "\"\"") + "\"";
+            sql(admin, "GRANT USAGE ON SCHEMA public TO " + role);
+            sql(admin, "GRANT SELECT, INSERT, UPDATE ON public.requests TO " + role);
+            sql(admin, "GRANT SELECT, INSERT ON public.request_status_history TO " + role);
+
+            new ApplicationContextRunner()
+                    .withInitializer(new ConfigDataApplicationContextInitializer())
+                    .withConfiguration(AutoConfigurations.of(HibernateJpaAutoConfiguration.class,
+                            TransactionAutoConfiguration.class))
+                    .withUserConfiguration(RequestJpaConfiguration.class)
+                    .withBean(DataSource.class, () -> database)
+                    .withPropertyValues("dxos.workflow.schema=" + schema, "spring.flyway.enabled=false")
+                    .run(context -> {
+                        assertThat(context).hasNotFailed().hasSingleBean(WorkflowPersistencePort.class);
+                        var requests = context.getBean(RequestService.class);
+                        var requestWorkflow = context.getBean(RequestWorkflowService.class);
+                        var created = requests.create(new CreateRequestDto("schema regression", "public Request", "IT"));
+                        assertThat(requests.get(created.id()).status()).isEqualTo(RequestStatus.NEW);
+                        requestWorkflow.assign(created.id(), "test-assignee");
+                        requestWorkflow.start(created.id());
+                        assertThat(requests.get(created.id()).status()).isEqualTo(RequestStatus.IN_PROGRESS);
+                        assertThat(requestWorkflow.history(created.id())).extracting(RequestHistoryResponse::action)
+                                .containsExactly(RequestAction.ASSIGN, RequestAction.START);
+
+                        var workflow = context.getBean(WorkflowRuntime.class);
+                        workflow.createInstance("schema-regression", "document-review", 1,
+                                new ResourceReference("request", created.id().toString()));
+                        workflow.activateInstance("schema-regression");
+                        workflow.executeTransition(new TransitionCommand("schema-regression", "submit", ACTOR, 0));
+                        var port = context.getBean(WorkflowPersistencePort.class);
+                        assertThat(port.loadInstance("schema-regression").currentState()).isEqualTo("IN_REVIEW");
+                        assertThat(port.loadHistory("schema-regression")).hasSize(1);
+                    });
+
+            assertThat(scalar(admin, "SELECT count(*) FROM public.requests")).isEqualTo(2);
+            assertThat(scalar(admin, "SELECT count(*) FROM public.request_status_history")).isEqualTo(2);
+            assertThat(scalar(admin, "SELECT count(*) FROM " + schema + ".workflow_instances")).isEqualTo(1);
+            assertThat(scalar(admin, "SELECT count(*) FROM " + schema + ".workflow_transition_history")).isEqualTo(1);
+            assertThat(scalar(admin, "SELECT count(*) FROM pg_catalog.pg_class WHERE relnamespace='" + schema
+                    + "'::regnamespace AND relname IN ('requests','request_status_history')")).isZero();
+            assertThat(scalar(admin, """
+                    SELECT count(*) FROM pg_catalog.pg_class WHERE relnamespace='public'::regnamespace
+                    AND relname IN ('workflow_definitions','workflow_definition_states','workflow_definition_transitions',
+                                    'workflow_instances','workflow_transition_history')
+                    """)).isZero();
+            try (Connection connection = database.getConnection()) {
+                assertThat(connection.getSchema()).isEqualTo(schema);
+                try (var statement = connection.createStatement(); var rows = statement.executeQuery("SHOW search_path")) {
+                    assertThat(rows.next()).isTrue();
+                    assertThat(rows.getString(1)).isEqualTo(schema);
+                }
+            }
+        } finally {
+            sql(admin, "DROP TABLE IF EXISTS public.request_status_history");
+            sql(admin, "DROP TABLE public.requests CASCADE");
+        }
+    }
+
+    @Configuration(proxyBeanMethods = false)
+    @EntityScan(basePackageClasses = Request.class)
+    @EnableJpaRepositories(basePackageClasses = RequestRepository.class)
+    @Import({RequestService.class, RequestWorkflowService.class,
+            PostgresWorkflowPersistence.class, WorkflowPersistenceConfiguration.class})
+    static class RequestJpaConfiguration {}
 
     @Test
     void validatesStructuralArgumentsWithoutConnecting() {
