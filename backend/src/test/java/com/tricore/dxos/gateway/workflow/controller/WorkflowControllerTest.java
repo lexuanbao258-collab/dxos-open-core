@@ -18,6 +18,7 @@ import com.tricore.dxos.request.dto.RequestResponse;
 import com.tricore.dxos.request.domain.RequestStatus;
 import com.tricore.dxos.request.service.RequestService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -49,6 +50,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(controllers = {WorkflowControllerTest.TestController.class, RequestController.class})
+@AutoConfigureMockMvc(addFilters = false)
 @ActiveProfiles("workflow-http-tests")
 @Import(WorkflowControllerTest.TestController.class)
 class WorkflowControllerTest {
