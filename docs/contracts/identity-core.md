@@ -24,8 +24,8 @@ External/Application -> Gateway -> Identity
 Gateway is the primary future runtime consumer of Identity.
 Workflow must not directly depend on Identity.
 A trusted identity must originate from a verified authentication boundary.
-The exact runtime verification mechanism, provider integration and trusted-context
-propagation are deferred and are not defined by this contract.
+The current OIDC runtime verification is implemented outside Core; trusted-context
+propagation through Gateway remains separate from this contract.
 These are logical capability boundaries within the existing modular monolith,
 not a new microservice or deployment design.
 
@@ -57,9 +57,9 @@ them.
 A trusted identity must originate from a verified authentication boundary.
 Identity claims supplied by an external caller must not automatically become
 trusted authentication state. In particular, externally supplied headers such as
-`X-User-Id`, `X-Role` or `X-Authorities` must not be accepted as trusted identity
-claims merely because they are present. The exact runtime/provider verification
-mechanism is deferred; this contract neither defines nor proves it.
+`X-User`, `X-User-Id`, `X-Role` or `X-Authorities` are not trusted identity
+inputs. The current Spring Security filter-chain test confirms that `X-User` and
+`X-Role` cannot authenticate an anonymous request.
 
 ## AuthenticationContext semantics
 
@@ -182,13 +182,58 @@ mapping belongs outside Identity Core.
 
 The public contract must not expose Keycloak SDK types, Spring Security types, JWT
 library types, provider session objects, provider-specific exceptions, raw
-credentials or raw tokens. A future provider implementation must remain behind an
+credentials or raw tokens. Provider implementations must remain behind an
 adapter/verified boundary and translate its behavior into these provider-neutral
 types and normalized errors.
 
-No Identity provider has been selected or implemented by this contract. Keycloak
-and provider-replacement work remain deferred/POC topics rather than accepted
-architecture decisions.
+This Core contract does not select an Identity provider. The current Week-2 OIDC
+runtime uses Keycloak; that implementation does not make Keycloak part of the Core
+contract or settle future provider replacement.
+
+## Current OIDC runtime adapter
+
+The infrastructure adapter uses Spring Security OAuth2 Resource Server with a
+Bearer JWT access token. The production `JwtDecoder` uses issuer discovery and
+the provider's JWKS for signature verification. Its validator chain checks issuer,
+timestamp/expiry (and `nbf` when present), an audience containing `tricore-api`,
+and the payload claim `typ` exactly equal to `"Bearer"`. It does not trim or
+case-fold that claim; missing or other values fail validation.
+
+The observed local Keycloak token has three distinct type values:
+
+| Location | Observed value |
+| --- | --- |
+| OAuth token response `token_type` | `Bearer` |
+| JWT JOSE header `typ` | `JWT` |
+| JWT payload claim `typ` | `Bearer` |
+
+The payload claim, not the JOSE header, is the input to
+`AccessTokenTypeValidator`.
+
+`SpringSecurityCurrentPrincipal` accepts only an authenticated
+`JwtAuthenticationToken` from the Spring Security context. In production, the
+filter chain verifies the JWT before establishing that authentication. The
+adapter maps its issuer and subject to the canonical `subjectId` described
+above. It reads Workflow authorities only from
+`resource_access.tricore-api.roles`, exposing the
+exact values `workflow:create`, `workflow:activate`, `workflow:transition` and
+`workflow:read`; unknown roles are ignored. Constructing an
+`AuthenticatedPrincipal` manually is not evidence of production authentication.
+
+The API authenticates with Bearer JWT, uses `SessionCreationPolicy.STATELESS` and
+has its request cache disabled. HTTP session/JSESSIONID, form login and OAuth2
+login are not authentication mechanisms for this API runtime. Missing or invalid
+Bearer credentials return HTTP 401 with a safe `ApiError` containing
+`AUTHENTICATION_REQUIRED`; client-supplied identity headers do not bypass this
+boundary. A Bearer-authenticated state-changing POST was tested through the
+Spring Security filter chain without a CSRF token and returned 201. That test
+does not establish a general CSRF policy. Application authorization responses,
+including Workflow/Gateway 403/404 behavior, belong to those boundaries rather
+than an Identity filter-level authority rule.
+
+Local configuration uses `OIDC_ISSUER_URI` and `OIDC_AUDIENCE`. The verified
+local values are `http://localhost:8180/realms/tricore` and `tricore-api`,
+respectively; no credential or token value belongs in this contract.
 
 ## Gateway consumer expectations
 
@@ -204,16 +249,16 @@ External request
 ```
 
 A trusted principal/context must originate from a verified authentication
-boundary. The exact runtime verification mechanism and provider integration
-remain deferred. This flow defines trust expectations, not Gateway implementation
-code. The Gateway consumer must not infer authentication from successful Java
+boundary. The OIDC runtime adapter provides the current verified JWT boundary;
+this flow does not establish complete Gateway integration. The Gateway consumer
+must not infer authentication from successful Java
 object construction or copy unverified external identity claims into trusted
 downstream state.
 
 ## Tests and evidence
 
-The existing tests are pure Java JUnit tests. They prove current value-object and
-exception behavior:
+The Core unit tests are pure Java JUnit tests. They prove current value-object
+and exception behavior:
 
 - valid principals and optional null `displayName`;
 - rejection of null, empty and blank `subjectId`;
@@ -226,10 +271,8 @@ exception behavior:
 - availability of all normalized error codes and sanitized `IdentityException`
   message/cause behavior.
 
-These tests do not prove runtime authentication, SSO, JWT verification, Keycloak
-integration, Spring Security integration, provider behavior, trusted-context
-runtime verification, Gateway integration, production security or provider
-replacement.
+These Core tests do not prove runtime authentication, JWT verification, Keycloak
+integration, Gateway integration or provider replacement.
 
 Separately, `SpringSecurityCurrentPrincipalTest` uses synthetic authenticated
 JWT tokens to verify deterministic identity for the same issuer and subject,
@@ -237,15 +280,29 @@ separation across different issuers or subjects, exact Base64URL encoding withou
 padding, UTF-8/Unicode behavior, preservation without normalization, and
 rejection of missing or blank issuer or subject. Its verified-JWT Workflow
 authority mapping tests remain separate from the identity-ID assertions. These
-unit/security tests do not prove real Keycloak/JWKS end-to-end integration.
+unit/security tests do not prove real Keycloak/JWKS integration on their own.
+
+Additional unit and filter-chain results are `TokenTypeValidatorTest` 4/4,
+`AudienceValidatorTest` 4/4, `IssuerAndTimestampValidatorTest` 2/2,
+`SecurityConfigTest` 5/5 and `SpringSecurityCurrentPrincipalTest` 19/19. The
+filter-chain tests cover safe 401 responses, rejection of spoofed identity
+headers, no session on an anonymous protected request, and a Bearer POST without
+a CSRF token. These use test fixtures or a mocked decoder, not a real IdP token.
+
+A real local Keycloak run of `OidcKeycloakIntegrationTest` recorded `tests=3`,
+`skipped=0`, `failures=0`, `errors=0`. It exercised the production decoder with a
+valid Keycloak access token through discovery/JWKS, mapped the canonical
+principal and four Workflow authorities, and rejected a forged signature. This
+is local integration evidence, not proof of full-system end-to-end security.
 
 ## Limitations and deferred work
 
-Identity provider selection; Keycloak integration; JWT verification; Spring
-Security integration; SSO runtime; provider adapter implementation; trusted-context
-runtime verification; Gateway integration; authority freshness and revocation;
-provider replacement POC; HTTP error mapping; and business/resource-level
-authorization policy are not implemented or proven by the current contracts.
+The current OIDC runtime and local Keycloak verification do not complete Gateway
+authorization or its 403/404 integration, authority freshness and revocation,
+provider replacement, or full backend regression. Issue #24 still needs PR/cross-review/merge. The
+current evidence does not establish production readiness or full-system
+end-to-end security.
 
-The architecture baseline remains a modular monolith. This contract does not turn
-any deferred or POC item into an accepted provider or deployment decision.
+The architecture baseline remains a modular monolith. This Core contract does not
+turn a local provider integration into a permanent provider or deployment
+decision.

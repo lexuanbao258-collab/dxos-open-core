@@ -1,3 +1,7 @@
+param(
+    [switch]$RunBackendIntegration
+)
+
 $ErrorActionPreference = "Stop"
 
 $issuer = "http://localhost:8180/realms/tricore"
@@ -76,7 +80,6 @@ try {
     Write-Host "Access token present:" (
         -not [string]::IsNullOrWhiteSpace($tokenResponse.access_token)
     )
-    Write-Host "Token type:" $tokenResponse.token_type
     Write-Host "Expires in:" $tokenResponse.expires_in
 
     $jwtParts = $tokenResponse.access_token.Split(".")
@@ -84,6 +87,23 @@ try {
     if ($jwtParts.Length -ne 3) {
         throw "Access token is not a three-part JWT"
     }
+
+    $header = $jwtParts[0].
+        Replace("-", "+").
+        Replace("_", "/")
+
+    switch ($header.Length % 4) {
+        2 { $header += "==" }
+        3 { $header += "=" }
+        0 { }
+        default { throw "Invalid JWT header encoding" }
+    }
+
+    $headerJson = [System.Text.Encoding]::UTF8.GetString(
+        [Convert]::FromBase64String($header)
+    )
+
+    $joseHeader = $headerJson | ConvertFrom-Json
 
     $payload = $jwtParts[1].
         Replace("-", "+").
@@ -104,11 +124,20 @@ try {
 
     Write-Host ""
     Write-Host "=== SAFE JWT CLAIM INSPECTION ==="
+    Write-Host "OAuth token_type:" $tokenResponse.token_type
+    Write-Host "JOSE alg:" $joseHeader.alg
+    Write-Host "JOSE typ:" $joseHeader.typ
+    $payloadTyp = if ($null -eq $claims.PSObject.Properties['typ']) {
+        "<absent>"
+    }
+    else {
+        $claims.typ
+    }
+    Write-Host "Payload typ:" $payloadTyp
     Write-Host "iss:" $claims.iss
     Write-Host "sub present:" (-not [string]::IsNullOrWhiteSpace($claims.sub))
     Write-Host "aud:" ($claims.aud -join ", ")
     Write-Host "azp:" $claims.azp
-    Write-Host "typ:" $claims.typ
     Write-Host "scope:" $claims.scope
     Write-Host "preferred_username:" $claims.preferred_username
     Write-Host "exp present:" ($null -ne $claims.exp)
@@ -116,6 +145,7 @@ try {
 
     Write-Host ""
     Write-Host "realm roles:"
+
     if ($null -ne $claims.realm_access.roles) {
         $claims.realm_access.roles | ForEach-Object {
             Write-Host " -" $_
@@ -127,6 +157,7 @@ try {
 
     Write-Host ""
     Write-Host "tricore-api client roles:"
+
     $clientAccess = $claims.resource_access.'tricore-api'
 
     if ($null -ne $clientAccess.roles) {
@@ -137,15 +168,78 @@ try {
     else {
         Write-Host " <none>"
     }
+
+    # ============================================================
+    # REAL SPRING OIDC/JWKS INTEGRATION
+    # ============================================================
+
+    if ($RunBackendIntegration) {
+        Write-Host ""
+        Write-Host "=== SPRING OIDC INTEGRATION TEST ==="
+
+        $previousTestToken = $env:OIDC_TEST_ACCESS_TOKEN
+
+        try {
+            # Token is passed only through the child process environment.
+            # Never write or print the raw token.
+            $env:OIDC_TEST_ACCESS_TOKEN = $tokenResponse.access_token
+
+            $repoRoot = Resolve-Path (
+                Join-Path $PSScriptRoot "..\.."
+            )
+
+            $gradleWrapper = Join-Path `
+                $repoRoot `
+                "backend\gradlew.bat"
+
+            $backendDir = Join-Path `
+                $repoRoot `
+                "backend"
+
+            & $gradleWrapper `
+                --no-daemon `
+                -p $backendDir `
+                test `
+                --rerun-tasks `
+                --tests "com.tricore.dxos.infrastructure.identity.security.OidcKeycloakIntegrationTest"
+
+            if ($LASTEXITCODE -ne 0) {
+                throw "Spring OIDC integration test failed with exit code $LASTEXITCODE"
+            }
+
+            Write-Host "Spring OIDC integration test: SUCCESS"
+        }
+        finally {
+            # Do not leave the temporary access token in this process.
+            if ($null -eq $previousTestToken) {
+                Remove-Item `
+                    Env:OIDC_TEST_ACCESS_TOKEN `
+                    -ErrorAction SilentlyContinue
+            }
+            else {
+                $env:OIDC_TEST_ACCESS_TOKEN = $previousTestToken
+            }
+        }
+    }
 }
 catch {
     Write-Host "POC result: FAIL"
-    Write-Host "Reason:" $_.Exception.Message
+    Write-Host "Reason: OIDC POC step failed"
+    exit 1
 }
 finally {
     if ($listener) {
-        try { $listener.Stop() } catch {}
-        try { $listener.Close() } catch {}
+        try {
+            $listener.Stop()
+        }
+        catch {
+        }
+
+        try {
+            $listener.Close()
+        }
+        catch {
+        }
     }
 
     Write-Host "Listener cleaned: True"
