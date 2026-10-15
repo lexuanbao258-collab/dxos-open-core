@@ -9,6 +9,8 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.stereotype.Component;
 
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -41,12 +43,25 @@ final class SpringSecurityCurrentPrincipal implements CurrentPrincipal {
             );
         }
 
+        Object issuerClaim = jwtAuthentication.getToken().getClaim("iss");
+        if (!(issuerClaim instanceof String issuer) || issuer.isBlank()) {
+            throw new IllegalStateException(
+                    "Verified JWT issuer is required"
+            );
+        }
+
         return new AuthenticatedPrincipal(
-                subjectId,
+                canonicalSubjectId(issuer, subjectId),
                 jwtAuthentication.getName(),
                 workflowAuthorities(jwtAuthentication.getToken()),
                 true
         );
+    }
+
+    private static String canonicalSubjectId(String issuer, String subject) {
+        Base64.Encoder encoder = Base64.getUrlEncoder().withoutPadding();
+        return "oidc:" + encoder.encodeToString(issuer.getBytes(StandardCharsets.UTF_8))
+                + "." + encoder.encodeToString(subject.getBytes(StandardCharsets.UTF_8));
     }
 
     private static Set<Authority> workflowAuthorities(Jwt jwt) {

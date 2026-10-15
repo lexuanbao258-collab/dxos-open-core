@@ -95,6 +95,14 @@ identifier. It must not automatically be interpreted as a username, email,
 Keycloak username, database user ID or other provider-specific identifier.
 `displayName` is optional and may be null.
 
+The current OIDC infrastructure adapter represents a verified JWT identity as
+`oidc:<base64url(UTF8(issuer))>.<base64url(UTF8(subject))>`. It uses URL-safe
+Base64 without padding and preserves the issuer and subject exactly: no trimming,
+lowercasing or Unicode normalization. A missing or blank issuer or subject fails
+closed. This canonical `subjectId` is not a username, email, database user ID or
+raw JWT `sub`. This adapter mapping does not make the Core Identity contract
+depend on OIDC or Keycloak.
+
 `authorities` must be non-null. `Set.copyOf` defensively copies it, rejects any
 null element and exposes an unmodifiable set from the consumer's perspective. An
 empty set is valid. The constructor rejects null, empty or blank `subjectId`, null
@@ -222,6 +230,14 @@ These tests do not prove runtime authentication, SSO, JWT verification, Keycloak
 integration, Spring Security integration, provider behavior, trusted-context
 runtime verification, Gateway integration, production security or provider
 replacement.
+
+Separately, `SpringSecurityCurrentPrincipalTest` uses synthetic authenticated
+JWT tokens to verify deterministic identity for the same issuer and subject,
+separation across different issuers or subjects, exact Base64URL encoding without
+padding, UTF-8/Unicode behavior, preservation without normalization, and
+rejection of missing or blank issuer or subject. Its verified-JWT Workflow
+authority mapping tests remain separate from the identity-ID assertions. These
+unit/security tests do not prove real Keycloak/JWKS end-to-end integration.
 
 ## Limitations and deferred work
 
