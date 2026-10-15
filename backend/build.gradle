@@ -35,4 +35,118 @@ dependencies {
 
 tasks.named('test') {
     useJUnitPlatform()
+    systemProperty 'workflow.test.runtimeClasspath', sourceSets.test.runtimeClasspath.asPath
+    outputs.upToDateWhen { !System.getenv('WORKFLOW_TEST_JDBC_URL') }
+    outputs.cacheIf { !System.getenv('WORKFLOW_TEST_JDBC_URL') }
+}
+
+tasks.register('workflowIntegrationTest', Test) {
+    description = 'Runs Workflow persistence contracts against an actual PostgreSQL database.'
+    group = 'verification'
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    outputs.upToDateWhen { false }
+    outputs.cacheIf { false }
+    useJUnitPlatform()
+    systemProperty 'workflow.test.runtimeClasspath', sourceSets.test.runtimeClasspath.asPath
+    filter {
+        includeTestsMatching '*PostgresWorkflowPersistenceIntegrationTest'
+        includeTestsMatching '*WorkflowIsolationIntegrationTest'
+        includeTestsMatching '*WorkflowEventTriggerGuardIntegrationTest'
+        includeTestsMatching '*WorkflowEventTriggerReviewIntegrationTest'
+        includeTestsMatching '*WorkflowDevelopmentSmokeIntegrationTest'
+        includeTestsMatching '*WorkflowSchemaBootstrapIntegrationTest'
+        includeTestsMatching '*WorkflowApprovedMigrationIntegrationTest'
+    }
+    doFirst {
+        ['WORKFLOW_TEST_JDBC_URL', 'WORKFLOW_TEST_DB_USER', 'WORKFLOW_TEST_DB_PASSWORD'].each {
+            if (!System.getenv(it)) {
+                throw new GradleException("Missing integration-test environment variable: " + it)
+            }
+        }
+    }
+}
+
+tasks.register('workflowSmokeBundle', Copy) {
+    from('src/main/resources/db/migration') {
+        include 'V3__create_workflow_persistence.sql', 'V4__seed_workflow_definitions.sql'
+    }
+    into layout.buildDirectory.dir('workflow-smoke-bundle')
+}
+
+tasks.register('workflowSmoke', JavaExec) {
+    description = 'Independent Workflow smoke runner; default mode is read-only check.'
+    group = 'verification'
+    dependsOn classes, workflowSmokeBundle
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'com.tricore.dxos.infrastructure.workflow.WorkflowSmokeRunner'
+}
+
+tasks.register('workflowDevelopmentSmoke', JavaExec) {
+    description = 'One-time postgres integration; requires explicit development command, opt-in and approved schema.'
+    group = 'development integration'
+    dependsOn classes, workflowSmokeBundle
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'com.tricore.dxos.infrastructure.workflow.WorkflowDevelopmentSmokeRunner'
+}
+
+tasks.register('workflowSchemaBootstrap', JavaExec) {
+    description = 'Owner-approved empty schema only; fresh verified prechecks, conditional commit and independent audit.'
+    group = 'operator bootstrap'
+    dependsOn classes, workflowSmokeBundle
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'com.tricore.dxos.infrastructure.workflow.WorkflowSchemaBootstrap'
+    args layout.buildDirectory.dir('workflow-smoke-bundle').get().asFile.absolutePath
+}
+
+tasks.register('workflowApprovedMigration', JavaExec) {
+    description = 'Owner-approved V3/V4 only; fail-closed prechecks and independent read-only audit.'
+    group = 'operator migration'
+    dependsOn classes, workflowSmokeBundle
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'com.tricore.dxos.infrastructure.workflow.WorkflowApprovedMigration'
+    args layout.buildDirectory.dir('workflow-smoke-bundle').get().asFile.absolutePath
+}
+
+tasks.register('workflowReadOnlyPreflight', JavaExec) {
+    description = 'Reads PostgreSQL catalogs through JDBC with verified TLS; never starts Spring or Flyway.'
+    group = 'verification'
+    dependsOn classes
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'com.tricore.dxos.infrastructure.workflow.WorkflowReadOnlyPreflight'
+}
+
+tasks.register('workflowEventTriggerReview', JavaExec) {
+    description = 'Captures event-trigger metadata and protected local definitions through read-only JDBC.'
+    group = 'verification'
+    dependsOn classes
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'com.tricore.dxos.infrastructure.workflow.WorkflowEventTriggerReview'
+}
+
+tasks.register('workflowLiveGuard', JavaExec) {
+    description = 'Checks the reviewed Supabase catalog in a verified read-only transaction; no writes or Flyway.'
+    group = 'verification'
+    dependsOn classes, workflowSmokeBundle
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'com.tricore.dxos.infrastructure.workflow.WorkflowLiveGuard'
+    args layout.buildDirectory.dir('workflow-smoke-bundle').get().asFile.absolutePath
+}
+
+tasks.register('workflowRuntimePrivilegeAudit', JavaExec) {
+    description = 'Runs only pinned read-only privilege catalog queries through verified JDBC TLS.'
+    group = 'verification'
+    dependsOn classes
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'com.tricore.dxos.infrastructure.workflow.WorkflowRuntimePrivilegeAudit'
+    args rootProject.file('../docs/evidence/issue-25-runtime-privilege-review.sql').absolutePath
+}
+
+tasks.register('workflowSecurityDefinerReview', JavaExec) {
+    description = 'Captures pinned SECURITY DEFINER catalog evidence through read-only JDBC with verified TLS.'
+    group = 'verification'
+    dependsOn classes
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'com.tricore.dxos.infrastructure.workflow.WorkflowSecurityDefinerReview'
+    args rootProject.file('../docs/evidence/issue-25-security-definer-review.sql').absolutePath
 }

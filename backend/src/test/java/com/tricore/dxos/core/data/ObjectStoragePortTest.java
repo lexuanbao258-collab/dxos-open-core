@@ -183,6 +183,37 @@ class ObjectStoragePortTest {
     }
 
     @Test
+    void runtimeInputReadFailureIsSanitizedWithoutClosingInputOrOverwritingObject() throws IOException {
+        ObjectMetadata original = storage.store(command("original", StoreMode.CREATE_ONLY));
+        boolean[] closed = {false};
+        InputStream broken = new InputStream() {
+            @Override
+            public int read() {
+                throw new IllegalStateException("sensitive input details");
+            }
+
+            @Override
+            public void close() {
+                closed[0] = true;
+            }
+        };
+        assertThatThrownBy(() -> storage.store(new StoreObjectCommand(metadata(1), broken, StoreMode.OVERWRITE)))
+                .isInstanceOfSatisfying(StorageException.class, error -> {
+                    assertThat(error.code()).isEqualTo(StorageErrorCode.INVALID_INPUT);
+                    assertThat(error.getMessage()).isEqualTo(StorageErrorCode.INVALID_INPUT.name());
+                    assertThat(error.getCause()).isNull();
+                    assertThat(error.getSuppressed()).isEmpty();
+                    assertThat(error.getStackTrace()).isEmpty();
+                });
+        assertThat(closed[0]).isFalse();
+        assertThat(storage.metadata(KEY)).isEqualTo(original);
+        try (var object = storage.read(KEY)) {
+            assertThat(object.metadata()).isEqualTo(original);
+            assertThat(object.content().readAllBytes()).isEqualTo("original".getBytes(StandardCharsets.UTF_8));
+        }
+    }
+
+    @Test
     void consumesFromCurrentPositionAndClosesReadResourceAfterConsumerFailure() throws IOException {
         ByteArrayInputStream input = new ByteArrayInputStream("prefixhello".getBytes(StandardCharsets.UTF_8));
         assertThat(input.skip(6)).isEqualTo(6);

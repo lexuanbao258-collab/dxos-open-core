@@ -22,7 +22,7 @@ final class InMemoryObjectStorage implements ObjectStoragePort {
         byte[] bytes;
         try {
             bytes = command.content().readAllBytes();
-        } catch (IOException error) {
+        } catch (IOException | RuntimeException error) {
             // Caller-input read failure is invalid input, never a provider cause.
             throw new StorageException(StorageErrorCode.INVALID_INPUT);
         }

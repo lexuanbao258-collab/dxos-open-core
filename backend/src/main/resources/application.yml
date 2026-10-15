@@ -9,6 +9,9 @@ spring:
 
   jpa:
     open-in-view: false
+    properties:
+      hibernate:
+        default_schema: public
     hibernate:
       ddl-auto: none
 
