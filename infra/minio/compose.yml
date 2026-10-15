@@ -1,0 +1,51 @@
+name: olp-minio
+services:
+  minio:
+    image: olp-minio:source-2025-10-15
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:?Set MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?Set MINIO_ROOT_PASSWORD}
+    ports:
+      - "127.0.0.1:${MINIO_API_PORT:-9000}:9000"
+      - "127.0.0.1:${MINIO_CONSOLE_PORT:-9001}:9001"
+    volumes:
+      - minio-data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "http://127.0.0.1:9000/minio/health/ready"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+    security_opt:
+      - no-new-privileges:true
+    cap_drop: [ALL]
+  minio-init:
+    image: olp-minio:source-2025-10-15
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: ["/bin/sh", "/bootstrap/init.sh"]
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:?Set MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?Set MINIO_ROOT_PASSWORD}
+      MINIO_STORAGE_ACCESS_KEY: ${MINIO_STORAGE_ACCESS_KEY:?Set application access key}
+      MINIO_STORAGE_SECRET_KEY: ${MINIO_STORAGE_SECRET_KEY:?Set application secret key}
+      MINIO_STORAGE_BUCKET: ${MINIO_STORAGE_BUCKET:?Set bucket}
+      MINIO_STORAGE_KEY_PREFIX: ${MINIO_STORAGE_KEY_PREFIX:?Set key prefix}
+    volumes:
+      - ./init.sh:/bootstrap/init.sh:ro
+      - ./app-policy.json:/bootstrap/app-policy.json:ro
+      - ./durability-inside.sh:/bootstrap/durability-inside.sh:ro
+    tmpfs:
+      - /home/minio:uid=10001,gid=10001,mode=0700
+      - /tmp:uid=10001,gid=10001,mode=0700
+    restart: "no"
+    security_opt:
+      - no-new-privileges:true
+    cap_drop: [ALL]
+volumes:
+  minio-data:
