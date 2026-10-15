@@ -1,6 +1,7 @@
 package com.tricore.dxos.infrastructure.identity.security;
 
 import com.tricore.dxos.core.identity.AuthenticatedPrincipal;
+import com.tricore.dxos.core.identity.Authority;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.authentication.TestingAuthenticationToken;
@@ -11,6 +12,7 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtAut
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -86,6 +88,78 @@ class SpringSecurityCurrentPrincipalTest {
         assertEquals("user-123", principal.subjectId());
         assertTrue(principal.authenticated());
         assertTrue(principal.authorities().isEmpty());
+    }
+
+    @Test
+    void mapsCanonicalWorkflowAuthoritiesFromResourceAccess() {
+        AuthenticatedPrincipal principal = principalFromClaims(Map.of(
+                "sub", "user-123",
+                "resource_access", Map.of("tricore-api", Map.of("roles", List.of(
+                        "workflow:create", "workflow:activate", "workflow:transition", "workflow:read")))
+        ));
+
+        assertEquals(Set.of(
+                new Authority("workflow:create"),
+                new Authority("workflow:activate"),
+                new Authority("workflow:transition"),
+                new Authority("workflow:read")
+        ), principal.authorities());
+    }
+
+    @Test
+    void ignoresUnknownClientRoles() {
+        AuthenticatedPrincipal principal = principalFromClaims(Map.of(
+                "sub", "user-123",
+                "resource_access", Map.of("tricore-api", Map.of("roles", List.of(
+                        "workflow:create", "workflow:activate", "workflow:transition", "workflow:read",
+                        "offline_access", "uma_authorization", "some-other-role")))
+        ));
+
+        assertEquals(Set.of(
+                new Authority("workflow:create"),
+                new Authority("workflow:activate"),
+                new Authority("workflow:transition"),
+                new Authority("workflow:read")
+        ), principal.authorities());
+    }
+
+    @Test
+    void returnsEmptyAuthoritiesWhenResourceAccessIsMissing() {
+        AuthenticatedPrincipal principal = principalFromClaims(Map.of("sub", "user-123"));
+
+        assertEquals("user-123", principal.subjectId());
+        assertTrue(principal.authorities().isEmpty());
+    }
+
+    @Test
+    void returnsEmptyAuthoritiesWhenTricoreApiRolesAreMissing() {
+        for (Map<String, Object> resourceAccess : List.<Map<String, Object>>of(
+                Map.of("other-client", Map.of("roles", List.of("workflow:create"))),
+                Map.of("tricore-api", Map.of("other-claim", List.of("workflow:create")))
+        )) {
+            AuthenticatedPrincipal principal = principalFromClaims(Map.of(
+                    "sub", "user-123", "resource_access", resourceAccess));
+
+            assertEquals("user-123", principal.subjectId());
+            assertTrue(principal.authorities().isEmpty());
+        }
+    }
+
+    @Test
+    void authorityMatchingRemainsExact() {
+        AuthenticatedPrincipal principal = principalFromClaims(Map.of(
+                "sub", "user-123",
+                "resource_access", Map.of("tricore-api", Map.of("roles", List.of(
+                        "Workflow:create", " workflow:create", "workflow:create ", "workflow:*")))
+        ));
+
+        assertTrue(principal.authorities().isEmpty());
+    }
+
+    private AuthenticatedPrincipal principalFromClaims(Map<String, Object> claims) {
+        SecurityContextHolder.getContext()
+                .setAuthentication(new JwtAuthenticationToken(jwt(claims), List.of()));
+        return currentPrincipal.requireVerified();
     }
 
     private Jwt jwt(Map<String, Object> claims) {
