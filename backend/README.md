@@ -701,3 +701,28 @@ tra startup, `/api/v1/health` và `/actuator/health` với PostgreSQL thực t�
 Kiểm chứng launcher V3/V4 (2026-10-15): full JDK21/PostgreSQL17.11 TLS disposable
 752 PASS, 0 FAIL/SKIP, 9 integration suites, build PASS; bao gồm 38 tests mới.
 Đây chưa là cloud execution; Codex thiếu credentials/CA và chờ owner chạy launcher.
+
+## Supabase Object Storage — Issue 26
+
+REST-only ObjectStoragePort adapter lives in infrastructure.storage.supabase.
+Enable DXOS_OBJECT_STORAGE_PROVIDER=supabase and supply every SUPABASE_STORAGE_*
+placeholder from .env.example. Existing deployment bucket is dxos-objects and
+must be private. No Supabase Auth or S3 credentials are used; Keycloak remains
+application identity. No in-memory production fallback.
+
+See [adapter architecture](../docs/architecture/supabase-object-storage.md) for
+version-pinned reads, key/metadata formats, limits, ownership and error mapping,
+and [required hosted test gate](../docs/poc/supabase-object-storage.md) for setup.
+The hosted Supabase integration suite passed, based on user-provided Gradle output.
+Snapshot consistency and two-JVM CREATE_ONLY concurrency also passed. These results
+validate the reported integration run; production deployment has not been verified.
+
+From `backend/` with JDK 21 and all required variables supplied privately:
+
+```powershell
+.\gradlew.bat test
+.\gradlew.bat supabaseIntegrationTest --rerun-tasks
+```
+
+Regular tests exclude `supabase-real`; the opt-in integration task requires real
+configuration and fails when it is absent. Spring Boot does not load `.env` automatically.

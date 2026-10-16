@@ -25,3 +25,20 @@ management:
     health:
       show-details: never
       show-components: never
+
+dxos:
+  object-storage:
+    provider: ${DXOS_OBJECT_STORAGE_PROVIDER:disabled}
+    supabase:
+      rest-base-url: ${SUPABASE_STORAGE_REST_BASE_URL:}
+      api-key: ${SUPABASE_STORAGE_API_KEY:}
+      api-key-mode: ${SUPABASE_STORAGE_API_KEY_MODE:}
+      bucket: ${SUPABASE_STORAGE_BUCKET:}
+      key-prefix: ${SUPABASE_STORAGE_KEY_PREFIX:}
+      max-object-bytes: ${SUPABASE_STORAGE_MAX_OBJECT_BYTES:}
+      max-metadata-bytes: ${SUPABASE_STORAGE_MAX_METADATA_BYTES:}
+      max-key-bytes: ${SUPABASE_STORAGE_MAX_KEY_BYTES:}
+      max-response-bytes: ${SUPABASE_STORAGE_MAX_RESPONSE_BYTES:}
+      staging-directory: ${SUPABASE_STORAGE_STAGING_DIRECTORY:}
+      connect-timeout: ${SUPABASE_STORAGE_CONNECT_TIMEOUT:}
+      request-timeout: ${SUPABASE_STORAGE_REQUEST_TIMEOUT:}
