@@ -713,9 +713,10 @@ application identity. No in-memory production fallback.
 See [adapter architecture](../docs/architecture/supabase-object-storage.md) for
 version-pinned reads, key/metadata formats, limits, ownership and error mapping,
 and [required hosted test gate](../docs/poc/supabase-object-storage.md) for setup.
-The hosted Supabase integration suite passed, based on user-provided Gradle output.
-Snapshot consistency and two-JVM CREATE_ONLY concurrency also passed. These results
-validate the reported integration run; production deployment has not been verified.
+The current uncommitted PR 35 remediation passed the hosted suite: 19 passed,
+zero failed/errors/skipped (`BUILD SUCCESSFUL in 54s`), corroborated by Gradle XML.
+Full PostgreSQL regression and Linux/macOS runtime verification remain pending.
+See [current evidence](../docs/evidence/issue-26-storage.md) for source provenance.
 
 From `backend/` with JDK 21 and all required variables supplied privately:
 

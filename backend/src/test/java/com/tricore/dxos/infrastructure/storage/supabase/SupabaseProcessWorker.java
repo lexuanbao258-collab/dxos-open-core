@@ -7,7 +7,15 @@ import java.io.InputStreamReader;
 
 /** Real-provider child JVM: credentials inherited through environment, never command arguments. */
 public final class SupabaseProcessWorker {
+    static java.nio.file.Path javaExecutable() {
+        String executable = System.getProperty("os.name").startsWith("Windows") ? "java.exe" : "java";
+        return java.nio.file.Path.of(System.getProperty("java.home"), "bin", executable);
+    }
     public static void main(String[] args) {
+        if (args.length == 1 && args[0].equals("launcher-probe")) {
+            System.out.println("JDK=" + System.getProperty("java.home"));
+            return;
+        }
         try {
             var properties=SupabaseRealSupport.properties(args[1]);
             var mapper=new ObjectMapper();

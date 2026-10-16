@@ -33,12 +33,12 @@ class SupabaseHttpTest {
         executor=Executors.newCachedThreadPool();server.setExecutor(executor);server.createContext("/",this::handle);server.start();
         http=HttpClient.newBuilder().followRedirects(HttpClient.Redirect.NEVER).build();
         properties=new SupabaseStorageProperties(URI.create("https://storage.invalid/storage/v1"),"test-key","service-role","test-bucket","http-test",1024L,4096,1024,16384,temp,Duration.ofSeconds(2),Duration.ofSeconds(5));
-        client=new SupabaseRestStorageClient(properties,mapper,request->{
+        client=new SupabaseRestStorageClient(properties,mapper,(request,handler)->{
             requests.add(request);
             URI target=URI.create("http://localhost:"+server.getAddress().getPort()+request.uri().getRawPath()+(request.uri().getRawQuery()==null?"":"?"+request.uri().getRawQuery()));
             var builder=HttpRequest.newBuilder(target).timeout(Duration.ofSeconds(5));
             request.headers().map().forEach((name,values)->values.forEach(v->builder.header(name,v)));
-            return http.send(builder.method(request.method(),request.bodyPublisher().orElse(HttpRequest.BodyPublishers.noBody())).build(),HttpResponse.BodyHandlers.ofInputStream());
+            return http.send(builder.method(request.method(),request.bodyPublisher().orElse(HttpRequest.BodyPublishers.noBody())).build(),handler);
         });
         port=new SupabaseObjectStorageAdapter(properties,client,mapper);
     }

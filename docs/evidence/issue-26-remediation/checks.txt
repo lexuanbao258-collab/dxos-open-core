@@ -1,0 +1,25 @@
+2026-10-16 final staging review
+Original committed HEAD: 87d6c62346daf035041fc56689281417f925a316 (does not include remediation).
+Tested snapshot: uncommitted remediation, confirmed by user for hosted run.
+Future remediation commit SHA: PENDING until committed.
+git diff --check: PASS.
+Secret/provider scan: 27 candidate files plus 117 raw HTML/XML/log/text reports inspected.
+Checked private keys, JWTs, Supabase keys/hosts, AWS access keys, credential URLs,
+long assigned credentials, and one inherited sensitive environment value without disclosure.
+Three credential-shaped URL occurrences were known dummy negative-test fixtures in
+Java/raw reports. The matching parameterized label in sanitized full XML/HTML was
+redacted; no credential-shaped URLs remain in evidence. No other scan matches.
+Sanitized XML: no logs, properties, hostnames, failure messages or stack traces.
+Sanitized HTML: no scripts, frames, active load handlers or provider endpoints.
+Evidence directory: capture script, sanitized results, skipped lists, source manifests,
+and this check record only. Raw backend/build reports/logs are excluded from staging.
+Source manifests: focused/full/hosted all match the 10 current remediation Java files.
+Focused/full manifests were captured with their runs; hosted manifest was captured
+during final staging review and is not a contemporaneous hosted execution manifest.
+Hosted XML corroborates 19 passed, 0 failed, 0 errors, 0 skipped.
+User reports BUILD SUCCESSFUL in 54s for the current uncommitted remediation.
+No tests or infrastructure connections were rerun during final staging review.
+Full PostgreSQL regression: PENDING approved disposable DB, roles and TLS fixtures.
+Linux/macOS runtime verification: PENDING.
+No writes to D:\olp\data; no MinIO, AWS SDK, Core or Workflow modifications included.
+No commit, push, merge or rebase performed.

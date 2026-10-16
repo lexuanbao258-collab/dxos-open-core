@@ -119,7 +119,7 @@ class SupabaseStorageTest {
     }
     @Test void providerConflictCleansStagingAndNeverHead() throws Exception {
         List<HttpRequest> requests=new ArrayList<>();
-        var client=new SupabaseRestStorageClient(properties(),mapper,req->{requests.add(req);return response(req,409,mapper.createObjectNode().put("code","KeyAlreadyExists").put("message","secret").toString());});
+        var client=new SupabaseRestStorageClient(properties(),mapper,(req,handler)->{requests.add(req);return response(req,409,mapper.createObjectNode().put("code","KeyAlreadyExists").put("message","secret").toString());});
         var adapter=new SupabaseObjectStorageAdapter(properties(),client,mapper);
         error(()->adapter.store(command("hello",StoreMode.CREATE_ONLY)),StorageErrorCode.CONFLICT);
         assertThat(requests).hasSize(1);assertThat(requests.getFirst().method()).isEqualTo("POST");assertThat(requests.getFirst().headers().firstValue("x-upsert")).contains("false");
@@ -127,30 +127,33 @@ class SupabaseStorageTest {
     }
     @Test void overwriteSendsCompleteEnvelopeAndExactLength() throws Exception {
         List<HttpRequest> requests=new ArrayList<>();
-        var adapter=new SupabaseObjectStorageAdapter(properties(),new SupabaseRestStorageClient(properties(),mapper,req->{requests.add(req);return response(req,200,"{}");}),mapper);
+        var adapter=new SupabaseObjectStorageAdapter(properties(),new SupabaseRestStorageClient(properties(),mapper,(req,handler)->{requests.add(req);return response(req,200,"{}");}),mapper);
         var cmd=command("hello",StoreMode.OVERWRITE);assertThat(adapter.store(cmd)).isEqualTo(cmd.metadata());
         var req=requests.getFirst();assertThat(req.headers().firstValue("x-upsert")).contains("true");assertThat(req.bodyPublisher().orElseThrow().contentLength()).isEqualTo(5);
         var node=mapper.readTree(Base64.getDecoder().decode(req.headers().firstValue("x-metadata").orElseThrow()));
         assertThat(new SupabaseMetadataCodec(mapper,4096).decode(cmd.metadata().key(),5,node)).isEqualTo(cmd.metadata());
     }
     @Test void invalidUploadNeverMutatesNetwork() {
-        var adapter=new SupabaseObjectStorageAdapter(properties(),new SupabaseRestStorageClient(properties(),mapper,r->{throw new AssertionError("network called");}),mapper);
+        var adapter=new SupabaseObjectStorageAdapter(properties(),new SupabaseRestStorageClient(properties(),mapper,(r,handler)->{throw new AssertionError("network called");}),mapper);
         error(()->adapter.store(null),StorageErrorCode.INVALID_INPUT);
         var m=new ObjectMetadata(new ObjectKey("k"),"text/plain",2,Map.of());error(()->adapter.store(new StoreObjectCommand(m,new ByteArrayInputStream(new byte[]{1}),StoreMode.OVERWRITE)),StorageErrorCode.INVALID_INPUT);
         var bad=new ObjectMetadata(new ObjectKey("k"),"text/plain"+(char)13+(char)10+"X:bad",0,Map.of());error(()->adapter.store(new StoreObjectCommand(bad,InputStream.nullInputStream(),StoreMode.CREATE_ONLY)),StorageErrorCode.INVALID_INPUT);
     }
     @Test void missingDeleteAndTransportFailuresAreNormalized() {
-        var adapter=new SupabaseObjectStorageAdapter(properties(),new SupabaseRestStorageClient(properties(),mapper,r->response(r,404,mapper.createObjectNode().put("code","NoSuchKey").toString())),mapper);
+        var adapter=new SupabaseObjectStorageAdapter(properties(),new SupabaseRestStorageClient(properties(),mapper,(r,handler)->response(r,404,mapper.createObjectNode().put("code","NoSuchKey").toString())),mapper);
         error(()->adapter.delete(new ObjectKey("missing")),StorageErrorCode.NOT_FOUND);
-        var broken=new SupabaseObjectStorageAdapter(properties(),new SupabaseRestStorageClient(properties(),mapper,r->{throw new IOException("endpoint secret");}),mapper);
+        var broken=new SupabaseObjectStorageAdapter(properties(),new SupabaseRestStorageClient(properties(),mapper,(r,handler)->{throw new IOException("endpoint secret");}),mapper);
         error(()->broken.metadata(new ObjectKey("k")),StorageErrorCode.UNAVAILABLE);
+        var malformedForbidden = new SupabaseObjectStorageAdapter(properties(), new SupabaseRestStorageClient(
+                properties(), mapper, (r, handler) -> response(r, 403, "non-JSON provider response")), mapper);
+        error(() -> malformedForbidden.delete(new ObjectKey("k")), StorageErrorCode.ACCESS_FAILURE);
     }
     @Test void readPinsInfoAndDownloadToResolvedVersionNeverCurrentFallback() throws Exception {
         var cmd=command("hello",StoreMode.CREATE_ONLY);String physical=new SupabaseObjectKeyCodec("test",200000).encode(cmd.metadata().key());
         String version=UUID.randomUUID().toString();var metadata=mapper.readTree(Base64.getDecoder().decode(new SupabaseMetadataCodec(mapper,4096).encode(cmd.metadata())));
         var info=mapper.createObjectNode().put("version",version).put("name",physical).put("bucket_id","test-bucket").put("size",5);info.set("metadata",metadata);
         List<HttpRequest> requests=new ArrayList<>();
-        var adapter=new SupabaseObjectStorageAdapter(properties(),new SupabaseRestStorageClient(properties(),mapper,r->{requests.add(r);return response(r,200,r.uri().getPath().contains("/info/")?info.toString():"hello");}),mapper);
+        var adapter=new SupabaseObjectStorageAdapter(properties(),new SupabaseRestStorageClient(properties(),mapper,(r,handler)->{requests.add(r);return response(r,200,r.uri().getPath().contains("/info/")?info.toString():"hello");}),mapper);
         try(var resource=adapter.read(cmd.metadata().key())){assertThat(resource.metadata()).isEqualTo(cmd.metadata());assertThat(resource.content().readAllBytes()).isEqualTo("hello".getBytes());}
         assertThat(requests).hasSize(3);assertThat(requests.get(0).uri().getQuery()).isNull();
         assertThat(requests.get(1).uri().getQuery()).isEqualTo("versionId="+version);assertThat(requests.get(2).uri().getQuery()).isEqualTo("versionId="+version);
@@ -161,7 +164,7 @@ class SupabaseStorageTest {
         String first=UUID.randomUUID().toString(), second=UUID.randomUUID().toString();
         var metadata=mapper.readTree(Base64.getDecoder().decode(new SupabaseMetadataCodec(mapper,4096).encode(cmd.metadata())));
         List<HttpRequest> requests=new ArrayList<>();
-        var adapter=new SupabaseObjectStorageAdapter(properties(),new SupabaseRestStorageClient(properties(),mapper,r->{
+        var adapter=new SupabaseObjectStorageAdapter(properties(),new SupabaseRestStorageClient(properties(),mapper,(r,handler)->{
             requests.add(r);var info=mapper.createObjectNode().put("version",r.uri().getQuery()==null?first:second).put("name",physical).put("bucket_id","test-bucket").put("size",5);info.set("metadata",metadata);return response(r,200,info.toString());
         }),mapper);
         error(()->adapter.read(cmd.metadata().key()),StorageErrorCode.UNAVAILABLE);assertThat(requests).hasSize(2);
@@ -171,17 +174,17 @@ class SupabaseStorageTest {
         var metadata=mapper.readTree(Base64.getDecoder().decode(new SupabaseMetadataCodec(mapper,4096).encode(cmd.metadata())));
         var info=mapper.createObjectNode().put("version",UUID.randomUUID().toString()).put("name",physical).put("bucket_id","test-bucket").put("size",5);info.set("metadata",metadata);
         List<HttpRequest> requests=new ArrayList<>();
-        var adapter=new SupabaseObjectStorageAdapter(properties(),new SupabaseRestStorageClient(properties(),mapper,r->{requests.add(r);return r.uri().getQuery()==null?response(r,200,info.toString()):response(r,404,mapper.createObjectNode().put("code","NoSuchKey").toString());}),mapper);
+        var adapter=new SupabaseObjectStorageAdapter(properties(),new SupabaseRestStorageClient(properties(),mapper,(r,handler)->{requests.add(r);return r.uri().getQuery()==null?response(r,200,info.toString()):response(r,404,mapper.createObjectNode().put("code","NoSuchKey").toString());}),mapper);
         error(()->adapter.read(cmd.metadata().key()),StorageErrorCode.NOT_FOUND);assertThat(requests).hasSize(2);
     }
     @Test void malformedAndOversizedResponsesAreSanitized() {
         for(String body:List.of("provider secret invalid json", "x".repeat(20000))) {
-            var adapter=new SupabaseObjectStorageAdapter(properties(),new SupabaseRestStorageClient(properties(),mapper,r->response(r,200,body)),mapper);
+            var adapter=new SupabaseObjectStorageAdapter(properties(),new SupabaseRestStorageClient(properties(),mapper,(r,handler)->response(r,200,body)),mapper);
             error(()->adapter.metadata(new ObjectKey("k")),StorageErrorCode.UNAVAILABLE);
         }
     }
     @Test void oversizedMetadataIsRejectedBeforeTransport() {
-        var adapter=new SupabaseObjectStorageAdapter(properties(),new SupabaseRestStorageClient(properties(),mapper,r->{throw new AssertionError("network called");}),mapper);
+        var adapter=new SupabaseObjectStorageAdapter(properties(),new SupabaseRestStorageClient(properties(),mapper,(r,handler)->{throw new AssertionError("network called");}),mapper);
         var m=new ObjectMetadata(new ObjectKey("k"),"text/plain",0,Map.of("huge","x".repeat(10000)));
         error(()->adapter.store(new StoreObjectCommand(m,InputStream.nullInputStream(),StoreMode.CREATE_ONLY)),StorageErrorCode.INVALID_INPUT);
     }
@@ -194,7 +197,7 @@ class SupabaseStorageTest {
     }
     @Test void secretKeyModeUsesApiKeyWithoutUserAuthAndNoWriteRetry() {
         List<HttpRequest> requests=new ArrayList<>();
-        var adapter=new SupabaseObjectStorageAdapter(properties(),new SupabaseRestStorageClient(properties(),mapper,r->{requests.add(r);throw new IOException("lost acknowledgment secret");}),mapper);
+        var adapter=new SupabaseObjectStorageAdapter(properties(),new SupabaseRestStorageClient(properties(),mapper,(r,handler)->{requests.add(r);throw new IOException("lost acknowledgment secret");}),mapper);
         error(()->adapter.store(command("data",StoreMode.OVERWRITE)),StorageErrorCode.UNAVAILABLE);
         assertThat(requests).hasSize(1);assertThat(requests.getFirst().headers().firstValue("Authorization")).isEmpty();
     }

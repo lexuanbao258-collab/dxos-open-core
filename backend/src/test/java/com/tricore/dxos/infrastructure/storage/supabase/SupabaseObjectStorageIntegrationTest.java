@@ -167,7 +167,7 @@ class SupabaseObjectStorageIntegrationTest {
         try(var read=port.read(key)){assertThat(read.metadata()).isEqualTo(expected.metadata());assertThat(read.content().readAllBytes()).isEqualTo(value.getBytes(java.nio.charset.StandardCharsets.UTF_8));}
     }
     private Process worker(String action,String value)throws IOException {
-        String javaExecutable=java.nio.file.Path.of(System.getProperty("java.home"),"bin","java.exe").toString();
+        String javaExecutable=SupabaseProcessWorker.javaExecutable().toString();
         String classpath=System.getProperty("supabase.test.classpath");if(classpath==null)throw new AssertionError("Run Gradle supabaseIntegrationTest task");
         return new ProcessBuilder(javaExecutable,"-cp",classpath,SupabaseProcessWorker.class.getName(),action,properties.keyPrefix(),key.value(),value).redirectErrorStream(true).start();
     }

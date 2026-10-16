@@ -1,0 +1,24 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<testsuites skipped="0" errors="0" tests="19" failures="0">
+  <testsuite name="com.tricore.dxos.infrastructure.storage.supabase.SupabaseObjectStorageIntegrationTest" tests="19" failures="0" errors="0" skipped="0" time="51.775" timestamp="2026-10-16T11:37:35.099Z">
+    <testcase name="createOnlyAndConflictPreserveWinner()" classname="com.tricore.dxos.infrastructure.storage.supabase.SupabaseObjectStorageIntegrationTest" time="2.687" />
+    <testcase name="overwriteReplacesContentTypeAndEntireCustomMap()" classname="com.tricore.dxos.infrastructure.storage.supabase.SupabaseObjectStorageIntegrationTest" time="1.755" />
+    <testcase name="bucketPrivateAndObjectCannotBeDownloadedAnonymously()" classname="com.tricore.dxos.infrastructure.storage.supabase.SupabaseObjectStorageIntegrationTest" time="0.985" />
+    <testcase name="readMetadataAndRestEnvelopeRoundTrip()" classname="com.tricore.dxos.infrastructure.storage.supabase.SupabaseObjectStorageIntegrationTest" time="1.386" />
+    <testcase name="zeroByteObjectRoundTrips()" classname="com.tricore.dxos.infrastructure.storage.supabase.SupabaseObjectStorageIntegrationTest" time="1.808" />
+    <testcase name="durabilityAcrossFreshJvmRestarts()" classname="com.tricore.dxos.infrastructure.storage.supabase.SupabaseObjectStorageIntegrationTest" time="7.652" />
+    <testcase name="sameVersionReadSurvivesOverwriteAndDelete()" classname="com.tricore.dxos.infrastructure.storage.supabase.SupabaseObjectStorageIntegrationTest" time="1.74" />
+    <testcase name="exactVersionInfoAndDownloadNeverReturnReplacement()" classname="com.tricore.dxos.infrastructure.storage.supabase.SupabaseObjectStorageIntegrationTest" time="0.804" />
+    <testcase name="deleteAndRepeatedDelete()" classname="com.tricore.dxos.infrastructure.storage.supabase.SupabaseObjectStorageIntegrationTest" time="1.297" />
+    <testcase name="repetition 1 of 10" classname="com.tricore.dxos.infrastructure.storage.supabase.SupabaseObjectStorageIntegrationTest" time="2.877" />
+    <testcase name="repetition 2 of 10" classname="com.tricore.dxos.infrastructure.storage.supabase.SupabaseObjectStorageIntegrationTest" time="3.038" />
+    <testcase name="repetition 3 of 10" classname="com.tricore.dxos.infrastructure.storage.supabase.SupabaseObjectStorageIntegrationTest" time="2.494" />
+    <testcase name="repetition 4 of 10" classname="com.tricore.dxos.infrastructure.storage.supabase.SupabaseObjectStorageIntegrationTest" time="3.014" />
+    <testcase name="repetition 5 of 10" classname="com.tricore.dxos.infrastructure.storage.supabase.SupabaseObjectStorageIntegrationTest" time="2.986" />
+    <testcase name="repetition 6 of 10" classname="com.tricore.dxos.infrastructure.storage.supabase.SupabaseObjectStorageIntegrationTest" time="3.064" />
+    <testcase name="repetition 7 of 10" classname="com.tricore.dxos.infrastructure.storage.supabase.SupabaseObjectStorageIntegrationTest" time="3.098" />
+    <testcase name="repetition 8 of 10" classname="com.tricore.dxos.infrastructure.storage.supabase.SupabaseObjectStorageIntegrationTest" time="3.173" />
+    <testcase name="repetition 9 of 10" classname="com.tricore.dxos.infrastructure.storage.supabase.SupabaseObjectStorageIntegrationTest" time="5.088" />
+    <testcase name="repetition 10 of 10" classname="com.tricore.dxos.infrastructure.storage.supabase.SupabaseObjectStorageIntegrationTest" time="2.801" />
+  </testsuite>
+</testsuites>

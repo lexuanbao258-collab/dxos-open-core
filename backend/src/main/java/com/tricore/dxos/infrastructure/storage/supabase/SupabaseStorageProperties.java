@@ -7,7 +7,13 @@ import java.net.URI;
 import java.nio.file.Path;
 import java.time.Duration;
 
-/** Required only when dxos.object-storage.provider=supabase. Never prints credentials. */
+/**
+ * Required only when dxos.object-storage.provider=supabase. Never prints credentials.
+ * requestTimeout is an absolute per-HTTP-exchange budget starting immediately before send,
+ * including upload, headers and response consumption. Each info/download gets its own budget.
+ * Lazy download handles retain that deadline while idle; reads do not reset it.
+ * Local upload staging precedes the HTTP exchange and is outside this budget.
+ */
 @ConfigurationProperties("dxos.object-storage.supabase")
 public record SupabaseStorageProperties(URI restBaseUrl, String apiKey, String apiKeyMode,
         String bucket, String keyPrefix, Long maxObjectBytes, Integer maxMetadataBytes,
