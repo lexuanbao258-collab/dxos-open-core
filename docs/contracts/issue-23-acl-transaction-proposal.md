@@ -1,15 +1,15 @@
 # Issue #23 Phase 2 — Resource/Tenant ACL transaction design (PROPOSAL)
 
-**Status: PROPOSAL; not an approved security contract or executable migration.**
+**Status: PRODUCT SECURITY POLICY APPROVED by Issue #23 owner on 2026-10-16; PostgreSQL DDL, transactional coordinator and security implementation remain PROPOSAL / NOT APPROVED.**
 Owners: Bảo (application / Gateway), Ánh (PostgreSQL schema and transactional infrastructure), Yến (verified Identity).
 
-## Proposed decisions for team sign-off
+## Approved Issue #23 product security decisions
 
 1. **Resource owner:** An active resource owner with valid tenant membership may see resource existence. Ownership alone does **not** grant any Workflow CREATE / ACTIVATE / TRANSITION / READ access. Every operation requires both the exact verified OIDC authority and explicit authoritative resource permission. Admin APIs may grant the owner needed permissions, but cannot infer grants from a client-supplied owner field.
 2. **Definition binding:** An exact binding is maintained for `(tenant_id, resource_type, definition_id, definition_version)`, separately from resource ACL. CREATE requires an active binding **and** resource-level CREATE permission. Revoking a binding prevents subsequent creates; it does not itself revoke permissions for existing instances.
 3. **Resource transfer and deletion (v1):** Direct cross-tenant transfer is unsupported. Tombstoned resources reject normal Workflow operations, including snapshot/history reads, and identifiers are not reused. Administrative audit/recovery is a separate future contract; never silently resurrect resource IDs.
 
-**Approval needed:** Ánh and Yến must confirm these are the intended business/security policies before implementing migration or production ACL. This proposal does not claim that the schema exists.
+**Decision record:** The Issue #23 owner explicitly approved all three policies above on 2026-10-16. Ánh and Yến review implementation compatibility and security, but this is no longer a pending choice of product policy. This approval does not approve any DDL, migration, schema privilege, public endpoint or deployment. If a technical conflict is discovered, flag it for owner review rather than silently changing policy.
 
 ## Database design review checklist (Ánh to supply exact DDL)
 
