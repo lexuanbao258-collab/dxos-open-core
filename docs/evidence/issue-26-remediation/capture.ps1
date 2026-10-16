@@ -1,8 +1,10 @@
 param(
     [Parameter(Mandatory=$true)][ValidateSet('focused','full','hosted')][string]$Run,
-    [string]$OutputDirectory = $PSScriptRoot
+    [string]$OutputDirectory
 )
 $ErrorActionPreference = 'Stop'
+# Resolve script-scoped defaults after parameter binding (Windows PowerShell 5.1).
+if ([string]::IsNullOrWhiteSpace($OutputDirectory)) { $OutputDirectory = $PSScriptRoot }
 $null = New-Item -ItemType Directory -Force -Path $OutputDirectory
 $root = (Resolve-Path (Join-Path $PSScriptRoot '../../..')).Path
 $task = if ($Run -eq 'hosted') { 'supabaseIntegrationTest' } else { 'test' }
@@ -48,6 +50,6 @@ $html="<!doctype html><html lang='en'><meta charset='utf-8'><title>Issue 26 $Run
 [IO.File]::WriteAllText((Join-Path $OutputDirectory "$Run.html"),$html,[Text.UTF8Encoding]::new($false))
 [IO.File]::WriteAllLines((Join-Path $OutputDirectory "$Run-skipped.txt"),$skips,[Text.UTF8Encoding]::new($false))
 $sourceFiles = @((git -C $root diff HEAD --name-only) + (git -C $root ls-files --others --exclude-standard)) | Where-Object { $_ -match '^backend/.*\.(java|gradle)$' } | Sort-Object -Unique
-$manifest = foreach ($relative in $sourceFiles) { (Get-FileHash -Algorithm SHA256 (Join-Path $root $relative)).Hash + '  ' + $relative }
+$manifest = @(foreach ($relative in $sourceFiles) { (Get-FileHash -Algorithm SHA256 (Join-Path $root $relative)).Hash + '  ' + $relative })
 [IO.File]::WriteAllLines((Join-Path $OutputDirectory "$Run-source-sha256.txt"),[string[]]$manifest,[Text.UTF8Encoding]::new($false))
 Write-Output "${Run}: tests=$($totals.tests) passed=$passed failed=$($totals.failures) errors=$($totals.errors) skipped=$($totals.skipped)"

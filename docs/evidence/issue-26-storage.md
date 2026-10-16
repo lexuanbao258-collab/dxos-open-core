@@ -1,5 +1,7 @@
 # Issue 26 / PR 35 remediation evidence
 
+> **Historical record.** The statuses and worktree descriptions below were recorded before commit `14b35586128465d42534b0edc1e700178fed5406`. The latest clean-checkout PostgreSQL regression is **868 PASS / 0 FAIL / 0 ERROR / 0 SKIP**, including all nine integration suites (192 cases). See the [current verification summary](issue-26-postgres-17.11/verification-summary.md). Historical reports and skipped lists are preserved; Linux/macOS verification remains **PENDING**.
+
 Verification date: 2026-10-16. Branch: `feature/issue26-supabase-clean`.
 Reviewed remediation baseline and current committed HEAD: `0202ae87747fee558882c464f1198deb8abec3d3`. Status: **PENDING VERIFICATION; not approved to merge**.
 

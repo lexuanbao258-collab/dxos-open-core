@@ -1,5 +1,7 @@
 # PR 35 large-download verification
 
+> **Historical run record.** The 676 PASS / 112 SKIP run and pre-commit descriptions below are preserved as recorded. The follow-up was committed as `14b35586128465d42534b0edc1e700178fed5406`; the subsequent clean-checkout PostgreSQL run passed all 868 cases with no skips. See the [current verification summary](../issue-26-postgres-17.11/verification-summary.md). Linux/macOS verification remains **PENDING**.
+
 Date: 2026-10-16. Branch: `feature/issue26-supabase-clean`.
 Reviewed timeout remediation baseline / unchanged committed HEAD: `0202ae87747fee558882c464f1198deb8abec3d3`.
 Status: **PENDING VERIFICATION, not approved to merge**. These results cover the subsequent uncommitted worktree, not a new commit or a CI run.

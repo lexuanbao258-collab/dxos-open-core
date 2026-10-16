@@ -1,5 +1,7 @@
 # Issue 26: Supabase streaming deadlines and large transport deliveries
 
+> **Historical PR description draft.** Pre-commit and PostgreSQL-pending statements below describe the earlier review. For the final evidence at tested commit `14b35586128465d42534b0edc1e700178fed5406`, see the [current verification summary](../issue-26-postgres-17.11/verification-summary.md): 868 PASS, no failures/errors/skips; Linux/macOS verification remains **PENDING**. This local draft has not been published to PR #35.
+
 Reviewed timeout remediation baseline: `0202ae87747fee558882c464f1198deb8abec3d3`. **PENDING VERIFICATION; not approved to merge.** This description is prepared for PR #35; the large-download follow-up remains uncommitted and these local results are not CI results.
 
 The adapter enforces an absolute response-body deadline and cancels the HTTP subscription for stalled or idle lazy responses. A timed-out mutation may have committed remotely; no automatic mutation retry occurs. Version-pinned reads, length checks, sanitized errors and stream ownership are preserved.
