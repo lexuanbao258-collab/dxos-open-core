@@ -1,7 +1,7 @@
-2026-10-16 final staging review
+2026-10-16 historical timeout remediation staging review (subsequently committed at 0202ae87747fee558882c464f1198deb8abec3d3)
 Original committed HEAD: 87d6c62346daf035041fc56689281417f925a316 (does not include remediation).
 Tested snapshot: uncommitted remediation, confirmed by user for hosted run.
-Future remediation commit SHA: PENDING until committed.
+Reviewed remediation commit SHA: 0202ae87747fee558882c464f1198deb8abec3d3. Historical checks below predate subsequent large-download changes; see ../issue-26-large-download/.
 git diff --check: PASS.
 Secret/provider scan: 27 candidate files plus 117 raw HTML/XML/log/text reports inspected.
 Checked private keys, JWTs, Supabase keys/hosts, AWS access keys, credential URLs,
@@ -13,11 +13,11 @@ Sanitized XML: no logs, properties, hostnames, failure messages or stack traces.
 Sanitized HTML: no scripts, frames, active load handlers or provider endpoints.
 Evidence directory: capture script, sanitized results, skipped lists, source manifests,
 and this check record only. Raw backend/build reports/logs are excluded from staging.
-Source manifests: focused/full/hosted all match the 10 current remediation Java files.
+Source manifests: focused/full/hosted describe 10 historical remediation Java files. All historical manifests read from Git at 0202ae8 and verified against 0202ae8 (4 raw blob and 6 CRLF checkout matches per manifest); see baseline-source-verification.txt.
 Focused/full manifests were captured with their runs; hosted manifest was captured
 during final staging review and is not a contemporaneous hosted execution manifest.
-Hosted XML corroborates 19 passed, 0 failed, 0 errors, 0 skipped.
-User reports BUILD SUCCESSFUL in 54s for the current uncommitted remediation.
+Historical hosted XML at baseline 0202ae8 corroborates 19 passed, 0 failed, 0 errors, 0 skipped. Current hosted paths are replaced by the latest Large Download capture.
+User reports BUILD SUCCESSFUL in 54s for the historical remediation now committed at 0202ae8.
 No tests or infrastructure connections were rerun during final staging review.
 Full PostgreSQL regression: PENDING approved disposable DB, roles and TLS fixtures.
 Linux/macOS runtime verification: PENDING.

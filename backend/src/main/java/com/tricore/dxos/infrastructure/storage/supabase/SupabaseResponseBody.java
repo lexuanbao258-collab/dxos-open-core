@@ -4,20 +4,20 @@ import java.io.*;
 import java.net.http.HttpResponse;
 import java.nio.ByteBuffer;
 import java.util.List;
+import java.util.Iterator;
 import java.util.concurrent.*;
 import java.util.concurrent.Flow;
 
-/** One outstanding bounded chunk; cancellation never waits for a blocked reader. */
+/** One outstanding transport batch, without a payload copy or a queue of batches. */
 final class SupabaseResponseBody extends InputStream implements HttpResponse.BodySubscriber<InputStream> {
-    private static final int MAX_CHUNK_BYTES = 64 * 1024;
     private final CompletableFuture<InputStream> body = CompletableFuture.completedFuture(this);
     private final long started;
     private final long budget;
     private final Runnable released;
     private ScheduledFuture<?> timeout;
     private Flow.Subscription subscription;
-    private byte[] pending;
-    private int position;
+    private Iterator<ByteBuffer> pending;
+    private ByteBuffer current;
     private boolean complete, closed, failed, exhausted, resourcesReleased;
 
     SupabaseResponseBody(long started, long budget, Runnable released) {
@@ -35,12 +35,10 @@ final class SupabaseResponseBody extends InputStream implements HttpResponse.Bod
     }
     @Override public synchronized void onNext(List<ByteBuffer> buffers) {
         if (closed || failed || exhausted) return;
-        long size = 0;
-        for (var buffer : buffers) size += buffer.remaining();
-        if (pending != null || size > MAX_CHUNK_BYTES || remaining() <= 0) { expire(); return; }
-        pending = new byte[(int) size]; position = 0;
-        int offset = 0;
-        for (var buffer : buffers) { int n = buffer.remaining(); buffer.get(pending, offset, n); offset += n; }
+        if (pending != null || complete || remaining() <= 0) { expire(); return; }
+        // BodySubscriber transfers ownership of these buffers. Keep only this delivery;
+        // never copy its payload, sum its size, or request another while it is retained.
+        pending = buffers.iterator();
         notifyAll();
     }
     @Override public synchronized void onError(Throwable ignored) { expire(); }
@@ -51,7 +49,7 @@ final class SupabaseResponseBody extends InputStream implements HttpResponse.Bod
     }
     private synchronized void expire() {
         if (closed || failed || exhausted) return;
-        failed = true; pending = null;
+        failed = true; pending = null; current = null;
         cancel(); notifyAll();
     }
     private void cancel() {
@@ -70,12 +68,21 @@ final class SupabaseResponseBody extends InputStream implements HttpResponse.Bod
         for (;;) {
             if (!closed && !exhausted && remaining() <= 0) expire();
             if (closed || failed) throw new IOException("Response unavailable");
-            if (pending != null && position < pending.length) {
-                int n = Math.min(len, pending.length - position);
-                System.arraycopy(pending, position, bytes, off, n); position += n;
-                return n;
+            if (pending != null) {
+                while (current == null || !current.hasRemaining()) {
+                    current = null;
+                    if (!pending.hasNext()) break;
+                    current = pending.next();
+                }
+                if (current != null) {
+                    int n = Math.min(len, current.remaining());
+                    current.get(bytes, off, n);
+                    return n;
+                }
+                pending = null;
+                if (!complete) subscription.request(1);
+                continue;
             }
-            if (pending != null) { pending = null; if (!complete) subscription.request(1); continue; }
             if (complete) { exhausted = true; cancel(); return -1; }
             try { TimeUnit.NANOSECONDS.timedWait(this, Math.max(1, remaining())); }
             catch (InterruptedException ignored) { Thread.currentThread().interrupt(); expire(); throw new IOException("Response unavailable"); }
@@ -83,6 +90,6 @@ final class SupabaseResponseBody extends InputStream implements HttpResponse.Bod
     }
     @Override public synchronized void close() {
         if (closed) return;
-        closed = true; pending = null; cancel(); notifyAll();
+        closed = true; pending = null; current = null; cancel(); notifyAll();
     }
 }

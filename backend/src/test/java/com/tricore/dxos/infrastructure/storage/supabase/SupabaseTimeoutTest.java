@@ -41,7 +41,7 @@ class SupabaseTimeoutTest {
         server.setSoTimeout(4000);
         http = HttpClient.newBuilder().version(HttpClient.Version.HTTP_1_1).build();
         var properties = new SupabaseStorageProperties(URI.create("https://storage.invalid/storage/v1"),
-                "test-key", "secret", "test-bucket", "timeout", 1024L, 4096, 1024, 16384,
+                "test-key", "secret", "test-bucket", "timeout", operation.equals("lazy-large") ? 1_000_000L : 1024L, 4096, 1024, 16384,
                 temp, Duration.ofSeconds(1), Duration.ofMillis(500));
         client = new SupabaseRestStorageClient(properties, mapper, (request, handler) -> {
             var target = URI.create("http://localhost:" + server.getLocalPort() + request.uri().getRawPath()
@@ -68,7 +68,7 @@ class SupabaseTimeoutTest {
                         var metadata = mapper.readTree(Base64.getDecoder().decode(new SupabaseMetadataCodec(mapper, 4096)
                                 .encode(SupabaseRealSupport.command(key, "hello", StoreMode.CREATE_ONLY).metadata())));
                         var node = mapper.createObjectNode().put("name", physical).put("version", version)
-                                .put("bucket_id", "test-bucket").put("size", 5).put("etag", version);
+                                .put("bucket_id", "test-bucket").put("size", operation.equals("lazy-large") ? 600_000 : 5).put("etag", version);
                         node.set("metadata", metadata);
                         byte[] bytes = node.toString().getBytes(StandardCharsets.UTF_8);
                         write(socket, 200, bytes.length, bytes); socket.close(); continue;
@@ -76,10 +76,11 @@ class SupabaseTimeoutTest {
                     // Publication precedes acknowledgement: UNAVAILABLE cannot imply rollback.
                     if (first.startsWith("POST")) providerState.set("new");
                     if (first.startsWith("DELETE")) providerState.set(null);
-                                        byte[] partial = operation.startsWith("lazy") ? new byte[]{'{'}
+                    byte[] partial = operation.equals("lazy-large") ? SupabaseResponseBodyTest.pattern(300_000, 0)
+                            : operation.startsWith("lazy") ? new byte[]{'{'}
                             : ("{\"code\":\"" + (status == 409 ? "KeyAlreadyExists" : "NoSuchKey") + "\",")
                                     .getBytes(StandardCharsets.UTF_8);
-                    write(socket, status, operation.startsWith("lazy") ? 5 : 100, partial);
+                    write(socket, status, operation.equals("lazy-large") ? 600_000 : operation.startsWith("lazy") ? 5 : 100, partial);
                     // No more response bytes. EOF proves cancellation released the underlying connection.
                     if (in.read() != -1) throw new IOException("Unexpected client bytes");
                     released.countDown(); socket.close();
@@ -130,6 +131,13 @@ class SupabaseTimeoutTest {
         start("lazy-idle", 200);
         try (var content = port.read(key)) {
             assertThat(released.await(2, TimeUnit.SECONDS)).isTrue();
+            verify(() -> { try { content.content().read(); } catch (IOException error) { throw new AssertionError(error); } }, 3);
+        }
+    }
+    @Test void largePartialDownloadExpiresAndCancelsSocket() throws Exception {
+        start("lazy-large", 200);
+        try (var content = port.read(key)) {
+            assertThat(content.content().readNBytes(300_000)).isEqualTo(SupabaseResponseBodyTest.pattern(300_000, 0));
             verify(() -> { try { content.content().read(); } catch (IOException error) { throw new AssertionError(error); } }, 3);
         }
     }
