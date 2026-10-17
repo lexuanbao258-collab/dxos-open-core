@@ -194,3 +194,20 @@ mới là nền để nối luồng; chưa có bằng chứng portal tích hợp
 Mục tiêu Session 1 là tài liệu kiến trúc và bằng chứng đã nghiên cứu/chạy thử
 một capability. Workflow POC xác minh mô hình/contract generic hiện có, không
 xác minh engine bên thứ ba hay thay đổi topology.
+
+## Tài liệu OpenAPI / Swagger (Issue #37 — Draft)
+
+Backend có cấu hình Swagger **chỉ để xem tài liệu local**; `/v3/api-docs`
+và Swagger UI **mặc định tắt** trong `application.yml`.
+Profile `docs-local` bật chúng trên `127.0.0.1` và tắt nút gọi API
+trong Swagger. Không triển khai profile này lên public staging/production.
+
+- [Danh mục API ACTIVE / BLOCKED](docs/api/README.md): Request prototype và
+  Health hiện có HTTP route; generic Workflow HTTP vẫn BLOCKED đến khi
+  hoàn tất #22/#23/#24.
+- [Hướng dẫn Swagger local Windows](docs/api/local-swagger.md): chạy test,
+  điều kiện PostgreSQL local tách biệt, đường dẫn JSON/UI và kiểm tra
+  Workflow không xuất hiện trong spec.
+
+Cấu hình này **chưa phải bằng chứng Swagger đã chạy thành công**;
+cần test/smoke bằng JDK21 và review riêng trước khi merge Issue #37.
