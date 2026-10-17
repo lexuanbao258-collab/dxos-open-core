@@ -51,10 +51,13 @@ class LocalStorageContractTest {
         var port = store();
         var original = command(KEY, "original", StoreMode.CREATE_ONLY);
         port.store(original);
-        var input = new ByteArrayInputStream("loser".getBytes());
+        boolean[] closed = {false};
+        var input = new ByteArrayInputStream("loser".getBytes()) {
+            @Override public void close() throws IOException { closed[0] = true; super.close(); }
+        };
         error(() -> port.store(new StoreObjectCommand(command(KEY,"loser",StoreMode.CREATE_ONLY).metadata(),
                 input, StoreMode.CREATE_ONLY)), StorageErrorCode.CONFLICT);
-        assertThat(input.available()).isGreaterThanOrEqualTo(0);
+        assertThat(closed[0]).isFalse();
         assertThat(port.metadata(KEY)).isEqualTo(original.metadata());
         try (var read = port.read(KEY)) { assertThat(read.content().readAllBytes()).isEqualTo("original".getBytes()); }
     }
