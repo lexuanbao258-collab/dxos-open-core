@@ -238,13 +238,20 @@ class SupabaseObjectStorageIntegrationTest {
         var expected=SupabaseRealSupport.command(key,value,StoreMode.OVERWRITE);assertThat(port.metadata(key)).isEqualTo(expected.metadata());
         try(var read=port.read(key)){assertThat(read.metadata()).isEqualTo(expected.metadata());assertThat(read.content().readAllBytes()).isEqualTo(value.getBytes(java.nio.charset.StandardCharsets.UTF_8));}
     }
-    private static boolean terminateWorker(Process process) {
+    // True only for a confirmed zero-exit worker that did not require termination.
+    // A killed/failed child can have an unresolved write at the remote provider.
+    static boolean terminateWorker(Process process) {
         if (process == null) return true;
-        if (process.isAlive()) process.destroyForcibly();
         try {
-            return process.waitFor(10, TimeUnit.SECONDS);
+            boolean forced = process.isAlive();
+            if (forced) process.destroyForcibly();
+            if (!process.waitFor(10, TimeUnit.SECONDS)) return false;
+            return !forced && process.exitValue() == 0;
         } catch (InterruptedException failure) {
             Thread.currentThread().interrupt();
+            return false;
+        } catch (RuntimeException failure) {
+            // Ensure cleanup attempts continue for the other worker, without leaking details.
             return false;
         }
     }
