@@ -296,7 +296,7 @@ public final class LocalFileSystemStorageAdapter implements ObjectStoragePort {
         try (DirectoryStream<Path> entries = Files.newDirectoryStream(dir, "v-*")) {
             for (Path file : entries) {
                 String filename = file.getFileName().toString();
-                if (!filename.matches("v-[0-9a-f]{32}\.(blob|meta)")) continue;
+                if (!filename.matches("v-[0-9a-f]{32}[.](blob|meta)")) continue;
                 if (keep != null && filename.startsWith("v-" + keep + ".")) continue;
                 try { Files.deleteIfExists(file); } catch (IOException ignored) { /* best effort, operator quota */ }
             }
