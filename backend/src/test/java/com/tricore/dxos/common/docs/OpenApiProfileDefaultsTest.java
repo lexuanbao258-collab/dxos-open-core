@@ -38,6 +38,10 @@ class OpenApiProfileDefaultsTest {
         assertThat(rawYamlValue("application-docs-local.yml",
                 "springdoc", "swagger-ui", "supported-submit-methods"))
                 .isEqualTo(List.of());
+        // Springdoc already lists GroupedOpenApi("active") automatically in Swagger UI.
+        // A second manual urls entry previously produced duplicate choices.
+        assertThat(rawYamlValue("application-docs-local.yml",
+                "springdoc", "swagger-ui", "urls")).isNull();
     }
 
     private static Object value(String resource, String key) throws IOException {
