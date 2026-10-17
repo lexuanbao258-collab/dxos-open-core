@@ -205,9 +205,10 @@ trong Swagger. Không triển khai profile này lên public staging/production.
 - [Danh mục API ACTIVE / BLOCKED](docs/api/README.md): Request prototype và
   Health hiện có HTTP route; generic Workflow HTTP vẫn BLOCKED đến khi
   hoàn tất #22/#23/#24.
-- [Hướng dẫn Swagger local Windows](docs/api/local-swagger.md): chạy test,
-  điều kiện PostgreSQL local tách biệt, đường dẫn JSON/UI và kiểm tra
-  Workflow không xuất hiện trong spec.
+- [Hướng dẫn Swagger local Windows](docs/api/local-swagger.md): **ưu tiên
+  `docsPreview` (chỉ sinh tài liệu, không dùng DB/Flyway hay chạy API nghiệp vụ)**,
+  rồi mới kiểm tra backend thật với PostgreSQL local riêng sau review.
+  Workflow HTTP không xuất hiện trong spec cho đến khi được phê duyệt.
 
 Cấu hình này **chưa phải bằng chứng Swagger đã chạy thành công**;
 cần test/smoke bằng JDK21 và review riêng trước khi merge Issue #37.
