@@ -21,6 +21,18 @@ From backend with JDK 21:
 
 Regular test/build exclude supabase-real. Explicit integration invocation fails rather than skips when configuration is absent. Reports: build/reports/tests/supabaseIntegrationTest and build/test-results/supabaseIntegrationTest. Each invocation uses unique namespaces and cleans its test key; interrupted runs may leave test objects for explicit operator cleanup.
 
+## Hosted execution safety (test-harness remediation proposal)
+
+The separate `fix/issue26-hosted-worker-safety-20261017` branch changes **only hosted test code and its Gradle task**; it does not change the Supabase production adapter, Core or migrations. Until reviewed/merged into PR #35, this section is a **proposal**, not a statement about the code already in PR #35.
+
+- The hosted task fails early when any of the 12 required `SUPABASE_STORAGE_*` process variables is absent, and disables task up-to-date/build-cache reuse. A successful result must still be from an explicit execution, not a cached report.
+- The test class performs a private-bucket REST preflight **before the first object write**. The bucket must already exist as private `dxos-objects`; this preflight does not create a bucket, change policy or prevent administrators from changing bucket policy later.
+- Race-test children and sequential durability workers are reaped after termination. If a process cannot be confirmed stopped, object DELETE cleanup is skipped and the isolated test namespace must be reconciled manually. Killing a local process cannot guarantee that a request already accepted by the remote provider will not commit later.
+- A separate **external watchdog** must enforce a complete test-run deadline, including HTTP response-body reading, child JVMs and staging. Verify every worker has exited and inspect the specific test namespaces and staging files before reporting completion. Never blanket-delete a shared prefix.
+- Only run hosted tests with owner-approved credentials/private bucket, disposable namespace, bounded staging directory and quotas; no output or GitHub artifact should contain secret values. The historical 19 PASS are not fresh acceptance for the metadata codec change.
+
+The hosted gate remains **PENDING / NOT RUN** on this remediation branch. The preflight and worker teardown need independent review and controlled verification before any hosted mutation.
+
 ## Required acceptance evidence
 
 | Gate | Test coverage |
