@@ -29,10 +29,32 @@ dependencies {
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
-tasks.named('test') {
+// Windows CreateProcess has a command-line length limit. Passing the complete
+// testRuntimeClasspath twice as -D properties (Workflow + local storage workers)
+// prevents Gradle's Test Executor from even starting (error=206).
+// Package only a manifest with references to the existing compiled classes/JARs.
+// Java resolves this Class-Path, without repackaging any third-party dependencies.
+def shortTestClasspath = tasks.register('shortTestClasspath', Jar) {
+    dependsOn tasks.named('testClasses')
+    archiveFileName.set('test-runtime-classpath.jar')
+    destinationDirectory.set(layout.buildDirectory.dir('test-launcher'))
+    inputs.files(sourceSets.test.runtimeClasspath)
+    doFirst {
+        manifest.attributes('Class-Path': sourceSets.test.runtimeClasspath.files
+                .collect { entry -> entry.toURI().toASCIIString() }.join(' '))
+    }
+}
+
+tasks.named('test', Test) {
+    dependsOn shortTestClasspath
     useJUnitPlatform()
-    systemProperty 'workflow.test.runtimeClasspath', sourceSets.test.runtimeClasspath.asPath
-    systemProperty 'localfs.test.runtimeClasspath', sourceSets.test.runtimeClasspath.asPath
+    // The test executor and child JVMs both receive a short path to the same
+    // effective runtime dependencies. This also preserves Workflow test support.
+    classpath = files(shortTestClasspath)
+    systemProperty 'workflow.test.runtimeClasspath',
+            shortTestClasspath.get().archiveFile.get().asFile.absolutePath
+    systemProperty 'localfs.test.runtimeClasspath',
+            shortTestClasspath.get().archiveFile.get().asFile.absolutePath
     outputs.upToDateWhen { !System.getenv('WORKFLOW_TEST_JDBC_URL') }
     outputs.cacheIf { !System.getenv('WORKFLOW_TEST_JDBC_URL') }
 }
