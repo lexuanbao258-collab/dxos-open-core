@@ -60,6 +60,7 @@ function Assert-PrivateBucket([uri]$restUri) {
   $handler.AllowAutoRedirect = $false
   $http = [System.Net.Http.HttpClient]::new($handler)
   $http.Timeout = [TimeSpan]::FromSeconds(15)
+  $preflightDeadline = [System.Threading.CancellationTokenSource]::new([TimeSpan]::FromSeconds(15))
   $request = $null; $response = $null; $stream = $null; $buffer = $null
   try {
     $target = [uri]($restUri.AbsoluteUri.TrimEnd('/') + '/bucket/dxos-objects')
@@ -69,7 +70,8 @@ function Assert-PrivateBucket([uri]$restUri) {
       $request.Headers.Authorization = [System.Net.Http.Headers.AuthenticationHeaderValue]::new('Bearer', $env:SUPABASE_STORAGE_API_KEY)
     }
     $response = $http.SendAsync(
-      $request, [System.Net.Http.HttpCompletionOption]::ResponseHeadersRead
+      $request, [System.Net.Http.HttpCompletionOption]::ResponseHeadersRead,
+      $preflightDeadline.Token
     ).GetAwaiter().GetResult()
     Require ($response.StatusCode -eq [System.Net.HttpStatusCode]::OK) 'bucket response not OK'
     Require (($null -eq $response.Content.Headers.ContentLength) -or
@@ -77,7 +79,8 @@ function Assert-PrivateBucket([uri]$restUri) {
     $stream = $response.Content.ReadAsStreamAsync().GetAwaiter().GetResult()
     $buffer = New-Object System.IO.MemoryStream
     $block = New-Object byte[] 4096
-    while (($n = $stream.Read($block, 0, $block.Length)) -gt 0) {
+    while (($n = $stream.ReadAsync($block, 0, $block.Length,
+      $preflightDeadline.Token).GetAwaiter().GetResult()) -gt 0) {
       Require (($buffer.Length + $n) -le 65536) 'bucket response too large'
       $buffer.Write($block, 0, $n)
     }
@@ -90,7 +93,7 @@ function Assert-PrivateBucket([uri]$restUri) {
     if ($stream) { $stream.Dispose() }
     if ($response) { $response.Dispose() }
     if ($request) { $request.Dispose() }
-    $http.Dispose(); $handler.Dispose()
+    $http.Dispose(); $handler.Dispose(); $preflightDeadline.Dispose()
   }
 }
 
