@@ -12,6 +12,5 @@ springdoc:
     disable-swagger-default-url: true
     # Disable Try it out, especially POST operations, to avoid accidental writes.
     supported-submit-methods: []
-    urls:
-      - name: DX-OS ACTIVE local APIs
-        url: /v3/api-docs/active
+    # Springdoc discovers the "active" GroupedOpenApi automatically.
+    # Do not add a second manual urls entry for the same OpenAPI document.
