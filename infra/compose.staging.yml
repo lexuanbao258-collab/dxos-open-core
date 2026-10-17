@@ -1,0 +1,59 @@
+# Reproducible, fail-closed staging scaffold for Issue #40.
+# Default "up" only starts a NEW, ISOLATED PostgreSQL database.
+# "app" is intentionally opt-in; it requires reviewed schema, least-privilege
+# runtime credentials, Identity/Gateway security, and PR #43 or another provider.
+name: dxos-olp-staging
+
+services:
+  postgres:
+    image: postgres:17.11-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${STAGING_PG_DATABASE:-dxos_staging}
+      POSTGRES_USER: ${STAGING_PG_OWNER:-dxos_owner}
+      POSTGRES_PASSWORD: ${STAGING_PG_PASSWORD:?Set STAGING_PG_PASSWORD in infra/.env.staging}
+      POSTGRES_INITDB_ARGS: "--auth-host=scram-sha-256"
+    ports:
+      - "127.0.0.1:${STAGING_PG_LOOPBACK_PORT:-55426}:5432"
+    volumes:
+      - staging-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 10s
+    security_opt:
+      - no-new-privileges:true
+
+  backend:
+    profiles: ["app"]
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    restart: "no"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      DB_NAME: ${STAGING_PG_DATABASE:-dxos_staging}
+      DB_USER: ${STAGING_DB_RUNTIME_USER:-dxos_runtime}
+      DB_PASSWORD: ${STAGING_DB_RUNTIME_PASSWORD:?Set STAGING_DB_RUNTIME_PASSWORD}
+      DXOS_WORKFLOW_SCHEMA: ${DXOS_WORKFLOW_SCHEMA:-dxos_wf25_smoke_01}
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${STAGING_PG_DATABASE:-dxos_staging}?currentSchema=${DXOS_WORKFLOW_SCHEMA:-dxos_wf25_smoke_01},pg_catalog,pg_temp
+      SPRING_FLYWAY_ENABLED: "false"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: "none"
+      DXOS_OBJECT_STORAGE_PROVIDER: local
+      DXOS_OBJECT_STORAGE_LOCAL_ROOT: /var/lib/dxos/storage
+    ports:
+      - "127.0.0.1:${STAGING_BACKEND_LOOPBACK_PORT:-18080}:8080"
+    volumes:
+      - staging-storage-data:/var/lib/dxos/storage
+    security_opt:
+      - no-new-privileges:true
+
+volumes:
+  staging-postgres-data:
+  staging-storage-data:

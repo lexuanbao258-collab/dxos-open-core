@@ -1,0 +1,15 @@
+.git
+.gradle
+build
+bin
+.idea
+.vscode
+.env
+.env.*
+**/*.pem
+**/*.key
+**/*.p12
+**/*.pfx
+**/*.log
+**/.dxos-storage
+*.tmp
