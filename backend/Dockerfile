@@ -6,7 +6,9 @@ COPY gradle/ gradle/
 COPY gradlew settings.gradle build.gradle ./
 COPY src/main/ src/main/
 # Always use the repository-pinned Gradle wrapper, not a system Gradle version.
-RUN sh ./gradlew --no-daemon bootJar -x test --console=plain
+# Windows Git may check out gradlew with CRLF; normalize only inside the Linux build stage.
+RUN sed -i 's/\r$//' ./gradlew \
+    && sh ./gradlew --no-daemon bootJar -x test --console=plain
 
 FROM eclipse-temurin:21-jre-jammy AS runtime
 WORKDIR /app
