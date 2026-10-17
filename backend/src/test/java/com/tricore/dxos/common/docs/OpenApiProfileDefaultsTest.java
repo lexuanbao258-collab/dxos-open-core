@@ -3,14 +3,19 @@ package com.tricore.dxos.common.docs;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.env.YamlPropertySourceLoader;
 import org.springframework.core.io.ClassPathResource;
+import org.yaml.snakeyaml.LoaderOptions;
+import org.yaml.snakeyaml.Yaml;
+import org.yaml.snakeyaml.constructor.SafeConstructor;
 
 import java.io.IOException;
+import java.util.List;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Checks the checked-in profile defaults without starting the backend or contacting any database.
- * These are configuration assertions, not proof of externally exposed network behavior.
+ * Checks checked-in profile defaults without starting the backend or contacting any database.
+ * Config shape tests do not prove that Swagger UI runtime honored each setting: that needs HTTP smoke.
  */
 class OpenApiProfileDefaultsTest {
     @Test
@@ -26,13 +31,29 @@ class OpenApiProfileDefaultsTest {
         assertThat(value("application-docs-local.yml", "springdoc.swagger-ui.enabled")).isEqualTo(true);
         assertThat(value("application-docs-local.yml", "springdoc.swagger-ui.disable-swagger-default-url"))
                 .isEqualTo(true);
-        assertThat(value("application-docs-local.yml", "springdoc.swagger-ui.supported-submit-methods"))
-                .isEqualTo(java.util.List.of());
+
+        // Spring Boot's flattened PropertySource may omit an empty YAML collection entirely,
+        // so getProperty("...supported-submit-methods") is NOT a reliable way to verify [].
+        // Parse the checked-in YAML structure directly. Actual Swagger UI behavior needs an HTTP test.
+        assertThat(rawYamlValue("application-docs-local.yml",
+                "springdoc", "swagger-ui", "supported-submit-methods"))
+                .isEqualTo(List.of());
     }
 
     private static Object value(String resource, String key) throws IOException {
         var sources = new YamlPropertySourceLoader().load(resource, new ClassPathResource(resource));
         assertThat(sources).isNotEmpty();
         return sources.get(0).getProperty(key);
+    }
+
+    private static Object rawYamlValue(String resource, String... keys) throws IOException {
+        try (var input = new ClassPathResource(resource).getInputStream()) {
+            Object cursor = new Yaml(new SafeConstructor(new LoaderOptions())).load(input);
+            for (String key : keys) {
+                assertThat(cursor).as("YAML mapping for " + key).isInstanceOf(Map.class);
+                cursor = ((Map<?, ?>) cursor).get(key);
+            }
+            return cursor;
+        }
     }
 }
