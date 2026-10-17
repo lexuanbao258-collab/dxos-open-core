@@ -1,7 +1,13 @@
 # Issue #37 — run Swagger / OpenAPI safely on Windows
 
-**Status:** Development staging instructions; these steps are **not** evidence that
-the backend has already booted or that Swagger UI has been smoke-tested.
+**Status:** Local documentation preview verified on Windows/JDK 21 at
+`0673974f8ad376c4708e7b08f02645ad8de815de` (operator evidence:
+OpenAPI 3.1.0, 9 registered paths, HTTP 403 for business APIs, listener
+127.0.0.1:18080, Swagger `supportedSubmitMethods: []`, full Gradle build
+741 total / 629 passed / 112 skipped integration tests / 0 failed).
+**Every subsequent commit needs its own Gradle and HTTP re-verification.**
+The actual production application / default-profile HTTP behavior was not
+verified by those earlier results; do not infer deployment readiness.
 
 ## Access restrictions
 
@@ -49,8 +55,14 @@ From a clean checkout of PR #45 in Windows PowerShell:
 
 ```powershell
 cd D:\olp\dxos-api-docs\backend
-.\gradlew.bat test --tests '*DocsPreviewHttpTest' --tests '*OpenApiProfileDefaultsTest' --tests '*WorkflowHttpExposureTest' --rerun-tasks --no-build-cache --no-daemon --console=plain
+.\gradlew.bat test --tests '*DocsPreviewHttpTest' --tests '*DocsDisabledByDefaultHttpTest' --tests '*OpenApiProfileDefaultsTest' --tests '*WorkflowHttpExposureTest' --rerun-tasks --no-build-cache --no-daemon --console=plain
 ```
+
+The `DocsDisabledByDefaultHttpTest` sends real GET requests in a second
+database-free Spring MVC context with `docs-local` **not active**. It asserts
+that `/v3/api-docs`, `/v3/api-docs/active`, Swagger config, and both Swagger UI
+paths return **404**. This complements the checked-in YAML guard; it is still
+not proof of behavior in the real production `DxosApplication` or an OIDC test.
 
 **Only after the focused tests pass**, run in the same directory:
 
@@ -64,6 +76,10 @@ browser (port 18080, **not** 8080):
 - Swagger UI: http://127.0.0.1:18080/swagger-ui.html
 - Grouped OpenAPI JSON: http://127.0.0.1:18080/v3/api-docs/active
 - Swagger config: http://127.0.0.1:18080/v3/api-docs/swagger-config
+
+Swagger should show **one** auto-discovered group labeled `active`.
+Springdoc publishes the `GroupedOpenApi("active")` automatically;
+there is no second manual `springdoc.swagger-ui.urls` entry.
 
 No database environment variables, password, schema preparation or migration
 is needed for `docsPreview`. It does not use the temporary `dxos-swagger-pg`
@@ -158,6 +174,12 @@ The UI and JSON are not verified until a real operator test and reviewer signoff
   OIDC/tenant-resource ACL. It is not the generic Workflow Core API.
 - springdoc starter is pinned to 2.8.17 for Spring Boot 3.5.x; test its
   exact behavior in the target environment before merge.
+- `DocsDisabledByDefaultHttpTest` verifies default docs-off via test-only
+  embedded HTTP. Complete production `DxosApplication` docs-off and full
+  security tests when reviewed prerequisites are available.
+- Full Windows build on prior `0673974f` had 629 passed and 112 skipped:
+  skipped suites require opt-in JDBC/TLS variables, **not** evidence of passing
+  database tests. Do not enable them against Supabase/shared staging.
 - Verify errors/DTO annotations and real docs endpoint disablement with
-  integration tests; run full backend build/tests on JDK21.
+  integration tests; run full backend build/tests on JDK21 on **each new HEAD**.
 - Swagger local is documentation only; Developer Portal UI #39 is separate.
