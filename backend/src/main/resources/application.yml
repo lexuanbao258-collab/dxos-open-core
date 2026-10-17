@@ -38,3 +38,4 @@ tricore:
   security:
     oidc:
       audience: ${OIDC_AUDIENCE}
+      resource-client-id: ${OIDC_RESOURCE_CLIENT_ID}

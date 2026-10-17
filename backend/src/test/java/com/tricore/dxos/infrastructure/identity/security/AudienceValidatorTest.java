@@ -7,6 +7,7 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import java.time.Instant;
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -40,6 +41,21 @@ class AudienceValidatorTest {
                 validator.validate(jwtWithAudience(List.of("another-api")));
 
         assertTrue(result.hasErrors());
+    }
+
+    @Test
+    void rejectsJwtWithoutAudienceAsValidationFailure() {
+        Instant now = Instant.now();
+        Jwt jwt = Jwt.withTokenValue("test-token")
+                .header("alg", "none")
+                .issuedAt(now)
+                .expiresAt(now.plusSeconds(300))
+                .build();
+
+        OAuth2TokenValidatorResult result = validator.validate(jwt);
+
+        assertTrue(result.hasErrors());
+        assertEquals("invalid_token", result.getErrors().iterator().next().getErrorCode());
     }
 
     @Test

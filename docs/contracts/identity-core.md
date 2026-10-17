@@ -195,7 +195,8 @@ contract or settle future provider replacement.
 The infrastructure adapter uses Spring Security OAuth2 Resource Server with a
 Bearer JWT access token. The production `JwtDecoder` uses issuer discovery and
 the provider's JWKS for signature verification. Its validator chain checks issuer,
-timestamp/expiry (and `nbf` when present), an audience containing `tricore-api`,
+timestamp/expiry (and `nbf` when present), an audience containing the configured
+`OIDC_AUDIENCE` value,
 and the payload claim `typ` exactly equal to `"Bearer"`. It does not trim or
 case-fold that claim; missing or other values fail validation.
 
@@ -215,7 +216,7 @@ The payload claim, not the JOSE header, is the input to
 filter chain verifies the JWT before establishing that authentication. The
 adapter maps its issuer and subject to the canonical `subjectId` described
 above. It reads Workflow authorities only from
-`resource_access.tricore-api.roles`, exposing the
+`resource_access.<OIDC_RESOURCE_CLIENT_ID>.roles`, exposing the
 exact values `workflow:create`, `workflow:activate`, `workflow:transition` and
 `workflow:read`; unknown roles are ignored. Constructing an
 `AuthenticatedPrincipal` manually is not evidence of production authentication.
@@ -231,9 +232,11 @@ does not establish a general CSRF policy. Application authorization responses,
 including Workflow/Gateway 403/404 behavior, belong to those boundaries rather
 than an Identity filter-level authority rule.
 
-Local configuration uses `OIDC_ISSUER_URI` and `OIDC_AUDIENCE`. The verified
-local values are `http://localhost:8180/realms/tricore` and `tricore-api`,
-respectively; no credential or token value belongs in this contract.
+Local configuration uses `OIDC_ISSUER_URI`, `OIDC_AUDIENCE` and
+`OIDC_RESOURCE_CLIENT_ID`. The verified local values are
+`http://localhost:8180/realms/tricore`, `tricore-api` and `tricore-api`,
+respectively. Audience validation and resource-client role lookup use separate
+settings; no credential or token value belongs in this contract.
 
 ## Gateway consumer expectations
 

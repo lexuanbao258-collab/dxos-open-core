@@ -78,7 +78,7 @@ class OidcKeycloakIntegrationTest {
                 .setAuthentication(authentication);
 
         SpringSecurityCurrentPrincipal currentPrincipal =
-                new SpringSecurityCurrentPrincipal();
+                new SpringSecurityCurrentPrincipal(AUDIENCE);
 
         AuthenticatedPrincipal principal =
                 currentPrincipal.requireVerified();

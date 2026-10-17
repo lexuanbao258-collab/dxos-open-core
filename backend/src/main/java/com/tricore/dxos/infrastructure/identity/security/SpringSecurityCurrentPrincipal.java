@@ -3,6 +3,7 @@ package com.tricore.dxos.infrastructure.identity.security;
 import com.tricore.dxos.application.identity.CurrentPrincipal;
 import com.tricore.dxos.core.identity.AuthenticatedPrincipal;
 import com.tricore.dxos.core.identity.Authority;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -21,7 +22,14 @@ final class SpringSecurityCurrentPrincipal implements CurrentPrincipal {
     private static final Set<String> SUPPORTED_AUTHORITIES = Set.of(
             "workflow:create", "workflow:activate", "workflow:transition", "workflow:read"
     );
+    private final String resourceClientId;
 
+    SpringSecurityCurrentPrincipal(@Value("${tricore.security.oidc.resource-client-id}") String resourceClientId) {
+        if (resourceClientId == null || resourceClientId.isBlank()) {
+            throw new IllegalArgumentException("Resource client ID must not be blank");
+        }
+        this.resourceClientId = resourceClientId;
+    }
 
     @Override
     public AuthenticatedPrincipal requireVerified() {
@@ -64,10 +72,10 @@ final class SpringSecurityCurrentPrincipal implements CurrentPrincipal {
                 + "." + encoder.encodeToString(subject.getBytes(StandardCharsets.UTF_8));
     }
 
-    private static Set<Authority> workflowAuthorities(Jwt jwt) {
+    private Set<Authority> workflowAuthorities(Jwt jwt) {
         Object resourceAccess = jwt.getClaim("resource_access");
         if (!(resourceAccess instanceof Map<?, ?> clients)
-                || !(clients.get("tricore-api") instanceof Map<?, ?> client)
+                || !(clients.get(resourceClientId) instanceof Map<?, ?> client)
                 || !(client.get("roles") instanceof List<?> roles)
                 || roles.stream().anyMatch(role -> !(role instanceof String))) {
             return Set.of();

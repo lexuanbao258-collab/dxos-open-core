@@ -76,6 +76,26 @@ class SecurityConfigTest {
     }
 
     @Test
+    void anonymousPostReturnsSafeUnauthorizedWithoutCreatingSession() throws Exception {
+        mvc.perform(post("/api/v1/requests")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"title":"Repair printer","description":"Printer is offline",
+                                 "requestType":"IT_SUPPORT"}
+                                """))
+                .andExpectAll(
+                        status().isUnauthorized(),
+                        content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON),
+                        content().json("""
+                                {"status":401,"code":"AUTHENTICATION_REQUIRED",
+                                 "message":"Authentication is required","errors":{}}
+                                """, JsonCompareMode.STRICT),
+                        result -> assertNull(result.getRequest().getSession(false))
+                );
+
+        verifyNoInteractions(requestService);
+    }
+    @Test
     void authenticatedBearerPostDoesNotRequireCsrfToken() throws Exception {
         Jwt jwt = Jwt.withTokenValue("test-token")
                 .header("alg", "RS256")
@@ -137,6 +157,29 @@ class SecurityConfigTest {
                             String authenticate = result.getResponse().getHeader("WWW-Authenticate");
                             assertFalse(authenticate != null && authenticate.toLowerCase(Locale.ROOT)
                                     .contains("error_description"));
+                        }
+                );
+
+        verifyNoInteractions(requestService);
+    }
+    @Test
+    void rejectedJwtSubjectReturnsSafeUnauthorizedBeforeController() throws Exception {
+        when(jwtDecoder.decode("invalid-subject-token"))
+                .thenThrow(new BadJwtException("JWT subject is missing or invalid"));
+
+        mvc.perform(get("/api/v1/requests")
+                        .header("Authorization", "Bearer invalid-subject-token"))
+                .andExpectAll(
+                        status().isUnauthorized(),
+                        content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON),
+                        content().json("""
+                            {"status":401,"code":"AUTHENTICATION_REQUIRED",
+                             "message":"Authentication is required","errors":{}}
+                            """, JsonCompareMode.STRICT),
+                        result -> {
+                            String body = result.getResponse().getContentAsString();
+                            assertFalse(body.contains("JWT subject"));
+                            assertFalse(body.contains("invalid-subject-token"));
                         }
                 );
 

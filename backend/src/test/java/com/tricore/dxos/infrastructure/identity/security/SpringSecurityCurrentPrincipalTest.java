@@ -4,6 +4,7 @@ import com.tricore.dxos.core.identity.AuthenticatedPrincipal;
 import com.tricore.dxos.core.identity.Authority;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -26,7 +27,7 @@ class SpringSecurityCurrentPrincipalTest {
             "oidc:aHR0cHM6Ly9pc3N1ZXIuZXhhbXBsZS50ZXN0.dXNlci0xMjM";
 
     private final SpringSecurityCurrentPrincipal currentPrincipal =
-            new SpringSecurityCurrentPrincipal();
+            new SpringSecurityCurrentPrincipal("tricore-api");
 
     @AfterEach
     void clearSecurityContext() {
@@ -109,6 +110,51 @@ class SpringSecurityCurrentPrincipalTest {
                 new Authority("workflow:transition"),
                 new Authority("workflow:read")
         ), principal.authorities());
+    }
+
+    @Test
+    void mapsAuthoritiesFromAnotherConfiguredResourceClient() {
+        SpringSecurityCurrentPrincipal configuredPrincipal =
+                new SpringSecurityCurrentPrincipal("workflow-client");
+        SecurityContextHolder.getContext().setAuthentication(new JwtAuthenticationToken(jwt(Map.of(
+                "iss", ISSUER, "sub", "user-123",
+                "resource_access", Map.of(
+                        "tricore-api", Map.of("roles", List.of("workflow:transition")),
+                        "workflow-client", Map.of("roles", List.of("workflow:create", "workflow:read"))
+                )
+        )), List.of()));
+
+        assertEquals(Set.of(new Authority("workflow:create"), new Authority("workflow:read")),
+                configuredPrincipal.requireVerified().authorities());
+    }
+
+    @Test
+    void springPropertySelectsResourceClientRoles() {
+        new ApplicationContextRunner()
+                .withPropertyValues("tricore.security.oidc.resource-client-id=workflow-client")
+                .withBean(SpringSecurityCurrentPrincipal.class)
+                .run(context -> {
+                    SecurityContextHolder.getContext().setAuthentication(new JwtAuthenticationToken(jwt(Map.of(
+                            "iss", ISSUER, "sub", "user-123",
+                            "resource_access", Map.of("workflow-client", Map.of("roles", List.of("workflow:create")))
+                    )), List.of()));
+
+                    assertEquals(Set.of(new Authority("workflow:create")),
+                            context.getBean(SpringSecurityCurrentPrincipal.class)
+                                    .requireVerified().authorities());
+                });
+    }
+
+    @Test
+    void ignoresRolesUnderDifferentResourceClient() {
+        SpringSecurityCurrentPrincipal configuredPrincipal =
+                new SpringSecurityCurrentPrincipal("workflow-client");
+        SecurityContextHolder.getContext().setAuthentication(new JwtAuthenticationToken(jwt(Map.of(
+                "iss", ISSUER, "sub", "user-123",
+                "resource_access", Map.of("tricore-api", Map.of("roles", List.of("workflow:create")))
+        )), List.of()));
+
+        assertTrue(configuredPrincipal.requireVerified().authorities().isEmpty());
     }
 
     @Test
