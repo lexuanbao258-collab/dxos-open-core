@@ -17,6 +17,7 @@ $originalPrefix = $null
 $originalStaging = $null
 $originalMaxObject = $null
 $script:trackedPids = New-Object 'System.Collections.Generic.HashSet[int]'
+$script:trackedBirths = @{}
 $runPrefix = $null
 $staging = $null
 $privateLogs = $null
@@ -55,13 +56,22 @@ function Get-RunWorkers([string]$namespace) {
 # A failed CIM query is a BLOCKED outcome; process-tree polling is best effort,
 # and must be supplemented by an operator-controlled external watchdog.
 function Update-OwnedPids([object[]]$snapshot) {
+  $present = @{}
+  foreach ($item in $snapshot) { $present[[int]$item.ProcessId] = $item }
   $progress = $true
   while ($progress) {
     $progress = $false
     foreach ($entry in $snapshot) {
       $parent = [int]$entry.ParentProcessId
       $id = [int]$entry.ProcessId
-      if ($script:trackedPids.Contains($parent) -and $script:trackedPids.Add($id)) {
+      # A recycled PID must never let us track or kill an unrelated process.
+      if (-not $script:trackedPids.Contains($id) -and
+        $script:trackedPids.Contains($parent) -and
+        $present.ContainsKey($parent) -and
+        $script:trackedBirths.ContainsKey($parent) -and
+        ([string]$present[$parent].CreationDate -ceq $script:trackedBirths[$parent])) {
+        [void]$script:trackedPids.Add($id)
+        $script:trackedBirths[$id] = [string]$entry.CreationDate
         $progress = $true
       }
     }
@@ -70,7 +80,12 @@ function Update-OwnedPids([object[]]$snapshot) {
 function Get-LiveOwnedProcesses {
   $snapshot = @(Get-CimInstance Win32_Process -ErrorAction Stop)
   Update-OwnedPids $snapshot
-  return @($snapshot | Where-Object { $script:trackedPids.Contains([int]$_.ProcessId) })
+  return @($snapshot | Where-Object {
+    $id = [int]$_.ProcessId
+    $script:trackedPids.Contains($id) -and
+      $script:trackedBirths.ContainsKey($id) -and
+      ([string]$_.CreationDate -ceq $script:trackedBirths[$id])
+  })
 }
 function Stop-OwnedTree {
   # Only terminate PIDs discovered within this invocation's parent chain.
@@ -103,13 +118,22 @@ function Invoke-OfflineSelfTest {
   [void](New-Item -ItemType Directory -Path $tmp -ErrorAction Stop)
   try {
     $script:trackedPids.Clear()
+    $script:trackedBirths.Clear()
     [void]$script:trackedPids.Add(100001)
+    $script:trackedBirths[100001] = 'birth-root'
     $snapshot = @(
-      [pscustomobject]@{ ProcessId=100002; ParentProcessId=100001 },
-      [pscustomobject]@{ ProcessId=100003; ParentProcessId=100002 }
+      [pscustomobject]@{ ProcessId=100001; ParentProcessId=0; CreationDate='birth-root' },
+      [pscustomobject]@{ ProcessId=100002; ParentProcessId=100001; CreationDate='birth-child' },
+      [pscustomobject]@{ ProcessId=100003; ParentProcessId=100002; CreationDate='birth-grandchild' }
     )
     Update-OwnedPids $snapshot
     Require ($script:trackedPids.Contains(100003)) 'nested descendant tracking failed'
+    $reused = @(
+      [pscustomobject]@{ ProcessId=100002; ParentProcessId=0; CreationDate='recycled-pid' },
+      [pscustomobject]@{ ProcessId=100004; ParentProcessId=100002; CreationDate='foreign-child' }
+    )
+    Update-OwnedPids $reused
+    Require (-not $script:trackedPids.Contains(100004)) 'recycled PID must not own unrelated child'
     Require (-not (Test-FinalGate $true 0 1 0 $true)) 'late worker orphan must block'
     Require (-not (Test-FinalGate $true 1 0 0 $true)) 'detached owned process must block'
     Require (-not (Test-FinalGate $true 0 0 0 $false)) 'cleanup error must block'
@@ -129,6 +153,7 @@ function Invoke-OfflineSelfTest {
     Write-Host 'OFFLINE_SELFTEST=PASS: descendant tracking, late orphan, cleanup and synthetic JUnit gates.'
   } finally {
     $script:trackedPids.Clear()
+    $script:trackedBirths.Clear()
     Remove-Item -LiteralPath $tmp -Recurse -Force -ErrorAction SilentlyContinue
   }
 }
@@ -281,7 +306,10 @@ try {
     RedirectStandardOutput = $stdout; RedirectStandardError = $stderr
   }
   $process = Start-Process @launch
+  $rootRecord = @(Get-CimInstance Win32_Process -Filter ('ProcessId = ' + [int]$process.Id) -ErrorAction Stop)
+  Require ($rootRecord.Count -eq 1) 'started Gradle wrapper has no verifiable process identity'
   [void]$script:trackedPids.Add([int]$process.Id)
+  $script:trackedBirths[[int]$process.Id] = [string]$rootRecord[0].CreationDate
   $maxElapsed = [TimeSpan]::FromMinutes($MaxMinutes)
   $maxStaging = [long]$MaxStagingMiB * 1048576
   do {
@@ -341,6 +369,9 @@ try {
     Write-Host 'HOSTED_GATE_WARNING=final cleanup/process verification failed; preserve namespace.'
   }
 }
-Require $passed 'final process, report or cleanup gate not satisfied'
+if (-not $passed) {
+  Write-Host 'HOSTED_GATE_RESULT=BLOCKED. Final process or cleanup state was not verified.'
+  throw 'Hosted verification NOT accepted. Preserve the run namespace and local evidence.'
+}
 Write-Host 'HOSTED_GATE_RESULT=PASS tests=19 failures=0 skipped=0'
 Write-Host 'Evidence and namespace manifest remain in a protected local folder.'
