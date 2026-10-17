@@ -32,6 +32,7 @@ dependencies {
 tasks.named('test') {
     useJUnitPlatform()
     systemProperty 'workflow.test.runtimeClasspath', sourceSets.test.runtimeClasspath.asPath
+    systemProperty 'localfs.test.runtimeClasspath', sourceSets.test.runtimeClasspath.asPath
     outputs.upToDateWhen { !System.getenv('WORKFLOW_TEST_JDBC_URL') }
     outputs.cacheIf { !System.getenv('WORKFLOW_TEST_JDBC_URL') }
 }
