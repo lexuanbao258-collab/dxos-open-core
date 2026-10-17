@@ -134,7 +134,7 @@ class LocalStorageContractTest {
     }
 
     @Test void independentJvmCreateOnlyHasExactlyOneWinner() throws Exception {
-        String java = Path.of(System.getProperty("java.home"), "bin",
+        String javaExecutable = Path.of(System.getProperty("java.home"), "bin",
                 System.getProperty("os.name").startsWith("Windows") ? "java.exe" : "java").toString();
         String cp = System.getProperty("localfs.test.runtimeClasspath");
         assertThat(cp).as("Run this test through backend Gradle test task").isNotBlank();
@@ -143,9 +143,9 @@ class LocalStorageContractTest {
         Process second = null;
         ExecutorService readers = Executors.newFixedThreadPool(2);
         try {
-            first = new ProcessBuilder(java, "-cp", cp, LocalStorageProcessWorker.class.getName(),
+            first = new ProcessBuilder(javaExecutable, "-cp", cp, LocalStorageProcessWorker.class.getName(),
                     root.toString(), "winner-a").redirectErrorStream(true).start();
-            second = new ProcessBuilder(java, "-cp", cp, LocalStorageProcessWorker.class.getName(),
+            second = new ProcessBuilder(javaExecutable, "-cp", cp, LocalStorageProcessWorker.class.getName(),
                     root.toString(), "winner-b").redirectErrorStream(true).start();
             var a = new BufferedReader(new InputStreamReader(first.getInputStream()));
             var b = new BufferedReader(new InputStreamReader(second.getInputStream()));
