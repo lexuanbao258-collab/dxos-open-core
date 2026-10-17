@@ -171,13 +171,15 @@ function Get-JavaVersion([string]$executable) {
   $probe.StartInfo = $start
   try {
     Require ($probe.Start()) 'JDK version process failed to start'
-    $err = $probe.StandardError.ReadToEnd()
-    $out = $probe.StandardOutput.ReadToEnd()
+    # -version is small fixed output; enforce the deadline *before* ReadToEnd
+    # so a stalled Java process cannot block forever during dry preflight.
     if (-not $probe.WaitForExit(10000)) {
       $probe.Kill()
       throw 'BLOCKED: Java version process timed out'
     }
     Require ($probe.ExitCode -eq 0) 'Java version process failed'
+    $err = $probe.StandardError.ReadToEnd()
+    $out = $probe.StandardOutput.ReadToEnd()
     return ($err + $out)
   } finally { $probe.Dispose() }
 }
