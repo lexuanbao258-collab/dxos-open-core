@@ -67,10 +67,23 @@ class DocsPreviewHttpTest {
     }
 
     @Test
-    void swaggerUiConfigurationIsAvailableOnlyInDocsPreview() {
+    void swaggerUiHasOneActiveGroupAndDisablesAllSubmitMethods() throws Exception {
         ResponseEntity<String> config = http.getForEntity(url("/v3/api-docs/swagger-config"), String.class);
         assertThat(config.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(config.getBody()).contains("/v3/api-docs/active");
+
+        JsonNode settings = json.readTree(config.getBody());
+        JsonNode methods = settings.path("supportedSubmitMethods");
+        assertThat(methods.isArray()).isTrue();
+        assertThat(methods.size()).isZero();
+
+        // Springdoc automatically publishes GroupedOpenApi("active"). Adding manual
+        // swagger-ui.urls duplicated the same item in the UI drop-down.
+        JsonNode groups = settings.path("urls");
+        assertThat(groups.isArray()).isTrue();
+        assertThat(groups.size()).isEqualTo(1);
+        assertThat(groups.get(0).path("name").asText()).isEqualTo("active");
+        assertThat(groups.get(0).path("url").asText()).isEqualTo("/v3/api-docs/active");
+        assertThat(settings.path("validatorUrl").asText()).isEmpty();
     }
 
     private String url(String path) {
