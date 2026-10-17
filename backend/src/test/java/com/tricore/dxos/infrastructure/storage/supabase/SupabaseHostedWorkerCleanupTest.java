@@ -10,6 +10,17 @@ import static org.mockito.Mockito.*;
 /** Local-only regressions; never launch a worker or access a hosted Supabase project. */
 class SupabaseHostedWorkerCleanupTest {
 
+    @Test void verifiedProtocolAndNormalExitAllowCleanup() {
+        assertThat(SupabaseObjectStorageIntegrationTest.cleanupAllowed(true, true)).isTrue();
+    }
+
+    @Test void cleanExitWithUnverifiedProviderOutcomeCannotTriggerCleanup() {
+        // SupabaseProcessWorker may print UNAVAILABLE and still exit 0.
+        assertThat(SupabaseObjectStorageIntegrationTest.cleanupAllowed(true, false)).isFalse();
+        assertThat(SupabaseObjectStorageIntegrationTest.cleanupAllowed(false, true)).isFalse();
+        assertThat(SupabaseObjectStorageIntegrationTest.cleanupAllowed(false, false)).isFalse();
+    }
+
     @Test void absentWorkerNeedsNoCleanup() {
         assertThat(SupabaseObjectStorageIntegrationTest.terminateWorker(null)).isTrue();
     }
