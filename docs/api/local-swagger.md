@@ -67,6 +67,27 @@ if (@($spec.paths.PSObject.Properties.Name | Where-Object { $_ -like "/api/v1/wo
 }
 ```
 
+### Verify Swagger UI really disables submissions
+
+The YAML `supported-submit-methods: []` expresses the intended setting,
+but a configuration/unit test **does not prove** it reached Swagger UI.
+After local startup, inspect the **read-only** Swagger configuration endpoint:
+
+```powershell
+$uiConfig = Invoke-RestMethod -Uri "http://127.0.0.1:8080/v3/api-docs/swagger-config"
+$uiConfig | ConvertTo-Json -Depth 8
+$hasSetting = $uiConfig.PSObject.Properties.Name -contains "supportedSubmitMethods"
+if (-not $hasSetting -or @($uiConfig.supportedSubmitMethods).Count -ne 0) {
+    throw "Swagger method submission is NOT verified disabled; do not use Try it out"
+}
+```
+
+If the empty method list is missing/ignored by the running springdoc version,
+treat UI write-disabling as **NOT VERIFIED** and fix the server-side UI config
+before claiming the local docs are safe. Never rely on browser UI alone as an
+authorization control; use only isolated local test data and do not expose the
+Request prototype to untrusted users.
+
 If app startup fails on PostgreSQL/guard prerequisites, **stop and fix the
 isolated environment**; do not disable production guards, set `permitAll`,
 skip unreviewed migrations, or use shared Supabase just to make Swagger start.
