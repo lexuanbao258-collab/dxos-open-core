@@ -7,6 +7,7 @@ import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
@@ -191,6 +192,13 @@ public final class LocalFileSystemStorageAdapter implements ObjectStoragePort {
             if (!Files.isDirectory(path, NOFOLLOW_LINKS)) throw concurrentCreator;
         }
         if (!Files.isDirectory(path, NOFOLLOW_LINKS) || Files.isSymbolicLink(path)) throw new IOException();
+        try {
+            // On POSIX, lock down new/existing dedicated storage directories.
+            // Windows administrators must protect the configured root with NTFS ACLs.
+            Files.setPosixFilePermissions(path, PosixFilePermissions.fromString("rwx------"));
+        } catch (UnsupportedOperationException windowsOrOtherNonPosix) {
+            // POSIX permissions not available: OS ACLs remain operator-controlled.
+        }
     }
 
     private interface Work<T> { T run() throws IOException; }
