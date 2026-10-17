@@ -58,16 +58,15 @@ function Assert-PrivateBucket([uri]$restUri) {
   Add-Type -AssemblyName System.Net.Http
   $handler = New-Object System.Net.Http.HttpClientHandler
   $handler.AllowAutoRedirect = $false
-  $http = New-Object System.Net.Http.HttpClient -ArgumentList $handler
+  $http = [System.Net.Http.HttpClient]::new($handler)
   $http.Timeout = [TimeSpan]::FromSeconds(15)
   $request = $null; $response = $null; $stream = $null; $buffer = $null
   try {
     $target = [uri]($restUri.AbsoluteUri.TrimEnd('/') + '/bucket/dxos-objects')
-    $request = New-Object System.Net.Http.HttpRequestMessage([System.Net.Http.HttpMethod]::Get, $target)
+    $request = [System.Net.Http.HttpRequestMessage]::new([System.Net.Http.HttpMethod]::Get, $target)
     [void]$request.Headers.TryAddWithoutValidation('apikey', $env:SUPABASE_STORAGE_API_KEY)
     if ($env:SUPABASE_STORAGE_API_KEY_MODE -eq 'service-role') {
-      $request.Headers.Authorization =
-        New-Object System.Net.Http.Headers.AuthenticationHeaderValue('Bearer', $env:SUPABASE_STORAGE_API_KEY)
+      $request.Headers.Authorization = [System.Net.Http.Headers.AuthenticationHeaderValue]::new('Bearer', $env:SUPABASE_STORAGE_API_KEY)
     }
     $response = $http.SendAsync(
       $request, [System.Net.Http.HttpCompletionOption]::ResponseHeadersRead
