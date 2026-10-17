@@ -210,5 +210,10 @@ trong Swagger. Không triển khai profile này lên public staging/production.
   rồi mới kiểm tra backend thật với PostgreSQL local riêng sau review.
   Workflow HTTP không xuất hiện trong spec cho đến khi được phê duyệt.
 
-Cấu hình này **chưa phải bằng chứng Swagger đã chạy thành công**;
-cần test/smoke bằng JDK21 và review riêng trước khi merge Issue #37.
+**Bằng chứng local:** Swagger Preview đã chạy trên Windows/JDK21 tại
+commit `0673974f`, xuất OpenAPI 3.1.0 (9 đường dẫn Health/Request),
+Swagger UI chỉ nghe `127.0.0.1:18080` và cấu hình
+`supportedSubmitMethods: []`. Full build cũ có **629 test PASS,
+112 integration SKIPPED, 0 FAIL**; các commit mới cần chạy lại test.
+Chưa chứng minh môi trường production, OIDC/Gateway hay PostgreSQL E2E;
+chưa đủ điều kiện merge Issue #37.
