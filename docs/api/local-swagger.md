@@ -35,6 +35,65 @@ java -version
 These tests check *only* the selected configurations and controller behavior,
 not runtime Swagger generation. Capture exact Git SHA and Gradle logs.
 
+## Preferred: database-free Swagger preview for API catalog review
+
+The `docsPreview` Gradle task launches a **test-classpath-only**
+Spring MVC application with the actual registered Health and Request controllers
+but **Mockito service doubles**. Unlike `bootRun`, it has no DataSource,
+Hibernate JPA, Flyway, Workflow persistence component scanning, or DB setup.
+All `/api/**` and `/actuator/**` application requests return **403** by
+a filter, including GET and POST, so Swagger can display but cannot operate
+the prototype business APIs. It explicitly binds to IPv4 loopback.
+
+From a clean checkout of PR #45 in Windows PowerShell:
+
+```powershell
+cd D:\olp\dxos-api-docs\backend
+.\gradlew.bat test --tests '*DocsPreviewHttpTest' --tests '*OpenApiProfileDefaultsTest' --tests '*WorkflowHttpExposureTest' --rerun-tasks --no-build-cache --no-daemon --console=plain
+```
+
+**Only after the focused tests pass**, run in the same directory:
+
+```powershell
+.\gradlew.bat docsPreview --no-daemon --console=plain
+```
+
+The process intentionally remains running until `Ctrl+C`. Open in the local
+browser (port 18080, **not** 8080):
+
+- Swagger UI: http://127.0.0.1:18080/swagger-ui.html
+- Grouped OpenAPI JSON: http://127.0.0.1:18080/v3/api-docs/active
+- Swagger config: http://127.0.0.1:18080/v3/api-docs/swagger-config
+
+No database environment variables, password, schema preparation or migration
+is needed for `docsPreview`. It does not use the temporary `dxos-swagger-pg`
+container. **Do not use `bootRun` as an interchangeable command.**
+Only docs are functional: health/request business requests are 403 even when
+the OpenAPI schema lists them.
+
+This preview is **not** an end-to-end integration of real DB operations, OIDC,
+security ACL, or full production app startup. Before Issue #37 DoD, validate
+the spec against the actual production Spring configuration in an approved
+isolated environment, verify Swagger UI supported submit methods at runtime,
+and complete security review. Any missing/ignored empty-method setting is a
+blocker for a claim that Swagger UI itself is read-only.
+
+### Read-only verification of preview endpoints
+
+```powershell
+$spec = Invoke-RestMethod "http://127.0.0.1:18080/v3/api-docs/active"
+$spec.openapi
+$spec.paths.PSObject.Properties.Name
+if (@($spec.paths.PSObject.Properties.Name | Where-Object { $_ -like "/api/v1/workflow-instances*" }).Count -ne 0) {
+    throw "BLOCKED Workflow API appears in docs"
+}
+```
+
+The preview filter enforces 403 even if the Swagger UI disables fewer buttons
+than expected. No need to issue POST requests manually for this preview.
+
+---
+
 ## Optional actual local Swagger smoke only after safe DB setup
 
 In a separate PowerShell window with **already verified isolated-local**
