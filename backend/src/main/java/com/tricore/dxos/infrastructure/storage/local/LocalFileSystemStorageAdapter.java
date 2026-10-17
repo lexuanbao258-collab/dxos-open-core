@@ -183,7 +183,13 @@ public final class LocalFileSystemStorageAdapter implements ObjectStoragePort {
         for (Path parent = path; parent != null; parent = parent.getParent()) {
             if (Files.exists(parent, NOFOLLOW_LINKS) && Files.isSymbolicLink(parent)) throw new IOException();
         }
-        Files.createDirectories(path);
+        try {
+            Files.createDirectories(path);
+        } catch (FileAlreadyExistsException concurrentCreator) {
+            // Two JVMs can create the same hashed key directory at the same instant.
+            // An existing real directory is fine; a symlink or non-directory is not.
+            if (!Files.isDirectory(path, NOFOLLOW_LINKS)) throw concurrentCreator;
+        }
         if (!Files.isDirectory(path, NOFOLLOW_LINKS) || Files.isSymbolicLink(path)) throw new IOException();
     }
 
