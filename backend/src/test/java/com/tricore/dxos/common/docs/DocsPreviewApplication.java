@@ -67,7 +67,13 @@ public class DocsPreviewApplication {
     @Order(Ordered.LOWEST_PRECEDENCE)
     WebServerFactoryCustomizer<ConfigurableServletWebServerFactory> previewLoopbackOnly() {
         // Force loopback even if SERVER_ADDRESS or CLI properties try to override it.
-        return factory -> factory.setAddress(InetAddress.getByAddress(new byte[]{127, 0, 0, 1}));
+        return factory -> {
+            try {
+                factory.setAddress(InetAddress.getByAddress(new byte[]{127, 0, 0, 1}));
+            } catch (java.net.UnknownHostException impossible) {
+                throw new IllegalStateException("Cannot configure IPv4 loopback", impossible);
+            }
+        };
     }
 
     @Bean
