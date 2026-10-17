@@ -1,0 +1,22 @@
+2026-10-16 PR 35 Large Download final staging review
+Baseline / unchanged HEAD: 0202ae87747fee558882c464f1198deb8abec3d3.
+Current tested Large Download snapshot: uncommitted; future commit SHA NOT YET ASSIGNED.
+Focused Java 21: 66 PASS, 0 FAIL, 0 ERROR, 0 SKIP, 6 suites.
+Full local build: 676 PASS, 0 FAIL, 0 ERROR, 112 PostgreSQL SKIP, 50 suites.
+Hosted Storage: 19 PASS, 0 FAIL, 0 ERROR, 0 SKIP.
+Hosted BUILD SUCCESSFUL in 1m 6s and capture SUCCESS supplied by user.
+Hosted XML timestamp: 2026-10-16T12:07:45.304Z.
+Current focused/full/hosted manifests: 9/9 exact worktree byte matches across 3 Java files.
+Historical manifests read separately from baseline Git: 30/30 verified, zero mismatches.
+Per historical manifest: 4 raw blob matches, 6 explicit CRLF checkout matches.
+Historical hosted paths in worktree now contain latest evidence; baseline versions remain in Git.
+All new/modified evidence reviewed, including every XML element/attribute, HTML safety,
+test totals and skip counts. XML has no properties, logs, hostnames or traces.
+Raw Gradle reports under backend/build are excluded.
+Final staged blob checks and secret scan: see final-staging-review.txt.
+Linux JDK 21 runtime: PENDING; Windows only.
+Full PostgreSQL regression: PENDING approved disposable database, roles and TLS fixtures.
+No shared Supabase PostgreSQL connection. No new test or infrastructure execution during review.
+New CI verification NOT RUN. Merge approval remains pending.
+No MinIO, Core, Workflow, Flyway or AWS SDK changes included.
+No commit, push, merge, reset or rebase performed.

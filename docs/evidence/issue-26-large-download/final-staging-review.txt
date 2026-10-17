@@ -1,0 +1,29 @@
+PR 35 Large Download final staged snapshot review, 2026-10-16
+Baseline HEAD: 0202ae87747fee558882c464f1198deb8abec3d3.
+Future commit SHA: NOT YET ASSIGNED.
+Scope: 3 Supabase Java files, sanitized evidence, capture and baseline verification scripts,
+Issue 26 evidence report and Supabase storage PoC documentation.
+Current focused/full/hosted source manifests: 9 exact byte matches across 3 Java files.
+Staged Java blobs match the tested source after Git LF normalization only.
+Historical baseline: 30 entries verified independently from baseline Git; zero mismatches.
+Focused: 66 PASS, 0 FAIL, 0 ERROR, 0 SKIP.
+Full: 676 PASS, 0 FAIL, 0 ERROR, 112 PostgreSQL SKIP.
+Hosted: 19 PASS, 0 FAIL, 0 ERROR, 0 SKIP; capture SUCCESS.
+Hosted BUILD SUCCESSFUL in 1m 6s is user reported; XML corroborates case results.
+Full and hosted case names, classes, durations and suite metadata match raw Gradle XML
+after explicit label redaction. Raw reports are not staged.
+New full XML/HTML test labels had provider host details and a dummy query password;
+these are redacted. capture.ps1 now redacts provider hosts and query credential values.
+Every staged artifact scanned for private keys, JWTs, provider/API tokens, AWS/GitHub
+keys, assigned credentials, credential URLs and provider endpoint details.
+No credentials, private keys, tokens or provider endpoints remain in staged artifacts.
+Remaining URLs are storage.invalid and localhost test fixtures or redacted localhost
+JDBC negative-test labels. No real credential or provider endpoint is included.
+All new/modified evidence reviewed; test counts and skip lists agree.
+git diff --cached --check: PASS. Final name list and status inspected.
+No MinIO, Core, Workflow, Flyway or raw backend/build reports staged.
+Linux runtime: PENDING (Windows only).
+Full PostgreSQL regression: PENDING; no shared Supabase PostgreSQL connection.
+No tests rerun or infrastructure connections made during final staging review.
+Ready to commit this reviewed snapshot: YES. Merge gates remain pending.
+STOP before commit; no commit, push, merge, reset or rebase performed.

@@ -1,0 +1,1105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites skipped="112" errors="0" tests="778" failures="0">
+  <testsuite name="com.tricore.dxos.application.authorization.WorkflowAuthorizationTest" tests="46" failures="0" errors="0" skipped="0" time="0.222" timestamp="2026-10-16T11:34:52.825Z">
+    <testcase name="rejectsCreationWithoutRequiredAuthority()" classname="com.tricore.dxos.application.authorization.WorkflowAuthorizationTest" time="0.09" />
+    <testcase name="permitsCreationOnlyWithOperationAuthorityAndResourcePermission()" classname="com.tricore.dxos.application.authorization.WorkflowAuthorizationTest" time="0.001" />
+    <testcase name="[1] operation=ACTIVATE" classname="com.tricore.dxos.application.authorization.WorkflowAuthorizationTest" time="0.009" />
+    <testcase name="[2] operation=TRANSITION" classname="com.tricore.dxos.application.authorization.WorkflowAuthorizationTest" time="0.001" />
+    <testcase name="[3] operation=READ" classname="com.tricore.dxos.application.authorization.WorkflowAuthorizationTest" time="0.001" />
+    <testcase name="requiresAPolicyInsteadOfUsingAnAllowAllFallback()" classname="com.tricore.dxos.application.authorization.WorkflowAuthorizationTest" time="0.001" />
+    <testcase name="[1] operation=CREATE" classname="com.tricore.dxos.application.authorization.WorkflowAuthorizationTest" time="0.001" />
+    <testcase name="[2] operation=ACTIVATE" classname="com.tricore.dxos.application.authorization.WorkflowAuthorizationTest" time="0.001" />
+    <testcase name="[3] operation=TRANSITION" classname="com.tricore.dxos.application.authorization.WorkflowAuthorizationTest" time="0.001" />
+    <testcase name="[4] operation=READ" classname="com.tricore.dxos.application.authorization.WorkflowAuthorizationTest" time="0.001" />
+    <testcase name="[1] authority=workflow:*" classname="com.tricore.dxos.application.authorization.WorkflowAuthorizationTest" time="0.0" />
+    <testcase name="[2] authority=WORKFLOW:CREATE" classname="com.tricore.dxos.application.authorization.WorkflowAuthorizationTest" time="0.001" />
+    <testcase name="[3] authority= workflow:create" classname="com.tricore.dxos.application.authorization.WorkflowAuthorizationTest" time="0.001" />
+    <testcase name="[4] authority=workflow:create " classname="com.tricore.dxos.application.authorization.WorkflowAuthorizationTest" time="0.0" />
+    <testcase name="rejectsCreateAsAnInstanceOperation()" classname="com.tricore.dxos.application.authorization.WorkflowAuthorizationTest" time="0.001" />
+    <testcase name="[1] operation=CREATE" classname="com.tricore.dxos.application.authorization.WorkflowAuthorizationTest" time="0.001" />
+    <testcase name="[2] operation=ACTIVATE" classname="com.tricore.dxos.application.authorization.WorkflowAuthorizationTest" time="0.0" />
+    <testcase name="[3] operation=TRANSITION" classname="com.tricore.dxos.application.authorization.WorkflowAuthorizationTest" time="0.0" />
+    <testcase name="[4] operation=READ" classname="com.tricore.dxos.application.authorization.WorkflowAuthorizationTest" time="0.001" />
+    <testcase name="[1] operation=ACTIVATE, authority=workflow:activate" classname="com.tricore.dxos.application.authorization.WorkflowAuthorizationTest" time="0.001" />
+    <testcase name="[2] operation=TRANSITION, authority=workflow:transition" classname="com.tricore.dxos.application.authorization.WorkflowAuthorizationTest" time="0.0" />
+    <testcase name="[3] operation=READ, authority=workflow:read" classname="com.tricore.dxos.application.authorization.WorkflowAuthorizationTest" time="0.0" />
+    <testcase name="[1] operation=CREATE" classname="com.tricore.dxos.application.authorization.WorkflowAuthorizationTest" time="0.001" />
+    <testcase name="[2] operation=ACTIVATE" classname="com.tricore.dxos.application.authorization.WorkflowAuthorizationTest" time="0.0" />
+    <testcase name="[3] operation=TRANSITION" classname="com.tricore.dxos.application.authorization.WorkflowAuthorizationTest" time="0.001" />
+    <testcase name="[4] operation=READ" classname="com.tricore.dxos.application.authorization.WorkflowAuthorizationTest" time="0.001" />
+    <testcase name="[1] missing=creation-caller" classname="com.tricore.dxos.application.authorization.WorkflowAuthorizationTest" time="0.004" />
+    <testcase name="[2] missing=definition" classname="com.tricore.dxos.application.authorization.WorkflowAuthorizationTest" time="0.001" />
+    <testcase name="[3] missing=resource" classname="com.tricore.dxos.application.authorization.WorkflowAuthorizationTest" time="0.001" />
+    <testcase name="[4] missing=instance-caller" classname="com.tricore.dxos.application.authorization.WorkflowAuthorizationTest" time="0.001" />
+    <testcase name="[5] missing=instance" classname="com.tricore.dxos.application.authorization.WorkflowAuthorizationTest" time="0.0" />
+    <testcase name="[6] missing=operation" classname="com.tricore.dxos.application.authorization.WorkflowAuthorizationTest" time="0.0" />
+    <testcase name="[1] resourceId=hidden-document" classname="com.tricore.dxos.application.authorization.WorkflowAuthorizationTest" time="0.002" />
+    <testcase name="[2] resourceId=missing-document" classname="com.tricore.dxos.application.authorization.WorkflowAuthorizationTest" time="0.0" />
+    <testcase name="[1] operation=CREATE, decision=FORBIDDEN, expectedMessage=FORBIDDEN" classname="com.tricore.dxos.application.authorization.WorkflowAuthorizationTest" time="0.01" />
+    <testcase name="[2] operation=CREATE, decision=HIDDEN, expectedMessage=HIDDEN" classname="com.tricore.dxos.application.authorization.WorkflowAuthorizationTest" time="0.001" />
+    <testcase name="[3] operation=CREATE, decision=UNAVAILABLE, expectedMessage=UNAVAILABLE" classname="com.tricore.dxos.application.authorization.WorkflowAuthorizationTest" time="0.001" />
+    <testcase name="[4] operation=ACTIVATE, decision=FORBIDDEN, expectedMessage=FORBIDDEN" classname="com.tricore.dxos.application.authorization.WorkflowAuthorizationTest" time="0.0" />
+    <testcase name="[5] operation=ACTIVATE, decision=HIDDEN, expectedMessage=HIDDEN" classname="com.tricore.dxos.application.authorization.WorkflowAuthorizationTest" time="0.0" />
+    <testcase name="[6] operation=ACTIVATE, decision=UNAVAILABLE, expectedMessage=UNAVAILABLE" classname="com.tricore.dxos.application.authorization.WorkflowAuthorizationTest" time="0.001" />
+    <testcase name="[7] operation=TRANSITION, decision=FORBIDDEN, expectedMessage=FORBIDDEN" classname="com.tricore.dxos.application.authorization.WorkflowAuthorizationTest" time="0.001" />
+    <testcase name="[8] operation=TRANSITION, decision=HIDDEN, expectedMessage=HIDDEN" classname="com.tricore.dxos.application.authorization.WorkflowAuthorizationTest" time="0.0" />
+    <testcase name="[9] operation=TRANSITION, decision=UNAVAILABLE, expectedMessage=UNAVAILABLE" classname="com.tricore.dxos.application.authorization.WorkflowAuthorizationTest" time="0.0" />
+    <testcase name="[10] operation=READ, decision=FORBIDDEN, expectedMessage=FORBIDDEN" classname="com.tricore.dxos.application.authorization.WorkflowAuthorizationTest" time="0.0" />
+    <testcase name="[11] operation=READ, decision=HIDDEN, expectedMessage=HIDDEN" classname="com.tricore.dxos.application.authorization.WorkflowAuthorizationTest" time="0.001" />
+    <testcase name="[12] operation=READ, decision=UNAVAILABLE, expectedMessage=UNAVAILABLE" classname="com.tricore.dxos.application.authorization.WorkflowAuthorizationTest" time="0.001" />
+  </testsuite>
+  <testsuite name="com.tricore.dxos.common.health.HealthControllerTest" tests="1" failures="0" errors="0" skipped="0" time="0.515" timestamp="2026-10-16T11:34:54.820Z">
+    <testcase name="returnsUpAsJsonWithoutDatabase()" classname="com.tricore.dxos.common.health.HealthControllerTest" time="0.515" />
+  </testsuite>
+  <testsuite name="com.tricore.dxos.core.data.ObjectStoragePortTest" tests="14" failures="0" errors="0" skipped="0" time="0.035" timestamp="2026-10-16T11:34:55.341Z">
+    <testcase name="rejectsLengthMismatchWithoutClosingCallerInput()" classname="com.tricore.dxos.core.data.ObjectStoragePortTest" time="0.002" />
+    <testcase name="inputReadFailureIsSanitizedWithoutTakingOwnership()" classname="com.tricore.dxos.core.data.ObjectStoragePortTest" time="0.001" />
+    <testcase name="zeroLengthContentAndOpaqueKeysAndDefensiveMetadataAreSupported()" classname="com.tricore.dxos.core.data.ObjectStoragePortTest" time="0.007" />
+    <testcase name="concurrentCreateOnlyWritersHaveExactlyOneWinner()" classname="com.tricore.dxos.core.data.ObjectStoragePortTest" time="0.006" />
+    <testcase name="deletesContentAndMetadataAndReportsMissingObjects()" classname="com.tricore.dxos.core.data.ObjectStoragePortTest" time="0.001" />
+    <testcase name="overwriteCreatesOrReplacesContentAndAllMetadata()" classname="com.tricore.dxos.core.data.ObjectStoragePortTest" time="0.002" />
+    <testcase name="storesReadsAndLooksUpMatchingMetadata()" classname="com.tricore.dxos.core.data.ObjectStoragePortTest" time="0.0" />
+    <testcase name="callerClosesInputAndReadResourceReleasesStreamIdempotently()" classname="com.tricore.dxos.core.data.ObjectStoragePortTest" time="0.001" />
+    <testcase name="readSnapshotKeepsContentAndMetadataTogetherAcrossOverwriteAndDelete()" classname="com.tricore.dxos.core.data.ObjectStoragePortTest" time="0.001" />
+    <testcase name="createOnlyConflictPreservesContentMetadataAndCallerStream()" classname="com.tricore.dxos.core.data.ObjectStoragePortTest" time="0.001" />
+    <testcase name="rejectsInvalidKeysMetadataCommandsAndPortInputs()" classname="com.tricore.dxos.core.data.ObjectStoragePortTest" time="0.001" />
+    <testcase name="normalizedErrorsExposeOnlyStableCodes()" classname="com.tricore.dxos.core.data.ObjectStoragePortTest" time="0.004" />
+    <testcase name="runtimeInputReadFailureIsSanitizedWithoutClosingInputOrOverwritingObject()" classname="com.tricore.dxos.core.data.ObjectStoragePortTest" time="0.001" />
+    <testcase name="consumesFromCurrentPositionAndClosesReadResourceAfterConsumerFailure()" classname="com.tricore.dxos.core.data.ObjectStoragePortTest" time="0.002" />
+  </testsuite>
+  <testsuite name="com.tricore.dxos.core.identity.AuthenticatedPrincipalTest" tests="10" failures="0" errors="0" skipped="0" time="0.009" timestamp="2026-10-16T11:34:55.377Z">
+    <testcase name="shouldRejectUnauthenticatedPrincipal()" classname="com.tricore.dxos.core.identity.AuthenticatedPrincipalTest" time="0.002" />
+    <testcase name="shouldDefensivelyCopyAuthorities()" classname="com.tricore.dxos.core.identity.AuthenticatedPrincipalTest" time="0.001" />
+    <testcase name="shouldRejectNullSubjectId()" classname="com.tricore.dxos.core.identity.AuthenticatedPrincipalTest" time="0.0" />
+    <testcase name="shouldAllowNullDisplayName()" classname="com.tricore.dxos.core.identity.AuthenticatedPrincipalTest" time="0.0" />
+    <testcase name="shouldRejectEmptySubjectId()" classname="com.tricore.dxos.core.identity.AuthenticatedPrincipalTest" time="0.001" />
+    <testcase name="shouldExposeUnmodifiableAuthorities()" classname="com.tricore.dxos.core.identity.AuthenticatedPrincipalTest" time="0.0" />
+    <testcase name="shouldRejectAuthoritiesContainingNull()" classname="com.tricore.dxos.core.identity.AuthenticatedPrincipalTest" time="0.001" />
+    <testcase name="shouldRejectBlankSubjectId()" classname="com.tricore.dxos.core.identity.AuthenticatedPrincipalTest" time="0.0" />
+    <testcase name="shouldCreatePrincipalWithValidValues()" classname="com.tricore.dxos.core.identity.AuthenticatedPrincipalTest" time="0.0" />
+    <testcase name="shouldRejectNullAuthorities()" classname="com.tricore.dxos.core.identity.AuthenticatedPrincipalTest" time="0.0" />
+  </testsuite>
+  <testsuite name="com.tricore.dxos.core.identity.AuthenticationContextTest" tests="4" failures="0" errors="0" skipped="0" time="0.002" timestamp="2026-10-16T11:34:55.387Z">
+    <testcase name="nullAuthenticationReference_shouldBeRejected()" classname="com.tricore.dxos.core.identity.AuthenticationContextTest" time="0.001" />
+    <testcase name="emptyAuthenticationReference_shouldBeRejected()" classname="com.tricore.dxos.core.identity.AuthenticationContextTest" time="0.0" />
+    <testcase name="blankAuthenticationReference_shouldBeRejected()" classname="com.tricore.dxos.core.identity.AuthenticationContextTest" time="0.001" />
+    <testcase name="validAuthenticationReference_shouldBeAccepted()" classname="com.tricore.dxos.core.identity.AuthenticationContextTest" time="0.0" />
+  </testsuite>
+  <testsuite name="com.tricore.dxos.core.identity.AuthorityTest" tests="11" failures="0" errors="0" skipped="0" time="0.009" timestamp="2026-10-16T11:34:55.390Z">
+    <testcase name="shouldRejectBlankValue()" classname="com.tricore.dxos.core.identity.AuthorityTest" time="0.001" />
+    <testcase name="shouldRejectNullValue()" classname="com.tricore.dxos.core.identity.AuthorityTest" time="0.001" />
+    <testcase name="shouldNotTreatWildcardLikeAuthorityAsMatch()" classname="com.tricore.dxos.core.identity.AuthorityTest" time="0.001" />
+    <testcase name="shouldSatisfyRequiredAuthorityWithExactlyEqualValue()" classname="com.tricore.dxos.core.identity.AuthorityTest" time="0.0" />
+    <testcase name="shouldNotSatisfyRequiredAuthorityWithLeadingWhitespace()" classname="com.tricore.dxos.core.identity.AuthorityTest" time="0.0" />
+    <testcase name="shouldNotSatisfyRequiredAuthorityWithTrailingWhitespace()" classname="com.tricore.dxos.core.identity.AuthorityTest" time="0.0" />
+    <testcase name="shouldCreateAuthorityWithValidValue()" classname="com.tricore.dxos.core.identity.AuthorityTest" time="0.001" />
+    <testcase name="shouldNotSatisfyLongerRequiredAuthorityValue()" classname="com.tricore.dxos.core.identity.AuthorityTest" time="0.0" />
+    <testcase name="shouldRejectEmptyValue()" classname="com.tricore.dxos.core.identity.AuthorityTest" time="0.001" />
+    <testcase name="shouldNotSatisfyRequiredAuthorityWithDifferentCase()" classname="com.tricore.dxos.core.identity.AuthorityTest" time="0.001" />
+    <testcase name="shouldNotSatisfyRequiredAuthorityWithLongerAuthorityValue()" classname="com.tricore.dxos.core.identity.AuthorityTest" time="0.001" />
+  </testsuite>
+  <testsuite name="com.tricore.dxos.core.identity.AuthorizationDecisionTest" tests="6" failures="0" errors="0" skipped="0" time="0.005" timestamp="2026-10-16T11:34:55.400Z">
+    <testcase name="deniedDecisionWithGrantedReason_shouldBeRejected()" classname="com.tricore.dxos.core.identity.AuthorizationDecisionTest" time="0.001" />
+    <testcase name="grantedDecisionWithMissingAuthorityReason_shouldBeRejected()" classname="com.tricore.dxos.core.identity.AuthorizationDecisionTest" time="0.001" />
+    <testcase name="nullRequiredAuthority_shouldBeRejected()" classname="com.tricore.dxos.core.identity.AuthorizationDecisionTest" time="0.0" />
+    <testcase name="deniedDecision_shouldBeAccepted()" classname="com.tricore.dxos.core.identity.AuthorizationDecisionTest" time="0.0" />
+    <testcase name="nullReason_shouldBeRejected()" classname="com.tricore.dxos.core.identity.AuthorizationDecisionTest" time="0.001" />
+    <testcase name="grantedDecision_shouldBeAccepted()" classname="com.tricore.dxos.core.identity.AuthorizationDecisionTest" time="0.001" />
+  </testsuite>
+  <testsuite name="com.tricore.dxos.core.identity.IdentityExceptionTest" tests="7" failures="0" errors="0" skipped="0" time="0.01" timestamp="2026-10-16T11:34:55.405Z">
+    <testcase name="shouldExposeNormalizedErrorCode()" classname="com.tricore.dxos.core.identity.IdentityExceptionTest" time="0.001" />
+    <testcase name="shouldNotExposeCause()" classname="com.tricore.dxos.core.identity.IdentityExceptionTest" time="0.0" />
+    <testcase name="nullErrorCode_shouldBeRejected()" classname="com.tricore.dxos.core.identity.IdentityExceptionTest" time="0.001" />
+    <testcase name="shouldDisableSuppression()" classname="com.tricore.dxos.core.identity.IdentityExceptionTest" time="0.0" />
+    <testcase name="shouldNotExposeStackTrace()" classname="com.tricore.dxos.core.identity.IdentityExceptionTest" time="0.0" />
+    <testcase name="allBaselineErrorCodes_shouldBeAvailable()" classname="com.tricore.dxos.core.identity.IdentityExceptionTest" time="0.002" />
+    <testcase name="shouldUseOnlyNormalizedCodeAsMessage()" classname="com.tricore.dxos.core.identity.IdentityExceptionTest" time="0.001" />
+  </testsuite>
+  <testsuite name="com.tricore.dxos.core.identity.RequiredAuthorityTest" tests="4" failures="0" errors="0" skipped="0" time="0.003" timestamp="2026-10-16T11:34:55.415Z">
+    <testcase name="nullValue_shouldBeRejected()" classname="com.tricore.dxos.core.identity.RequiredAuthorityTest" time="0.001" />
+    <testcase name="blankValue_shouldBeRejected()" classname="com.tricore.dxos.core.identity.RequiredAuthorityTest" time="0.001" />
+    <testcase name="validRequiredAuthority_shouldBeAccepted()" classname="com.tricore.dxos.core.identity.RequiredAuthorityTest" time="0.001" />
+    <testcase name="emptyValue_shouldBeRejected()" classname="com.tricore.dxos.core.identity.RequiredAuthorityTest" time="0.0" />
+  </testsuite>
+  <testsuite name="com.tricore.dxos.core.workflow.WorkflowContractTest" tests="4" failures="0" errors="0" skipped="0" time="0.008" timestamp="2026-10-16T11:34:55.419Z">
+    <testcase name="commandCannotSupplyTargetStateLifecycleOrNewVersion()" classname="com.tricore.dxos.core.workflow.WorkflowContractTest" time="0.003" />
+    <testcase name="rejectsIncompleteCommandsAndReferences()" classname="com.tricore.dxos.core.workflow.WorkflowContractTest" time="0.001" />
+    <testcase name="rejectsHistoryThatDisagreesWithTransitionSnapshots()" classname="com.tricore.dxos.core.workflow.WorkflowContractTest" time="0.003" />
+    <testcase name="historyRequiresPositiveResultVersionAndTrustedActorReference()" classname="com.tricore.dxos.core.workflow.WorkflowContractTest" time="0.001" />
+  </testsuite>
+  <testsuite name="com.tricore.dxos.core.workflow.WorkflowDefinitionTest" tests="5" failures="0" errors="0" skipped="0" time="0.005" timestamp="2026-10-16T11:34:55.428Z">
+    <testcase name="rejectsDuplicateTransitionIdsEvenWithDifferentEndpoints()" classname="com.tricore.dxos.core.workflow.WorkflowDefinitionTest" time="0.001" />
+    <testcase name="mapsTransitionByIdAndDerivesTerminalState()" classname="com.tricore.dxos.core.workflow.WorkflowDefinitionTest" time="0.0" />
+    <testcase name="rejectsInvalidStructuralValues()" classname="com.tricore.dxos.core.workflow.WorkflowDefinitionTest" time="0.0" />
+    <testcase name="rejectsMissingInitialStateAndUnknownEndpoints()" classname="com.tricore.dxos.core.workflow.WorkflowDefinitionTest" time="0.0" />
+    <testcase name="defensivelyCopiesCollections()" classname="com.tricore.dxos.core.workflow.WorkflowDefinitionTest" time="0.001" />
+  </testsuite>
+  <testsuite name="com.tricore.dxos.core.workflow.WorkflowHttpRuntimeTest" tests="32" failures="0" errors="0" skipped="0" time="1.058" timestamp="2026-10-16T11:34:55.571Z">
+    <testcase name="[1] code=OPERATION_FAILURE" classname="com.tricore.dxos.core.workflow.WorkflowHttpRuntimeTest" time="0.39" />
+    <testcase name="[2] code=COMMIT_OUTCOME_UNKNOWN" classname="com.tricore.dxos.core.workflow.WorkflowHttpRuntimeTest" time="0.033" />
+    <testcase name="[1] missing=missing" classname="com.tricore.dxos.core.workflow.WorkflowHttpRuntimeTest" time="0.041" />
+    <testcase name="[2] missing=missing-version" classname="com.tricore.dxos.core.workflow.WorkflowHttpRuntimeTest" time="0.031" />
+    <testcase name="[1] suffix=, trailing={&quot;actorId&quot;:&quot;attacker&quot;}" classname="com.tricore.dxos.core.workflow.WorkflowHttpRuntimeTest" time="0.023" />
+    <testcase name="[2] suffix=, trailing=[]" classname="com.tricore.dxos.core.workflow.WorkflowHttpRuntimeTest" time="0.022" />
+    <testcase name="[3] suffix=, trailing=null" classname="com.tricore.dxos.core.workflow.WorkflowHttpRuntimeTest" time="0.02" />
+    <testcase name="[4] suffix=, trailing=42" classname="com.tricore.dxos.core.workflow.WorkflowHttpRuntimeTest" time="0.02" />
+    <testcase name="[5] suffix=, trailing=true" classname="com.tricore.dxos.core.workflow.WorkflowHttpRuntimeTest" time="0.016" />
+    <testcase name="[6] suffix=, trailing=&quot;extra&quot;" classname="com.tricore.dxos.core.workflow.WorkflowHttpRuntimeTest" time="0.017" />
+    <testcase name="[7] suffix=, trailing=not-json" classname="com.tricore.dxos.core.workflow.WorkflowHttpRuntimeTest" time="0.017" />
+    <testcase name="[8] suffix=/instance-1/activate, trailing={&quot;actorId&quot;:&quot;attacker&quot;}" classname="com.tricore.dxos.core.workflow.WorkflowHttpRuntimeTest" time="0.017" />
+    <testcase name="[9] suffix=/instance-1/activate, trailing=[]" classname="com.tricore.dxos.core.workflow.WorkflowHttpRuntimeTest" time="0.016" />
+    <testcase name="[10] suffix=/instance-1/activate, trailing=null" classname="com.tricore.dxos.core.workflow.WorkflowHttpRuntimeTest" time="0.014" />
+    <testcase name="[11] suffix=/instance-1/activate, trailing=42" classname="com.tricore.dxos.core.workflow.WorkflowHttpRuntimeTest" time="0.013" />
+    <testcase name="[12] suffix=/instance-1/activate, trailing=true" classname="com.tricore.dxos.core.workflow.WorkflowHttpRuntimeTest" time="0.015" />
+    <testcase name="[13] suffix=/instance-1/activate, trailing=&quot;extra&quot;" classname="com.tricore.dxos.core.workflow.WorkflowHttpRuntimeTest" time="0.014" />
+    <testcase name="[14] suffix=/instance-1/activate, trailing=not-json" classname="com.tricore.dxos.core.workflow.WorkflowHttpRuntimeTest" time="0.014" />
+    <testcase name="[15] suffix=/instance-1/transitions, trailing={&quot;actorId&quot;:&quot;attacker&quot;}" classname="com.tricore.dxos.core.workflow.WorkflowHttpRuntimeTest" time="0.016" />
+    <testcase name="[16] suffix=/instance-1/transitions, trailing=[]" classname="com.tricore.dxos.core.workflow.WorkflowHttpRuntimeTest" time="0.013" />
+    <testcase name="[17] suffix=/instance-1/transitions, trailing=null" classname="com.tricore.dxos.core.workflow.WorkflowHttpRuntimeTest" time="0.02" />
+    <testcase name="[18] suffix=/instance-1/transitions, trailing=42" classname="com.tricore.dxos.core.workflow.WorkflowHttpRuntimeTest" time="0.013" />
+    <testcase name="[19] suffix=/instance-1/transitions, trailing=true" classname="com.tricore.dxos.core.workflow.WorkflowHttpRuntimeTest" time="0.013" />
+    <testcase name="[20] suffix=/instance-1/transitions, trailing=&quot;extra&quot;" classname="com.tricore.dxos.core.workflow.WorkflowHttpRuntimeTest" time="0.014" />
+    <testcase name="[21] suffix=/instance-1/transitions, trailing=not-json" classname="com.tricore.dxos.core.workflow.WorkflowHttpRuntimeTest" time="0.015" />
+    <testcase name="[1] code=OPERATION_FAILURE" classname="com.tricore.dxos.core.workflow.WorkflowHttpRuntimeTest" time="0.022" />
+    <testcase name="[2] code=COMMIT_OUTCOME_UNKNOWN" classname="com.tricore.dxos.core.workflow.WorkflowHttpRuntimeTest" time="0.015" />
+    <testcase name="[1] code=OPERATION_FAILURE" classname="com.tricore.dxos.core.workflow.WorkflowHttpRuntimeTest" time="0.04" />
+    <testcase name="[2] code=COMMIT_OUTCOME_UNKNOWN" classname="com.tricore.dxos.core.workflow.WorkflowHttpRuntimeTest" time="0.017" />
+    <testcase name="[1] missing=missing" classname="com.tricore.dxos.core.workflow.WorkflowHttpRuntimeTest" time="0.014" />
+    <testcase name="[2] missing=missing-version" classname="com.tricore.dxos.core.workflow.WorkflowHttpRuntimeTest" time="0.013" />
+    <testcase name="executesTwoIndependentDefinitionsWithAuthoritativeReadsAndStableVersions()" classname="com.tricore.dxos.core.workflow.WorkflowHttpRuntimeTest" time="0.056" />
+  </testsuite>
+  <testsuite name="com.tricore.dxos.core.workflow.WorkflowInstanceTest" tests="9" failures="0" errors="0" skipped="0" time="0.013" timestamp="2026-10-16T11:34:56.632Z">
+    <testcase name="preventsRuntimeVersionOverflow()" classname="com.tricore.dxos.core.workflow.WorkflowInstanceTest" time="0.001" />
+    <testcase name="validatesRestoredLifecycleAndTimestamps()" classname="com.tricore.dxos.core.workflow.WorkflowInstanceTest" time="0.002" />
+    <testcase name="rejectsUnknownTransitionAndSourceMismatchWithoutChangingSnapshot()" classname="com.tricore.dxos.core.workflow.WorkflowInstanceTest" time="0.002" />
+    <testcase name="rejectsAnotherDefinitionIdOrVersion()" classname="com.tricore.dxos.core.workflow.WorkflowInstanceTest" time="0.001" />
+    <testcase name="preventsTransitionBeforeActivationAndReactivation()" classname="com.tricore.dxos.core.workflow.WorkflowInstanceTest" time="0.002" />
+    <testcase name="rejectsVersionConflictAndWrongInstance()" classname="com.tricore.dxos.core.workflow.WorkflowInstanceTest" time="0.001" />
+    <testcase name="pinsDefinitionVersionSeparatelyFromIncrementedRuntimeVersion()" classname="com.tricore.dxos.core.workflow.WorkflowInstanceTest" time="0.0" />
+    <testcase name="protectsCompletedInstanceAgainstTransitionsAndReopen()" classname="com.tricore.dxos.core.workflow.WorkflowInstanceTest" time="0.001" />
+    <testcase name="followsTwoIndependentLifecyclesWithoutBusinessSpecificStates()" classname="com.tricore.dxos.core.workflow.WorkflowInstanceTest" time="0.0" />
+  </testsuite>
+  <testsuite name="com.tricore.dxos.core.workflow.WorkflowPersistencePortTest" tests="30" failures="0" errors="0" skipped="0" time="0.059" timestamp="2026-10-16T11:34:56.647Z">
+    <testcase name="identicalCreationReplayStillConflicts()" classname="com.tricore.dxos.core.workflow.WorkflowPersistencePortTest" time="0.0" />
+    <testcase name="creationRejectsNoninitialOrForgedDefinitionSnapshots()" classname="com.tricore.dxos.core.workflow.WorkflowPersistencePortTest" time="0.002" />
+    <testcase name="activationChecksVersionAndLifecycleAndNeverReactivatesCompletedInstances()" classname="com.tricore.dxos.core.workflow.WorkflowPersistencePortTest" time="0.002" />
+    <testcase name="invalidAndTerminalAttemptsDoNotAppendHistory()" classname="com.tricore.dxos.core.workflow.WorkflowPersistencePortTest" time="0.002" />
+    <testcase name="activationComparesDefinitionResourceStateAndExactSourceTimestamps()" classname="com.tricore.dxos.core.workflow.WorkflowPersistencePortTest" time="0.002" />
+    <testcase name="concurrentCommitsHaveExactlyOneWinner()" classname="com.tricore.dxos.core.workflow.WorkflowPersistencePortTest" time="0.005" />
+    <testcase name="ordersHistoryByUniqueRuntimeVersionEvenWhenTimestampsTie()" classname="com.tricore.dxos.core.workflow.WorkflowPersistencePortTest" time="0.004" />
+    <testcase name="rejectsProposalFromConsumerRestoredSourceOrDefinitionBinding()" classname="com.tricore.dxos.core.workflow.WorkflowPersistencePortTest" time="0.002" />
+    <testcase name="failureOnLaterTransitionPreservesAlreadyCommittedHistory()" classname="com.tricore.dxos.core.workflow.WorkflowPersistencePortTest" time="0.002" />
+    <testcase name="operationFailureLeavesBothStateAndHistoryUnchangedAndAllowsExplicitRetry()" classname="com.tricore.dxos.core.workflow.WorkflowPersistencePortTest" time="0.001" />
+    <testcase name="rejectsTransitionIdsMissingFromTheAuthoritativeSameKeyDefinition()" classname="com.tricore.dxos.core.workflow.WorkflowPersistencePortTest" time="0.001" />
+    <testcase name="unknownTransitionOutcomeCommitsInstanceAndHistoryTogetherAndRejectsReplay()" classname="com.tricore.dxos.core.workflow.WorkflowPersistencePortTest" time="0.002" />
+    <testcase name="normalizedErrorsCarryNoProviderCauseOrStackTrace()" classname="com.tricore.dxos.core.workflow.WorkflowPersistencePortTest" time="0.001" />
+    <testcase name="unknownActivationOutcomeCanAlreadyHaveCommittedAtVersionZeroWithoutHistory()" classname="com.tricore.dxos.core.workflow.WorkflowPersistencePortTest" time="0.002" />
+    <testcase name="unknownCreationOutcomeCanAlreadyHaveCommittedAndReplayIsStillRejected()" classname="com.tricore.dxos.core.workflow.WorkflowPersistencePortTest" time="0.002" />
+    <testcase name="createsOnlyInitialSnapshotsWithEmptyHistoryAndPreservesNanosecondTimestamps()" classname="com.tricore.dxos.core.workflow.WorkflowPersistencePortTest" time="0.002" />
+    <testcase name="rejectsUnknownInstancesForBothReadsAndCommit()" classname="com.tricore.dxos.core.workflow.WorkflowPersistencePortTest" time="0.002" />
+    <testcase name="activationRejectsProposalsThatDoNotMatchDomainActivation()" classname="com.tricore.dxos.core.workflow.WorkflowPersistencePortTest" time="0.001" />
+    <testcase name="creationRequiresProvisioningAndDoesNotLeavePartialDataOnFailure()" classname="com.tricore.dxos.core.workflow.WorkflowPersistencePortTest" time="0.002" />
+    <testcase name="concurrentCreationsOfTheSameIdHaveExactlyOneWinner()" classname="com.tricore.dxos.core.workflow.WorkflowPersistencePortTest" time="0.002" />
+    <testcase name="commitsStateVersionAndExactlyOneMatchingHistoryRecord()" classname="com.tricore.dxos.core.workflow.WorkflowPersistencePortTest" time="0.001" />
+    <testcase name="duplicateCreationNeverOverwritesAnExistingInstanceOrItsHistory()" classname="com.tricore.dxos.core.workflow.WorkflowPersistencePortTest" time="0.002" />
+    <testcase name="activationFailureChangesNothingAndAllowsExplicitRetryButNotReplay()" classname="com.tricore.dxos.core.workflow.WorkflowPersistencePortTest" time="0.002" />
+    <testcase name="rejectsSameKeyForgedTransitionTargetsAndLifecyclesAgainstAuthoritativeDefinition()" classname="com.tricore.dxos.core.workflow.WorkflowPersistencePortTest" time="0.001" />
+    <testcase name="portProtectsTerminalSnapshotEvenAgainstReconstitutedActiveProposal()" classname="com.tricore.dxos.core.workflow.WorkflowPersistencePortTest" time="0.001" />
+    <testcase name="concurrentActivationsHaveOneWinnerDespiteBothExpectingVersionZero()" classname="com.tricore.dxos.core.workflow.WorkflowPersistencePortTest" time="0.002" />
+    <testcase name="activationAcceptsAnEqualRestoredSourceWithoutIncrementingVersionOrHistory()" classname="com.tricore.dxos.core.workflow.WorkflowPersistencePortTest" time="0.001" />
+    <testcase name="loadsOnlyAuthoritativeExactDefinitionVersionsAndProtectsProvisionedContent()" classname="com.tricore.dxos.core.workflow.WorkflowPersistencePortTest" time="0.001" />
+    <testcase name="activationUsesTheAuthoritativeDefinitionEvenForAnInitialTerminalState()" classname="com.tricore.dxos.core.workflow.WorkflowPersistencePortTest" time="0.001" />
+    <testcase name="rejectsStaleConcurrentProposalAndReplayWithoutChangingStateOrHistory()" classname="com.tricore.dxos.core.workflow.WorkflowPersistencePortTest" time="0.002" />
+  </testsuite>
+  <testsuite name="com.tricore.dxos.core.workflow.WorkflowRuntimeTest" tests="30" failures="0" errors="0" skipped="0" time="0.221" timestamp="2026-10-16T11:34:56.709Z">
+    <testcase name="[1] error=OPERATION_FAILURE" classname="com.tricore.dxos.core.workflow.WorkflowRuntimeTest" time="0.004" />
+    <testcase name="[2] error=COMMIT_OUTCOME_UNKNOWN" classname="com.tricore.dxos.core.workflow.WorkflowRuntimeTest" time="0.001" />
+    <testcase name="[1] error=OPERATION_FAILURE" classname="com.tricore.dxos.core.workflow.WorkflowRuntimeTest" time="0.002" />
+    <testcase name="[2] error=COMMIT_OUTCOME_UNKNOWN" classname="com.tricore.dxos.core.workflow.WorkflowRuntimeTest" time="0.002" />
+    <testcase name="preservesRuntimeVersionOverflowRejectionBeforePersistence()" classname="com.tricore.dxos.core.workflow.WorkflowRuntimeTest" time="0.011" />
+    <testcase name="rejectsABackwardsClockWithoutClampingTimestampsOrWriting()" classname="com.tricore.dxos.core.workflow.WorkflowRuntimeTest" time="0.004" />
+    <testcase name="propagatesMissingInstancesForReadsActivationAndTransition()" classname="com.tricore.dxos.core.workflow.WorkflowRuntimeTest" time="0.003" />
+    <testcase name="[1] error=OPERATION_FAILURE" classname="com.tricore.dxos.core.workflow.WorkflowRuntimeTest" time="0.003" />
+    <testcase name="[2] error=COMMIT_OUTCOME_UNKNOWN" classname="com.tricore.dxos.core.workflow.WorkflowRuntimeTest" time="0.0" />
+    <testcase name="rejectsStaleVersionsAndTransitionReplayWithoutAppendingHistory()" classname="com.tricore.dxos.core.workflow.WorkflowRuntimeTest" time="0.003" />
+    <testcase name="preservesTheDomainRejectionOfAnInitialTerminalState()" classname="com.tricore.dxos.core.workflow.WorkflowRuntimeTest" time="0.002" />
+    <testcase name="propagatesAuthoritativeReadFailuresWithoutAttemptingWrites()" classname="com.tricore.dxos.core.workflow.WorkflowRuntimeTest" time="0.003" />
+    <testcase name="rejectsATransitionThatLosesTheRaceAfterLoadingItsSource()" classname="com.tricore.dxos.core.workflow.WorkflowRuntimeTest" time="0.129" />
+    <testcase name="rejectsTransitionsBeforeActivationUnknownTransitionsAndWrongSources()" classname="com.tricore.dxos.core.workflow.WorkflowRuntimeTest" time="0.002" />
+    <testcase name="readsAuthoritativeDataWithoutCachingAndReturnsImmutableHistorySnapshots()" classname="com.tricore.dxos.core.workflow.WorkflowRuntimeTest" time="0.001" />
+    <testcase name="usesExactClockInstantsForAllWritesIndependentlyOfClockTimeZone()" classname="com.tricore.dxos.core.workflow.WorkflowRuntimeTest" time="0.001" />
+    <testcase name="insertOnlyPersistenceRejectsConcurrentCreationAfterThePreliminaryRead()" classname="com.tricore.dxos.core.workflow.WorkflowRuntimeTest" time="0.003" />
+    <testcase name="rejectsDuplicateCreationAndReplayWithoutOverwritingExistingHistory()" classname="com.tricore.dxos.core.workflow.WorkflowRuntimeTest" time="0.003" />
+    <testcase name="rejectsReactivationAndCompletedOperationsWithExistingErrorPrecedence()" classname="com.tricore.dxos.core.workflow.WorkflowRuntimeTest" time="0.003" />
+    <testcase name="createsActivatesAndCompletesAWorkflowWithTrustedActorsAndOrderedHistory()" classname="com.tricore.dxos.core.workflow.WorkflowRuntimeTest" time="0.001" />
+    <testcase name="rejectsMissingExactDefinitionsWithoutCreatingAnInstance()" classname="com.tricore.dxos.core.workflow.WorkflowRuntimeTest" time="0.002" />
+    <testcase name="executesAnIndependentDefinitionWithoutBusinessSpecificStates()" classname="com.tricore.dxos.core.workflow.WorkflowRuntimeTest" time="0.001" />
+    <testcase name="propagatesDefinitionLoadingFailuresBeforeActivationOrTransitionWrites()" classname="com.tricore.dxos.core.workflow.WorkflowRuntimeTest" time="0.003" />
+    <testcase name="[1] error=OPERATION_FAILURE" classname="com.tricore.dxos.core.workflow.WorkflowRuntimeTest" time="0.004" />
+    <testcase name="[2] error=COMMIT_OUTCOME_UNKNOWN" classname="com.tricore.dxos.core.workflow.WorkflowRuntimeTest" time="0.002" />
+    <testcase name="rejectsInvalidStructuralInputsAndRequiresAnActorInTheCommand()" classname="com.tricore.dxos.core.workflow.WorkflowRuntimeTest" time="0.003" />
+    <testcase name="pinsDefinitionVersionsEvenWhenANewerVersionChangesTheInitialState()" classname="com.tricore.dxos.core.workflow.WorkflowRuntimeTest" time="0.002" />
+    <testcase name="prioritizesDuplicateInstanceOverMissingDefinitionIdWithoutMutation()" classname="com.tricore.dxos.core.workflow.WorkflowRuntimeTest" time="0.001" />
+    <testcase name="rejectsAnActivationThatLosesTheRaceAfterLoadingAVersionZeroSource()" classname="com.tricore.dxos.core.workflow.WorkflowRuntimeTest" time="0.003" />
+    <testcase name="prioritizesDuplicateInstanceOverMissingDefinitionVersionWithoutMutation()" classname="com.tricore.dxos.core.workflow.WorkflowRuntimeTest" time="0.002" />
+  </testsuite>
+  <testsuite name="com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest" tests="102" failures="0" errors="0" skipped="0" time="0.596" timestamp="2026-10-16T11:34:57.374Z">
+    <testcase name="transitionsUsingOnlyTheServerSuppliedActorAndPreservesRecordPrecision()" classname="com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest" time="0.031" />
+    <testcase name="[1] code=DEFINITION_NOT_FOUND" classname="com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest" time="0.017" />
+    <testcase name="[2] code=INSTANCE_NOT_FOUND" classname="com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest" time="0.01" />
+    <testcase name="[3] code=INVALID_TRANSITION" classname="com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest" time="0.017" />
+    <testcase name="[4] code=TRANSITION_NOT_ALLOWED" classname="com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest" time="0.008" />
+    <testcase name="[5] code=INSTANCE_COMPLETED" classname="com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest" time="0.006" />
+    <testcase name="[6] code=VERSION_CONFLICT" classname="com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest" time="0.006" />
+    <testcase name="[7] code=OPERATION_FAILURE" classname="com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest" time="0.007" />
+    <testcase name="[8] code=INSTANCE_ALREADY_EXISTS" classname="com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest" time="0.006" />
+    <testcase name="[9] code=COMMIT_OUTCOME_UNKNOWN" classname="com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest" time="0.005" />
+    <testcase name="headersAndBearerStringsCannotSupplyTheReservedActorAttribute()" classname="com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest" time="0.006" />
+    <testcase name="[1] path=/api/v1/workflow-instances, body={&quot;instanceId&quot;:&quot;instance-1&quot;,&quot;definitionId&quot;:&quot;publication&quot;,&quot;definitionVersion&quot;:7,&#xA; &quot;resourceType&quot;:&quot;document&quot;,&quot;resourceId&quot;:&quot;document-1&quot;,&quot;actorId&quot;:&quot;client&quot;}" classname="com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest" time="0.007" />
+    <testcase name="[2] path=/api/v1/workflow-instances/instance-1/activate, body={&quot;actorId&quot;:&quot;client&quot;}" classname="com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest" time="0.005" />
+    <testcase name="[3] path=/api/v1/workflow-instances/instance-1/transitions, body={&quot;transitionId&quot;:&quot;submit&quot;,&quot;expectedVersion&quot;:0,&quot;actorId&quot;:&quot;client&quot;}" classname="com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest" time="0.004" />
+    <testcase name="[4] path=/api/v1/workflow-instances, body={&quot;instanceId&quot;:&quot;instance-1&quot;,&quot;definitionId&quot;:&quot;publication&quot;,&quot;definitionVersion&quot;:7,&#xA; &quot;resourceType&quot;:&quot;document&quot;,&quot;resourceId&quot;:&quot;document-1&quot;,&quot;actorReference&quot;:&quot;client&quot;}" classname="com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest" time="0.004" />
+    <testcase name="[5] path=/api/v1/workflow-instances/instance-1/activate, body={&quot;actorReference&quot;:&quot;client&quot;}" classname="com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest" time="0.005" />
+    <testcase name="[6] path=/api/v1/workflow-instances/instance-1/transitions, body={&quot;transitionId&quot;:&quot;submit&quot;,&quot;expectedVersion&quot;:0,&quot;actorReference&quot;:&quot;client&quot;}" classname="com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest" time="0.004" />
+    <testcase name="[7] path=/api/v1/workflow-instances, body={&quot;instanceId&quot;:&quot;instance-1&quot;,&quot;definitionId&quot;:&quot;publication&quot;,&quot;definitionVersion&quot;:7,&#xA; &quot;resourceType&quot;:&quot;document&quot;,&quot;resourceId&quot;:&quot;document-1&quot;,&quot;roles&quot;:&quot;client&quot;}" classname="com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest" time="0.003" />
+    <testcase name="[8] path=/api/v1/workflow-instances/instance-1/activate, body={&quot;roles&quot;:&quot;client&quot;}" classname="com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest" time="0.003" />
+    <testcase name="[9] path=/api/v1/workflow-instances/instance-1/transitions, body={&quot;transitionId&quot;:&quot;submit&quot;,&quot;expectedVersion&quot;:0,&quot;roles&quot;:&quot;client&quot;}" classname="com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest" time="0.005" />
+    <testcase name="[10] path=/api/v1/workflow-instances, body={&quot;instanceId&quot;:&quot;instance-1&quot;,&quot;definitionId&quot;:&quot;publication&quot;,&quot;definitionVersion&quot;:7,&#xA; &quot;resourceType&quot;:&quot;document&quot;,&quot;resourceId&quot;:&quot;document-1&quot;,&quot;lifecycle&quot;:&quot;client&quot;}" classname="com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest" time="0.003" />
+    <testcase name="[11] path=/api/v1/workflow-instances/instance-1/activate, body={&quot;lifecycle&quot;:&quot;client&quot;}" classname="com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest" time="0.003" />
+    <testcase name="[12] path=/api/v1/workflow-instances/instance-1/transitions, body={&quot;transitionId&quot;:&quot;submit&quot;,&quot;expectedVersion&quot;:0,&quot;lifecycle&quot;:&quot;client&quot;}" classname="com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest" time="0.004" />
+    <testcase name="[13] path=/api/v1/workflow-instances, body={&quot;instanceId&quot;:&quot;instance-1&quot;,&quot;definitionId&quot;:&quot;publication&quot;,&quot;definitionVersion&quot;:7,&#xA; &quot;resourceType&quot;:&quot;document&quot;,&quot;resourceId&quot;:&quot;document-1&quot;,&quot;timestamp&quot;:&quot;client&quot;}" classname="com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest" time="0.004" />
+    <testcase name="[14] path=/api/v1/workflow-instances/instance-1/activate, body={&quot;timestamp&quot;:&quot;client&quot;}" classname="com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest" time="0.005" />
+    <testcase name="[15] path=/api/v1/workflow-instances/instance-1/transitions, body={&quot;transitionId&quot;:&quot;submit&quot;,&quot;expectedVersion&quot;:0,&quot;timestamp&quot;:&quot;client&quot;}" classname="com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest" time="0.004" />
+    <testcase name="[16] path=/api/v1/workflow-instances, body={&quot;instanceId&quot;:&quot;instance-1&quot;,&quot;definitionId&quot;:&quot;publication&quot;,&quot;definitionVersion&quot;:7,&#xA; &quot;resourceType&quot;:&quot;document&quot;,&quot;resourceId&quot;:&quot;document-1&quot;,&quot;targetState&quot;:&quot;client&quot;}" classname="com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest" time="0.005" />
+    <testcase name="[17] path=/api/v1/workflow-instances/instance-1/activate, body={&quot;targetState&quot;:&quot;client&quot;}" classname="com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest" time="0.003" />
+    <testcase name="[18] path=/api/v1/workflow-instances/instance-1/transitions, body={&quot;transitionId&quot;:&quot;submit&quot;,&quot;expectedVersion&quot;:0,&quot;targetState&quot;:&quot;client&quot;}" classname="com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest" time="0.004" />
+    <testcase name="[19] path=/api/v1/workflow-instances, body={&quot;instanceId&quot;:&quot;instance-1&quot;,&quot;definitionId&quot;:&quot;publication&quot;,&quot;definitionVersion&quot;:7,&#xA; &quot;resourceType&quot;:&quot;document&quot;,&quot;resourceId&quot;:&quot;document-1&quot;,&quot;createdAt&quot;:&quot;client&quot;}" classname="com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest" time="0.003" />
+    <testcase name="[20] path=/api/v1/workflow-instances/instance-1/activate, body={&quot;createdAt&quot;:&quot;client&quot;}" classname="com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest" time="0.003" />
+    <testcase name="[21] path=/api/v1/workflow-instances/instance-1/transitions, body={&quot;transitionId&quot;:&quot;submit&quot;,&quot;expectedVersion&quot;:0,&quot;createdAt&quot;:&quot;client&quot;}" classname="com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest" time="0.003" />
+    <testcase name="[22] path=/api/v1/workflow-instances, body={&quot;instanceId&quot;:&quot;instance-1&quot;,&quot;definitionId&quot;:&quot;publication&quot;,&quot;definitionVersion&quot;:7,&#xA; &quot;resourceType&quot;:&quot;document&quot;,&quot;resourceId&quot;:&quot;document-1&quot;,&quot;updatedAt&quot;:&quot;client&quot;}" classname="com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest" time="0.004" />
+    <testcase name="[23] path=/api/v1/workflow-instances/instance-1/activate, body={&quot;updatedAt&quot;:&quot;client&quot;}" classname="com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest" time="0.002" />
+    <testcase name="[24] path=/api/v1/workflow-instances/instance-1/transitions, body={&quot;transitionId&quot;:&quot;submit&quot;,&quot;expectedVersion&quot;:0,&quot;updatedAt&quot;:&quot;client&quot;}" classname="com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest" time="0.003" />
+    <testcase name="hidesUnexpectedProviderAndServerClockFailures()" classname="com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest" time="0.011" />
+    <testcase name="readsAuthoritativeInstanceAndOrderedHistoryThroughRuntime()" classname="com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest" time="0.011" />
+    <testcase name="doesNotCoerceOrRoundLargeIntegerVersions()" classname="com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest" time="0.006" />
+    <testcase name="[1] suffix=, body={&quot;instanceId&quot;:&quot;instance-1&quot;,&quot;definitionId&quot;:&quot;publication&quot;,&quot;definitionVersion&quot;:7,&#xA; &quot;resourceType&quot;:&quot;document&quot;,&quot;resourceId&quot;:&quot;document-1&quot;}&#xA;, trailing={&quot;actorId&quot;:&quot;attacker&quot;}" classname="com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest" time="0.005" />
+    <testcase name="[2] suffix=, body={&quot;instanceId&quot;:&quot;instance-1&quot;,&quot;definitionId&quot;:&quot;publication&quot;,&quot;definitionVersion&quot;:7,&#xA; &quot;resourceType&quot;:&quot;document&quot;,&quot;resourceId&quot;:&quot;document-1&quot;}&#xA;, trailing=[]" classname="com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest" time="0.005" />
+    <testcase name="[3] suffix=, body={&quot;instanceId&quot;:&quot;instance-1&quot;,&quot;definitionId&quot;:&quot;publication&quot;,&quot;definitionVersion&quot;:7,&#xA; &quot;resourceType&quot;:&quot;document&quot;,&quot;resourceId&quot;:&quot;document-1&quot;}&#xA;, trailing=null" classname="com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest" time="0.003" />
+    <testcase name="[4] suffix=, body={&quot;instanceId&quot;:&quot;instance-1&quot;,&quot;definitionId&quot;:&quot;publication&quot;,&quot;definitionVersion&quot;:7,&#xA; &quot;resourceType&quot;:&quot;document&quot;,&quot;resourceId&quot;:&quot;document-1&quot;}&#xA;, trailing=42" classname="com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest" time="0.003" />
+    <testcase name="[5] suffix=, body={&quot;instanceId&quot;:&quot;instance-1&quot;,&quot;definitionId&quot;:&quot;publication&quot;,&quot;definitionVersion&quot;:7,&#xA; &quot;resourceType&quot;:&quot;document&quot;,&quot;resourceId&quot;:&quot;document-1&quot;}&#xA;, trailing=true" classname="com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest" time="0.003" />
+    <testcase name="[6] suffix=, body={&quot;instanceId&quot;:&quot;instance-1&quot;,&quot;definitionId&quot;:&quot;publication&quot;,&quot;definitionVersion&quot;:7,&#xA; &quot;resourceType&quot;:&quot;document&quot;,&quot;resourceId&quot;:&quot;document-1&quot;}&#xA;, trailing=&quot;extra&quot;" classname="com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest" time="0.003" />
+    <testcase name="[7] suffix=, body={&quot;instanceId&quot;:&quot;instance-1&quot;,&quot;definitionId&quot;:&quot;publication&quot;,&quot;definitionVersion&quot;:7,&#xA; &quot;resourceType&quot;:&quot;document&quot;,&quot;resourceId&quot;:&quot;document-1&quot;}&#xA;, trailing=not-json" classname="com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest" time="0.003" />
+    <testcase name="[8] suffix=/instance-1/activate, body={}, trailing={&quot;lifecycle&quot;:&quot;COMPLETED&quot;}" classname="com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest" time="0.003" />
+    <testcase name="[9] suffix=/instance-1/activate, body={}, trailing=[]" classname="com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest" time="0.003" />
+    <testcase name="[10] suffix=/instance-1/activate, body={}, trailing=null" classname="com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest" time="0.004" />
+    <testcase name="[11] suffix=/instance-1/activate, body={}, trailing=42" classname="com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest" time="0.002" />
+    <testcase name="[12] suffix=/instance-1/activate, body={}, trailing=true" classname="com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest" time="0.004" />
+    <testcase name="[13] suffix=/instance-1/activate, body={}, trailing=&quot;extra&quot;" classname="com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest" time="0.004" />
+    <testcase name="[14] suffix=/instance-1/activate, body={}, trailing=not-json" classname="com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest" time="0.003" />
+    <testcase name="[15] suffix=/instance-1/transitions, body={&quot;transitionId&quot;:&quot;submit&quot;,&quot;expectedVersion&quot;:0}&#xA;, trailing={&quot;targetState&quot;:&quot;evil&quot;}" classname="com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest" time="0.003" />
+    <testcase name="[16] suffix=/instance-1/transitions, body={&quot;transitionId&quot;:&quot;submit&quot;,&quot;expectedVersion&quot;:0}&#xA;, trailing=[]" classname="com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest" time="0.002" />
+    <testcase name="[17] suffix=/instance-1/transitions, body={&quot;transitionId&quot;:&quot;submit&quot;,&quot;expectedVersion&quot;:0}&#xA;, trailing=null" classname="com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest" time="0.003" />
+    <testcase name="[18] suffix=/instance-1/transitions, body={&quot;transitionId&quot;:&quot;submit&quot;,&quot;expectedVersion&quot;:0}&#xA;, trailing=42" classname="com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest" time="0.003" />
+    <testcase name="[19] suffix=/instance-1/transitions, body={&quot;transitionId&quot;:&quot;submit&quot;,&quot;expectedVersion&quot;:0}&#xA;, trailing=true" classname="com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest" time="0.003" />
+    <testcase name="[20] suffix=/instance-1/transitions, body={&quot;transitionId&quot;:&quot;submit&quot;,&quot;expectedVersion&quot;:0}&#xA;, trailing=&quot;extra&quot;" classname="com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest" time="0.004" />
+    <testcase name="[21] suffix=/instance-1/transitions, body={&quot;transitionId&quot;:&quot;submit&quot;,&quot;expectedVersion&quot;:0}&#xA;, trailing=not-json" classname="com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest" time="0.004" />
+    <testcase name="[1] suffix=" classname="com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest" time="0.003" />
+    <testcase name="[2] suffix=/instance-1/transitions" classname="com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest" time="0.003" />
+    <testcase name="rejectsInvalidPathIdentifiersBeforeRuntime()" classname="com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest" time="0.028" />
+    <testcase name="[1] suffix=" classname="com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest" time="0.003" />
+    <testcase name="[2] suffix=/instance-1/activate" classname="com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest" time="0.002" />
+    <testcase name="[3] suffix=/instance-1/transitions" classname="com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest" time="0.003" />
+    <testcase name="leavesSharedMapperAndRequestMessageConversionUnchanged()" classname="com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest" time="0.016" />
+    <testcase name="[1] suffix=" classname="com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest" time="0.004" />
+    <testcase name="[2] suffix=/instance-1/activate" classname="com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest" time="0.003" />
+    <testcase name="[3] suffix=/instance-1/transitions" classname="com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest" time="0.003" />
+    <testcase name="[1] path=/api/v1/workflow-instances, body={}" classname="com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest" time="0.011" />
+    <testcase name="[2] path=/api/v1/workflow-instances, body=null" classname="com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest" time="0.002" />
+    <testcase name="[3] path=/api/v1/workflow-instances, body={&quot;instanceId&quot;:&quot;&quot;,&quot;definitionId&quot;:&quot;publication&quot;,&quot;definitionVersion&quot;:7,&#xA; &quot;resourceType&quot;:&quot;document&quot;,&quot;resourceId&quot;:&quot;document-1&quot;}&#xA;" classname="com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest" time="0.003" />
+    <testcase name="[4] path=/api/v1/workflow-instances, body={&quot;instanceId&quot;:&quot;bad/id&quot;,&quot;definitionId&quot;:&quot;publication&quot;,&quot;definitionVersion&quot;:7,&#xA; &quot;resourceType&quot;:&quot;document&quot;,&quot;resourceId&quot;:&quot;document-1&quot;}&#xA;" classname="com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest" time="0.002" />
+    <testcase name="[5] path=/api/v1/workflow-instances, body={&quot;instanceId&quot;:&quot;instance-1&quot;,&quot;definitionId&quot;:&quot; &quot;,&quot;definitionVersion&quot;:7,&#xA; &quot;resourceType&quot;:&quot;document&quot;,&quot;resourceId&quot;:&quot;document-1&quot;}&#xA;" classname="com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest" time="0.003" />
+    <testcase name="[6] path=/api/v1/workflow-instances, body={&quot;instanceId&quot;:&quot;instance-1&quot;,&quot;definitionId&quot;:&quot;publication&quot;,&quot;definitionVersion&quot;:7,&#xA; &quot;resourceType&quot;:&quot;&quot;,&quot;resourceId&quot;:&quot;document-1&quot;}&#xA;" classname="com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest" time="0.003" />
+    <testcase name="[7] path=/api/v1/workflow-instances, body={&quot;instanceId&quot;:&quot;instance-1&quot;,&quot;definitionId&quot;:&quot;publication&quot;,&quot;definitionVersion&quot;:7,&#xA; &quot;resourceType&quot;:&quot;document&quot;,&quot;resourceId&quot;:null}&#xA;" classname="com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest" time="0.003" />
+    <testcase name="[8] path=/api/v1/workflow-instances, body={&quot;instanceId&quot;:&quot;instance-1&quot;,&quot;definitionId&quot;:&quot;publication&quot;,&quot;definitionVersion&quot;:null,&#xA; &quot;resourceType&quot;:&quot;document&quot;,&quot;resourceId&quot;:&quot;document-1&quot;}&#xA;" classname="com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest" time="0.003" />
+    <testcase name="[9] path=/api/v1/workflow-instances/instance-1/transitions, body={&quot;transitionId&quot;:&quot;submit&quot;,&quot;expectedVersion&quot;:null}&#xA;" classname="com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest" time="0.004" />
+    <testcase name="[10] path=/api/v1/workflow-instances, body={&quot;instanceId&quot;:&quot;instance-1&quot;,&quot;definitionId&quot;:&quot;publication&quot;,&quot;definitionVersion&quot;:-1,&#xA; &quot;resourceType&quot;:&quot;document&quot;,&quot;resourceId&quot;:&quot;document-1&quot;}&#xA;" classname="com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest" time="0.004" />
+    <testcase name="[11] path=/api/v1/workflow-instances/instance-1/transitions, body={&quot;transitionId&quot;:&quot;submit&quot;,&quot;expectedVersion&quot;:-1}&#xA;" classname="com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest" time="0.002" />
+    <testcase name="[12] path=/api/v1/workflow-instances, body={&quot;instanceId&quot;:&quot;instance-1&quot;,&quot;definitionId&quot;:&quot;publication&quot;,&quot;definitionVersion&quot;:7.5,&#xA; &quot;resourceType&quot;:&quot;document&quot;,&quot;resourceId&quot;:&quot;document-1&quot;}&#xA;" classname="com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest" time="0.003" />
+    <testcase name="[13] path=/api/v1/workflow-instances/instance-1/transitions, body={&quot;transitionId&quot;:&quot;submit&quot;,&quot;expectedVersion&quot;:7.5}&#xA;" classname="com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest" time="0.002" />
+    <testcase name="[14] path=/api/v1/workflow-instances, body={&quot;instanceId&quot;:&quot;instance-1&quot;,&quot;definitionId&quot;:&quot;publication&quot;,&quot;definitionVersion&quot;:&quot;7&quot;,&#xA; &quot;resourceType&quot;:&quot;document&quot;,&quot;resourceId&quot;:&quot;document-1&quot;}&#xA;" classname="com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest" time="0.003" />
+    <testcase name="[15] path=/api/v1/workflow-instances/instance-1/transitions, body={&quot;transitionId&quot;:&quot;submit&quot;,&quot;expectedVersion&quot;:&quot;7&quot;}&#xA;" classname="com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest" time="0.003" />
+    <testcase name="[16] path=/api/v1/workflow-instances, body={&quot;instanceId&quot;:&quot;instance-1&quot;,&quot;definitionId&quot;:&quot;publication&quot;,&quot;definitionVersion&quot;:true,&#xA; &quot;resourceType&quot;:&quot;document&quot;,&quot;resourceId&quot;:&quot;document-1&quot;}&#xA;" classname="com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest" time="0.003" />
+    <testcase name="[17] path=/api/v1/workflow-instances/instance-1/transitions, body={&quot;transitionId&quot;:&quot;submit&quot;,&quot;expectedVersion&quot;:true}&#xA;" classname="com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest" time="0.002" />
+    <testcase name="[18] path=/api/v1/workflow-instances, body={&quot;instanceId&quot;:&quot;instance-1&quot;,&quot;definitionId&quot;:&quot;publication&quot;,&quot;definitionVersion&quot;:{},&#xA; &quot;resourceType&quot;:&quot;document&quot;,&quot;resourceId&quot;:&quot;document-1&quot;}&#xA;" classname="com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest" time="0.002" />
+    <testcase name="[19] path=/api/v1/workflow-instances/instance-1/transitions, body={&quot;transitionId&quot;:&quot;submit&quot;,&quot;expectedVersion&quot;:{}}&#xA;" classname="com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest" time="0.004" />
+    <testcase name="[20] path=/api/v1/workflow-instances, body={&quot;instanceId&quot;:&quot;instance-1&quot;,&quot;definitionId&quot;:&quot;publication&quot;,&quot;definitionVersion&quot;:9223372036854775808,&#xA; &quot;resourceType&quot;:&quot;document&quot;,&quot;resourceId&quot;:&quot;document-1&quot;}&#xA;" classname="com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest" time="0.004" />
+    <testcase name="[21] path=/api/v1/workflow-instances/instance-1/transitions, body={&quot;transitionId&quot;:&quot;submit&quot;,&quot;expectedVersion&quot;:9223372036854775808}&#xA;" classname="com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest" time="0.003" />
+    <testcase name="[22] path=/api/v1/workflow-instances/instance-1/transitions, body={}" classname="com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest" time="0.003" />
+    <testcase name="[23] path=/api/v1/workflow-instances/instance-1/transitions, body=null" classname="com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest" time="0.002" />
+    <testcase name="[24] path=/api/v1/workflow-instances/instance-1/transitions, body={&quot;transitionId&quot;:&quot;&quot;,&quot;expectedVersion&quot;:0}&#xA;" classname="com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest" time="0.004" />
+    <testcase name="[25] path=/api/v1/workflow-instances/instance-1/transitions, body={&quot;transitionId&quot;:&quot;submit&quot;}" classname="com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest" time="0.003" />
+    <testcase name="returnsEmptyHistory()" classname="com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest" time="0.003" />
+    <testcase name="[1] suffix=" classname="com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest" time="0.006" />
+    <testcase name="[2] suffix=/instance-1/activate" classname="com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest" time="0.003" />
+    <testcase name="[3] suffix=/instance-1/transitions" classname="com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest" time="0.003" />
+    <testcase name="rejectsUnsupportedMediaTypeBeforeRuntime()" classname="com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest" time="0.005" />
+    <testcase name="createsAnInstanceWithLocationAndExactSnapshotProjection()" classname="com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest" time="0.003" />
+    <testcase name="[1] body=" classname="com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest" time="0.003" />
+    <testcase name="[2] body={}" classname="com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest" time="0.003" />
+  </testsuite>
+  <testsuite name="com.tricore.dxos.gateway.workflow.controller.WorkflowHttpExposureTest" tests="5" failures="0" errors="0" skipped="0" time="0.033" timestamp="2026-10-16T11:34:58.231Z">
+    <testcase name="[1] method=POST, suffix=" classname="com.tricore.dxos.gateway.workflow.controller.WorkflowHttpExposureTest" time="0.013" />
+    <testcase name="[2] method=POST, suffix=/instance-1/activate" classname="com.tricore.dxos.gateway.workflow.controller.WorkflowHttpExposureTest" time="0.005" />
+    <testcase name="[3] method=POST, suffix=/instance-1/transitions" classname="com.tricore.dxos.gateway.workflow.controller.WorkflowHttpExposureTest" time="0.003" />
+    <testcase name="[4] method=GET, suffix=/instance-1" classname="com.tricore.dxos.gateway.workflow.controller.WorkflowHttpExposureTest" time="0.004" />
+    <testcase name="[5] method=GET, suffix=/instance-1/history" classname="com.tricore.dxos.gateway.workflow.controller.WorkflowHttpExposureTest" time="0.003" />
+  </testsuite>
+  <testsuite name="com.tricore.dxos.infrastructure.storage.supabase.SupabaseHttpTest" tests="5" failures="0" errors="0" skipped="0" time="0.379" timestamp="2026-10-16T11:34:58.269Z">
+    <testcase name="serverFaultIsSanitizedAndStagingCleaned()" classname="com.tricore.dxos.infrastructure.storage.supabase.SupabaseHttpTest" time="0.277" />
+    <testcase name="pinnedReadAfterMutationKeepsOldMetadataAndBody()" classname="com.tricore.dxos.infrastructure.storage.supabase.SupabaseHttpTest" time="0.025" />
+    <testcase name="fullHttpCrudReplacesMapAndDeletesStrictly()" classname="com.tricore.dxos.infrastructure.storage.supabase.SupabaseHttpTest" time="0.04" />
+    <testcase name="invalidLengthPreservesExistingObjectWithoutNetworkMutation()" classname="com.tricore.dxos.infrastructure.storage.supabase.SupabaseHttpTest" time="0.014" />
+    <testcase name="zeroLengthAndCallerOwnershipOnSuccessAndConflict()" classname="com.tricore.dxos.infrastructure.storage.supabase.SupabaseHttpTest" time="0.021" />
+  </testsuite>
+  <testsuite name="com.tricore.dxos.infrastructure.storage.supabase.SupabaseProcessLauncherTest" tests="1" failures="0" errors="0" skipped="0" time="0.103" timestamp="2026-10-16T11:34:58.649Z">
+    <testcase name="launchesWorkerWithCurrentJdkAndClasspathWithoutProviderConfiguration()" classname="com.tricore.dxos.infrastructure.storage.supabase.SupabaseProcessLauncherTest" time="0.103" />
+  </testsuite>
+  <testsuite name="com.tricore.dxos.infrastructure.storage.supabase.SupabaseResponseBodyTest" tests="3" failures="0" errors="0" skipped="0" time="0.004" timestamp="2026-10-16T11:34:58.753Z">
+    <testcase name="oversizedTransportChunkFailsWithoutCopyingOrRetainingIt()" classname="com.tricore.dxos.infrastructure.storage.supabase.SupabaseResponseBodyTest" time="0.001" />
+    <testcase name="closeCancelsExactlyOnceAndRemovesScheduledTask()" classname="com.tricore.dxos.infrastructure.storage.supabase.SupabaseResponseBodyTest" time="0.001" />
+    <testcase name="backpressureKeepsOnlyOneChunkAndEofIsRepeatable()" classname="com.tricore.dxos.infrastructure.storage.supabase.SupabaseResponseBodyTest" time="0.001" />
+  </testsuite>
+  <testsuite name="com.tricore.dxos.infrastructure.storage.supabase.SupabaseStorageTest" tests="23" failures="0" errors="0" skipped="0" time="0.182" timestamp="2026-10-16T11:34:58.759Z">
+    <testcase name="secretKeyModeUsesApiKeyWithoutUserAuthAndNoWriteRetry()" classname="com.tricore.dxos.infrastructure.storage.supabase.SupabaseStorageTest" time="0.006" />
+    <testcase name="readsKeepMetadataAndCloseIdempotently()" classname="com.tricore.dxos.infrastructure.storage.supabase.SupabaseStorageTest" time="0.003" />
+    <testcase name="runtimeProviderFailuresAndBulkReadArgumentsAreNormalized()" classname="com.tricore.dxos.infrastructure.storage.supabase.SupabaseStorageTest" time="0.002" />
+    <testcase name="stagingShortLongAndZeroBytes()" classname="com.tricore.dxos.infrastructure.storage.supabase.SupabaseStorageTest" time="0.004" />
+    <testcase name="vanishedPinnedVersionDoesNotRetryCurrentKey()" classname="com.tricore.dxos.infrastructure.storage.supabase.SupabaseStorageTest" time="0.004" />
+    <testcase name="invalidUploadNeverMutatesNetwork()" classname="com.tricore.dxos.infrastructure.storage.supabase.SupabaseStorageTest" time="0.005" />
+    <testcase name="configurationValidRegistersOneRealPort()" classname="com.tricore.dxos.infrastructure.storage.supabase.SupabaseStorageTest" time="0.058" />
+    <testcase name="overwriteSendsCompleteEnvelopeAndExactLength()" classname="com.tricore.dxos.infrastructure.storage.supabase.SupabaseStorageTest" time="0.005" />
+    <testcase name="lazyReadAndCloseFaultsAreSanitizedAndReleased()" classname="com.tricore.dxos.infrastructure.storage.supabase.SupabaseStorageTest" time="0.003" />
+    <testcase name="truncatedAndExcessProviderBytesAreUnavailable()" classname="com.tricore.dxos.infrastructure.storage.supabase.SupabaseStorageTest" time="0.002" />
+    <testcase name="missingDeleteAndTransportFailuresAreNormalized()" classname="com.tricore.dxos.infrastructure.storage.supabase.SupabaseStorageTest" time="0.005" />
+    <testcase name="errorCodesAreDeterministicAndNeverExposeBodies()" classname="com.tricore.dxos.infrastructure.storage.supabase.SupabaseStorageTest" time="0.003" />
+    <testcase name="oversizedMetadataIsRejectedBeforeTransport()" classname="com.tricore.dxos.infrastructure.storage.supabase.SupabaseStorageTest" time="0.003" />
+    <testcase name="configurationDisabledDoesNotRegisterFakeAndEnabledMissingConfigFailsClosed()" classname="com.tricore.dxos.infrastructure.storage.supabase.SupabaseStorageTest" time="0.016" />
+    <testcase name="readPinsInfoAndDownloadToResolvedVersionNeverCurrentFallback()" classname="com.tricore.dxos.infrastructure.storage.supabase.SupabaseStorageTest" time="0.003" />
+    <testcase name="stagingReadsCurrentPositionNeverClosesAndCleansUp()" classname="com.tricore.dxos.infrastructure.storage.supabase.SupabaseStorageTest" time="0.002" />
+    <testcase name="providerConflictCleansStagingAndNeverHead()" classname="com.tricore.dxos.infrastructure.storage.supabase.SupabaseStorageTest" time="0.005" />
+    <testcase name="keysRoundTripAllCodeUnitsAndTraversalWithoutCollisions()" classname="com.tricore.dxos.infrastructure.storage.supabase.SupabaseStorageTest" time="0.029" />
+    <testcase name="versionMismatchFailsClosedBeforeDownload()" classname="com.tricore.dxos.infrastructure.storage.supabase.SupabaseStorageTest" time="0.003" />
+    <testcase name="stagingInputFailuresRemainInvalidAndCallerOwned()" classname="com.tricore.dxos.infrastructure.storage.supabase.SupabaseStorageTest" time="0.003" />
+    <testcase name="metadataRoundTripsCaseUnicodeEmptyAndIsolatedSurrogates()" classname="com.tricore.dxos.infrastructure.storage.supabase.SupabaseStorageTest" time="0.003" />
+    <testcase name="configurationRejectsInsecureEndpointAndTraversalPrefix()" classname="com.tricore.dxos.infrastructure.storage.supabase.SupabaseStorageTest" time="0.002" />
+    <testcase name="malformedAndOversizedResponsesAreSanitized()" classname="com.tricore.dxos.infrastructure.storage.supabase.SupabaseStorageTest" time="0.003" />
+  </testsuite>
+  <testsuite name="com.tricore.dxos.infrastructure.storage.supabase.SupabaseTimeoutTest" tests="10" failures="0" errors="0" skipped="0" time="5.178" timestamp="2026-10-16T11:34:58.944Z">
+    <testcase name="lazyPartialDownloadExpiresAndCancels()" classname="com.tricore.dxos.infrastructure.storage.supabase.SupabaseTimeoutTest" time="0.534" />
+    <testcase name="[1] operation=create" classname="com.tricore.dxos.infrastructure.storage.supabase.SupabaseTimeoutTest" time="0.516" />
+    <testcase name="[2] operation=overwrite" classname="com.tricore.dxos.infrastructure.storage.supabase.SupabaseTimeoutTest" time="0.516" />
+    <testcase name="[3] operation=delete" classname="com.tricore.dxos.infrastructure.storage.supabase.SupabaseTimeoutTest" time="0.518" />
+    <testcase name="idleLazyHandleExpiresBeforeFirstRead()" classname="com.tricore.dxos.infrastructure.storage.supabase.SupabaseTimeoutTest" time="0.529" />
+    <testcase name="[1] status=200" classname="com.tricore.dxos.infrastructure.storage.supabase.SupabaseTimeoutTest" time="0.509" />
+    <testcase name="[2] status=503" classname="com.tricore.dxos.infrastructure.storage.supabase.SupabaseTimeoutTest" time="0.511" />
+    <testcase name="[3] status=409" classname="com.tricore.dxos.infrastructure.storage.supabase.SupabaseTimeoutTest" time="0.514" />
+    <testcase name="[4] status=404" classname="com.tricore.dxos.infrastructure.storage.supabase.SupabaseTimeoutTest" time="0.51" />
+    <testcase name="[5] status=403" classname="com.tricore.dxos.infrastructure.storage.supabase.SupabaseTimeoutTest" time="0.512" />
+  </testsuite>
+  <testsuite name="com.tricore.dxos.infrastructure.workflow.PostgresWorkflowPersistenceIntegrationTest" tests="25" failures="0" errors="0" skipped="25" time="0.001" timestamp="2026-10-16T11:35:04.132Z">
+    <testcase name="migrationsUpgradeV1V2AndSeedTwoIndependentDefinitions()" classname="com.tricore.dxos.infrastructure.workflow.PostgresWorkflowPersistenceIntegrationTest" time="0.0">
+      <skipped />
+    </testcase>
+    <testcase name="databaseRejectsOutOfRangeInstantAndNanos()" classname="com.tricore.dxos.infrastructure.workflow.PostgresWorkflowPersistenceIntegrationTest" time="0.0">
+      <skipped />
+    </testcase>
+    <testcase name="requestJpaUsesPublicWhileWorkflowKeepsPrivateSchema()" classname="com.tricore.dxos.infrastructure.workflow.PostgresWorkflowPersistenceIntegrationTest" time="0.0">
+      <skipped />
+    </testcase>
+    <testcase name="runtimeLoginCannotProvisionDeleteOrOwnWorkflowTables()" classname="com.tricore.dxos.infrastructure.workflow.PostgresWorkflowPersistenceIntegrationTest" time="0.0">
+      <skipped />
+    </testcase>
+    <testcase name="createIsInsertOnlyAndActivationStaysVersionZeroWithoutHistory()" classname="com.tricore.dxos.infrastructure.workflow.PostgresWorkflowPersistenceIntegrationTest" time="0.0">
+      <skipped />
+    </testcase>
+    <testcase name="initialStateMustExistAndProvisioningTransactionCannotBeSpoofed()" classname="com.tricore.dxos.infrastructure.workflow.PostgresWorkflowPersistenceIntegrationTest" time="0.0">
+      <skipped />
+    </testcase>
+    <testcase name="cleanupFailureDoesNotHideConfirmedDurableCommit()" classname="com.tricore.dxos.infrastructure.workflow.PostgresWorkflowPersistenceIntegrationTest" time="0.0">
+      <skipped />
+    </testcase>
+    <testcase name="historyIsImmutableOrderedContiguousAndTerminalReplayHasCorrectPrecedence()" classname="com.tricore.dxos.infrastructure.workflow.PostgresWorkflowPersistenceIntegrationTest" time="0.0">
+      <skipped />
+    </testcase>
+    <testcase name="ambientSpringTransactionCannotDeferPortCommit()" classname="com.tricore.dxos.infrastructure.workflow.PostgresWorkflowPersistenceIntegrationTest" time="0.0">
+      <skipped />
+    </testcase>
+    <testcase name="sqlInjectionIdentifiersRemainData()" classname="com.tricore.dxos.infrastructure.workflow.PostgresWorkflowPersistenceIntegrationTest" time="0.0">
+      <skipped />
+    </testcase>
+    <testcase name="historyInsertFailureRollsBackInstanceAndDoesNotRetry()" classname="com.tricore.dxos.infrastructure.workflow.PostgresWorkflowPersistenceIntegrationTest" time="0.0">
+      <skipped />
+    </testcase>
+    <testcase name="authoritativeDefinitionRejectsForgedTransitionTargetAndUnknownTransition()" classname="com.tricore.dxos.infrastructure.workflow.PostgresWorkflowPersistenceIntegrationTest" time="0.0">
+      <skipped />
+    </testcase>
+    <testcase name="creationUsesAuthoritativeInitialStateAndDefinition()" classname="com.tricore.dxos.infrastructure.workflow.PostgresWorkflowPersistenceIntegrationTest" time="0.0">
+      <skipped />
+    </testcase>
+    <testcase name="springProvidesOneProductionPortAndDataSurvivesBackendRestart()" classname="com.tricore.dxos.infrastructure.workflow.PostgresWorkflowPersistenceIntegrationTest" time="0.0">
+      <skipped />
+    </testcase>
+    <testcase name="failedRollbackCannotClaimOperationFailure()" classname="com.tricore.dxos.infrastructure.workflow.PostgresWorkflowPersistenceIntegrationTest" time="0.0">
+      <skipped />
+    </testcase>
+    <testcase name="exactVersionsAndImmutableIdempotentProvisioning()" classname="com.tricore.dxos.infrastructure.workflow.PostgresWorkflowPersistenceIntegrationTest" time="0.0">
+      <skipped />
+    </testcase>
+    <testcase name="validatesStructuralArgumentsWithoutConnecting()" classname="com.tricore.dxos.infrastructure.workflow.PostgresWorkflowPersistenceIntegrationTest" time="0.0">
+      <skipped />
+    </testcase>
+    <testcase name="activationChecksLifecycleVersionProposalAndBackwardsTime()" classname="com.tricore.dxos.infrastructure.workflow.PostgresWorkflowPersistenceIntegrationTest" time="0.0">
+      <skipped />
+    </testcase>
+    <testcase name="allJavaInstantSecondsAndNanosRoundTripExactly(String)" classname="com.tricore.dxos.infrastructure.workflow.PostgresWorkflowPersistenceIntegrationTest" time="0.0">
+      <skipped />
+    </testcase>
+    <testcase name="twoIndependentConnectionsHaveExactlyOneWinner(String)" classname="com.tricore.dxos.infrastructure.workflow.PostgresWorkflowPersistenceIntegrationTest" time="0.0">
+      <skipped />
+    </testcase>
+    <testcase name="transitionComparesFullPersistedSource(String, WorkflowErrorCode)" classname="com.tricore.dxos.infrastructure.workflow.PostgresWorkflowPersistenceIntegrationTest" time="0.001">
+      <skipped />
+    </testcase>
+    <testcase name="lostCommitResponseIsUnknownAndAtomicWithoutAutomaticRetry(String)" classname="com.tricore.dxos.infrastructure.workflow.PostgresWorkflowPersistenceIntegrationTest" time="0.001">
+      <skipped />
+    </testcase>
+    <testcase name="databaseSealsAllDefinitionContent(String)" classname="com.tricore.dxos.infrastructure.workflow.PostgresWorkflowPersistenceIntegrationTest" time="0.001">
+      <skipped />
+    </testcase>
+    <testcase name="activationRejectsForgedSource(String)" classname="com.tricore.dxos.infrastructure.workflow.PostgresWorkflowPersistenceIntegrationTest" time="0.001">
+      <skipped />
+    </testcase>
+    <testcase name="lostCommitResponseForOtherWritesIsAlsoUnknown(String)" classname="com.tricore.dxos.infrastructure.workflow.PostgresWorkflowPersistenceIntegrationTest" time="0.001">
+      <skipped />
+    </testcase>
+  </testsuite>
+  <testsuite name="com.tricore.dxos.infrastructure.workflow.WorkflowApprovedMigrationIntegrationTest" tests="10" failures="0" errors="0" skipped="10" time="0.002" timestamp="2026-10-16T11:35:04.135Z">
+    <testcase name="originalWrongReadOnlyPathIsDiagnosedBeforeGuardOrFlyway()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowApprovedMigrationIntegrationTest" time="0.0">
+      <skipped />
+    </testcase>
+    <testcase name="realFlywayRunsOnlyV3V4WithExactInventoryAndFreshReadOnlyAudit()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowApprovedMigrationIntegrationTest" time="0.0">
+      <skipped />
+    </testcase>
+    <testcase name="v3CommittedAndV4FailsWithoutRetryOrDestructiveRecovery()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowApprovedMigrationIntegrationTest" time="0.0">
+      <skipped />
+    </testcase>
+    <testcase name="confirmedSqlFailureWithNoWorkflowObjectsReportsRolledBack()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowApprovedMigrationIntegrationTest" time="0.0">
+      <skipped />
+    </testcase>
+    <testcase name="developmentSmokeAuditPreservesCatalogAndDetectsSeedAndInventoryDrift()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowApprovedMigrationIntegrationTest" time="0.0">
+      <skipped />
+    </testcase>
+    <testcase name="failedGuardAfterRealConnectionReportsTlsAndSafeFailureStage()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowApprovedMigrationIntegrationTest" time="0.0">
+      <skipped />
+    </testcase>
+    <testcase name="tlsCannotDowngradeToReachMigrations(String)" classname="com.tricore.dxos.infrastructure.workflow.WorkflowApprovedMigrationIntegrationTest" time="0.0">
+      <skipped />
+    </testcase>
+    <testcase name="precheckFailuresNeverHandOffToFlyway(String)" classname="com.tricore.dxos.infrastructure.workflow.WorkflowApprovedMigrationIntegrationTest" time="0.001">
+      <skipped />
+    </testcase>
+    <testcase name="lostV4CommitResponseReconcilesSeedAndHistoryWithoutRetry(String)" classname="com.tricore.dxos.infrastructure.workflow.WorkflowApprovedMigrationIntegrationTest" time="0.002">
+      <skipped />
+    </testcase>
+    <testcase name="independentAuditFailureCannotReturnSuccess(String)" classname="com.tricore.dxos.infrastructure.workflow.WorkflowApprovedMigrationIntegrationTest" time="0.001">
+      <skipped />
+    </testcase>
+  </testsuite>
+  <testsuite name="com.tricore.dxos.infrastructure.workflow.WorkflowApprovedMigrationTest" tests="24" failures="0" errors="0" skipped="0" time="2.294" timestamp="2026-10-16T11:35:04.140Z">
+    <testcase name="[1] fault=missing" classname="com.tricore.dxos.infrastructure.workflow.WorkflowApprovedMigrationTest" time="0.314" />
+    <testcase name="[2] fault=partial" classname="com.tricore.dxos.infrastructure.workflow.WorkflowApprovedMigrationTest" time="0.329" />
+    <testcase name="[3] fault=secret-output" classname="com.tricore.dxos.infrastructure.workflow.WorkflowApprovedMigrationTest" time="0.311" />
+    <testcase name="[4] fault=success" classname="com.tricore.dxos.infrastructure.workflow.WorkflowApprovedMigrationTest" time="0.315" />
+    <testcase name="bundleSidecarsAreRejectedBeforeConnection()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowApprovedMigrationTest" time="0.043" />
+    <testcase name="[1] state=28P01" classname="com.tricore.dxos.infrastructure.workflow.WorkflowApprovedMigrationTest" time="0.006" />
+    <testcase name="[2] state=3D000" classname="com.tricore.dxos.infrastructure.workflow.WorkflowApprovedMigrationTest" time="0.004" />
+    <testcase name="driverErrorsCannotLeakSecretsOrClaimAWrite()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowApprovedMigrationTest" time="0.004" />
+    <testcase name="[1] host=aws-0-region.pooler.supabase.com" classname="com.tricore.dxos.infrastructure.workflow.WorkflowApprovedMigrationTest" time="0.003" />
+    <testcase name="[2] host=db.differentprojectref.supabase.co" classname="com.tricore.dxos.infrastructure.workflow.WorkflowApprovedMigrationTest" time="0.003" />
+    <testcase name="[3] host=localhost" classname="com.tricore.dxos.infrastructure.workflow.WorkflowApprovedMigrationTest" time="0.004" />
+    <testcase name="[4] host=db.zsfctpnitkdztlfhzqgw.supabase.co?sslmode=disable" classname="com.tricore.dxos.infrastructure.workflow.WorkflowApprovedMigrationTest" time="0.004" />
+    <testcase name="[1] fault=no-opt-in" classname="com.tricore.dxos.infrastructure.workflow.WorkflowApprovedMigrationTest" time="0.218" />
+    <testcase name="[2] fault=wrong-host" classname="com.tricore.dxos.infrastructure.workflow.WorkflowApprovedMigrationTest" time="0.224" />
+    <testcase name="[3] fault=wrong-ca" classname="com.tricore.dxos.infrastructure.workflow.WorkflowApprovedMigrationTest" time="0.239" />
+    <testcase name="[4] fault=local-flag" classname="com.tricore.dxos.infrastructure.workflow.WorkflowApprovedMigrationTest" time="0.229" />
+    <testcase name="[1] key=WORKFLOW_EVENT_GUARD_LOCAL_DISPOSABLE" classname="com.tricore.dxos.infrastructure.workflow.WorkflowApprovedMigrationTest" time="0.004" />
+    <testcase name="[2] key=WORKFLOW_DEV_LOCAL_DISPOSABLE" classname="com.tricore.dxos.infrastructure.workflow.WorkflowApprovedMigrationTest" time="0.004" />
+    <testcase name="[3] key=WF25_DISPOSABLE_TEST" classname="com.tricore.dxos.infrastructure.workflow.WorkflowApprovedMigrationTest" time="0.004" />
+    <testcase name="tlsCannotBeOverriddenAndWriterIsNotProductionDefault()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowApprovedMigrationTest" time="0.005" />
+    <testcase name="[1] key=DB_PORT" classname="com.tricore.dxos.infrastructure.workflow.WorkflowApprovedMigrationTest" time="0.003" />
+    <testcase name="[2] key=DB_NAME" classname="com.tricore.dxos.infrastructure.workflow.WorkflowApprovedMigrationTest" time="0.004" />
+    <testcase name="[3] key=DB_USER" classname="com.tricore.dxos.infrastructure.workflow.WorkflowApprovedMigrationTest" time="0.003" />
+    <testcase name="[4] key=WORKFLOW_FLYWAY_APPROVAL" classname="com.tricore.dxos.infrastructure.workflow.WorkflowApprovedMigrationTest" time="0.004" />
+  </testsuite>
+  <testsuite name="com.tricore.dxos.infrastructure.workflow.WorkflowApprovedSmokeLauncherTest" tests="14" failures="0" errors="0" skipped="0" time="4.031" timestamp="2026-10-16T11:35:06.435Z">
+    <testcase name="[1] fault=no-opt-in" classname="com.tricore.dxos.infrastructure.workflow.WorkflowApprovedSmokeLauncherTest" time="0.206" />
+    <testcase name="[2] fault=both-modes" classname="com.tricore.dxos.infrastructure.workflow.WorkflowApprovedSmokeLauncherTest" time="0.206" />
+    <testcase name="[3] fault=wrong-host" classname="com.tricore.dxos.infrastructure.workflow.WorkflowApprovedSmokeLauncherTest" time="0.21" />
+    <testcase name="[4] fault=wrong-ca" classname="com.tricore.dxos.infrastructure.workflow.WorkflowApprovedSmokeLauncherTest" time="0.228" />
+    <testcase name="[5] fault=local-flag" classname="com.tricore.dxos.infrastructure.workflow.WorkflowApprovedSmokeLauncherTest" time="0.219" />
+    <testcase name="[1] fault=success" classname="com.tricore.dxos.infrastructure.workflow.WorkflowApprovedSmokeLauncherTest" time="0.406" />
+    <testcase name="[2] fault=lost-ack" classname="com.tricore.dxos.infrastructure.workflow.WorkflowApprovedSmokeLauncherTest" time="0.432" />
+    <testcase name="[3] fault=read-failure" classname="com.tricore.dxos.infrastructure.workflow.WorkflowApprovedSmokeLauncherTest" time="0.366" />
+    <testcase name="[4] fault=post-drift" classname="com.tricore.dxos.infrastructure.workflow.WorkflowApprovedSmokeLauncherTest" time="0.324" />
+    <testcase name="[5] fault=preexisting" classname="com.tricore.dxos.infrastructure.workflow.WorkflowApprovedSmokeLauncherTest" time="0.28" />
+    <testcase name="[6] fault=missing-precheck" classname="com.tricore.dxos.infrastructure.workflow.WorkflowApprovedSmokeLauncherTest" time="0.276" />
+    <testcase name="[7] fault=duplicate-precheck" classname="com.tricore.dxos.infrastructure.workflow.WorkflowApprovedSmokeLauncherTest" time="0.269" />
+    <testcase name="[8] fault=secret-output" classname="com.tricore.dxos.infrastructure.workflow.WorkflowApprovedSmokeLauncherTest" time="0.329" />
+    <testcase name="[9] fault=audit-only" classname="com.tricore.dxos.infrastructure.workflow.WorkflowApprovedSmokeLauncherTest" time="0.275" />
+  </testsuite>
+  <testsuite name="com.tricore.dxos.infrastructure.workflow.WorkflowDevelopmentSmokeIntegrationTest" tests="6" failures="0" errors="0" skipped="6" time="0.0" timestamp="2026-10-16T11:35:10.467Z">
+    <testcase name="bundleAndCatalogDriftAreRejectedBeforeSmokeWrites()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowDevelopmentSmokeIntegrationTest" time="0.0">
+      <skipped />
+    </testcase>
+    <testcase name="postgresMigrationSmokeAndNewJvmReadStayInsideApprovedSchema()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowDevelopmentSmokeIntegrationTest" time="0.0">
+      <skipped />
+    </testcase>
+    <testcase name="productionRunnerRejectsSamePostgresOwnerEvenWithDevelopmentEnvironment()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowDevelopmentSmokeIntegrationTest" time="0.0">
+      <skipped />
+    </testcase>
+    <testcase name="missingAuthorizationFailsBeforeSchemaWrites(String)" classname="com.tricore.dxos.infrastructure.workflow.WorkflowDevelopmentSmokeIntegrationTest" time="0.0">
+      <skipped />
+    </testcase>
+    <testcase name="actualTlsFailuresPreventMigration(String)" classname="com.tricore.dxos.infrastructure.workflow.WorkflowDevelopmentSmokeIntegrationTest" time="0.0">
+      <skipped />
+    </testcase>
+    <testcase name="unreviewedSchemaFailsBeforeMigration(String)" classname="com.tricore.dxos.infrastructure.workflow.WorkflowDevelopmentSmokeIntegrationTest" time="0.0">
+      <skipped />
+    </testcase>
+  </testsuite>
+  <testsuite name="com.tricore.dxos.infrastructure.workflow.WorkflowDevelopmentSmokeRunnerTest" tests="24" failures="0" errors="0" skipped="0" time="0.083" timestamp="2026-10-16T11:35:10.468Z">
+    <testcase name="[1] host=aws-0-region.pooler.supabase.com" classname="com.tricore.dxos.infrastructure.workflow.WorkflowDevelopmentSmokeRunnerTest" time="0.004" />
+    <testcase name="[2] host=127.0.0.1" classname="com.tricore.dxos.infrastructure.workflow.WorkflowDevelopmentSmokeRunnerTest" time="0.003" />
+    <testcase name="[3] host=other.example.com" classname="com.tricore.dxos.infrastructure.workflow.WorkflowDevelopmentSmokeRunnerTest" time="0.003" />
+    <testcase name="[4] host=db.abcdefghijklmnopqrst.supabase.co?sslmode=disable" classname="com.tricore.dxos.infrastructure.workflow.WorkflowDevelopmentSmokeRunnerTest" time="0.003" />
+    <testcase name="[5] host=db.abcdefghijklmnopqrst.supabase.co.evil.example" classname="com.tricore.dxos.infrastructure.workflow.WorkflowDevelopmentSmokeRunnerTest" time="0.003" />
+    <testcase name="productionConfigurationAndMissingCommandCannotOptIn()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowDevelopmentSmokeRunnerTest" time="0.003" />
+    <testcase name="[1] schema=public" classname="com.tricore.dxos.infrastructure.workflow.WorkflowDevelopmentSmokeRunnerTest" time="0.003" />
+    <testcase name="[2] schema=storage" classname="com.tricore.dxos.infrastructure.workflow.WorkflowDevelopmentSmokeRunnerTest" time="0.002" />
+    <testcase name="[3] schema=auth" classname="com.tricore.dxos.infrastructure.workflow.WorkflowDevelopmentSmokeRunnerTest" time="0.003" />
+    <testcase name="[4] schema=dxos_wf25_smoke_02" classname="com.tricore.dxos.infrastructure.workflow.WorkflowDevelopmentSmokeRunnerTest" time="0.003" />
+    <testcase name="[5] schema=dxos_wf25_smoke_01;DROP SCHEMA public" classname="com.tricore.dxos.infrastructure.workflow.WorkflowDevelopmentSmokeRunnerTest" time="0.002" />
+    <testcase name="projectPortDatabaseUserCaAndBundleRemainRequired()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowDevelopmentSmokeRunnerTest" time="0.004" />
+    <testcase name="[1] value=" classname="com.tricore.dxos.infrastructure.workflow.WorkflowDevelopmentSmokeRunnerTest" time="0.003" />
+    <testcase name="[2] value=true" classname="com.tricore.dxos.infrastructure.workflow.WorkflowDevelopmentSmokeRunnerTest" time="0.004" />
+    <testcase name="[3] value=false" classname="com.tricore.dxos.infrastructure.workflow.WorkflowDevelopmentSmokeRunnerTest" time="0.002" />
+    <testcase name="[4] value=production" classname="com.tricore.dxos.infrastructure.workflow.WorkflowDevelopmentSmokeRunnerTest" time="0.002" />
+    <testcase name="[5] value=ISSUE-25-POSTGRES-DEVELOPMENT-ONLY" classname="com.tricore.dxos.infrastructure.workflow.WorkflowDevelopmentSmokeRunnerTest" time="0.003" />
+    <testcase name="readOnlyPreparationDoesNotConnectOrRequireWriteApproval()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowDevelopmentSmokeRunnerTest" time="0.006" />
+    <testcase name="disposableLocalOptInCannotDowngradeOrReachCloud()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowDevelopmentSmokeRunnerTest" time="0.005" />
+    <testcase name="[1] mode=migrate" classname="com.tricore.dxos.infrastructure.workflow.WorkflowDevelopmentSmokeRunnerTest" time="0.004" />
+    <testcase name="[2] mode=smoke" classname="com.tricore.dxos.infrastructure.workflow.WorkflowDevelopmentSmokeRunnerTest" time="0.003" />
+    <testcase name="[1] name=WORKFLOW_DEV_LOCAL_DISPOSABLE" classname="com.tricore.dxos.infrastructure.workflow.WorkflowDevelopmentSmokeRunnerTest" time="0.005" />
+    <testcase name="[2] name=WF25_DISPOSABLE_TEST" classname="com.tricore.dxos.infrastructure.workflow.WorkflowDevelopmentSmokeRunnerTest" time="0.003" />
+    <testcase name="[3] name=WORKFLOW_EVENT_GUARD_LOCAL_DISPOSABLE" classname="com.tricore.dxos.infrastructure.workflow.WorkflowDevelopmentSmokeRunnerTest" time="0.002" />
+  </testsuite>
+  <testsuite name="com.tricore.dxos.infrastructure.workflow.WorkflowEventTriggerGuardIntegrationTest" tests="12" failures="0" errors="0" skipped="12" time="0.0" timestamp="2026-10-16T11:35:10.552Z">
+    <testcase name="strictReadOnlyGuardWorksBeforeSchemaProvisioningAndDoesNotBypassEmptyCatalog()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowEventTriggerGuardIntegrationTest" time="0.0">
+      <skipped />
+    </testcase>
+    <testcase name="rejectsUnknownDisabledTriggerToo()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowEventTriggerGuardIntegrationTest" time="0.0">
+      <skipped />
+    </testcase>
+    <testcase name="strictReadOnlyGuardRejectsMissingHelperAndManifestDrift()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowEventTriggerGuardIntegrationTest" time="0.0">
+      <skipped />
+    </testcase>
+    <testcase name="distinguishesUnrestrictedNullTagsFromEmptyTags()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowEventTriggerGuardIntegrationTest" time="0.0">
+      <skipped />
+    </testcase>
+    <testcase name="rejectsWrongSchemaAndServerVersion()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowEventTriggerGuardIntegrationTest" time="0.0">
+      <skipped />
+    </testcase>
+    <testcase name="rejectsChangedTags()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowEventTriggerGuardIntegrationTest" time="0.0">
+      <skipped />
+    </testcase>
+    <testcase name="approvedMigrationReadOnlyPropertiesPassTheRealCatalogGuard()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowEventTriggerGuardIntegrationTest" time="0.0">
+      <skipped />
+    </testcase>
+    <testcase name="strictReadOnlyGuardRejectsWritableTransaction()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowEventTriggerGuardIntegrationTest" time="0.0">
+      <skipped />
+    </testcase>
+    <testcase name="approvedFixtureUsesLiveHelperSignaturesInsteadOfCapturedOids()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowEventTriggerGuardIntegrationTest" time="0.0">
+      <skipped />
+    </testcase>
+    <testcase name="liveRunnerUsesActualVerifiedTlsReadOnlyTransactionAndMeasuresCatalogChecks()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowEventTriggerGuardIntegrationTest" time="0.0">
+      <skipped />
+    </testcase>
+    <testcase name="liveRunnerRejectsActualInvalidTls(String)" classname="com.tricore.dxos.infrastructure.workflow.WorkflowEventTriggerGuardIntegrationTest" time="0.0">
+      <skipped />
+    </testcase>
+    <testcase name="rejectsLiveTriggerFunctionHelperAclAndSessionDrift(String)" classname="com.tricore.dxos.infrastructure.workflow.WorkflowEventTriggerGuardIntegrationTest" time="0.0">
+      <skipped />
+    </testcase>
+  </testsuite>
+  <testsuite name="com.tricore.dxos.infrastructure.workflow.WorkflowEventTriggerReviewIntegrationTest" tests="8" failures="0" errors="0" skipped="8" time="0.0" timestamp="2026-10-16T11:35:10.553Z">
+    <testcase name="collectsHelpersIdentifiedDuringPrivateBodyReviewByBoundSignature()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowEventTriggerReviewIntegrationTest" time="0.0">
+      <skipped />
+    </testcase>
+    <testcase name="broadDirectoryAclStopsBeforeConnecting()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowEventTriggerReviewIntegrationTest" time="0.0">
+      <skipped />
+    </testcase>
+    <testcase name="capturesUnknownEnabledTriggersWithoutSilentlyFilteringThem()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowEventTriggerReviewIntegrationTest" time="0.0">
+      <skipped />
+    </testcase>
+    <testcase name="capturesConfirmedMetadataWithoutPublishingBodiesOrConfigurationValues()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowEventTriggerReviewIntegrationTest" time="0.0">
+      <skipped />
+    </testcase>
+    <testcase name="matchingNamesAndMetadataDoNotAuthorizeChangedDeployedBodies()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowEventTriggerReviewIntegrationTest" time="0.0">
+      <skipped />
+    </testcase>
+    <testcase name="rollbackFailureDoesNotPersistSourceOrLeakExceptionText()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowEventTriggerReviewIntegrationTest" time="0.0">
+      <skipped />
+    </testcase>
+    <testcase name="malformedHelperSignatureIsBoundAndNotLoggedOrExecuted()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowEventTriggerReviewIntegrationTest" time="0.0">
+      <skipped />
+    </testcase>
+    <testcase name="readOnlyReferenceSqlExecutesAgainstAllSixActualMetadataShapes()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowEventTriggerReviewIntegrationTest" time="0.0">
+      <skipped />
+    </testcase>
+  </testsuite>
+  <testsuite name="com.tricore.dxos.infrastructure.workflow.WorkflowIsolationIntegrationTest" tests="34" failures="0" errors="0" skipped="34" time="0.0" timestamp="2026-10-16T11:35:10.554Z">
+    <testcase name="extraMigrationRejectedBeforeConnection()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowIsolationIntegrationTest" time="0.0">
+      <skipped />
+    </testcase>
+    <testcase name="unapprovedBundleRejectedBeforeConnection()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowIsolationIntegrationTest" time="0.0">
+      <skipped />
+    </testcase>
+    <testcase name="flywayRejectsUnreviewedInitializationAndCallbackConfiguration()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowIsolationIntegrationTest" time="0.0">
+      <skipped />
+    </testcase>
+    <testcase name="flywayRejectsSpoofedCallbackWithTheGuardNameBeforeDdl()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowIsolationIntegrationTest" time="0.0">
+      <skipped />
+    </testcase>
+    <testcase name="runtimeCreatePrivilegeStopsBeforeDdl()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowIsolationIntegrationTest" time="0.0">
+      <skipped />
+    </testcase>
+    <testcase name="jdbcCatalogPreflightIsReadOnlyOnPostgres()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowIsolationIntegrationTest" time="0.0">
+      <skipped />
+    </testcase>
+    <testcase name="jdbcCatalogPreflightDoesNotCreateMissingSchema()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowIsolationIntegrationTest" time="0.0">
+      <skipped />
+    </testcase>
+    <testcase name="customDefaultPrivilegesRequireReviewBeforeDdl()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowIsolationIntegrationTest" time="0.0">
+      <skipped />
+    </testcase>
+    <testcase name="flywayRejectsCustomResourceProviderWithAnApprovedScriptName()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowIsolationIntegrationTest" time="0.0">
+      <skipped />
+    </testcase>
+    <testcase name="localDisposableFlagCannotAuthorizeARemoteEmptyInventory()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowIsolationIntegrationTest" time="0.0">
+      <skipped />
+    </testcase>
+    <testcase name="flywayRejectsClassLoaderAndEncodingDrift()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowIsolationIntegrationTest" time="0.0">
+      <skipped />
+    </testcase>
+    <testcase name="existingUnknownObjectsPreventMigration()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowIsolationIntegrationTest" time="0.0">
+      <skipped />
+    </testcase>
+    <testcase name="runtimeWithoutTriggerPrivilegeIsAccepted()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowIsolationIntegrationTest" time="0.0">
+      <skipped />
+    </testcase>
+    <testcase name="flywayRejectsJavaMigrationsAndWorkingDirectoryOverrides()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowIsolationIntegrationTest" time="0.0">
+      <skipped />
+    </testcase>
+    <testcase name="unsafeMigrationConfigurationRejectedBeforeDdl()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowIsolationIntegrationTest" time="0.0">
+      <skipped />
+    </testcase>
+    <testcase name="checksumMismatchStopsBeforeWorkflowWrites()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowIsolationIntegrationTest" time="0.0">
+      <skipped />
+    </testcase>
+    <testcase name="runtimeOwnerIsRejected()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowIsolationIntegrationTest" time="0.0">
+      <skipped />
+    </testcase>
+    <testcase name="flywayRejectsBundleChangedAfterConfigurationBeforeDdl()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowIsolationIntegrationTest" time="0.0">
+      <skipped />
+    </testcase>
+    <testcase name="jdbcCatalogPreflightDoesNotPrintCustomFunctionSettings()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowIsolationIntegrationTest" time="0.0">
+      <skipped />
+    </testcase>
+    <testcase name="jdbcEntrypointKeepsEveryCatalogQueryInVerifiedReadOnlyTransaction()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowIsolationIntegrationTest" time="0.0">
+      <skipped />
+    </testcase>
+    <testcase name="migrationAndSmokeStayPrivateAndPersistAcrossNewConnections()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowIsolationIntegrationTest" time="0.0">
+      <skipped />
+    </testcase>
+    <testcase name="immutableFunctionsAndAclRemainEffective()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowIsolationIntegrationTest" time="0.0">
+      <skipped />
+    </testcase>
+    <testcase name="wrongPropertiesSchemaRejectedBeforeReads()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowIsolationIntegrationTest" time="0.0">
+      <skipped />
+    </testcase>
+    <testcase name="enabledEventTriggerRequiresReviewBeforeDdl()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowIsolationIntegrationTest" time="0.0">
+      <skipped />
+    </testcase>
+    <testcase name="smokeRunnerRejectsWrongRuntimeSchema()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowIsolationIntegrationTest" time="0.0">
+      <skipped />
+    </testcase>
+    <testcase name="missingRuntimePermissionsStopBeforeWrites()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowIsolationIntegrationTest" time="0.0">
+      <skipped />
+    </testcase>
+    <testcase name="smokeAndRuntimeRejectTriggerAddedAfterMigrationBeforeWriting()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowIsolationIntegrationTest" time="0.0">
+      <skipped />
+    </testcase>
+    <testcase name="verifyFullRejectsUntrustedCaAndWrongHostname()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowIsolationIntegrationTest" time="0.0">
+      <skipped />
+    </testcase>
+    <testcase name="flywayRejectsTriggerCreatedAfterConfigurationBeforeDdl()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowIsolationIntegrationTest" time="0.0">
+      <skipped />
+    </testcase>
+    <testcase name="migratedSchemaCannotBeMigratedAgainByRunner()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowIsolationIntegrationTest" time="0.0">
+      <skipped />
+    </testcase>
+    <testcase name="inheritedRuntimeTriggerPrivilegeStopsBeforeWrites(String)" classname="com.tricore.dxos.infrastructure.workflow.WorkflowIsolationIntegrationTest" time="0.0">
+      <skipped />
+    </testcase>
+    <testcase name="urlOverrideRejectedBeforeWriting(String)" classname="com.tricore.dxos.infrastructure.workflow.WorkflowIsolationIntegrationTest" time="0.0">
+      <skipped />
+    </testcase>
+    <testcase name="runtimeTriggerPrivilegeStopsBeforeWrites(String)" classname="com.tricore.dxos.infrastructure.workflow.WorkflowIsolationIntegrationTest" time="0.0">
+      <skipped />
+    </testcase>
+    <testcase name="verifiedJdbcTlsAcceptsUnverifiedBackendSslStatus(String)" classname="com.tricore.dxos.infrastructure.workflow.WorkflowIsolationIntegrationTest" time="0.0">
+      <skipped />
+    </testcase>
+  </testsuite>
+  <testsuite name="com.tricore.dxos.infrastructure.workflow.WorkflowLiveGuardTest" tests="17" failures="0" errors="0" skipped="0" time="0.316" timestamp="2026-10-16T11:35:10.555Z">
+    <testcase name="[1] key=DB_HOST" classname="com.tricore.dxos.infrastructure.workflow.WorkflowLiveGuardTest" time="0.005" />
+    <testcase name="[2] key=DB_PORT" classname="com.tricore.dxos.infrastructure.workflow.WorkflowLiveGuardTest" time="0.004" />
+    <testcase name="[3] key=DB_NAME" classname="com.tricore.dxos.infrastructure.workflow.WorkflowLiveGuardTest" time="0.004" />
+    <testcase name="[4] key=PGSSLROOTCERT" classname="com.tricore.dxos.infrastructure.workflow.WorkflowLiveGuardTest" time="0.003" />
+    <testcase name="directConnectionReportsDirectTlsWithoutPoolerLabelsOrCredentials()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowLiveGuardTest" time="0.235" />
+    <testcase name="[1] mode=off" classname="com.tricore.dxos.infrastructure.workflow.WorkflowLiveGuardTest" time="0.007" />
+    <testcase name="[2] mode=" classname="com.tricore.dxos.infrastructure.workflow.WorkflowLiveGuardTest" time="0.005" />
+    <testcase name="[3] mode=ON" classname="com.tricore.dxos.infrastructure.workflow.WorkflowLiveGuardTest" time="0.004" />
+    <testcase name="bundleDriftStopsBeforeConnect()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowLiveGuardTest" time="0.004" />
+    <testcase name="catalogDriftIsSanitizedAndRollsBack()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowLiveGuardTest" time="0.005" />
+    <testcase name="[1] local=true" classname="com.tricore.dxos.infrastructure.workflow.WorkflowLiveGuardTest" time="0.003" />
+    <testcase name="[2] local=false" classname="com.tricore.dxos.infrastructure.workflow.WorkflowLiveGuardTest" time="0.002" />
+    <testcase name="[3] local=" classname="com.tricore.dxos.infrastructure.workflow.WorkflowLiveGuardTest" time="0.003" />
+    <testcase name="[1] phase=rollback" classname="com.tricore.dxos.infrastructure.workflow.WorkflowLiveGuardTest" time="0.006" />
+    <testcase name="[2] phase=close" classname="com.tricore.dxos.infrastructure.workflow.WorkflowLiveGuardTest" time="0.005" />
+    <testcase name="verifiesServerReadOnlyBeforeCatalogAndRollsBackBeforePass()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowLiveGuardTest" time="0.011" />
+    <testcase name="invalidSslIsSanitizedAndCannotPass()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowLiveGuardTest" time="0.003" />
+  </testsuite>
+  <testsuite name="com.tricore.dxos.infrastructure.workflow.WorkflowReadOnlyPreflightTest" tests="29" failures="0" errors="0" skipped="0" time="0.084" timestamp="2026-10-16T11:35:10.872Z">
+    <testcase name="rollbackAndCloseFailuresDoNotClaimCompletion()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowReadOnlyPreflightTest" time="0.008" />
+    <testcase name="directConnectionUsesExistingCredentialsWithVerifiedTlsAndReadOnly()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowReadOnlyPreflightTest" time="0.004" />
+    <testcase name="connectFailureReportsSafePhaseAndSqlState()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowReadOnlyPreflightTest" time="0.003" />
+    <testcase name="sqlErrorsIdentifyTransactionCatalogAndPrivilegePhases()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowReadOnlyPreflightTest" time="0.008" />
+    <testcase name="[1] name=DB_HOST" classname="com.tricore.dxos.infrastructure.workflow.WorkflowReadOnlyPreflightTest" time="0.001" />
+    <testcase name="[2] name=DB_PORT" classname="com.tricore.dxos.infrastructure.workflow.WorkflowReadOnlyPreflightTest" time="0.001" />
+    <testcase name="[3] name=DB_NAME" classname="com.tricore.dxos.infrastructure.workflow.WorkflowReadOnlyPreflightTest" time="0.001" />
+    <testcase name="[4] name=DB_USER" classname="com.tricore.dxos.infrastructure.workflow.WorkflowReadOnlyPreflightTest" time="0.001" />
+    <testcase name="[5] name=DB_PASSWORD" classname="com.tricore.dxos.infrastructure.workflow.WorkflowReadOnlyPreflightTest" time="0.001" />
+    <testcase name="[6] name=PGSSLROOTCERT" classname="com.tricore.dxos.infrastructure.workflow.WorkflowReadOnlyPreflightTest" time="0.001" />
+    <testcase name="invalidSqlStateCannotInjectOutput()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowReadOnlyPreflightTest" time="0.003" />
+    <testcase name="tlsHandshakeFailureReportsPhaseWithoutDriverMessage()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowReadOnlyPreflightTest" time="0.002" />
+    <testcase name="rollbackFailureDoesNotHideOriginalCatalogFailure()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowReadOnlyPreflightTest" time="0.003" />
+    <testcase name="verifiedTlsAndReadOnlyCannotBeOverriddenByCredentials()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowReadOnlyPreflightTest" time="0.0" />
+    <testcase name="[1] host=127.0.0.1" classname="com.tricore.dxos.infrastructure.workflow.WorkflowReadOnlyPreflightTest" time="0.002" />
+    <testcase name="[2] host=other.example.com" classname="com.tricore.dxos.infrastructure.workflow.WorkflowReadOnlyPreflightTest" time="0.001" />
+    <testcase name="[3] host=aws.pooler.supabase.com?sslmode=disable" classname="com.tricore.dxos.infrastructure.workflow.WorkflowReadOnlyPreflightTest" time="0.001" />
+    <testcase name="[4] host=user@aws.pooler.supabase.com" classname="com.tricore.dxos.infrastructure.workflow.WorkflowReadOnlyPreflightTest" time="0.002" />
+    <testcase name="[5] host=db.abcdefghijklmnopqrst.supabase.co?sslmode=disable" classname="com.tricore.dxos.infrastructure.workflow.WorkflowReadOnlyPreflightTest" time="0.001" />
+    <testcase name="[6] host=db.abcdefghijklmnopqrst.supabase.co.evil.example" classname="com.tricore.dxos.infrastructure.workflow.WorkflowReadOnlyPreflightTest" time="0.001" />
+    <testcase name="transactionAndDatabaseIdentityFailuresAreClassified()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowReadOnlyPreflightTest" time="0.004" />
+    <testcase name="[1] backendSsl=TRUE" classname="com.tricore.dxos.infrastructure.workflow.WorkflowReadOnlyPreflightTest" time="0.004" />
+    <testcase name="[2] backendSsl=FALSE" classname="com.tricore.dxos.infrastructure.workflow.WorkflowReadOnlyPreflightTest" time="0.006" />
+    <testcase name="[3] backendSsl=NULL" classname="com.tricore.dxos.infrastructure.workflow.WorkflowReadOnlyPreflightTest" time="0.003" />
+    <testcase name="[4] backendSsl=NO_ROW" classname="com.tricore.dxos.infrastructure.workflow.WorkflowReadOnlyPreflightTest" time="0.007" />
+    <testcase name="validationAndUnexpectedFailuresNeverPrintSecrets()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowReadOnlyPreflightTest" time="0.003" />
+    <testcase name="missingCaStopsBeforeConnection()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowReadOnlyPreflightTest" time="0.001" />
+    <testcase name="[1] database=postgres?sslmode=require" classname="com.tricore.dxos.infrastructure.workflow.WorkflowReadOnlyPreflightTest" time="0.002" />
+    <testcase name="[2] database=postgres?sslmode=disable" classname="com.tricore.dxos.infrastructure.workflow.WorkflowReadOnlyPreflightTest" time="0.002" />
+  </testsuite>
+  <testsuite name="com.tricore.dxos.infrastructure.workflow.WorkflowRuntimePrivilegeAuditIntegrationTest" tests="2" failures="0" errors="0" skipped="2" time="0.0" timestamp="2026-10-16T11:35:10.956Z">
+    <testcase name="actualTlsAuditReportsUnprovisionedRolesWithoutCreatingThem()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowRuntimePrivilegeAuditIntegrationTest" time="0.0">
+      <skipped />
+    </testcase>
+    <testcase name="actualVerifyFullRejectsWrongCaAndWrongHostname(String)" classname="com.tricore.dxos.infrastructure.workflow.WorkflowRuntimePrivilegeAuditIntegrationTest" time="0.0">
+      <skipped />
+    </testcase>
+  </testsuite>
+  <testsuite name="com.tricore.dxos.infrastructure.workflow.WorkflowRuntimePrivilegeAuditLauncherTest" tests="5" failures="0" errors="0" skipped="0" time="0.831" timestamp="2026-10-16T11:35:10.957Z">
+    <testcase name="filtersNativeOutputAndKeepsSecretsOutOfArguments()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowRuntimePrivilegeAuditLauncherTest" time="0.191" />
+    <testcase name="[1] key=DB_PASSWORD" classname="com.tricore.dxos.infrastructure.workflow.WorkflowRuntimePrivilegeAuditLauncherTest" time="0.14" />
+    <testcase name="[2] key=WORKFLOW_EVENT_GUARD_LOCAL_DISPOSABLE" classname="com.tricore.dxos.infrastructure.workflow.WorkflowRuntimePrivilegeAuditLauncherTest" time="0.138" />
+    <testcase name="[1] batch=@echo off&#xD;&#xA;echo private-secret&#xD;&#xA;exit /b 0&#xD;&#xA;" classname="com.tricore.dxos.infrastructure.workflow.WorkflowRuntimePrivilegeAuditLauncherTest" time="0.168" />
+    <testcase name="[2] batch=@echo off&#xD;&#xA;echo RUNTIME_PRIVILEGE_AUDIT=FAIL phase=connect_tls&#xD;&#xA;echo private-secret 1&gt;&amp;2&#xD;&#xA;exit /b 1&#xD;&#xA;" classname="com.tricore.dxos.infrastructure.workflow.WorkflowRuntimePrivilegeAuditLauncherTest" time="0.193" />
+  </testsuite>
+  <testsuite name="com.tricore.dxos.infrastructure.workflow.WorkflowRuntimePrivilegeAuditTest" tests="18" failures="0" errors="0" skipped="0" time="0.104" timestamp="2026-10-16T11:35:11.790Z">
+    <testcase name="[1] value=true" classname="com.tricore.dxos.infrastructure.workflow.WorkflowRuntimePrivilegeAuditTest" time="0.005" />
+    <testcase name="[2] value=false" classname="com.tricore.dxos.infrastructure.workflow.WorkflowRuntimePrivilegeAuditTest" time="0.002" />
+    <testcase name="[3] value=" classname="com.tricore.dxos.infrastructure.workflow.WorkflowRuntimePrivilegeAuditTest" time="0.002" />
+    <testcase name="[1] mode=off" classname="com.tricore.dxos.infrastructure.workflow.WorkflowRuntimePrivilegeAuditTest" time="0.003" />
+    <testcase name="[2] mode=" classname="com.tricore.dxos.infrastructure.workflow.WorkflowRuntimePrivilegeAuditTest" time="0.003" />
+    <testcase name="[3] mode=ON" classname="com.tricore.dxos.infrastructure.workflow.WorkflowRuntimePrivilegeAuditTest" time="0.002" />
+    <testcase name="[1] phase=rollback" classname="com.tricore.dxos.infrastructure.workflow.WorkflowRuntimePrivilegeAuditTest" time="0.036" />
+    <testcase name="[2] phase=close" classname="com.tricore.dxos.infrastructure.workflow.WorkflowRuntimePrivilegeAuditTest" time="0.005" />
+    <testcase name="reviewedSqlContainsFifteenCatalogQueriesAndNoExecutableTransactionCommands()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowRuntimePrivilegeAuditTest" time="0.001" />
+    <testcase name="publicSchemaCreateIsReportedBeforeRolesExist()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowRuntimePrivilegeAuditTest" time="0.007" />
+    <testcase name="publicSecurityDefinerCallabilityIsReportedBeforeRolesExist()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowRuntimePrivilegeAuditTest" time="0.006" />
+    <testcase name="catalogFailureDiscardsPartialReportAndRollsBack()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowRuntimePrivilegeAuditTest" time="0.004" />
+    <testcase name="[1] change=&#xA;CREATE ROLE unsafe;" classname="com.tricore.dxos.infrastructure.workflow.WorkflowRuntimePrivilegeAuditTest" time="0.003" />
+    <testcase name="[2] change=&#xA;SELECT pg_catalog.pg_advisory_lock(1);" classname="com.tricore.dxos.infrastructure.workflow.WorkflowRuntimePrivilegeAuditTest" time="0.003" />
+    <testcase name="[3] change=&#xA;WITH x AS (DELETE FROM secret RETURNING *) SELECT * FROM x;" classname="com.tricore.dxos.infrastructure.workflow.WorkflowRuntimePrivilegeAuditTest" time="0.003" />
+    <testcase name="presentRolesAndEffectiveColumnGrantOptionsStillRequireManualReview()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowRuntimePrivilegeAuditTest" time="0.006" />
+    <testcase name="driverErrorsCannotExposeConnectionOrPassword()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowRuntimePrivilegeAuditTest" time="0.002" />
+    <testcase name="reportsMissingRolesAndPublicTempWithoutExposingIdentifiersOrSecrets()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowRuntimePrivilegeAuditTest" time="0.005" />
+  </testsuite>
+  <testsuite name="com.tricore.dxos.infrastructure.workflow.WorkflowSchemaBootstrapIntegrationTest" tests="9" failures="0" errors="0" skipped="9" time="0.0" timestamp="2026-10-16T11:35:11.895Z">
+    <testcase name="existingSchemaStopsWithoutAnySchemaWrite()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowSchemaBootstrapIntegrationTest" time="0.0">
+      <skipped />
+    </testcase>
+    <testcase name="independentAuditFailureNeverReturnsOverallSuccess()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowSchemaBootstrapIntegrationTest" time="0.0">
+      <skipped />
+    </testcase>
+    <testcase name="manifestDriftStopsBeforeWrite()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowSchemaBootstrapIntegrationTest" time="0.0">
+      <skipped />
+    </testcase>
+    <testcase name="observesOnlyOwnPgrstNotificationAfterCommit()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowSchemaBootstrapIntegrationTest" time="0.0">
+      <skipped />
+    </testcase>
+    <testcase name="commitsOnlyOneEmptyPrivateSchemaAndAuditsOnNewReadOnlyConnection()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowSchemaBootstrapIntegrationTest" time="0.0">
+      <skipped />
+    </testcase>
+    <testcase name="loginCustomRoleStopsBeforeWrite()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowSchemaBootstrapIntegrationTest" time="0.0">
+      <skipped />
+    </testcase>
+    <testcase name="lostCommitResponseReconcilesWithoutRetryOrDrop(String)" classname="com.tricore.dxos.infrastructure.workflow.WorkflowSchemaBootstrapIntegrationTest" time="0.0">
+      <skipped />
+    </testcase>
+    <testcase name="postcheckFailureRollsBackSchemaAndTriggerEffects(String)" classname="com.tricore.dxos.infrastructure.workflow.WorkflowSchemaBootstrapIntegrationTest" time="0.0">
+      <skipped />
+    </testcase>
+    <testcase name="actualTlsFailuresPreventWrite(String)" classname="com.tricore.dxos.infrastructure.workflow.WorkflowSchemaBootstrapIntegrationTest" time="0.0">
+      <skipped />
+    </testcase>
+  </testsuite>
+  <testsuite name="com.tricore.dxos.infrastructure.workflow.WorkflowSchemaBootstrapTest" tests="20" failures="0" errors="0" skipped="0" time="0.819" timestamp="2026-10-16T11:35:11.896Z">
+    <testcase name="[1] key=DB_PORT" classname="com.tricore.dxos.infrastructure.workflow.WorkflowSchemaBootstrapTest" time="0.005" />
+    <testcase name="[2] key=DB_NAME" classname="com.tricore.dxos.infrastructure.workflow.WorkflowSchemaBootstrapTest" time="0.003" />
+    <testcase name="[3] key=DB_USER" classname="com.tricore.dxos.infrastructure.workflow.WorkflowSchemaBootstrapTest" time="0.003" />
+    <testcase name="[4] key=DB_PASSWORD" classname="com.tricore.dxos.infrastructure.workflow.WorkflowSchemaBootstrapTest" time="0.003" />
+    <testcase name="[5] key=PGSSLROOTCERT" classname="com.tricore.dxos.infrastructure.workflow.WorkflowSchemaBootstrapTest" time="0.002" />
+    <testcase name="[6] key=WORKFLOW_SCHEMA_BOOTSTRAP_APPROVAL" classname="com.tricore.dxos.infrastructure.workflow.WorkflowSchemaBootstrapTest" time="0.003" />
+    <testcase name="[1] host=aws-0-region.pooler.supabase.com" classname="com.tricore.dxos.infrastructure.workflow.WorkflowSchemaBootstrapTest" time="0.003" />
+    <testcase name="[2] host=db.differentprojectref.supabase.co" classname="com.tricore.dxos.infrastructure.workflow.WorkflowSchemaBootstrapTest" time="0.003" />
+    <testcase name="[3] host=127.0.0.1" classname="com.tricore.dxos.infrastructure.workflow.WorkflowSchemaBootstrapTest" time="0.003" />
+    <testcase name="[4] host=db.zsfctpnitkdztlfhzqgw.supabase.co?sslmode=disable" classname="com.tricore.dxos.infrastructure.workflow.WorkflowSchemaBootstrapTest" time="0.005" />
+    <testcase name="[1] failure=no-opt-in" classname="com.tricore.dxos.infrastructure.workflow.WorkflowSchemaBootstrapTest" time="0.176" />
+    <testcase name="[2] failure=wrong-host" classname="com.tricore.dxos.infrastructure.workflow.WorkflowSchemaBootstrapTest" time="0.167" />
+    <testcase name="[3] failure=missing-ca" classname="com.tricore.dxos.infrastructure.workflow.WorkflowSchemaBootstrapTest" time="0.179" />
+    <testcase name="connectionFailuresNeverExposeSecretsOrClaimCloudSuccess()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowSchemaBootstrapTest" time="0.004" />
+    <testcase name="bundleDriftStopsBeforeConnect()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowSchemaBootstrapTest" time="0.003" />
+    <testcase name="[1] key=WORKFLOW_EVENT_GUARD_LOCAL_DISPOSABLE" classname="com.tricore.dxos.infrastructure.workflow.WorkflowSchemaBootstrapTest" time="0.002" />
+    <testcase name="[2] key=WF25_DISPOSABLE_TEST" classname="com.tricore.dxos.infrastructure.workflow.WorkflowSchemaBootstrapTest" time="0.002" />
+    <testcase name="[3] key=WORKFLOW_DEV_LOCAL_DISPOSABLE" classname="com.tricore.dxos.infrastructure.workflow.WorkflowSchemaBootstrapTest" time="0.002" />
+    <testcase name="exactApprovedEndpointCannotDowngradeTlsOrReadOnlyPrechecks()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowSchemaBootstrapTest" time="0.002" />
+    <testcase name="missingChildReportIsUnknownRatherThanClaimingNoSchemaWrite()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowSchemaBootstrapTest" time="0.241" />
+  </testsuite>
+  <testsuite name="com.tricore.dxos.infrastructure.workflow.WorkflowSchemaTest" tests="18" failures="0" errors="0" skipped="0" time="0.06" timestamp="2026-10-16T11:35:12.715Z">
+    <testcase name="applicationRejectsPublicSchemaBeforeOpeningAConnection()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowSchemaTest" time="0.036" />
+    <testcase name="[1] url=jdbc:postgresql://localhost:5432/test?currentSchema=public" classname="com.tricore.dxos.infrastructure.workflow.WorkflowSchemaTest" time="0.001" />
+    <testcase name="[2] url=jdbc:postgresql://localhost:5432/test?currentSchema=private,public" classname="com.tricore.dxos.infrastructure.workflow.WorkflowSchemaTest" time="0.0" />
+    <testcase name="[3] url=jdbc:postgresql://localhost:5432/test?currentSchema=private&amp;currentSchema=public" classname="com.tricore.dxos.infrastructure.workflow.WorkflowSchemaTest" time="0.0" />
+    <testcase name="[4] url=jdbc:postgresql://localhost:5432/test?options=-c%20search_path%3Dpublic" classname="com.tricore.dxos.infrastructure.workflow.WorkflowSchemaTest" time="0.001" />
+    <testcase name="[5] url=jdbc:postgresql://localhost:5432/test?password=secret" classname="com.tricore.dxos.infrastructure.workflow.WorkflowSchemaTest" time="0.0" />
+    <testcase name="[6] url=jdbc:postgresql://[REDACTED]@localhost:5432/test" classname="com.tricore.dxos.infrastructure.workflow.WorkflowSchemaTest" time="0.001" />
+    <testcase name="[1] name=" classname="com.tricore.dxos.infrastructure.workflow.WorkflowSchemaTest" time="0.012" />
+    <testcase name="[2] name=public" classname="com.tricore.dxos.infrastructure.workflow.WorkflowSchemaTest" time="0.001" />
+    <testcase name="[3] name=extensions" classname="com.tricore.dxos.infrastructure.workflow.WorkflowSchemaTest" time="0.0" />
+    <testcase name="[4] name=information_schema" classname="com.tricore.dxos.infrastructure.workflow.WorkflowSchemaTest" time="0.001" />
+    <testcase name="[5] name=pg_catalog" classname="com.tricore.dxos.infrastructure.workflow.WorkflowSchemaTest" time="0.0" />
+    <testcase name="[6] name=pg_private" classname="com.tricore.dxos.infrastructure.workflow.WorkflowSchemaTest" time="0.001" />
+    <testcase name="[7] name=bad&quot;; DROP SCHEMA public; --" classname="com.tricore.dxos.infrastructure.workflow.WorkflowSchemaTest" time="0.0" />
+    <testcase name="[8] name=bad'; --" classname="com.tricore.dxos.infrastructure.workflow.WorkflowSchemaTest" time="0.0" />
+    <testcase name="[9] name=UPPER" classname="com.tricore.dxos.infrastructure.workflow.WorkflowSchemaTest" time="0.0" />
+    <testcase name="[10] name=a,b" classname="com.tricore.dxos.infrastructure.workflow.WorkflowSchemaTest" time="0.0" />
+    <testcase name="approvedBundleAcceptsWindowsCheckoutLineEndings(Path)" classname="com.tricore.dxos.infrastructure.workflow.WorkflowSchemaTest" time="0.003" />
+  </testsuite>
+  <testsuite name="com.tricore.dxos.infrastructure.workflow.WorkflowSecurityDefinerReviewIntegrationTest" tests="6" failures="0" errors="0" skipped="6" time="0.0" timestamp="2026-10-16T11:35:12.776Z">
+    <testcase name="falseExecuteIsOnlyReportedWhenRuntimeActuallyExists()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowSecurityDefinerReviewIntegrationTest" time="0.0">
+      <skipped />
+    </testcase>
+    <testcase name="validBaselineAllowsProtectedPrivateCaptureAndBoundManualHelpers()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowSecurityDefinerReviewIntegrationTest" time="0.0">
+      <skipped />
+    </testcase>
+    <testcase name="changedBodyBlocksPrivateCapture()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowSecurityDefinerReviewIntegrationTest" time="0.0">
+      <skipped />
+    </testcase>
+    <testcase name="actualMetadataIdentifiesDefinersAndPotentialPublicAccessWithoutBodies()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowSecurityDefinerReviewIntegrationTest" time="0.0">
+      <skipped />
+    </testcase>
+    <testcase name="malformedHelperIsBoundNeverExecutedOrLogged()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowSecurityDefinerReviewIntegrationTest" time="0.0">
+      <skipped />
+    </testcase>
+    <testcase name="actualVerifyFullRejectsWrongCaAndHostname(String)" classname="com.tricore.dxos.infrastructure.workflow.WorkflowSecurityDefinerReviewIntegrationTest" time="0.0">
+      <skipped />
+    </testcase>
+  </testsuite>
+  <testsuite name="com.tricore.dxos.infrastructure.workflow.WorkflowSecurityDefinerReviewLauncherTest" tests="8" failures="0" errors="0" skipped="0" time="1.702" timestamp="2026-10-16T11:35:12.776Z">
+    <testcase name="[1] batch=@echo off&#xD;&#xA;exit /b 0&#xD;&#xA;" classname="com.tricore.dxos.infrastructure.workflow.WorkflowSecurityDefinerReviewLauncherTest" time="0.225" />
+    <testcase name="[2] batch=@echo off&#xD;&#xA;echo SECURITY_DEFINER_CAPTURE=PASS scope=READ_ONLY_CATALOG client_tls=VERIFIED_VERIFY_FULL&#xD;&#xA;exit /b 0&#xD;&#xA;" classname="com.tricore.dxos.infrastructure.workflow.WorkflowSecurityDefinerReviewLauncherTest" time="0.219" />
+    <testcase name="[3] batch=@echo off&#xD;&#xA;echo SECURITY_DEFINER_CAPTURE=FAIL phase=connect_tls&#xD;&#xA;echo fixture-password 1&gt;&amp;2&#xD;&#xA;exit /b 1&#xD;&#xA;" classname="com.tricore.dxos.infrastructure.workflow.WorkflowSecurityDefinerReviewLauncherTest" time="0.25" />
+    <testcase name="nativeOutputIsFilteredAndCredentialsStayOutOfArguments()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowSecurityDefinerReviewLauncherTest" time="0.247" />
+    <testcase name="privateModeUsesEnvironmentAndNeverPrintsBodies()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowSecurityDefinerReviewLauncherTest" time="0.252" />
+    <testcase name="nativeFailureAfterSuccessMarkerIsStillFailure()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowSecurityDefinerReviewLauncherTest" time="0.225" />
+    <testcase name="[1] key=DB_PASSWORD" classname="com.tricore.dxos.infrastructure.workflow.WorkflowSecurityDefinerReviewLauncherTest" time="0.141" />
+    <testcase name="[2] key=WORKFLOW_EVENT_GUARD_LOCAL_DISPOSABLE" classname="com.tricore.dxos.infrastructure.workflow.WorkflowSecurityDefinerReviewLauncherTest" time="0.142" />
+  </testsuite>
+  <testsuite name="com.tricore.dxos.infrastructure.workflow.WorkflowSecurityDefinerReviewTest" tests="15" failures="0" errors="0" skipped="0" time="0.317" timestamp="2026-10-16T11:35:14.479Z">
+    <testcase name="falseForUnprovisionedRuntimeIsRejectedRatherThanPublished()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowSecurityDefinerReviewTest" time="0.054" />
+    <testcase name="[1] phase=rollback" classname="com.tricore.dxos.infrastructure.workflow.WorkflowSecurityDefinerReviewTest" time="0.025" />
+    <testcase name="[2] phase=close" classname="com.tricore.dxos.infrastructure.workflow.WorkflowSecurityDefinerReviewTest" time="0.024" />
+    <testcase name="driftStopsBeforeFetchingPrivateBodies()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowSecurityDefinerReviewTest" time="0.046" />
+    <testcase name="pinnedSqlIncludesBoundHelpersAndNeverReturnsBodiesOrArbitraryConfiguration()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowSecurityDefinerReviewTest" time="0.001" />
+    <testcase name="capturesUnknownPrivilegesAsNullAndPublishesOnlyAfterCleanup()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowSecurityDefinerReviewTest" time="0.022" />
+    <testcase name="driverErrorsAndLocalBypassCannotExposeSecrets()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowSecurityDefinerReviewTest" time="0.017" />
+    <testcase name="unexpectedPrivateColumnsAreRejected()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowSecurityDefinerReviewTest" time="0.018" />
+    <testcase name="[1] mutation=&#xA;CREATE ROLE unsafe;" classname="com.tricore.dxos.infrastructure.workflow.WorkflowSecurityDefinerReviewTest" time="0.002" />
+    <testcase name="[2] mutation=&#xA;SELECT pg_catalog.pg_advisory_lock(1);" classname="com.tricore.dxos.infrastructure.workflow.WorkflowSecurityDefinerReviewTest" time="0.001" />
+    <testcase name="[3] mutation=&#xA;WITH x AS (DELETE FROM secret RETURNING *) SELECT * FROM x;" classname="com.tricore.dxos.infrastructure.workflow.WorkflowSecurityDefinerReviewTest" time="0.002" />
+    <testcase name="[1] mode=off" classname="com.tricore.dxos.infrastructure.workflow.WorkflowSecurityDefinerReviewTest" time="0.018" />
+    <testcase name="[2] mode=ON" classname="com.tricore.dxos.infrastructure.workflow.WorkflowSecurityDefinerReviewTest" time="0.021" />
+    <testcase name="[3] mode=" classname="com.tricore.dxos.infrastructure.workflow.WorkflowSecurityDefinerReviewTest" time="0.019" />
+    <testcase name="tamperedBaselineStopsBeforeConnect()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowSecurityDefinerReviewTest" time="0.044" />
+  </testsuite>
+  <testsuite name="com.tricore.dxos.infrastructure.workflow.WorkflowSmokeRunnerEndpointTest" tests="3" failures="0" errors="0" skipped="0" time="0.002" timestamp="2026-10-16T11:35:14.797Z">
+    <testcase name="cloudAcceptsOnlyTheExactDirectEndpoint()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowSmokeRunnerEndpointTest" time="0.001" />
+    <testcase name="preflightRejectsSetRoleInsteadOfARealLogin()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowSmokeRunnerEndpointTest" time="0.0" />
+    <testcase name="disposableLocalEndpointRemainsAvailable()" classname="com.tricore.dxos.infrastructure.workflow.WorkflowSmokeRunnerEndpointTest" time="0.001" />
+  </testsuite>
+  <testsuite name="com.tricore.dxos.request.controller.RequestControllerTest" tests="23" failures="0" errors="0" skipped="0" time="0.095" timestamp="2026-10-16T11:35:14.979Z">
+    <testcase name="returnsExistingRequest()" classname="com.tricore.dxos.request.controller.RequestControllerTest" time="0.006" />
+    <testcase name="rejectsBlankRequiredFields()" classname="com.tricore.dxos.request.controller.RequestControllerTest" time="0.008" />
+    <testcase name="returns404ForMissingRequest()" classname="com.tricore.dxos.request.controller.RequestControllerTest" time="0.003" />
+    <testcase name="[1] field=resolution" classname="com.tricore.dxos.request.controller.RequestControllerTest" time="0.004" />
+    <testcase name="[2] field=assigneeId" classname="com.tricore.dxos.request.controller.RequestControllerTest" time="0.004" />
+    <testcase name="[3] field=version" classname="com.tricore.dxos.request.controller.RequestControllerTest" time="0.002" />
+    <testcase name="returnsEmptyJsonArrayWhenThereAreNoRequests()" classname="com.tricore.dxos.request.controller.RequestControllerTest" time="0.004" />
+    <testcase name="listsRequests()" classname="com.tricore.dxos.request.controller.RequestControllerTest" time="0.004" />
+    <testcase name="acceptsMaximumFieldLengths()" classname="com.tricore.dxos.request.controller.RequestControllerTest" time="0.003" />
+    <testcase name="[1] body={" classname="com.tricore.dxos.request.controller.RequestControllerTest" time="0.002" />
+    <testcase name="[2] body=null" classname="com.tricore.dxos.request.controller.RequestControllerTest" time="0.001" />
+    <testcase name="[3] body=" classname="com.tricore.dxos.request.controller.RequestControllerTest" time="0.004" />
+    <testcase name="[4] body=[]" classname="com.tricore.dxos.request.controller.RequestControllerTest" time="0.004" />
+    <testcase name="[1] body={}" classname="com.tricore.dxos.request.controller.RequestControllerTest" time="0.004" />
+    <testcase name="[2] body={&quot;title&quot;:null,&quot;description&quot;:null,&quot;requestType&quot;:null}&#xA;" classname="com.tricore.dxos.request.controller.RequestControllerTest" time="0.003" />
+    <testcase name="[3] body={&quot;description&quot;:&quot;Details&quot;,&quot;requestType&quot;:&quot;IT_SUPPORT&quot;}&#xA;" classname="com.tricore.dxos.request.controller.RequestControllerTest" time="0.003" />
+    <testcase name="[4] body={&quot;title&quot;:&quot;Printer&quot;,&quot;requestType&quot;:&quot;IT_SUPPORT&quot;}&#xA;" classname="com.tricore.dxos.request.controller.RequestControllerTest" time="0.004" />
+    <testcase name="[5] body={&quot;title&quot;:&quot;Printer&quot;,&quot;description&quot;:&quot;Details&quot;}&#xA;" classname="com.tricore.dxos.request.controller.RequestControllerTest" time="0.002" />
+    <testcase name="[6] body={&quot;title&quot;:&quot;aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa&quot;,&quot;description&quot;:&quot;Details&quot;,&quot;requestType&quot;:&quot;IT_SUPPORT&quot;}" classname="com.tricore.dxos.request.controller.RequestControllerTest" time="0.003" />
+    <testcase name="[7] body={&quot;title&quot;:&quot;Printer&quot;,&quot;description&quot;:&quot;Details&quot;,&quot;requestType&quot;:&quot;aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa&quot;}" classname="com.tricore.dxos.request.controller.RequestControllerTest" time="0.003" />
+    <testcase name="rejectsClientSuppliedStatus()" classname="com.tricore.dxos.request.controller.RequestControllerTest" time="0.002" />
+    <testcase name="createsRequestWithLocationAndResponseDto()" classname="com.tricore.dxos.request.controller.RequestControllerTest" time="0.002" />
+    <testcase name="rejectsMalformedId()" classname="com.tricore.dxos.request.controller.RequestControllerTest" time="0.004" />
+  </testsuite>
+  <testsuite name="com.tricore.dxos.request.controller.RequestWorkflowControllerTest" tests="32" failures="0" errors="0" skipped="0" time="0.124" timestamp="2026-10-16T11:35:15.207Z">
+    <testcase name="assignsRequest()" classname="com.tricore.dxos.request.controller.RequestWorkflowControllerTest" time="0.01" />
+    <testcase name="[1] action=ASSIGN" classname="com.tricore.dxos.request.controller.RequestWorkflowControllerTest" time="0.005" />
+    <testcase name="[2] action=START" classname="com.tricore.dxos.request.controller.RequestWorkflowControllerTest" time="0.002" />
+    <testcase name="[3] action=RESOLVE" classname="com.tricore.dxos.request.controller.RequestWorkflowControllerTest" time="0.005" />
+    <testcase name="[4] action=CONFIRM" classname="com.tricore.dxos.request.controller.RequestWorkflowControllerTest" time="0.002" />
+    <testcase name="[5] action=CLOSE" classname="com.tricore.dxos.request.controller.RequestWorkflowControllerTest" time="0.002" />
+    <testcase name="returnsHistoryDtos()" classname="com.tricore.dxos.request.controller.RequestWorkflowControllerTest" time="0.005" />
+    <testcase name="[1] action=ASSIGN" classname="com.tricore.dxos.request.controller.RequestWorkflowControllerTest" time="0.004" />
+    <testcase name="[2] action=START" classname="com.tricore.dxos.request.controller.RequestWorkflowControllerTest" time="0.002" />
+    <testcase name="[3] action=RESOLVE" classname="com.tricore.dxos.request.controller.RequestWorkflowControllerTest" time="0.002" />
+    <testcase name="[4] action=CONFIRM" classname="com.tricore.dxos.request.controller.RequestWorkflowControllerTest" time="0.002" />
+    <testcase name="[5] action=CLOSE" classname="com.tricore.dxos.request.controller.RequestWorkflowControllerTest" time="0.002" />
+    <testcase name="missingRequestReturns404()" classname="com.tricore.dxos.request.controller.RequestWorkflowControllerTest" time="0.003" />
+    <testcase name="resolvesRequest()" classname="com.tricore.dxos.request.controller.RequestWorkflowControllerTest" time="0.002" />
+    <testcase name="rejectsBlankAssignee()" classname="com.tricore.dxos.request.controller.RequestWorkflowControllerTest" time="0.003" />
+    <testcase name="startsAssignedRequestWithoutBody()" classname="com.tricore.dxos.request.controller.RequestWorkflowControllerTest" time="0.002" />
+    <testcase name="[1] route=assign, field=assigneeId, body={}" classname="com.tricore.dxos.request.controller.RequestWorkflowControllerTest" time="0.002" />
+    <testcase name="[2] route=assign, field=assigneeId, body={&quot;assigneeId&quot;:null}" classname="com.tricore.dxos.request.controller.RequestWorkflowControllerTest" time="0.009" />
+    <testcase name="[3] route=assign, field=assigneeId, body={&quot;assigneeId&quot;:&quot;aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa&quot;}" classname="com.tricore.dxos.request.controller.RequestWorkflowControllerTest" time="0.009" />
+    <testcase name="[4] route=resolve, field=resolution, body={}" classname="com.tricore.dxos.request.controller.RequestWorkflowControllerTest" time="0.003" />
+    <testcase name="[5] route=resolve, field=resolution, body={&quot;resolution&quot;:null}" classname="com.tricore.dxos.request.controller.RequestWorkflowControllerTest" time="0.002" />
+    <testcase name="[6] route=resolve, field=resolution, body={&quot;resolution&quot;:&quot;aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa…" classname="com.tricore.dxos.request.controller.RequestWorkflowControllerTest" time="0.002" />
+    <testcase name="rejectsBlankResolution()" classname="com.tricore.dxos.request.controller.RequestWorkflowControllerTest" time="0.002" />
+    <testcase name="missingRequestHistoryReturns404()" classname="com.tricore.dxos.request.controller.RequestWorkflowControllerTest" time="0.002" />
+    <testcase name="invalidTransitionReturns409()" classname="com.tricore.dxos.request.controller.RequestWorkflowControllerTest" time="0.002" />
+    <testcase name="[1] conflict=org.springframework.orm.ObjectOptimisticLockingFailureException: Object of class [Request] with identifier [24265f03-ab9e-4e01-a8af-819aaf863c4e]: optimistic locking failed" classname="com.tricore.dxos.request.controller.RequestWorkflowControllerTest" time="0.003" />
+    <testcase name="[2] conflict=jakarta.persistence.OptimisticLockException: Internal persistence detail" classname="com.tricore.dxos.request.controller.RequestWorkflowControllerTest" time="0.002" />
+    <testcase name="rejectsMalformedUuidAndReturnsEmptyHistoryArray()" classname="com.tricore.dxos.request.controller.RequestWorkflowControllerTest" time="0.003" />
+    <testcase name="[1] route=assign" classname="com.tricore.dxos.request.controller.RequestWorkflowControllerTest" time="0.003" />
+    <testcase name="[2] route=resolve" classname="com.tricore.dxos.request.controller.RequestWorkflowControllerTest" time="0.003" />
+    <testcase name="closesConfirmedRequestWithoutBody()" classname="com.tricore.dxos.request.controller.RequestWorkflowControllerTest" time="0.001" />
+    <testcase name="confirmsResolvedRequestWithoutBody()" classname="com.tricore.dxos.request.controller.RequestWorkflowControllerTest" time="0.001" />
+  </testsuite>
+  <testsuite name="com.tricore.dxos.request.domain.RequestTest" tests="3" failures="0" errors="0" skipped="0" time="0.004" timestamp="2026-10-16T11:35:15.332Z">
+    <testcase name="definesTheEstablishedLifecycleStatuses()" classname="com.tricore.dxos.request.domain.RequestTest" time="0.0" />
+    <testcase name="mapsLongVersionForJpaOptimisticLocking()" classname="com.tricore.dxos.request.domain.RequestTest" time="0.004" />
+    <testcase name="newRequestHasNewStatusAndMatchingTimestamps()" classname="com.tricore.dxos.request.domain.RequestTest" time="0.0" />
+  </testsuite>
+  <testsuite name="com.tricore.dxos.request.domain.RequestWorkflowTest" tests="27" failures="0" errors="0" skipped="0" time="0.014" timestamp="2026-10-16T11:35:15.337Z">
+    <testcase name="followsLifecycleAndUpdatesWorkflowDataAndTimestamps()" classname="com.tricore.dxos.request.domain.RequestWorkflowTest" time="0.0" />
+    <testcase name="[1] status=NEW, action=START" classname="com.tricore.dxos.request.domain.RequestWorkflowTest" time="0.001" />
+    <testcase name="[2] status=NEW, action=RESOLVE" classname="com.tricore.dxos.request.domain.RequestWorkflowTest" time="0.0" />
+    <testcase name="[3] status=NEW, action=CONFIRM" classname="com.tricore.dxos.request.domain.RequestWorkflowTest" time="0.0" />
+    <testcase name="[4] status=NEW, action=CLOSE" classname="com.tricore.dxos.request.domain.RequestWorkflowTest" time="0.0" />
+    <testcase name="[5] status=ASSIGNED, action=ASSIGN" classname="com.tricore.dxos.request.domain.RequestWorkflowTest" time="0.0" />
+    <testcase name="[6] status=ASSIGNED, action=RESOLVE" classname="com.tricore.dxos.request.domain.RequestWorkflowTest" time="0.0" />
+    <testcase name="[7] status=ASSIGNED, action=CONFIRM" classname="com.tricore.dxos.request.domain.RequestWorkflowTest" time="0.0" />
+    <testcase name="[8] status=ASSIGNED, action=CLOSE" classname="com.tricore.dxos.request.domain.RequestWorkflowTest" time="0.0" />
+    <testcase name="[9] status=IN_PROGRESS, action=ASSIGN" classname="com.tricore.dxos.request.domain.RequestWorkflowTest" time="0.0" />
+    <testcase name="[10] status=IN_PROGRESS, action=START" classname="com.tricore.dxos.request.domain.RequestWorkflowTest" time="0.0" />
+    <testcase name="[11] status=IN_PROGRESS, action=CONFIRM" classname="com.tricore.dxos.request.domain.RequestWorkflowTest" time="0.0" />
+    <testcase name="[12] status=IN_PROGRESS, action=CLOSE" classname="com.tricore.dxos.request.domain.RequestWorkflowTest" time="0.001" />
+    <testcase name="[13] status=RESOLVED, action=ASSIGN" classname="com.tricore.dxos.request.domain.RequestWorkflowTest" time="0.0" />
+    <testcase name="[14] status=RESOLVED, action=START" classname="com.tricore.dxos.request.domain.RequestWorkflowTest" time="0.0" />
+    <testcase name="[15] status=RESOLVED, action=RESOLVE" classname="com.tricore.dxos.request.domain.RequestWorkflowTest" time="0.0" />
+    <testcase name="[16] status=RESOLVED, action=CLOSE" classname="com.tricore.dxos.request.domain.RequestWorkflowTest" time="0.001" />
+    <testcase name="[17] status=CONFIRMED, action=ASSIGN" classname="com.tricore.dxos.request.domain.RequestWorkflowTest" time="0.0" />
+    <testcase name="[18] status=CONFIRMED, action=START" classname="com.tricore.dxos.request.domain.RequestWorkflowTest" time="0.0" />
+    <testcase name="[19] status=CONFIRMED, action=RESOLVE" classname="com.tricore.dxos.request.domain.RequestWorkflowTest" time="0.0" />
+    <testcase name="[20] status=CONFIRMED, action=CONFIRM" classname="com.tricore.dxos.request.domain.RequestWorkflowTest" time="0.0" />
+    <testcase name="[21] status=CLOSED, action=ASSIGN" classname="com.tricore.dxos.request.domain.RequestWorkflowTest" time="0.001" />
+    <testcase name="[22] status=CLOSED, action=START" classname="com.tricore.dxos.request.domain.RequestWorkflowTest" time="0.0" />
+    <testcase name="[23] status=CLOSED, action=RESOLVE" classname="com.tricore.dxos.request.domain.RequestWorkflowTest" time="0.0" />
+    <testcase name="[24] status=CLOSED, action=CONFIRM" classname="com.tricore.dxos.request.domain.RequestWorkflowTest" time="0.0" />
+    <testcase name="[25] status=CLOSED, action=CLOSE" classname="com.tricore.dxos.request.domain.RequestWorkflowTest" time="0.0" />
+    <testcase name="rejectsInvalidAssignmentAndResolutionWithoutMutating()" classname="com.tricore.dxos.request.domain.RequestWorkflowTest" time="0.001" />
+  </testsuite>
+  <testsuite name="com.tricore.dxos.request.service.RequestServiceTest" tests="5" failures="0" errors="0" skipped="0" time="0.079" timestamp="2026-10-16T11:35:15.355Z">
+    <testcase name="getsPersistedRequestAsDto()" classname="com.tricore.dxos.request.service.RequestServiceTest" time="0.073" />
+    <testcase name="createsAndSavesNewRequestAndMapsSavedResult()" classname="com.tricore.dxos.request.service.RequestServiceTest" time="0.003" />
+    <testcase name="returnsEmptyListWhenNoRequestsExist()" classname="com.tricore.dxos.request.service.RequestServiceTest" time="0.001" />
+    <testcase name="throwsNotFoundWhenRepositoryHasNoRequest()" classname="com.tricore.dxos.request.service.RequestServiceTest" time="0.001" />
+    <testcase name="listsPersistedRequestsAsDtos()" classname="com.tricore.dxos.request.service.RequestServiceTest" time="0.001" />
+  </testsuite>
+  <testsuite name="com.tricore.dxos.request.service.RequestWorkflowServiceTest" tests="10" failures="0" errors="0" skipped="0" time="0.048" timestamp="2026-10-16T11:35:15.435Z">
+    <testcase name="existingRequestWithNoTransitionsHasEmptyHistory()" classname="com.tricore.dxos.request.service.RequestWorkflowServiceTest" time="0.037" />
+    <testcase name="optimisticConflictPropagatesWithoutInsertingHistory()" classname="com.tricore.dxos.request.service.RequestWorkflowServiceTest" time="0.001" />
+    <testcase name="missingRequestCreatesNoHistory()" classname="com.tricore.dxos.request.service.RequestWorkflowServiceTest" time="0.001" />
+    <testcase name="failedResolveSavesNothingAndDoesNotChangeTimestamp()" classname="com.tricore.dxos.request.service.RequestWorkflowServiceTest" time="0.001" />
+    <testcase name="assignmentSavesRequestAndExactlyOneHistoryEntry()" classname="com.tricore.dxos.request.service.RequestWorkflowServiceTest" time="0.001" />
+    <testcase name="invalidAssignmentLeavesRequestUnchangedAndSavesNoHistory()" classname="com.tricore.dxos.request.service.RequestWorkflowServiceTest" time="0.001" />
+    <testcase name="completesLifecycleSavingOneMatchingHistoryRecordPerAction()" classname="com.tricore.dxos.request.service.RequestWorkflowServiceTest" time="0.002" />
+    <testcase name="responseMapsVersionAfterRepositoryFlush()" classname="com.tricore.dxos.request.service.RequestWorkflowServiceTest" time="0.001" />
+    <testcase name="historyOfMissingRequestReturnsNotFound()" classname="com.tricore.dxos.request.service.RequestWorkflowServiceTest" time="0.001" />
+    <testcase name="historyUsesDeterministicQueryAndMapsChronologicalResults()" classname="com.tricore.dxos.request.service.RequestWorkflowServiceTest" time="0.001" />
+  </testsuite>
+  <testsuite name="com.tricore.dxos.request.service.RequestWorkflowTransactionTest" tests="9" failures="0" errors="0" skipped="0" time="0.133" timestamp="2026-10-16T11:35:15.483Z">
+    <testcase name="historyRunsInReadOnlyTransaction()" classname="com.tricore.dxos.request.service.RequestWorkflowTransactionTest" time="0.114" />
+    <testcase name="[1] action=ASSIGN" classname="com.tricore.dxos.request.service.RequestWorkflowTransactionTest" time="0.003" />
+    <testcase name="[2] action=START" classname="com.tricore.dxos.request.service.RequestWorkflowTransactionTest" time="0.002" />
+    <testcase name="[3] action=RESOLVE" classname="com.tricore.dxos.request.service.RequestWorkflowTransactionTest" time="0.002" />
+    <testcase name="[4] action=CONFIRM" classname="com.tricore.dxos.request.service.RequestWorkflowTransactionTest" time="0.002" />
+    <testcase name="[5] action=CLOSE" classname="com.tricore.dxos.request.service.RequestWorkflowTransactionTest" time="0.002" />
+    <testcase name="invalidTransitionRollsBackWithoutSavingAnything()" classname="com.tricore.dxos.request.service.RequestWorkflowTransactionTest" time="0.001" />
+    <testcase name="historyInsertFailureRollsBackTransactionAfterRequestFlush()" classname="com.tricore.dxos.request.service.RequestWorkflowTransactionTest" time="0.004" />
+    <testcase name="optimisticConflictRollsBackWithoutHistoryInsert()" classname="com.tricore.dxos.request.service.RequestWorkflowTransactionTest" time="0.002" />
+  </testsuite>
+</testsuites>
