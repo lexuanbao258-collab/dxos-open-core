@@ -3,7 +3,7 @@ package com.tricore.dxos.infrastructure.storage.supabase;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tricore.dxos.core.data.*;
-import java.nio.charset.StandardCharsets;
+import java.io.*;
 import java.util.*;
 
 /** One envelope, independent of HTTP header naming/case restrictions. */
@@ -13,6 +13,7 @@ final class SupabaseMetadataCodec {
     SupabaseMetadataCodec(ObjectMapper mapper, int maxBytes) { this.mapper = mapper; this.maxBytes = maxBytes; }
     String encode(ObjectMetadata metadata) {
         try {
+            checkEncodedSize(metadata);
             var envelope = mapper.createObjectNode();
             envelope.put("version", 1);
             envelope.put("contentType", units(metadata.contentType()));
@@ -21,14 +22,19 @@ final class SupabaseMetadataCodec {
                 var pair = custom.addArray(); pair.add(units(e.getKey())); pair.add(units(e.getValue()));
             });
             var outer = mapper.createObjectNode(); outer.set("dxos-envelope-v1", envelope);
-            String encoded = Base64.getEncoder().encodeToString(mapper.writeValueAsBytes(outer));
+            var bytes = new ByteArrayOutputStream();
+            // Base64 needs four header bytes for each (possibly partial) three JSON bytes.
+            mapper.writeValue(new LimitedOutputStream(bytes, (maxBytes / 4L) * 3), outer);
+            String encoded = Base64.getEncoder().encodeToString(bytes.toByteArray());
             if (encoded.length() > maxBytes) throw new StorageException(StorageErrorCode.INVALID_INPUT);
             return encoded;
         } catch (Exception error) { throw new StorageException(StorageErrorCode.INVALID_INPUT); }
     }
     ObjectMetadata decode(ObjectKey key, long size, JsonNode outer) {
         try {
-            if (outer == null || mapper.writeValueAsBytes(outer).length > maxBytes) throw new IllegalArgumentException();
+            if (outer == null) throw new IllegalArgumentException();
+            // Count into a bounded sink instead of allocating a second copy of provider JSON.
+            mapper.writeValue(new LimitedOutputStream(OutputStream.nullOutputStream(), maxBytes), outer);
             JsonNode e = outer.get("dxos-envelope-v1");
             if (e == null || !e.isObject() || !e.path("version").isIntegralNumber() || !e.path("version").canConvertToInt() || e.path("version").intValue() != 1
                     || !e.path("contentType").isTextual() || !e.path("custom").isArray()) throw new IllegalArgumentException();
@@ -40,6 +46,38 @@ final class SupabaseMetadataCodec {
             }
             return new ObjectMetadata(key, fromUnits(e.get("contentType").textValue()), size, custom);
         } catch (Exception error) { throw new StorageException(StorageErrorCode.UNAVAILABLE); }
+    }
+    private void checkEncodedSize(ObjectMetadata metadata) {
+        // All variable JSON strings contain only Base64 ASCII, without JSON escaping.
+        // Check before units(), sorting, tree construction or serialization. Long arithmetic
+        // also prevents overflow in the UTF-16 byte-array length calculation in units().
+        long jsonBytes = "{\"dxos-envelope-v1\":{\"version\":1,\"contentType\":\"\",\"custom\":[]}}".length()
+                + unitBytes(metadata.contentType());
+        checkJsonSize(jsonBytes);
+        boolean first = true;
+        for (var entry : metadata.customMetadata().entrySet()) {
+            jsonBytes += (first ? 7 : 8) + unitBytes(entry.getKey()) + unitBytes(entry.getValue());
+            checkJsonSize(jsonBytes);
+            first = false;
+        }
+    }
+    private static long unitBytes(String value) { return 4 * ((2L * value.length() + 2) / 3); }
+    private void checkJsonSize(long bytes) {
+        if (4 * ((bytes + 2) / 3) > maxBytes) throw new IllegalArgumentException();
+    }
+    private static final class LimitedOutputStream extends OutputStream {
+        private final OutputStream delegate;
+        private final long limit;
+        private long count;
+        LimitedOutputStream(OutputStream delegate, long limit) { this.delegate = delegate; this.limit = limit; }
+        @Override public void write(int value) throws IOException {
+            if (count == limit) throw new IOException("metadata limit");
+            delegate.write(value); count++;
+        }
+        @Override public void write(byte[] bytes, int offset, int length) throws IOException {
+            if (length > limit - count) throw new IOException("metadata limit");
+            delegate.write(bytes, offset, length); count += length;
+        }
     }
     // Encode code units inside JSON too, avoiding charset replacement of isolated surrogates.
     private static String units(String value) {

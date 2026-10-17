@@ -1,6 +1,16 @@
 # Issue 26 / PR 35 remediation evidence
 
-> **Historical record.** The statuses and worktree descriptions below were recorded before commit `14b35586128465d42534b0edc1e700178fed5406`. The latest clean-checkout PostgreSQL regression is **868 PASS / 0 FAIL / 0 ERROR / 0 SKIP**, including all nine integration suites (192 cases). See the [current verification summary](issue-26-postgres-17.11/verification-summary.md). Historical reports and skipped lists are preserved; Linux/macOS verification remains **PENDING**.
+## Current review index
+
+Fetched PR #35 HEAD: **`1997d96bdea50c288f74daee28d0ae4b56afc72f`**. The delta from tested Java commit **`14b35586128465d42534b0edc1e700178fed5406`** contains documentation/evidence changes only, with no Java or build changes. This final review adds adapter-only metadata memory bounds and regressions; [current review, exact tested source and fresh results](issue-26-final-review/review.md) and [proposed PR description](issue-26-final-review/pr35-description.md) track it separately.
+
+The latest prior clean-checkout backend/PostgreSQL evidence is **50 suites / 868 PASS / 0 FAIL / 0 ERROR / 0 SKIP**, including **9 PostgreSQL integration suites / 192 PASS**, at `14b3558`: [verification summary](issue-26-postgres-17.11/verification-summary.md), [XML](issue-26-postgres-17.11/full.xml), [HTML](issue-26-postgres-17.11/full.html). Separate prior hosted Storage evidence is **19 PASS / 0 FAIL / 0 ERROR / 0 SKIP**: [XML](issue-26-remediation/hosted.xml), [HTML](issue-26-remediation/hosted.html), [source manifest](issue-26-remediation/hosted-source-sha256.txt). These historical results are not new executions or CI runs for the metadata fix.
+
+PostgreSQL verification at the preceding Java source is complete. Linux/macOS runtime verification remains **PENDING**; no successful GitHub CI run is claimed. New source must be judged using the fresh results in the final-review directory. Remote PR metadata requires owner approval before update; no merge or Issue #26 closure is authorized.
+
+## Historical records (preserved)
+
+All statuses, worktree descriptions, present-tense references and pending gates below describe their original capture dates. In particular, references to uncommitted large-download changes and pending PostgreSQL are historical and superseded by the current index above. Historical XML/HTML, source manifests and skipped lists are not rewritten.
 
 Verification date: 2026-10-16. Branch: `feature/issue26-supabase-clean`.
 Reviewed remediation baseline and current committed HEAD: `0202ae87747fee558882c464f1198deb8abec3d3`. Status: **PENDING VERIFICATION; not approved to merge**.
@@ -9,7 +19,7 @@ The response-body timeout remediation was committed at that SHA and accepted by 
 
 All three historical source manifests were checked against committed blobs at `0202ae8`: 30 entries verified, zero mismatches. Each manifest has four raw Git blob matches and six matches to the explicit CRLF checkout representation of the committed LF blobs. This is not a claim that every recorded hash equals a raw Git blob hash. See [verification details](issue-26-remediation/baseline-source-verification.txt) and [reproducible verifier](issue-26-remediation/verify-baseline.ps1).
 
-## Current large-download remediation after the reviewed baseline
+## Historical large-download remediation after the reviewed baseline
 
 The uncommitted Java changes remove rejection based on transport batch size. The subscriber retains a cursor over one delivered list of buffers and copies bytes directly into the caller's buffer. It requests one additional delivery only after draining the previous batch. There is no application payload copy, batch queue, or whole-download assembly. A transport delivery may exceed 64 KiB in one buffer or in aggregate. No buffer-size sum or narrowing conversion is needed.
 

@@ -76,6 +76,30 @@ class SupabaseStorageTest {
         }
         try(var entries=Files.list(temp)){assertThat(entries.count()).isZero();}
     }
+    @Test void excessiveStagingStillDrainsToEofWithoutFurtherDiskWrites() throws Exception {
+        int[] reads = {0};
+        boolean[] closed = {false};
+        var input = new InputStream() {
+            @Override public int read() { throw new AssertionError("bulk reads expected"); }
+            @Override public int read(byte[] bytes, int offset, int length) throws IOException {
+                if (reads[0] >= 2) {
+                    try (var files = Files.list(temp)) {
+                        assertThat(Files.size(files.findFirst().orElseThrow())).isEqualTo(8);
+                    }
+                }
+                if (reads[0]++ == 4) return -1;
+                Arrays.fill(bytes, offset, offset + 8, (byte) 1);
+                return 8;
+            }
+            @Override public void close() { closed[0] = true; }
+        };
+        var command = new StoreObjectCommand(new ObjectMetadata(new ObjectKey("k"), "text/plain", 8, Map.of()),
+                input, StoreMode.CREATE_ONLY);
+        error(() -> StagedObjectUpload.create(command, temp, 8), StorageErrorCode.INVALID_INPUT);
+        assertThat(reads[0]).isEqualTo(5);
+        assertThat(closed[0]).isFalse();
+        try (var files = Files.list(temp)) { assertThat(files.count()).isZero(); }
+    }
     @Test void readsKeepMetadataAndCloseIdempotently() throws Exception {
         var m=command("hello",StoreMode.CREATE_ONLY).metadata();int[] closes={0};
         var resource=new SupabaseObjectContent(m,new ByteArrayInputStream("hello".getBytes()){public void close(){closes[0]++;}});
