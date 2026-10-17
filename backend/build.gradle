@@ -153,7 +153,24 @@ tasks.register('supabaseIntegrationTest', Test) {
     group = 'verification'
     testClassesDirs = sourceSets.test.output.classesDirs
     classpath = sourceSets.test.runtimeClasspath
+    // A hosted execution must never reuse a cached or up-to-date test result.
+    outputs.upToDateWhen { false }
+    outputs.cacheIf { false }
     useJUnitPlatform { includeTags 'supabase-real' }
     systemProperty 'supabase.test.classpath', sourceSets.test.runtimeClasspath.asPath
     shouldRunAfter tasks.named('test')
+    doFirst {
+        def required = [
+            'SUPABASE_STORAGE_REST_BASE_URL', 'SUPABASE_STORAGE_API_KEY',
+            'SUPABASE_STORAGE_API_KEY_MODE', 'SUPABASE_STORAGE_BUCKET',
+            'SUPABASE_STORAGE_KEY_PREFIX', 'SUPABASE_STORAGE_MAX_OBJECT_BYTES',
+            'SUPABASE_STORAGE_MAX_METADATA_BYTES', 'SUPABASE_STORAGE_MAX_KEY_BYTES',
+            'SUPABASE_STORAGE_MAX_RESPONSE_BYTES', 'SUPABASE_STORAGE_STAGING_DIRECTORY',
+            'SUPABASE_STORAGE_CONNECT_TIMEOUT', 'SUPABASE_STORAGE_REQUEST_TIMEOUT'
+        ]
+        def missing = required.findAll { !System.getenv(it)?.trim() }
+        if (!missing.isEmpty()) {
+            throw new GradleException('BLOCKED: missing hosted Supabase environment variables: ' + missing.join(', '))
+        }
+    }
 }
