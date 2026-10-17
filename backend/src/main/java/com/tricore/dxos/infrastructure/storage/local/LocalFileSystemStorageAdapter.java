@@ -79,11 +79,18 @@ public final class LocalFileSystemStorageAdapter implements ObjectStoragePort {
                     Files.write(attributes, envelope, CREATE_NEW, WRITE, NOFOLLOW_LINKS);
                     force(attributes);
                     force(blob);
+                    // Persist the immutable version and newly created key directories
+                    // before publishing the CURRENT pointer on POSIX filesystems.
+                    forceStorageDirectories(dir);
                     next = Files.createTempFile(dir, ".pointer-", ".tmp");
                     Files.writeString(next, version, StandardCharsets.US_ASCII, WRITE, TRUNCATE_EXISTING);
                     force(next);
                     Files.move(next, dir.resolve("CURRENT"), ATOMIC_MOVE, REPLACE_EXISTING);
                     published = true;
+                    // A durable rename needs a directory sync in addition to file sync.
+                    // If this fails, the outcome may be uncertain: do not delete the
+                    // newly published version or claim that the operation rolled back.
+                    forceDirectory(dir);
                 } finally {
                     if (next != null) Files.deleteIfExists(next);
                     if (!published) {
@@ -137,6 +144,8 @@ public final class LocalFileSystemStorageAdapter implements ObjectStoragePort {
             String id = requiredCurrent(dir);
             verifyKey(dir, id, key);
             Files.delete(dir.resolve("CURRENT"));
+            // Persist the deletion of the namespace entry on POSIX filesystems.
+            forceDirectory(dir);
             pruneOldVersions(dir, null);
             return null;
         });
@@ -291,6 +300,22 @@ public final class LocalFileSystemStorageAdapter implements ObjectStoragePort {
     }
     private static void force(Path path) throws IOException {
         try (FileChannel channel = FileChannel.open(path, WRITE, NOFOLLOW_LINKS)) { channel.force(true); }
+    }
+    private void forceStorageDirectories(Path dir) throws IOException {
+        // Sync from the newest hashed-key directory towards the configured root,
+        // so newly created directory entries are persisted before CURRENT changes.
+        for (Path path = dir; path != null && path.startsWith(root); path = path.getParent()) {
+            forceDirectory(path);
+        }
+        if (root.getParent() != null) forceDirectory(root.getParent());
+    }
+    private static void forceDirectory(Path directory) throws IOException {
+        // Opening directories for fsync is not portable to Windows. Keep the
+        // already-tested Windows behavior but enforce directory sync on POSIX.
+        if (!Files.getFileStore(directory).supportsFileAttributeView("posix")) return;
+        try (FileChannel channel = FileChannel.open(directory, READ, NOFOLLOW_LINKS)) {
+            channel.force(true);
+        }
     }
     private static long copyBounded(Path source, Path target, long length) throws IOException {
         long bytes = 0;
