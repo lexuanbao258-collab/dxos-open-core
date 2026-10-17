@@ -1,5 +1,11 @@
 # TRICORE DX-OS Open-Core
 
+## Storage demo không phụ thuộc cloud (Draft PR)
+
+Nhánh `feature/local-filesystem-storage-demo` bổ sung **LocalFileSystemStorageAdapter** làm mặc định cho `ObjectStoragePort`: Java 21 lưu file trong `backend/.dxos-storage/`, **không cần cài MinIO hoặc lấy khóa Supabase**. PostgreSQL vẫn cần cho dữ liệu có cấu trúc/Workflow; việc tích hợp này không mở public upload endpoint hay bỏ qua Identity/Gateway ACL.
+
+**Cài đặt và test riêng module lưu trữ:** [Hướng dẫn 1 trang](docs/poc/local-filesystem-storage-demo.md). Tính đúng đắn/toàn bộ Backend vẫn phải được xác minh trên JDK21 trước khi merge. PR #34/#35 về các provider khác được giữ nguyên để bảo toàn bằng chứng và tùy chọn kiến trúc.
+
 ## Vấn đề sản phẩm
 
 **DX-OS Internal Service Portal** là định hướng sản phẩm của TRICORE: tập trung
