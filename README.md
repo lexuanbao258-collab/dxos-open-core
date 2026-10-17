@@ -194,3 +194,8 @@ mới là nền để nối luồng; chưa có bằng chứng portal tích hợp
 Mục tiêu Session 1 là tài liệu kiến trúc và bằng chứng đã nghiên cứu/chạy thử
 một capability. Workflow POC xác minh mô hình/contract generic hiện có, không
 xác minh engine bên thứ ba hay thay đổi topology.
+
+## Docker / AWS OLP staging — Draft (#40)
+
+Bản đóng gói đang phát triển trên PR riêng: [runbook Docker Compose / Ubuntu AWS](docs/deployment/aws-staging.md).
+Cấu hình `infra/compose.staging.yml` mặc định chỉ khởi động PostgreSQL **local, cô lập**; Backend là profile `app` cần chuẩn bị migration, quyền DB, Identity/Gateway và storage trước khi kích hoạt. Đây **chưa phải** bộ cài OLP chạy end-to-end hoặc triển khai an toàn trên AWS `t3.micro`. Giữ nguyên Supabase/Workflow migrations đang dùng chung và tuyệt đối không đưa secrets lên Git.
