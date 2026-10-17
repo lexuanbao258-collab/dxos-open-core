@@ -16,13 +16,56 @@ class SupabaseObjectStorageIntegrationTest {
     SupabaseRestStorageClient client;
     SupabaseObjectStorageAdapter port;
     ObjectKey key;
+    boolean skipRemoteCleanup;
+
+    // Abort the entire hosted suite before any mutation if the shared bucket is public.
+    @BeforeAll static void requirePrivateBucketBeforeWrites() {
+        var p = SupabaseRealSupport.properties(SupabaseRealSupport.required("SUPABASE_STORAGE_KEY_PREFIX")
+                + "_it_" + UUID.randomUUID().toString().replace("-", ""));
+        assertThat(p.bucket()).as("Use existing private dxos-objects bucket").isEqualTo("dxos-objects");
+        verifyPrivateBucket(p);
+    }
+
+    private static void verifyPrivateBucket(SupabaseStorageProperties p) {
+        try (var http = HttpClient.newBuilder().followRedirects(HttpClient.Redirect.NEVER)
+                .connectTimeout(Duration.ofSeconds(10)).build()) {
+            String base = p.restBaseUrl().toString().replaceAll("/$", "");
+            var bucket = HttpRequest.newBuilder(java.net.URI.create(base + "/bucket/" + p.bucket()))
+                    .header("apikey", p.apiKey()).timeout(p.requestTimeout());
+            if (p.apiKeyMode().equals("service-role")) {
+                bucket.header("Authorization", "Bearer " + p.apiKey());
+            }
+            var result = http.send(bucket.GET().build(), HttpResponse.BodyHandlers.ofInputStream());
+            try (var body = result.body()) {
+                assertThat(result.statusCode()).isEqualTo(200);
+                byte[] bytes = body.readNBytes(p.maxResponseBytes() + 1);
+                assertThat(bytes.length).as("Bucket lookup response too large")
+                        .isLessThanOrEqualTo(p.maxResponseBytes());
+                assertThat(new ObjectMapper().readTree(bytes).path("public").asBoolean(true)).isFalse();
+            }
+        } catch (InterruptedException failure) {
+            Thread.currentThread().interrupt();
+            throw new AssertionError("BLOCKED: private bucket could not be verified before writes");
+        } catch (Exception | AssertionError failure) {
+            // Never include provider response/URL, credential-bearing causes or assertion details.
+            throw new AssertionError("BLOCKED: private bucket could not be verified before writes");
+        }
+    }
     @BeforeEach void setup() {
         properties=SupabaseRealSupport.properties(SupabaseRealSupport.required("SUPABASE_STORAGE_KEY_PREFIX")+"_it_"+UUID.randomUUID().toString().replace("-",""));
         assertThat(properties.bucket()).as("Use existing private dxos-objects bucket").isEqualTo("dxos-objects");
         client=new SupabaseRestStorageClient(properties,new ObjectMapper());port=new SupabaseObjectStorageAdapter(properties,client,new ObjectMapper());key=new ObjectKey("integration/ Mixed Key ");
     }
     @AfterEach void cleanup() {
-        try { if(port!=null)try{port.delete(key);}catch(StorageException e){if(e.code()!=StorageErrorCode.NOT_FOUND)throw e;} }
+        try {
+            if (skipRemoteCleanup) {
+                // Do not race a potentially running child writer with DELETE cleanup.
+                System.err.println("Hosted worker/result not confirmed; namespace needs manual reconciliation");
+            } else if (port != null) {
+                try { port.delete(key); }
+                catch (StorageException e) { if (e.code() != StorageErrorCode.NOT_FOUND) throw e; }
+            }
+        }
         finally { if(client!=null)client.close(); }
     }
     @Test void createOnlyAndConflictPreserveWinner() throws Exception {
@@ -129,19 +172,47 @@ class SupabaseObjectStorageIntegrationTest {
         } catch(StorageException error) {assertThat(error.code()).isEqualTo(StorageErrorCode.NOT_FOUND);}
     }
     @RepeatedTest(10) void concurrentCreatorsAcrossIndependentJvmsHaveExactlyOneWinner() throws Exception {
-        Process first=worker("create","first");Process second=worker("create","second");
-        var executor=Executors.newFixedThreadPool(2);
+        Process first = null;
+        Process second = null;
+        ExecutorService executor = null;
+        boolean verified = false;
+        skipRemoteCleanup = true;
         try {
-            var a=new BufferedReader(new InputStreamReader(first.getInputStream()));var b=new BufferedReader(new InputStreamReader(second.getInputStream()));
-            assertThat(executor.submit(a::readLine).get(60,TimeUnit.SECONDS)).isEqualTo("READY");
-            assertThat(executor.submit(b::readLine).get(60,TimeUnit.SECONDS)).isEqualTo("READY");
-            first.getOutputStream().write(10);first.getOutputStream().flush();second.getOutputStream().write(10);second.getOutputStream().flush();
-            String ra=executor.submit(a::readLine).get(60,TimeUnit.SECONDS);String rb=executor.submit(b::readLine).get(60,TimeUnit.SECONDS);
-            assertThat(List.of(ra,rb)).containsExactlyInAnyOrder("STORED","CONFLICT");
-            assertObject(ra.equals("STORED")?"first":"second");
-            SupabaseStorageTest.error(()->port.store(SupabaseRealSupport.command(key,"third",StoreMode.CREATE_ONLY)),StorageErrorCode.CONFLICT);
-            assertObject(ra.equals("STORED")?"first":"second");
-        } finally {first.destroyForcibly();second.destroyForcibly();executor.shutdownNow();}
+            first = worker("create", "first");
+            second = worker("create", "second");
+            executor = Executors.newFixedThreadPool(2);
+            var a = new BufferedReader(new InputStreamReader(first.getInputStream()));
+            var b = new BufferedReader(new InputStreamReader(second.getInputStream()));
+            assertThat(executor.submit(a::readLine).get(60, TimeUnit.SECONDS)).isEqualTo("READY");
+            assertThat(executor.submit(b::readLine).get(60, TimeUnit.SECONDS)).isEqualTo("READY");
+            first.getOutputStream().write(10);
+            first.getOutputStream().flush();
+            second.getOutputStream().write(10);
+            second.getOutputStream().flush();
+            String ra = executor.submit(a::readLine).get(60, TimeUnit.SECONDS);
+            String rb = executor.submit(b::readLine).get(60, TimeUnit.SECONDS);
+            assertThat(List.of(ra, rb)).containsExactlyInAnyOrder("STORED", "CONFLICT");
+            // A reported result is not proof the worker JVM has exited.
+            assertThat(first.waitFor(10, TimeUnit.SECONDS)).as("first worker exit").isTrue();
+            assertThat(second.waitFor(10, TimeUnit.SECONDS)).as("second worker exit").isTrue();
+            assertThat(first.exitValue()).isZero();
+            assertThat(second.exitValue()).isZero();
+            assertObject(ra.equals("STORED") ? "first" : "second");
+            SupabaseStorageTest.error(() -> port.store(SupabaseRealSupport.command(key, "third",
+                    StoreMode.CREATE_ONLY)), StorageErrorCode.CONFLICT);
+            assertObject(ra.equals("STORED") ? "first" : "second");
+            verified = true;
+        } finally {
+            // A normally exited child can still report an unknown provider outcome.
+            // Require both clean child exits AND verified STORED/CONFLICT protocol.
+            boolean firstStopped = terminateWorker(first);
+            boolean secondStopped = terminateWorker(second);
+            skipRemoteCleanup = !cleanupAllowed(firstStopped && secondStopped, verified);
+            if (executor != null) executor.shutdownNow();
+            if (skipRemoteCleanup) {
+                throw new AssertionError("Hosted worker or result unknown; skip DELETE and reconcile namespace");
+            }
+        }
     }
     @Test void durabilityAcrossFreshJvmRestarts() throws Exception {
         assertWorker("store","durable","STORED");assertWorker("verify","durable","VERIFIED");
@@ -149,14 +220,18 @@ class SupabaseObjectStorageIntegrationTest {
         assertWorker("delete","unused","DELETED");assertWorker("missing","unused","MISSING");
     }
     @Test void bucketPrivateAndObjectCannotBeDownloadedAnonymously() throws Exception {
+        verifyPrivateBucket(properties);
         port.store(SupabaseRealSupport.command(key,"private",StoreMode.CREATE_ONLY));
         try(var http=HttpClient.newBuilder().followRedirects(HttpClient.Redirect.NEVER).connectTimeout(Duration.ofSeconds(10)).build()) {
             String base=properties.restBaseUrl().toString().replaceAll("/$","");
             var bucket=HttpRequest.newBuilder(java.net.URI.create(base+"/bucket/"+properties.bucket())).header("apikey",properties.apiKey()).timeout(properties.requestTimeout());
             if(properties.apiKeyMode().equals("service-role"))bucket.header("Authorization","Bearer "+properties.apiKey());
             var result=http.send(bucket.GET().build(),HttpResponse.BodyHandlers.ofInputStream());
-            assertThat(result.statusCode()).isEqualTo(200);
-            try(var body=result.body()){assertThat(new ObjectMapper().readTree(body.readNBytes(properties.maxResponseBytes())).path("public").asBoolean(true)).isFalse();}
+            try (var body = result.body()) {
+                assertThat(result.statusCode()).isEqualTo(200);
+                assertThat(new ObjectMapper().readTree(body.readNBytes(properties.maxResponseBytes()))
+                        .path("public").asBoolean(true)).isFalse();
+            }
             String physical=new SupabaseObjectKeyCodec(properties.keyPrefix(),properties.maxKeyBytes()).encode(key);
             var anonymous=http.send(HttpRequest.newBuilder(java.net.URI.create(base+"/object/public/"+properties.bucket()+"/"+physical)).timeout(properties.requestTimeout()).GET().build(),HttpResponse.BodyHandlers.discarding());
             assertThat(anonymous.statusCode()).isIn(400,401,403,404);
@@ -166,14 +241,49 @@ class SupabaseObjectStorageIntegrationTest {
         var expected=SupabaseRealSupport.command(key,value,StoreMode.OVERWRITE);assertThat(port.metadata(key)).isEqualTo(expected.metadata());
         try(var read=port.read(key)){assertThat(read.metadata()).isEqualTo(expected.metadata());assertThat(read.content().readAllBytes()).isEqualTo(value.getBytes(java.nio.charset.StandardCharsets.UTF_8));}
     }
+    // Even a worker with exit code 0 may have returned UNAVAILABLE instead of a
+    // confirmed mutation result. Cleanup must require both facts.
+    static boolean cleanupAllowed(boolean cleanWorkerExit, boolean protocolVerified) {
+        return cleanWorkerExit && protocolVerified;
+    }
+
+    // True only for a confirmed zero-exit worker that did not require termination.
+    // A killed/failed child can have an unresolved write at the remote provider.
+    static boolean terminateWorker(Process process) {
+        if (process == null) return true;
+        try {
+            boolean forced = process.isAlive();
+            if (forced) process.destroyForcibly();
+            if (!process.waitFor(10, TimeUnit.SECONDS)) return false;
+            return !forced && process.exitValue() == 0;
+        } catch (InterruptedException failure) {
+            Thread.currentThread().interrupt();
+            return false;
+        } catch (RuntimeException failure) {
+            // Ensure cleanup attempts continue for the other worker, without leaking details.
+            return false;
+        }
+    }
+
     private Process worker(String action,String value)throws IOException {
         String javaExecutable=SupabaseProcessWorker.javaExecutable().toString();
         String classpath=System.getProperty("supabase.test.classpath");if(classpath==null)throw new AssertionError("Run Gradle supabaseIntegrationTest task");
         return new ProcessBuilder(javaExecutable,"-cp",classpath,SupabaseProcessWorker.class.getName(),action,properties.keyPrefix(),key.value(),value).redirectErrorStream(true).start();
     }
     private void assertWorker(String action,String value,String expected)throws Exception {
-        Process process=worker(action,value);
-        try {assertThat(process.waitFor(60,TimeUnit.SECONDS)).isTrue();assertThat(process.exitValue()).isZero();assertThat(new String(process.getInputStream().readAllBytes()).strip()).isEqualTo(expected);}
-        finally {process.destroyForcibly();}
+        Process process = worker(action, value);
+        boolean verified = false;
+        skipRemoteCleanup = true;
+        try {
+            assertThat(process.waitFor(60, TimeUnit.SECONDS)).isTrue();
+            assertThat(process.exitValue()).isZero();
+            assertThat(new String(process.getInputStream().readAllBytes()).strip()).isEqualTo(expected);
+            verified = true;
+        } finally {
+            skipRemoteCleanup = !cleanupAllowed(terminateWorker(process), verified);
+            if (skipRemoteCleanup) {
+                throw new AssertionError("Hosted worker or result unknown; skip DELETE and reconcile namespace");
+            }
+        }
     }
 }
