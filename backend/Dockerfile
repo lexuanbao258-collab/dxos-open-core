@@ -1,7 +1,10 @@
 # DX-OS backend packaging only. Build/test and DB provisioning are separate gates.
 FROM eclipse-temurin:21-jdk-jammy AS build
 WORKDIR /src
-COPY . .
+# Copy only build inputs: do not accidentally bake developer secrets or .env into an image.
+COPY gradle/ gradle/
+COPY gradlew settings.gradle build.gradle ./
+COPY src/main/ src/main/
 # Always use the repository-pinned Gradle wrapper, not a system Gradle version.
 RUN sh ./gradlew --no-daemon bootJar -x test --console=plain
 
