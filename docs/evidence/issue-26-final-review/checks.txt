@@ -1,0 +1,26 @@
+PR 35 final remediation scope and provenance checks
+Review date: 2026-10-17
+Fetched remote HEAD: 1997d96bdea50c288f74daee28d0ae4b56afc72f
+Tested implementation: be605c803e978ab89be533deccd37b653cb58c9d
+Base main: 2115de355e8df4f0567e8e8421dae8465da9cea8
+
+PASS: git diff --name-status 14b3558..1997d96 contains docs/evidence/capture.ps1 only; no Java/build changes.
+PASS: git diff be605c8 -- backend is empty during fresh verification.
+PASS: git diff origin/main...HEAD -- backend/src/main/java/com/tricore/dxos/core is empty.
+PASS: git diff origin/main...HEAD -- backend/src/main/java/com/tricore/dxos/gateway is empty.
+PASS: git diff origin/main...HEAD -- backend/src/main/java/com/tricore/dxos/infrastructure/workflow is empty.
+PASS: git diff origin/main...HEAD -- backend/src/main/resources/db/migration is empty (including V1-V4).
+PASS: git diff 1997d96 -- docs/evidence/issue-26-remediation docs/evidence/issue-26-large-download docs/evidence/issue-26-postgres-17.11 is empty.
+PASS: no new production HTTP controller/mapping, application auth, Gateway ACL or Supabase Auth code.
+PASS: production SupabaseRestStorageClient explicitly configures HttpClient.Redirect.NEVER and properties require HTTPS.
+PASS: no production adapter request/body/provider logging; StorageException normalization and redacted configuration retained.
+
+Historical reports independently parsed (not rerun):
+  issue-26-postgres-17.11/full.xml: 50 suites, 868 PASS, 0 FAIL, 0 ERROR, 0 SKIP.
+  issue-26-remediation/hosted.xml: 1 suite, 19 PASS, 0 FAIL, 0 ERROR, 0 SKIP.
+  issue-26-large-download/full.xml: 50 suites, 676 PASS, 0 FAIL, 0 ERROR, 112 SKIP.
+
+Fresh report counts, final diff/secret checks and local fixture cleanup are recorded in review.md.
+Linux/macOS: NOT RUN. GitHub CI: not invoked; no successful run claimed.
+Hosted Supabase: NOT RUN without privately authorized configuration. No shared Supabase PostgreSQL used.
+No merge, Issue #26 closure or changes to PR #33/#34/#36. Remote PR metadata requires owner approval.

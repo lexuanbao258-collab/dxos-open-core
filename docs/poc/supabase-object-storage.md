@@ -2,6 +2,8 @@
 
 Fetched PR #35 HEAD for this review: `1997d96bdea50c288f74daee28d0ae4b56afc72f`. Its delta from tested Java commit `14b35586128465d42534b0edc1e700178fed5406` contains documentation/evidence only, with no Java/build changes. The large-download remediation is committed. This review adds adapter-only metadata memory bounds and focused regressions; see [final review and current execution status](../evidence/issue-26-final-review/review.md). No merge approval is implied.
 
+Fresh Windows verification at `be605c803e978ab89be533deccd37b653cb58c9d`: **76 focused PASS**, **51 backend suites / 878 PASS**, including **9 PostgreSQL suites / 192 PASS**, all with **0 FAIL / 0 ERROR / 0 SKIP**. Hosted verification of the metadata change is **NOT RUN** without private authorized configuration. Ready for independent review; merge approval remains separate.
+
 Historical Windows verification at the preceding Java source: [full backend and disposable PostgreSQL](../evidence/issue-26-postgres-17.11/verification-summary.md): **50 suites / 868 PASS / 0 FAIL / 0 ERROR / 0 SKIP**, including **9 PostgreSQL suites / 192 PASS**. Separate [hosted Storage XML](../evidence/issue-26-remediation/hosted.xml): **19 PASS / 0 FAIL / 0 ERROR / 0 SKIP**. These results are not new executions of this review's Java change. Linux/macOS runtime verification remains pending; no successful GitHub CI run is claimed.
 
 ## Setup

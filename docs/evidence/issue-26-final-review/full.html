@@ -1,0 +1,965 @@
+<!doctype html><html lang='en'><meta charset='utf-8'><title>Issue 26 full</title><style>body{font:14px system-ui;margin:2rem}td,th{padding:4px 12px;text-align:left;border-bottom:1px solid #ddd}</style><h1>Gradle full results (sanitized)</h1><p>Passed: 878; failed: 0; errors: 0; skipped: 0. Derived from Gradle test XML. Logs, properties, hostnames, failure messages and stack traces omitted.</p><table><tr><th>Test</th><th>Result</th></tr><tr><td>com.tricore.dxos.application.authorization.WorkflowAuthorizationTest :: rejectsCreationWithoutRequiredAuthority()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.application.authorization.WorkflowAuthorizationTest :: permitsCreationOnlyWithOperationAuthorityAndResourcePermission()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.application.authorization.WorkflowAuthorizationTest :: [1] operation=ACTIVATE</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.application.authorization.WorkflowAuthorizationTest :: [2] operation=TRANSITION</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.application.authorization.WorkflowAuthorizationTest :: [3] operation=READ</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.application.authorization.WorkflowAuthorizationTest :: requiresAPolicyInsteadOfUsingAnAllowAllFallback()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.application.authorization.WorkflowAuthorizationTest :: [1] operation=CREATE</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.application.authorization.WorkflowAuthorizationTest :: [2] operation=ACTIVATE</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.application.authorization.WorkflowAuthorizationTest :: [3] operation=TRANSITION</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.application.authorization.WorkflowAuthorizationTest :: [4] operation=READ</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.application.authorization.WorkflowAuthorizationTest :: [1] authority=workflow:*</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.application.authorization.WorkflowAuthorizationTest :: [2] authority=WORKFLOW:CREATE</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.application.authorization.WorkflowAuthorizationTest :: [3] authority= workflow:create</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.application.authorization.WorkflowAuthorizationTest :: [4] authority=workflow:create </td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.application.authorization.WorkflowAuthorizationTest :: rejectsCreateAsAnInstanceOperation()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.application.authorization.WorkflowAuthorizationTest :: [1] operation=CREATE</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.application.authorization.WorkflowAuthorizationTest :: [2] operation=ACTIVATE</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.application.authorization.WorkflowAuthorizationTest :: [3] operation=TRANSITION</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.application.authorization.WorkflowAuthorizationTest :: [4] operation=READ</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.application.authorization.WorkflowAuthorizationTest :: [1] operation=ACTIVATE, authority=workflow:activate</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.application.authorization.WorkflowAuthorizationTest :: [2] operation=TRANSITION, authority=workflow:transition</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.application.authorization.WorkflowAuthorizationTest :: [3] operation=READ, authority=workflow:read</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.application.authorization.WorkflowAuthorizationTest :: [1] operation=CREATE</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.application.authorization.WorkflowAuthorizationTest :: [2] operation=ACTIVATE</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.application.authorization.WorkflowAuthorizationTest :: [3] operation=TRANSITION</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.application.authorization.WorkflowAuthorizationTest :: [4] operation=READ</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.application.authorization.WorkflowAuthorizationTest :: [1] missing=creation-caller</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.application.authorization.WorkflowAuthorizationTest :: [2] missing=definition</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.application.authorization.WorkflowAuthorizationTest :: [3] missing=resource</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.application.authorization.WorkflowAuthorizationTest :: [4] missing=instance-caller</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.application.authorization.WorkflowAuthorizationTest :: [5] missing=instance</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.application.authorization.WorkflowAuthorizationTest :: [6] missing=operation</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.application.authorization.WorkflowAuthorizationTest :: [1] resourceId=hidden-document</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.application.authorization.WorkflowAuthorizationTest :: [2] resourceId=missing-document</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.application.authorization.WorkflowAuthorizationTest :: [1] operation=CREATE, decision=FORBIDDEN, expectedMessage=FORBIDDEN</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.application.authorization.WorkflowAuthorizationTest :: [2] operation=CREATE, decision=HIDDEN, expectedMessage=HIDDEN</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.application.authorization.WorkflowAuthorizationTest :: [3] operation=CREATE, decision=UNAVAILABLE, expectedMessage=UNAVAILABLE</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.application.authorization.WorkflowAuthorizationTest :: [4] operation=ACTIVATE, decision=FORBIDDEN, expectedMessage=FORBIDDEN</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.application.authorization.WorkflowAuthorizationTest :: [5] operation=ACTIVATE, decision=HIDDEN, expectedMessage=HIDDEN</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.application.authorization.WorkflowAuthorizationTest :: [6] operation=ACTIVATE, decision=UNAVAILABLE, expectedMessage=UNAVAILABLE</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.application.authorization.WorkflowAuthorizationTest :: [7] operation=TRANSITION, decision=FORBIDDEN, expectedMessage=FORBIDDEN</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.application.authorization.WorkflowAuthorizationTest :: [8] operation=TRANSITION, decision=HIDDEN, expectedMessage=HIDDEN</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.application.authorization.WorkflowAuthorizationTest :: [9] operation=TRANSITION, decision=UNAVAILABLE, expectedMessage=UNAVAILABLE</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.application.authorization.WorkflowAuthorizationTest :: [10] operation=READ, decision=FORBIDDEN, expectedMessage=FORBIDDEN</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.application.authorization.WorkflowAuthorizationTest :: [11] operation=READ, decision=HIDDEN, expectedMessage=HIDDEN</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.application.authorization.WorkflowAuthorizationTest :: [12] operation=READ, decision=UNAVAILABLE, expectedMessage=UNAVAILABLE</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.common.health.HealthControllerTest :: returnsUpAsJsonWithoutDatabase()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.data.ObjectStoragePortTest :: rejectsLengthMismatchWithoutClosingCallerInput()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.data.ObjectStoragePortTest :: inputReadFailureIsSanitizedWithoutTakingOwnership()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.data.ObjectStoragePortTest :: zeroLengthContentAndOpaqueKeysAndDefensiveMetadataAreSupported()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.data.ObjectStoragePortTest :: concurrentCreateOnlyWritersHaveExactlyOneWinner()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.data.ObjectStoragePortTest :: deletesContentAndMetadataAndReportsMissingObjects()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.data.ObjectStoragePortTest :: overwriteCreatesOrReplacesContentAndAllMetadata()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.data.ObjectStoragePortTest :: storesReadsAndLooksUpMatchingMetadata()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.data.ObjectStoragePortTest :: callerClosesInputAndReadResourceReleasesStreamIdempotently()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.data.ObjectStoragePortTest :: readSnapshotKeepsContentAndMetadataTogetherAcrossOverwriteAndDelete()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.data.ObjectStoragePortTest :: createOnlyConflictPreservesContentMetadataAndCallerStream()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.data.ObjectStoragePortTest :: rejectsInvalidKeysMetadataCommandsAndPortInputs()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.data.ObjectStoragePortTest :: normalizedErrorsExposeOnlyStableCodes()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.data.ObjectStoragePortTest :: runtimeInputReadFailureIsSanitizedWithoutClosingInputOrOverwritingObject()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.data.ObjectStoragePortTest :: consumesFromCurrentPositionAndClosesReadResourceAfterConsumerFailure()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.identity.AuthenticatedPrincipalTest :: shouldRejectUnauthenticatedPrincipal()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.identity.AuthenticatedPrincipalTest :: shouldDefensivelyCopyAuthorities()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.identity.AuthenticatedPrincipalTest :: shouldRejectNullSubjectId()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.identity.AuthenticatedPrincipalTest :: shouldAllowNullDisplayName()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.identity.AuthenticatedPrincipalTest :: shouldRejectEmptySubjectId()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.identity.AuthenticatedPrincipalTest :: shouldExposeUnmodifiableAuthorities()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.identity.AuthenticatedPrincipalTest :: shouldRejectAuthoritiesContainingNull()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.identity.AuthenticatedPrincipalTest :: shouldRejectBlankSubjectId()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.identity.AuthenticatedPrincipalTest :: shouldCreatePrincipalWithValidValues()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.identity.AuthenticatedPrincipalTest :: shouldRejectNullAuthorities()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.identity.AuthenticationContextTest :: nullAuthenticationReference_shouldBeRejected()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.identity.AuthenticationContextTest :: emptyAuthenticationReference_shouldBeRejected()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.identity.AuthenticationContextTest :: blankAuthenticationReference_shouldBeRejected()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.identity.AuthenticationContextTest :: validAuthenticationReference_shouldBeAccepted()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.identity.AuthorityTest :: shouldRejectBlankValue()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.identity.AuthorityTest :: shouldRejectNullValue()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.identity.AuthorityTest :: shouldNotTreatWildcardLikeAuthorityAsMatch()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.identity.AuthorityTest :: shouldSatisfyRequiredAuthorityWithExactlyEqualValue()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.identity.AuthorityTest :: shouldNotSatisfyRequiredAuthorityWithLeadingWhitespace()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.identity.AuthorityTest :: shouldNotSatisfyRequiredAuthorityWithTrailingWhitespace()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.identity.AuthorityTest :: shouldCreateAuthorityWithValidValue()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.identity.AuthorityTest :: shouldNotSatisfyLongerRequiredAuthorityValue()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.identity.AuthorityTest :: shouldRejectEmptyValue()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.identity.AuthorityTest :: shouldNotSatisfyRequiredAuthorityWithDifferentCase()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.identity.AuthorityTest :: shouldNotSatisfyRequiredAuthorityWithLongerAuthorityValue()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.identity.AuthorizationDecisionTest :: deniedDecisionWithGrantedReason_shouldBeRejected()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.identity.AuthorizationDecisionTest :: grantedDecisionWithMissingAuthorityReason_shouldBeRejected()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.identity.AuthorizationDecisionTest :: nullRequiredAuthority_shouldBeRejected()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.identity.AuthorizationDecisionTest :: deniedDecision_shouldBeAccepted()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.identity.AuthorizationDecisionTest :: nullReason_shouldBeRejected()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.identity.AuthorizationDecisionTest :: grantedDecision_shouldBeAccepted()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.identity.IdentityExceptionTest :: shouldExposeNormalizedErrorCode()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.identity.IdentityExceptionTest :: shouldNotExposeCause()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.identity.IdentityExceptionTest :: nullErrorCode_shouldBeRejected()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.identity.IdentityExceptionTest :: shouldDisableSuppression()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.identity.IdentityExceptionTest :: shouldNotExposeStackTrace()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.identity.IdentityExceptionTest :: allBaselineErrorCodes_shouldBeAvailable()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.identity.IdentityExceptionTest :: shouldUseOnlyNormalizedCodeAsMessage()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.identity.RequiredAuthorityTest :: nullValue_shouldBeRejected()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.identity.RequiredAuthorityTest :: blankValue_shouldBeRejected()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.identity.RequiredAuthorityTest :: validRequiredAuthority_shouldBeAccepted()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.identity.RequiredAuthorityTest :: emptyValue_shouldBeRejected()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.workflow.WorkflowContractTest :: commandCannotSupplyTargetStateLifecycleOrNewVersion()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.workflow.WorkflowContractTest :: rejectsIncompleteCommandsAndReferences()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.workflow.WorkflowContractTest :: rejectsHistoryThatDisagreesWithTransitionSnapshots()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.workflow.WorkflowContractTest :: historyRequiresPositiveResultVersionAndTrustedActorReference()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.workflow.WorkflowDefinitionTest :: rejectsDuplicateTransitionIdsEvenWithDifferentEndpoints()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.workflow.WorkflowDefinitionTest :: mapsTransitionByIdAndDerivesTerminalState()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.workflow.WorkflowDefinitionTest :: rejectsInvalidStructuralValues()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.workflow.WorkflowDefinitionTest :: rejectsMissingInitialStateAndUnknownEndpoints()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.workflow.WorkflowDefinitionTest :: defensivelyCopiesCollections()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.workflow.WorkflowHttpRuntimeTest :: [1] code=OPERATION_FAILURE</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.workflow.WorkflowHttpRuntimeTest :: [2] code=COMMIT_OUTCOME_UNKNOWN</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.workflow.WorkflowHttpRuntimeTest :: [1] missing=missing</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.workflow.WorkflowHttpRuntimeTest :: [2] missing=missing-version</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.workflow.WorkflowHttpRuntimeTest :: [1] suffix=, trailing={&quot;actorId&quot;:&quot;attacker&quot;}</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.workflow.WorkflowHttpRuntimeTest :: [2] suffix=, trailing=[]</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.workflow.WorkflowHttpRuntimeTest :: [3] suffix=, trailing=null</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.workflow.WorkflowHttpRuntimeTest :: [4] suffix=, trailing=42</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.workflow.WorkflowHttpRuntimeTest :: [5] suffix=, trailing=true</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.workflow.WorkflowHttpRuntimeTest :: [6] suffix=, trailing=&quot;extra&quot;</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.workflow.WorkflowHttpRuntimeTest :: [7] suffix=, trailing=not-json</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.workflow.WorkflowHttpRuntimeTest :: [8] suffix=/instance-1/activate, trailing={&quot;actorId&quot;:&quot;attacker&quot;}</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.workflow.WorkflowHttpRuntimeTest :: [9] suffix=/instance-1/activate, trailing=[]</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.workflow.WorkflowHttpRuntimeTest :: [10] suffix=/instance-1/activate, trailing=null</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.workflow.WorkflowHttpRuntimeTest :: [11] suffix=/instance-1/activate, trailing=42</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.workflow.WorkflowHttpRuntimeTest :: [12] suffix=/instance-1/activate, trailing=true</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.workflow.WorkflowHttpRuntimeTest :: [13] suffix=/instance-1/activate, trailing=&quot;extra&quot;</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.workflow.WorkflowHttpRuntimeTest :: [14] suffix=/instance-1/activate, trailing=not-json</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.workflow.WorkflowHttpRuntimeTest :: [15] suffix=/instance-1/transitions, trailing={&quot;actorId&quot;:&quot;attacker&quot;}</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.workflow.WorkflowHttpRuntimeTest :: [16] suffix=/instance-1/transitions, trailing=[]</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.workflow.WorkflowHttpRuntimeTest :: [17] suffix=/instance-1/transitions, trailing=null</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.workflow.WorkflowHttpRuntimeTest :: [18] suffix=/instance-1/transitions, trailing=42</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.workflow.WorkflowHttpRuntimeTest :: [19] suffix=/instance-1/transitions, trailing=true</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.workflow.WorkflowHttpRuntimeTest :: [20] suffix=/instance-1/transitions, trailing=&quot;extra&quot;</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.workflow.WorkflowHttpRuntimeTest :: [21] suffix=/instance-1/transitions, trailing=not-json</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.workflow.WorkflowHttpRuntimeTest :: [1] code=OPERATION_FAILURE</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.workflow.WorkflowHttpRuntimeTest :: [2] code=COMMIT_OUTCOME_UNKNOWN</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.workflow.WorkflowHttpRuntimeTest :: [1] code=OPERATION_FAILURE</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.workflow.WorkflowHttpRuntimeTest :: [2] code=COMMIT_OUTCOME_UNKNOWN</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.workflow.WorkflowHttpRuntimeTest :: [1] missing=missing</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.workflow.WorkflowHttpRuntimeTest :: [2] missing=missing-version</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.workflow.WorkflowHttpRuntimeTest :: executesTwoIndependentDefinitionsWithAuthoritativeReadsAndStableVersions()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.workflow.WorkflowInstanceTest :: preventsRuntimeVersionOverflow()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.workflow.WorkflowInstanceTest :: validatesRestoredLifecycleAndTimestamps()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.workflow.WorkflowInstanceTest :: rejectsUnknownTransitionAndSourceMismatchWithoutChangingSnapshot()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.workflow.WorkflowInstanceTest :: rejectsAnotherDefinitionIdOrVersion()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.workflow.WorkflowInstanceTest :: preventsTransitionBeforeActivationAndReactivation()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.workflow.WorkflowInstanceTest :: rejectsVersionConflictAndWrongInstance()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.workflow.WorkflowInstanceTest :: pinsDefinitionVersionSeparatelyFromIncrementedRuntimeVersion()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.workflow.WorkflowInstanceTest :: protectsCompletedInstanceAgainstTransitionsAndReopen()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.workflow.WorkflowInstanceTest :: followsTwoIndependentLifecyclesWithoutBusinessSpecificStates()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.workflow.WorkflowPersistencePortTest :: identicalCreationReplayStillConflicts()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.workflow.WorkflowPersistencePortTest :: creationRejectsNoninitialOrForgedDefinitionSnapshots()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.workflow.WorkflowPersistencePortTest :: activationChecksVersionAndLifecycleAndNeverReactivatesCompletedInstances()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.workflow.WorkflowPersistencePortTest :: invalidAndTerminalAttemptsDoNotAppendHistory()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.workflow.WorkflowPersistencePortTest :: activationComparesDefinitionResourceStateAndExactSourceTimestamps()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.workflow.WorkflowPersistencePortTest :: concurrentCommitsHaveExactlyOneWinner()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.workflow.WorkflowPersistencePortTest :: ordersHistoryByUniqueRuntimeVersionEvenWhenTimestampsTie()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.workflow.WorkflowPersistencePortTest :: rejectsProposalFromConsumerRestoredSourceOrDefinitionBinding()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.workflow.WorkflowPersistencePortTest :: failureOnLaterTransitionPreservesAlreadyCommittedHistory()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.workflow.WorkflowPersistencePortTest :: operationFailureLeavesBothStateAndHistoryUnchangedAndAllowsExplicitRetry()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.workflow.WorkflowPersistencePortTest :: rejectsTransitionIdsMissingFromTheAuthoritativeSameKeyDefinition()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.workflow.WorkflowPersistencePortTest :: unknownTransitionOutcomeCommitsInstanceAndHistoryTogetherAndRejectsReplay()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.workflow.WorkflowPersistencePortTest :: normalizedErrorsCarryNoProviderCauseOrStackTrace()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.workflow.WorkflowPersistencePortTest :: unknownActivationOutcomeCanAlreadyHaveCommittedAtVersionZeroWithoutHistory()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.workflow.WorkflowPersistencePortTest :: unknownCreationOutcomeCanAlreadyHaveCommittedAndReplayIsStillRejected()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.workflow.WorkflowPersistencePortTest :: createsOnlyInitialSnapshotsWithEmptyHistoryAndPreservesNanosecondTimestamps()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.workflow.WorkflowPersistencePortTest :: rejectsUnknownInstancesForBothReadsAndCommit()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.workflow.WorkflowPersistencePortTest :: activationRejectsProposalsThatDoNotMatchDomainActivation()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.workflow.WorkflowPersistencePortTest :: creationRequiresProvisioningAndDoesNotLeavePartialDataOnFailure()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.workflow.WorkflowPersistencePortTest :: concurrentCreationsOfTheSameIdHaveExactlyOneWinner()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.workflow.WorkflowPersistencePortTest :: commitsStateVersionAndExactlyOneMatchingHistoryRecord()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.workflow.WorkflowPersistencePortTest :: duplicateCreationNeverOverwritesAnExistingInstanceOrItsHistory()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.workflow.WorkflowPersistencePortTest :: activationFailureChangesNothingAndAllowsExplicitRetryButNotReplay()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.workflow.WorkflowPersistencePortTest :: rejectsSameKeyForgedTransitionTargetsAndLifecyclesAgainstAuthoritativeDefinition()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.workflow.WorkflowPersistencePortTest :: portProtectsTerminalSnapshotEvenAgainstReconstitutedActiveProposal()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.workflow.WorkflowPersistencePortTest :: concurrentActivationsHaveOneWinnerDespiteBothExpectingVersionZero()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.workflow.WorkflowPersistencePortTest :: activationAcceptsAnEqualRestoredSourceWithoutIncrementingVersionOrHistory()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.workflow.WorkflowPersistencePortTest :: loadsOnlyAuthoritativeExactDefinitionVersionsAndProtectsProvisionedContent()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.workflow.WorkflowPersistencePortTest :: activationUsesTheAuthoritativeDefinitionEvenForAnInitialTerminalState()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.workflow.WorkflowPersistencePortTest :: rejectsStaleConcurrentProposalAndReplayWithoutChangingStateOrHistory()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.workflow.WorkflowRuntimeTest :: [1] error=OPERATION_FAILURE</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.workflow.WorkflowRuntimeTest :: [2] error=COMMIT_OUTCOME_UNKNOWN</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.workflow.WorkflowRuntimeTest :: [1] error=OPERATION_FAILURE</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.workflow.WorkflowRuntimeTest :: [2] error=COMMIT_OUTCOME_UNKNOWN</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.workflow.WorkflowRuntimeTest :: preservesRuntimeVersionOverflowRejectionBeforePersistence()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.workflow.WorkflowRuntimeTest :: rejectsABackwardsClockWithoutClampingTimestampsOrWriting()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.workflow.WorkflowRuntimeTest :: propagatesMissingInstancesForReadsActivationAndTransition()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.workflow.WorkflowRuntimeTest :: [1] error=OPERATION_FAILURE</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.workflow.WorkflowRuntimeTest :: [2] error=COMMIT_OUTCOME_UNKNOWN</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.workflow.WorkflowRuntimeTest :: rejectsStaleVersionsAndTransitionReplayWithoutAppendingHistory()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.workflow.WorkflowRuntimeTest :: preservesTheDomainRejectionOfAnInitialTerminalState()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.workflow.WorkflowRuntimeTest :: propagatesAuthoritativeReadFailuresWithoutAttemptingWrites()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.workflow.WorkflowRuntimeTest :: rejectsATransitionThatLosesTheRaceAfterLoadingItsSource()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.workflow.WorkflowRuntimeTest :: rejectsTransitionsBeforeActivationUnknownTransitionsAndWrongSources()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.workflow.WorkflowRuntimeTest :: readsAuthoritativeDataWithoutCachingAndReturnsImmutableHistorySnapshots()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.workflow.WorkflowRuntimeTest :: usesExactClockInstantsForAllWritesIndependentlyOfClockTimeZone()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.workflow.WorkflowRuntimeTest :: insertOnlyPersistenceRejectsConcurrentCreationAfterThePreliminaryRead()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.workflow.WorkflowRuntimeTest :: rejectsDuplicateCreationAndReplayWithoutOverwritingExistingHistory()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.workflow.WorkflowRuntimeTest :: rejectsReactivationAndCompletedOperationsWithExistingErrorPrecedence()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.workflow.WorkflowRuntimeTest :: createsActivatesAndCompletesAWorkflowWithTrustedActorsAndOrderedHistory()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.workflow.WorkflowRuntimeTest :: rejectsMissingExactDefinitionsWithoutCreatingAnInstance()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.workflow.WorkflowRuntimeTest :: executesAnIndependentDefinitionWithoutBusinessSpecificStates()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.workflow.WorkflowRuntimeTest :: propagatesDefinitionLoadingFailuresBeforeActivationOrTransitionWrites()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.workflow.WorkflowRuntimeTest :: [1] error=OPERATION_FAILURE</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.workflow.WorkflowRuntimeTest :: [2] error=COMMIT_OUTCOME_UNKNOWN</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.workflow.WorkflowRuntimeTest :: rejectsInvalidStructuralInputsAndRequiresAnActorInTheCommand()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.workflow.WorkflowRuntimeTest :: pinsDefinitionVersionsEvenWhenANewerVersionChangesTheInitialState()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.workflow.WorkflowRuntimeTest :: prioritizesDuplicateInstanceOverMissingDefinitionIdWithoutMutation()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.workflow.WorkflowRuntimeTest :: rejectsAnActivationThatLosesTheRaceAfterLoadingAVersionZeroSource()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.workflow.WorkflowRuntimeTest :: prioritizesDuplicateInstanceOverMissingDefinitionVersionWithoutMutation()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest :: transitionsUsingOnlyTheServerSuppliedActorAndPreservesRecordPrecision()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest :: [1] code=DEFINITION_NOT_FOUND</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest :: [2] code=INSTANCE_NOT_FOUND</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest :: [3] code=INVALID_TRANSITION</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest :: [4] code=TRANSITION_NOT_ALLOWED</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest :: [5] code=INSTANCE_COMPLETED</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest :: [6] code=VERSION_CONFLICT</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest :: [7] code=OPERATION_FAILURE</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest :: [8] code=INSTANCE_ALREADY_EXISTS</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest :: [9] code=COMMIT_OUTCOME_UNKNOWN</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest :: headersAndBearerStringsCannotSupplyTheReservedActorAttribute()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest :: [1] path=/api/v1/workflow-instances, body={&quot;instanceId&quot;:&quot;instance-1&quot;,&quot;definitionId&quot;:&quot;publication&quot;,&quot;definitionVersion&quot;:7,
+ &quot;resourceType&quot;:&quot;document&quot;,&quot;resourceId&quot;:&quot;document-1&quot;,&quot;actorId&quot;:&quot;client&quot;}</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest :: [2] path=/api/v1/workflow-instances/instance-1/activate, body={&quot;actorId&quot;:&quot;client&quot;}</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest :: [3] path=/api/v1/workflow-instances/instance-1/transitions, body={&quot;transitionId&quot;:&quot;submit&quot;,&quot;expectedVersion&quot;:0,&quot;actorId&quot;:&quot;client&quot;}</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest :: [4] path=/api/v1/workflow-instances, body={&quot;instanceId&quot;:&quot;instance-1&quot;,&quot;definitionId&quot;:&quot;publication&quot;,&quot;definitionVersion&quot;:7,
+ &quot;resourceType&quot;:&quot;document&quot;,&quot;resourceId&quot;:&quot;document-1&quot;,&quot;actorReference&quot;:&quot;client&quot;}</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest :: [5] path=/api/v1/workflow-instances/instance-1/activate, body={&quot;actorReference&quot;:&quot;client&quot;}</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest :: [6] path=/api/v1/workflow-instances/instance-1/transitions, body={&quot;transitionId&quot;:&quot;submit&quot;,&quot;expectedVersion&quot;:0,&quot;actorReference&quot;:&quot;client&quot;}</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest :: [7] path=/api/v1/workflow-instances, body={&quot;instanceId&quot;:&quot;instance-1&quot;,&quot;definitionId&quot;:&quot;publication&quot;,&quot;definitionVersion&quot;:7,
+ &quot;resourceType&quot;:&quot;document&quot;,&quot;resourceId&quot;:&quot;document-1&quot;,&quot;roles&quot;:&quot;client&quot;}</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest :: [8] path=/api/v1/workflow-instances/instance-1/activate, body={&quot;roles&quot;:&quot;client&quot;}</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest :: [9] path=/api/v1/workflow-instances/instance-1/transitions, body={&quot;transitionId&quot;:&quot;submit&quot;,&quot;expectedVersion&quot;:0,&quot;roles&quot;:&quot;client&quot;}</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest :: [10] path=/api/v1/workflow-instances, body={&quot;instanceId&quot;:&quot;instance-1&quot;,&quot;definitionId&quot;:&quot;publication&quot;,&quot;definitionVersion&quot;:7,
+ &quot;resourceType&quot;:&quot;document&quot;,&quot;resourceId&quot;:&quot;document-1&quot;,&quot;lifecycle&quot;:&quot;client&quot;}</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest :: [11] path=/api/v1/workflow-instances/instance-1/activate, body={&quot;lifecycle&quot;:&quot;client&quot;}</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest :: [12] path=/api/v1/workflow-instances/instance-1/transitions, body={&quot;transitionId&quot;:&quot;submit&quot;,&quot;expectedVersion&quot;:0,&quot;lifecycle&quot;:&quot;client&quot;}</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest :: [13] path=/api/v1/workflow-instances, body={&quot;instanceId&quot;:&quot;instance-1&quot;,&quot;definitionId&quot;:&quot;publication&quot;,&quot;definitionVersion&quot;:7,
+ &quot;resourceType&quot;:&quot;document&quot;,&quot;resourceId&quot;:&quot;document-1&quot;,&quot;timestamp&quot;:&quot;client&quot;}</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest :: [14] path=/api/v1/workflow-instances/instance-1/activate, body={&quot;timestamp&quot;:&quot;client&quot;}</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest :: [15] path=/api/v1/workflow-instances/instance-1/transitions, body={&quot;transitionId&quot;:&quot;submit&quot;,&quot;expectedVersion&quot;:0,&quot;timestamp&quot;:&quot;client&quot;}</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest :: [16] path=/api/v1/workflow-instances, body={&quot;instanceId&quot;:&quot;instance-1&quot;,&quot;definitionId&quot;:&quot;publication&quot;,&quot;definitionVersion&quot;:7,
+ &quot;resourceType&quot;:&quot;document&quot;,&quot;resourceId&quot;:&quot;document-1&quot;,&quot;targetState&quot;:&quot;client&quot;}</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest :: [17] path=/api/v1/workflow-instances/instance-1/activate, body={&quot;targetState&quot;:&quot;client&quot;}</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest :: [18] path=/api/v1/workflow-instances/instance-1/transitions, body={&quot;transitionId&quot;:&quot;submit&quot;,&quot;expectedVersion&quot;:0,&quot;targetState&quot;:&quot;client&quot;}</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest :: [19] path=/api/v1/workflow-instances, body={&quot;instanceId&quot;:&quot;instance-1&quot;,&quot;definitionId&quot;:&quot;publication&quot;,&quot;definitionVersion&quot;:7,
+ &quot;resourceType&quot;:&quot;document&quot;,&quot;resourceId&quot;:&quot;document-1&quot;,&quot;createdAt&quot;:&quot;client&quot;}</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest :: [20] path=/api/v1/workflow-instances/instance-1/activate, body={&quot;createdAt&quot;:&quot;client&quot;}</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest :: [21] path=/api/v1/workflow-instances/instance-1/transitions, body={&quot;transitionId&quot;:&quot;submit&quot;,&quot;expectedVersion&quot;:0,&quot;createdAt&quot;:&quot;client&quot;}</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest :: [22] path=/api/v1/workflow-instances, body={&quot;instanceId&quot;:&quot;instance-1&quot;,&quot;definitionId&quot;:&quot;publication&quot;,&quot;definitionVersion&quot;:7,
+ &quot;resourceType&quot;:&quot;document&quot;,&quot;resourceId&quot;:&quot;document-1&quot;,&quot;updatedAt&quot;:&quot;client&quot;}</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest :: [23] path=/api/v1/workflow-instances/instance-1/activate, body={&quot;updatedAt&quot;:&quot;client&quot;}</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest :: [24] path=/api/v1/workflow-instances/instance-1/transitions, body={&quot;transitionId&quot;:&quot;submit&quot;,&quot;expectedVersion&quot;:0,&quot;updatedAt&quot;:&quot;client&quot;}</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest :: hidesUnexpectedProviderAndServerClockFailures()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest :: readsAuthoritativeInstanceAndOrderedHistoryThroughRuntime()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest :: doesNotCoerceOrRoundLargeIntegerVersions()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest :: [1] suffix=, body={&quot;instanceId&quot;:&quot;instance-1&quot;,&quot;definitionId&quot;:&quot;publication&quot;,&quot;definitionVersion&quot;:7,
+ &quot;resourceType&quot;:&quot;document&quot;,&quot;resourceId&quot;:&quot;document-1&quot;}
+, trailing={&quot;actorId&quot;:&quot;attacker&quot;}</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest :: [2] suffix=, body={&quot;instanceId&quot;:&quot;instance-1&quot;,&quot;definitionId&quot;:&quot;publication&quot;,&quot;definitionVersion&quot;:7,
+ &quot;resourceType&quot;:&quot;document&quot;,&quot;resourceId&quot;:&quot;document-1&quot;}
+, trailing=[]</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest :: [3] suffix=, body={&quot;instanceId&quot;:&quot;instance-1&quot;,&quot;definitionId&quot;:&quot;publication&quot;,&quot;definitionVersion&quot;:7,
+ &quot;resourceType&quot;:&quot;document&quot;,&quot;resourceId&quot;:&quot;document-1&quot;}
+, trailing=null</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest :: [4] suffix=, body={&quot;instanceId&quot;:&quot;instance-1&quot;,&quot;definitionId&quot;:&quot;publication&quot;,&quot;definitionVersion&quot;:7,
+ &quot;resourceType&quot;:&quot;document&quot;,&quot;resourceId&quot;:&quot;document-1&quot;}
+, trailing=42</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest :: [5] suffix=, body={&quot;instanceId&quot;:&quot;instance-1&quot;,&quot;definitionId&quot;:&quot;publication&quot;,&quot;definitionVersion&quot;:7,
+ &quot;resourceType&quot;:&quot;document&quot;,&quot;resourceId&quot;:&quot;document-1&quot;}
+, trailing=true</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest :: [6] suffix=, body={&quot;instanceId&quot;:&quot;instance-1&quot;,&quot;definitionId&quot;:&quot;publication&quot;,&quot;definitionVersion&quot;:7,
+ &quot;resourceType&quot;:&quot;document&quot;,&quot;resourceId&quot;:&quot;document-1&quot;}
+, trailing=&quot;extra&quot;</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest :: [7] suffix=, body={&quot;instanceId&quot;:&quot;instance-1&quot;,&quot;definitionId&quot;:&quot;publication&quot;,&quot;definitionVersion&quot;:7,
+ &quot;resourceType&quot;:&quot;document&quot;,&quot;resourceId&quot;:&quot;document-1&quot;}
+, trailing=not-json</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest :: [8] suffix=/instance-1/activate, body={}, trailing={&quot;lifecycle&quot;:&quot;COMPLETED&quot;}</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest :: [9] suffix=/instance-1/activate, body={}, trailing=[]</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest :: [10] suffix=/instance-1/activate, body={}, trailing=null</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest :: [11] suffix=/instance-1/activate, body={}, trailing=42</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest :: [12] suffix=/instance-1/activate, body={}, trailing=true</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest :: [13] suffix=/instance-1/activate, body={}, trailing=&quot;extra&quot;</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest :: [14] suffix=/instance-1/activate, body={}, trailing=not-json</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest :: [15] suffix=/instance-1/transitions, body={&quot;transitionId&quot;:&quot;submit&quot;,&quot;expectedVersion&quot;:0}
+, trailing={&quot;targetState&quot;:&quot;evil&quot;}</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest :: [16] suffix=/instance-1/transitions, body={&quot;transitionId&quot;:&quot;submit&quot;,&quot;expectedVersion&quot;:0}
+, trailing=[]</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest :: [17] suffix=/instance-1/transitions, body={&quot;transitionId&quot;:&quot;submit&quot;,&quot;expectedVersion&quot;:0}
+, trailing=null</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest :: [18] suffix=/instance-1/transitions, body={&quot;transitionId&quot;:&quot;submit&quot;,&quot;expectedVersion&quot;:0}
+, trailing=42</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest :: [19] suffix=/instance-1/transitions, body={&quot;transitionId&quot;:&quot;submit&quot;,&quot;expectedVersion&quot;:0}
+, trailing=true</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest :: [20] suffix=/instance-1/transitions, body={&quot;transitionId&quot;:&quot;submit&quot;,&quot;expectedVersion&quot;:0}
+, trailing=&quot;extra&quot;</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest :: [21] suffix=/instance-1/transitions, body={&quot;transitionId&quot;:&quot;submit&quot;,&quot;expectedVersion&quot;:0}
+, trailing=not-json</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest :: [1] suffix=</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest :: [2] suffix=/instance-1/transitions</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest :: rejectsInvalidPathIdentifiersBeforeRuntime()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest :: [1] suffix=</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest :: [2] suffix=/instance-1/activate</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest :: [3] suffix=/instance-1/transitions</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest :: leavesSharedMapperAndRequestMessageConversionUnchanged()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest :: [1] suffix=</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest :: [2] suffix=/instance-1/activate</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest :: [3] suffix=/instance-1/transitions</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest :: [1] path=/api/v1/workflow-instances, body={}</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest :: [2] path=/api/v1/workflow-instances, body=null</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest :: [3] path=/api/v1/workflow-instances, body={&quot;instanceId&quot;:&quot;&quot;,&quot;definitionId&quot;:&quot;publication&quot;,&quot;definitionVersion&quot;:7,
+ &quot;resourceType&quot;:&quot;document&quot;,&quot;resourceId&quot;:&quot;document-1&quot;}
+</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest :: [4] path=/api/v1/workflow-instances, body={&quot;instanceId&quot;:&quot;bad/id&quot;,&quot;definitionId&quot;:&quot;publication&quot;,&quot;definitionVersion&quot;:7,
+ &quot;resourceType&quot;:&quot;document&quot;,&quot;resourceId&quot;:&quot;document-1&quot;}
+</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest :: [5] path=/api/v1/workflow-instances, body={&quot;instanceId&quot;:&quot;instance-1&quot;,&quot;definitionId&quot;:&quot; &quot;,&quot;definitionVersion&quot;:7,
+ &quot;resourceType&quot;:&quot;document&quot;,&quot;resourceId&quot;:&quot;document-1&quot;}
+</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest :: [6] path=/api/v1/workflow-instances, body={&quot;instanceId&quot;:&quot;instance-1&quot;,&quot;definitionId&quot;:&quot;publication&quot;,&quot;definitionVersion&quot;:7,
+ &quot;resourceType&quot;:&quot;&quot;,&quot;resourceId&quot;:&quot;document-1&quot;}
+</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest :: [7] path=/api/v1/workflow-instances, body={&quot;instanceId&quot;:&quot;instance-1&quot;,&quot;definitionId&quot;:&quot;publication&quot;,&quot;definitionVersion&quot;:7,
+ &quot;resourceType&quot;:&quot;document&quot;,&quot;resourceId&quot;:null}
+</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest :: [8] path=/api/v1/workflow-instances, body={&quot;instanceId&quot;:&quot;instance-1&quot;,&quot;definitionId&quot;:&quot;publication&quot;,&quot;definitionVersion&quot;:null,
+ &quot;resourceType&quot;:&quot;document&quot;,&quot;resourceId&quot;:&quot;document-1&quot;}
+</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest :: [9] path=/api/v1/workflow-instances/instance-1/transitions, body={&quot;transitionId&quot;:&quot;submit&quot;,&quot;expectedVersion&quot;:null}
+</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest :: [10] path=/api/v1/workflow-instances, body={&quot;instanceId&quot;:&quot;instance-1&quot;,&quot;definitionId&quot;:&quot;publication&quot;,&quot;definitionVersion&quot;:-1,
+ &quot;resourceType&quot;:&quot;document&quot;,&quot;resourceId&quot;:&quot;document-1&quot;}
+</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest :: [11] path=/api/v1/workflow-instances/instance-1/transitions, body={&quot;transitionId&quot;:&quot;submit&quot;,&quot;expectedVersion&quot;:-1}
+</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest :: [12] path=/api/v1/workflow-instances, body={&quot;instanceId&quot;:&quot;instance-1&quot;,&quot;definitionId&quot;:&quot;publication&quot;,&quot;definitionVersion&quot;:7.5,
+ &quot;resourceType&quot;:&quot;document&quot;,&quot;resourceId&quot;:&quot;document-1&quot;}
+</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest :: [13] path=/api/v1/workflow-instances/instance-1/transitions, body={&quot;transitionId&quot;:&quot;submit&quot;,&quot;expectedVersion&quot;:7.5}
+</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest :: [14] path=/api/v1/workflow-instances, body={&quot;instanceId&quot;:&quot;instance-1&quot;,&quot;definitionId&quot;:&quot;publication&quot;,&quot;definitionVersion&quot;:&quot;7&quot;,
+ &quot;resourceType&quot;:&quot;document&quot;,&quot;resourceId&quot;:&quot;document-1&quot;}
+</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest :: [15] path=/api/v1/workflow-instances/instance-1/transitions, body={&quot;transitionId&quot;:&quot;submit&quot;,&quot;expectedVersion&quot;:&quot;7&quot;}
+</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest :: [16] path=/api/v1/workflow-instances, body={&quot;instanceId&quot;:&quot;instance-1&quot;,&quot;definitionId&quot;:&quot;publication&quot;,&quot;definitionVersion&quot;:true,
+ &quot;resourceType&quot;:&quot;document&quot;,&quot;resourceId&quot;:&quot;document-1&quot;}
+</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest :: [17] path=/api/v1/workflow-instances/instance-1/transitions, body={&quot;transitionId&quot;:&quot;submit&quot;,&quot;expectedVersion&quot;:true}
+</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest :: [18] path=/api/v1/workflow-instances, body={&quot;instanceId&quot;:&quot;instance-1&quot;,&quot;definitionId&quot;:&quot;publication&quot;,&quot;definitionVersion&quot;:{},
+ &quot;resourceType&quot;:&quot;document&quot;,&quot;resourceId&quot;:&quot;document-1&quot;}
+</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest :: [19] path=/api/v1/workflow-instances/instance-1/transitions, body={&quot;transitionId&quot;:&quot;submit&quot;,&quot;expectedVersion&quot;:{}}
+</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest :: [20] path=/api/v1/workflow-instances, body={&quot;instanceId&quot;:&quot;instance-1&quot;,&quot;definitionId&quot;:&quot;publication&quot;,&quot;definitionVersion&quot;:9223372036854775808,
+ &quot;resourceType&quot;:&quot;document&quot;,&quot;resourceId&quot;:&quot;document-1&quot;}
+</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest :: [21] path=/api/v1/workflow-instances/instance-1/transitions, body={&quot;transitionId&quot;:&quot;submit&quot;,&quot;expectedVersion&quot;:9223372036854775808}
+</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest :: [22] path=/api/v1/workflow-instances/instance-1/transitions, body={}</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest :: [23] path=/api/v1/workflow-instances/instance-1/transitions, body=null</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest :: [24] path=/api/v1/workflow-instances/instance-1/transitions, body={&quot;transitionId&quot;:&quot;&quot;,&quot;expectedVersion&quot;:0}
+</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest :: [25] path=/api/v1/workflow-instances/instance-1/transitions, body={&quot;transitionId&quot;:&quot;submit&quot;}</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest :: returnsEmptyHistory()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest :: [1] suffix=</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest :: [2] suffix=/instance-1/activate</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest :: [3] suffix=/instance-1/transitions</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest :: rejectsUnsupportedMediaTypeBeforeRuntime()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest :: createsAnInstanceWithLocationAndExactSnapshotProjection()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest :: [1] body=</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.gateway.workflow.controller.WorkflowControllerTest :: [2] body={}</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.gateway.workflow.controller.WorkflowHttpExposureTest :: [1] method=POST, suffix=</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.gateway.workflow.controller.WorkflowHttpExposureTest :: [2] method=POST, suffix=/instance-1/activate</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.gateway.workflow.controller.WorkflowHttpExposureTest :: [3] method=POST, suffix=/instance-1/transitions</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.gateway.workflow.controller.WorkflowHttpExposureTest :: [4] method=GET, suffix=/instance-1</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.gateway.workflow.controller.WorkflowHttpExposureTest :: [5] method=GET, suffix=/instance-1/history</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseHttpTest :: serverFaultIsSanitizedAndStagingCleaned()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseHttpTest :: pinnedReadAfterMutationKeepsOldMetadataAndBody()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseHttpTest :: fullHttpCrudReplacesMapAndDeletesStrictly()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseHttpTest :: invalidLengthPreservesExistingObjectWithoutNetworkMutation()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseHttpTest :: zeroLengthAndCallerOwnershipOnSuccessAndConflict()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseMetadataCodecTest :: oversizedCustomNameIsRejectedBeforeBuildingEnvelope()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseMetadataCodecTest :: providerJsonByteBoundaryIsPreserved()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseMetadataCodecTest :: emptyMapBoundaryIncludesEnvelopeOverhead()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseMetadataCodecTest :: aggregateSizeIsCheckedBeforeSortingOrBuildingEnvelope()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseMetadataCodecTest :: exactEncodedBoundaryPreservesCodeUnitsAndCanonicalOrdering()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseMetadataCodecTest :: serializerExpansionIsStillBoundedAndSanitized()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseMetadataCodecTest :: oversizedCustomValueIsRejectedBeforeBuildingEnvelope()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseMetadataCodecTest :: oversizedProviderTreeIsRejectedWithoutMaterializingSerializedBytes()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseMetadataCodecTest :: oversizedContentTypeIsRejectedBeforeBuildingEnvelope()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseProcessLauncherTest :: launchesWorkerWithCurrentJdkAndClasspathWithoutProviderConfiguration()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseResponseBodyTest :: singleLargeBufferPreservesContentWithoutAdditionalDemand()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseResponseBodyTest :: closeDiscardsUnreadLargeBatchAndRejectsLateDelivery()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseResponseBodyTest :: aggregateLargeBatchHonorsPositionsLimitsAndEmptyBuffers()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseResponseBodyTest :: closeCancelsExactlyOnceAndRemovesScheduledTask()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseResponseBodyTest :: providerErrorDiscardsLargeBatchWithSanitizedFailure()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseResponseBodyTest :: manyLargeBatchesStreamWithOneOutstandingDeliveryAndExactIntegrity()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseResponseBodyTest :: emptyDeliveriesDoNotRecurseOrLoseDemand()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseResponseBodyTest :: unsolicitedSecondBatchIsCancelledRatherThanQueued()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseResponseBodyTest :: providerStallAfterLargePartialDownloadWakesBlockedReader()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseResponseBodyTest :: backpressureKeepsOnlyOneChunkAndEofIsRepeatable()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseResponseBodyTest :: absoluteDeadlineDiscardsCompletedButUnreadLargeBatch()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseResponseBodyTest :: closeWakesBlockedReaderAfterLargeBatch()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseStorageTest :: secretKeyModeUsesApiKeyWithoutUserAuthAndNoWriteRetry()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseStorageTest :: readsKeepMetadataAndCloseIdempotently()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseStorageTest :: excessiveStagingStillDrainsToEofWithoutFurtherDiskWrites()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseStorageTest :: runtimeProviderFailuresAndBulkReadArgumentsAreNormalized()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseStorageTest :: stagingShortLongAndZeroBytes()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseStorageTest :: vanishedPinnedVersionDoesNotRetryCurrentKey()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseStorageTest :: invalidUploadNeverMutatesNetwork()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseStorageTest :: configurationValidRegistersOneRealPort()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseStorageTest :: overwriteSendsCompleteEnvelopeAndExactLength()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseStorageTest :: lazyReadAndCloseFaultsAreSanitizedAndReleased()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseStorageTest :: truncatedAndExcessProviderBytesAreUnavailable()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseStorageTest :: missingDeleteAndTransportFailuresAreNormalized()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseStorageTest :: errorCodesAreDeterministicAndNeverExposeBodies()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseStorageTest :: oversizedMetadataIsRejectedBeforeTransport()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseStorageTest :: configurationDisabledDoesNotRegisterFakeAndEnabledMissingConfigFailsClosed()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseStorageTest :: readPinsInfoAndDownloadToResolvedVersionNeverCurrentFallback()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseStorageTest :: stagingReadsCurrentPositionNeverClosesAndCleansUp()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseStorageTest :: providerConflictCleansStagingAndNeverHead()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseStorageTest :: keysRoundTripAllCodeUnitsAndTraversalWithoutCollisions()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseStorageTest :: versionMismatchFailsClosedBeforeDownload()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseStorageTest :: stagingInputFailuresRemainInvalidAndCallerOwned()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseStorageTest :: metadataRoundTripsCaseUnicodeEmptyAndIsolatedSurrogates()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseStorageTest :: configurationRejectsInsecureEndpointAndTraversalPrefix()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseStorageTest :: malformedAndOversizedResponsesAreSanitized()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseTimeoutTest :: lazyPartialDownloadExpiresAndCancels()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseTimeoutTest :: [1] operation=create</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseTimeoutTest :: [2] operation=overwrite</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseTimeoutTest :: [3] operation=delete</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseTimeoutTest :: idleLazyHandleExpiresBeforeFirstRead()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseTimeoutTest :: [1] status=200</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseTimeoutTest :: [2] status=503</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseTimeoutTest :: [3] status=409</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseTimeoutTest :: [4] status=404</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseTimeoutTest :: [5] status=403</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseTimeoutTest :: largePartialDownloadExpiresAndCancelsSocket()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.PostgresWorkflowPersistenceIntegrationTest :: migrationsUpgradeV1V2AndSeedTwoIndependentDefinitions()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.PostgresWorkflowPersistenceIntegrationTest :: databaseRejectsOutOfRangeInstantAndNanos()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.PostgresWorkflowPersistenceIntegrationTest :: requestJpaUsesPublicWhileWorkflowKeepsPrivateSchema()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.PostgresWorkflowPersistenceIntegrationTest :: runtimeLoginCannotProvisionDeleteOrOwnWorkflowTables()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.PostgresWorkflowPersistenceIntegrationTest :: createIsInsertOnlyAndActivationStaysVersionZeroWithoutHistory()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.PostgresWorkflowPersistenceIntegrationTest :: initialStateMustExistAndProvisioningTransactionCannotBeSpoofed()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.PostgresWorkflowPersistenceIntegrationTest :: cleanupFailureDoesNotHideConfirmedDurableCommit()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.PostgresWorkflowPersistenceIntegrationTest :: historyIsImmutableOrderedContiguousAndTerminalReplayHasCorrectPrecedence()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.PostgresWorkflowPersistenceIntegrationTest :: [1] operation=create</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.PostgresWorkflowPersistenceIntegrationTest :: [2] operation=activate</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.PostgresWorkflowPersistenceIntegrationTest :: ambientSpringTransactionCannotDeferPortCommit()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.PostgresWorkflowPersistenceIntegrationTest :: sqlInjectionIdentifiersRemainData()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.PostgresWorkflowPersistenceIntegrationTest :: [1] mutation=UPDATE workflow_definitions SET initial_state = &#39;APPROVED&#39; WHERE definition_id = &#39;document-review&#39;</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.PostgresWorkflowPersistenceIntegrationTest :: [2] mutation=DELETE FROM workflow_definitions WHERE definition_id = &#39;document-review&#39;</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.PostgresWorkflowPersistenceIntegrationTest :: [3] mutation=UPDATE workflow_definition_states SET state_id = &#39;NEW&#39; WHERE state_id = &#39;DRAFT&#39;</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.PostgresWorkflowPersistenceIntegrationTest :: [4] mutation=DELETE FROM workflow_definition_states WHERE state_id = &#39;DRAFT&#39;</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.PostgresWorkflowPersistenceIntegrationTest :: [5] mutation=UPDATE workflow_definition_transitions SET target_state = &#39;DRAFT&#39; WHERE transition_id = &#39;approve&#39;</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.PostgresWorkflowPersistenceIntegrationTest :: [6] mutation=DELETE FROM workflow_definition_transitions WHERE transition_id = &#39;approve&#39;</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.PostgresWorkflowPersistenceIntegrationTest :: [7] mutation=INSERT INTO workflow_definition_states VALUES (&#39;document-review&#39;, 1, &#39;LATE&#39;)</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.PostgresWorkflowPersistenceIntegrationTest :: [8] mutation=INSERT INTO workflow_definition_transitions VALUES (&#39;document-review&#39;, 1, &#39;late&#39;, &#39;DRAFT&#39;, &#39;APPROVED&#39;)</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.PostgresWorkflowPersistenceIntegrationTest :: [9] mutation=TRUNCATE workflow_definitions CASCADE</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.PostgresWorkflowPersistenceIntegrationTest :: [10] mutation=TRUNCATE workflow_definition_states CASCADE</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.PostgresWorkflowPersistenceIntegrationTest :: [11] mutation=TRUNCATE workflow_definition_transitions</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.PostgresWorkflowPersistenceIntegrationTest :: historyInsertFailureRollsBackInstanceAndDoesNotRetry()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.PostgresWorkflowPersistenceIntegrationTest :: [1] field=id</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.PostgresWorkflowPersistenceIntegrationTest :: [2] field=definition</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.PostgresWorkflowPersistenceIntegrationTest :: [3] field=definition-version</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.PostgresWorkflowPersistenceIntegrationTest :: [4] field=resource-type</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.PostgresWorkflowPersistenceIntegrationTest :: [5] field=resource-id</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.PostgresWorkflowPersistenceIntegrationTest :: [6] field=state</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.PostgresWorkflowPersistenceIntegrationTest :: [7] field=created</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.PostgresWorkflowPersistenceIntegrationTest :: authoritativeDefinitionRejectsForgedTransitionTargetAndUnknownTransition()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.PostgresWorkflowPersistenceIntegrationTest :: [1] field=id, error=INSTANCE_NOT_FOUND</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.PostgresWorkflowPersistenceIntegrationTest :: [2] field=definition, error=TRANSITION_NOT_ALLOWED</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.PostgresWorkflowPersistenceIntegrationTest :: [3] field=definition-version, error=TRANSITION_NOT_ALLOWED</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.PostgresWorkflowPersistenceIntegrationTest :: [4] field=resource-type, error=TRANSITION_NOT_ALLOWED</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.PostgresWorkflowPersistenceIntegrationTest :: [5] field=resource-id, error=TRANSITION_NOT_ALLOWED</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.PostgresWorkflowPersistenceIntegrationTest :: [6] field=state, error=TRANSITION_NOT_ALLOWED</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.PostgresWorkflowPersistenceIntegrationTest :: [7] field=version, error=VERSION_CONFLICT</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.PostgresWorkflowPersistenceIntegrationTest :: [8] field=created, error=TRANSITION_NOT_ALLOWED</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.PostgresWorkflowPersistenceIntegrationTest :: [9] field=updated, error=TRANSITION_NOT_ALLOWED</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.PostgresWorkflowPersistenceIntegrationTest :: creationUsesAuthoritativeInitialStateAndDefinition()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.PostgresWorkflowPersistenceIntegrationTest :: [1] fault=commit-before</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.PostgresWorkflowPersistenceIntegrationTest :: [2] fault=commit-after</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.PostgresWorkflowPersistenceIntegrationTest :: [1] text=-1000000000-01-01T00:00:00Z</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.PostgresWorkflowPersistenceIntegrationTest :: [2] text=+1000000000-12-31T23:59:59.999999999Z</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.PostgresWorkflowPersistenceIntegrationTest :: [3] text=1969-12-31T23:59:59.999999999Z</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.PostgresWorkflowPersistenceIntegrationTest :: [4] text=2026-10-13T01:02:03.123456789Z</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.PostgresWorkflowPersistenceIntegrationTest :: springProvidesOneProductionPortAndDataSurvivesBackendRestart()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.PostgresWorkflowPersistenceIntegrationTest :: failedRollbackCannotClaimOperationFailure()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.PostgresWorkflowPersistenceIntegrationTest :: [1] operation=create</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.PostgresWorkflowPersistenceIntegrationTest :: [2] operation=activate</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.PostgresWorkflowPersistenceIntegrationTest :: [3] operation=transition</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.PostgresWorkflowPersistenceIntegrationTest :: exactVersionsAndImmutableIdempotentProvisioning()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.PostgresWorkflowPersistenceIntegrationTest :: validatesStructuralArgumentsWithoutConnecting()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.PostgresWorkflowPersistenceIntegrationTest :: activationChecksLifecycleVersionProposalAndBackwardsTime()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowApprovedMigrationIntegrationTest :: [1] failure=commit-before</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowApprovedMigrationIntegrationTest :: [2] failure=commit-after</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowApprovedMigrationIntegrationTest :: originalWrongReadOnlyPathIsDiagnosedBeforeGuardOrFlyway()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowApprovedMigrationIntegrationTest :: [1] failure=outside-drift</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowApprovedMigrationIntegrationTest :: [2] failure=inventory-drift</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowApprovedMigrationIntegrationTest :: [3] failure=column-acl</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowApprovedMigrationIntegrationTest :: [4] failure=seed-drift</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowApprovedMigrationIntegrationTest :: [5] failure=audit-connect</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowApprovedMigrationIntegrationTest :: realFlywayRunsOnlyV3V4WithExactInventoryAndFreshReadOnlyAudit()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowApprovedMigrationIntegrationTest :: v3CommittedAndV4FailsWithoutRetryOrDestructiveRecovery()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowApprovedMigrationIntegrationTest :: confirmedSqlFailureWithNoWorkflowObjectsReportsRolledBack()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowApprovedMigrationIntegrationTest :: [1] failure=existing-table</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowApprovedMigrationIntegrationTest :: [2] failure=public-acl</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowApprovedMigrationIntegrationTest :: [3] failure=custom-login</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowApprovedMigrationIntegrationTest :: [4] failure=bundle</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowApprovedMigrationIntegrationTest :: developmentSmokeAuditPreservesCatalogAndDetectsSeedAndInventoryDrift()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowApprovedMigrationIntegrationTest :: [1] failure=wrong-ca</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowApprovedMigrationIntegrationTest :: [2] failure=wrong-host</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowApprovedMigrationIntegrationTest :: failedGuardAfterRealConnectionReportsTlsAndSafeFailureStage()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowApprovedMigrationTest :: [1] fault=missing</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowApprovedMigrationTest :: [2] fault=partial</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowApprovedMigrationTest :: [3] fault=secret-output</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowApprovedMigrationTest :: [4] fault=success</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowApprovedMigrationTest :: bundleSidecarsAreRejectedBeforeConnection()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowApprovedMigrationTest :: [1] state=28P01</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowApprovedMigrationTest :: [2] state=3D000</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowApprovedMigrationTest :: driverErrorsCannotLeakSecretsOrClaimAWrite()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowApprovedMigrationTest :: [1] host=[REDACTED-PROVIDER-HOST]m</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowApprovedMigrationTest :: [2] host=[REDACTED-PROVIDER-HOST]</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowApprovedMigrationTest :: [3] host=localhost</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowApprovedMigrationTest :: [4] host=[REDACTED-PROVIDER-HOST]?sslmode=disable</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowApprovedMigrationTest :: [1] fault=no-opt-in</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowApprovedMigrationTest :: [2] fault=wrong-host</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowApprovedMigrationTest :: [3] fault=wrong-ca</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowApprovedMigrationTest :: [4] fault=local-flag</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowApprovedMigrationTest :: [1] key=WORKFLOW_EVENT_GUARD_LOCAL_DISPOSABLE</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowApprovedMigrationTest :: [2] key=WORKFLOW_DEV_LOCAL_DISPOSABLE</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowApprovedMigrationTest :: [3] key=WF25_DISPOSABLE_TEST</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowApprovedMigrationTest :: tlsCannotBeOverriddenAndWriterIsNotProductionDefault()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowApprovedMigrationTest :: [1] key=DB_PORT</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowApprovedMigrationTest :: [2] key=DB_NAME</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowApprovedMigrationTest :: [3] key=DB_USER</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowApprovedMigrationTest :: [4] key=WORKFLOW_FLYWAY_APPROVAL</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowApprovedSmokeLauncherTest :: [1] fault=no-opt-in</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowApprovedSmokeLauncherTest :: [2] fault=both-modes</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowApprovedSmokeLauncherTest :: [3] fault=wrong-host</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowApprovedSmokeLauncherTest :: [4] fault=wrong-ca</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowApprovedSmokeLauncherTest :: [5] fault=local-flag</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowApprovedSmokeLauncherTest :: [1] fault=success</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowApprovedSmokeLauncherTest :: [2] fault=lost-ack</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowApprovedSmokeLauncherTest :: [3] fault=read-failure</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowApprovedSmokeLauncherTest :: [4] fault=post-drift</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowApprovedSmokeLauncherTest :: [5] fault=preexisting</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowApprovedSmokeLauncherTest :: [6] fault=missing-precheck</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowApprovedSmokeLauncherTest :: [7] fault=duplicate-precheck</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowApprovedSmokeLauncherTest :: [8] fault=secret-output</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowApprovedSmokeLauncherTest :: [9] fault=audit-only</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowDevelopmentSmokeIntegrationTest :: [1] missing=opt-in</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowDevelopmentSmokeIntegrationTest :: [2] missing=schema</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowDevelopmentSmokeIntegrationTest :: [3] missing=write-approval</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowDevelopmentSmokeIntegrationTest :: [4] missing=local-profile</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowDevelopmentSmokeIntegrationTest :: [1] failure=wrong-ca</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowDevelopmentSmokeIntegrationTest :: [2] failure=wrong-hostname</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowDevelopmentSmokeIntegrationTest :: [1] failure=public-access</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowDevelopmentSmokeIntegrationTest :: [2] failure=unexpected-table</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowDevelopmentSmokeIntegrationTest :: [3] failure=wrong-owner</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowDevelopmentSmokeIntegrationTest :: bundleAndCatalogDriftAreRejectedBeforeSmokeWrites()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowDevelopmentSmokeIntegrationTest :: postgresMigrationSmokeAndNewJvmReadStayInsideApprovedSchema()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowDevelopmentSmokeIntegrationTest :: productionRunnerRejectsSamePostgresOwnerEvenWithDevelopmentEnvironment()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowDevelopmentSmokeRunnerTest :: [1] host=[REDACTED-PROVIDER-HOST]m</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowDevelopmentSmokeRunnerTest :: [2] host=127.0.0.1</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowDevelopmentSmokeRunnerTest :: [3] host=other.example.com</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowDevelopmentSmokeRunnerTest :: [4] host=[REDACTED-PROVIDER-HOST]?sslmode=disable</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowDevelopmentSmokeRunnerTest :: [5] host=[REDACTED-PROVIDER-HOST].evil.example</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowDevelopmentSmokeRunnerTest :: productionConfigurationAndMissingCommandCannotOptIn()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowDevelopmentSmokeRunnerTest :: [1] schema=public</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowDevelopmentSmokeRunnerTest :: [2] schema=storage</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowDevelopmentSmokeRunnerTest :: [3] schema=auth</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowDevelopmentSmokeRunnerTest :: [4] schema=dxos_wf25_smoke_02</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowDevelopmentSmokeRunnerTest :: [5] schema=dxos_wf25_smoke_01;DROP SCHEMA public</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowDevelopmentSmokeRunnerTest :: projectPortDatabaseUserCaAndBundleRemainRequired()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowDevelopmentSmokeRunnerTest :: [1] value=</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowDevelopmentSmokeRunnerTest :: [2] value=true</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowDevelopmentSmokeRunnerTest :: [3] value=false</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowDevelopmentSmokeRunnerTest :: [4] value=production</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowDevelopmentSmokeRunnerTest :: [5] value=ISSUE-25-POSTGRES-DEVELOPMENT-ONLY</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowDevelopmentSmokeRunnerTest :: readOnlyPreparationDoesNotConnectOrRequireWriteApproval()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowDevelopmentSmokeRunnerTest :: disposableLocalOptInCannotDowngradeOrReachCloud()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowDevelopmentSmokeRunnerTest :: [1] mode=migrate</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowDevelopmentSmokeRunnerTest :: [2] mode=smoke</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowDevelopmentSmokeRunnerTest :: [1] name=WORKFLOW_DEV_LOCAL_DISPOSABLE</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowDevelopmentSmokeRunnerTest :: [2] name=WF25_DISPOSABLE_TEST</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowDevelopmentSmokeRunnerTest :: [3] name=WORKFLOW_EVENT_GUARD_LOCAL_DISPOSABLE</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowEventTriggerGuardIntegrationTest :: strictReadOnlyGuardWorksBeforeSchemaProvisioningAndDoesNotBypassEmptyCatalog()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowEventTriggerGuardIntegrationTest :: rejectsUnknownDisabledTriggerToo()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowEventTriggerGuardIntegrationTest :: [1] change=CREATE EVENT TRIGGER wf25_unknown ON ddl_command_end EXECUTE FUNCTION extensions.pgrst_ddl_watch()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowEventTriggerGuardIntegrationTest :: [2] change=ALTER EVENT TRIGGER pgrst_ddl_watch RENAME TO wf25_unknown</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowEventTriggerGuardIntegrationTest :: [3] change=ALTER EVENT TRIGGER pgrst_ddl_watch OWNER TO CURRENT_USER</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowEventTriggerGuardIntegrationTest :: [4] change=ALTER EVENT TRIGGER pgrst_ddl_watch ENABLE ALWAYS</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowEventTriggerGuardIntegrationTest :: [5] change=ALTER EVENT TRIGGER pgrst_ddl_watch DISABLE</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowEventTriggerGuardIntegrationTest :: [6] change=CREATE OR REPLACE FUNCTION extensions.pgrst_ddl_watch() RETURNS event_trigger LANGUAGE plpgsql SET search_path=&#39;&#39; AS $$ BEGIN PERFORM 1; END; $$</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowEventTriggerGuardIntegrationTest :: [7] change=ALTER FUNCTION extensions.pgrst_ddl_watch() SET dxos.fixture_token=&#39;fixture_value&#39;</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowEventTriggerGuardIntegrationTest :: [8] change=ALTER FUNCTION extensions.pgrst_ddl_watch() SECURITY DEFINER</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowEventTriggerGuardIntegrationTest :: [9] change=REVOKE EXECUTE ON FUNCTION extensions.pgrst_ddl_watch() FROM PUBLIC</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowEventTriggerGuardIntegrationTest :: [10] change=ALTER FUNCTION pg_catalog.pg_event_trigger_ddl_commands() COST 11</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowEventTriggerGuardIntegrationTest :: [11] change=ALTER FUNCTION pg_catalog.pg_event_trigger_dropped_objects() SET dxos.fixture_token=&#39;fixture_value&#39;</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowEventTriggerGuardIntegrationTest :: [12] change=REVOKE EXECUTE ON FUNCTION pg_catalog.pg_event_trigger_ddl_commands() FROM PUBLIC</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowEventTriggerGuardIntegrationTest :: [13] change=ALTER ROLE supabase_admin NOSUPERUSER</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowEventTriggerGuardIntegrationTest :: [14] change=GRANT wf25_runtime TO supabase_admin</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowEventTriggerGuardIntegrationTest :: [15] change=SET LOCAL session_replication_role=&#39;replica&#39;</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowEventTriggerGuardIntegrationTest :: [16] change=SET LOCAL event_triggers=off</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowEventTriggerGuardIntegrationTest :: strictReadOnlyGuardRejectsMissingHelperAndManifestDrift()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowEventTriggerGuardIntegrationTest :: distinguishesUnrestrictedNullTagsFromEmptyTags()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowEventTriggerGuardIntegrationTest :: rejectsWrongSchemaAndServerVersion()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowEventTriggerGuardIntegrationTest :: rejectsChangedTags()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowEventTriggerGuardIntegrationTest :: approvedMigrationReadOnlyPropertiesPassTheRealCatalogGuard()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowEventTriggerGuardIntegrationTest :: strictReadOnlyGuardRejectsWritableTransaction()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowEventTriggerGuardIntegrationTest :: approvedFixtureUsesLiveHelperSignaturesInsteadOfCapturedOids()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowEventTriggerGuardIntegrationTest :: liveRunnerUsesActualVerifiedTlsReadOnlyTransactionAndMeasuresCatalogChecks()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowEventTriggerGuardIntegrationTest :: [1] mismatch=hostname</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowEventTriggerGuardIntegrationTest :: [2] mismatch=ca</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowEventTriggerReviewIntegrationTest :: collectsHelpersIdentifiedDuringPrivateBodyReviewByBoundSignature()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowEventTriggerReviewIntegrationTest :: broadDirectoryAclStopsBeforeConnecting()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowEventTriggerReviewIntegrationTest :: capturesUnknownEnabledTriggersWithoutSilentlyFilteringThem()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowEventTriggerReviewIntegrationTest :: capturesConfirmedMetadataWithoutPublishingBodiesOrConfigurationValues()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowEventTriggerReviewIntegrationTest :: matchingNamesAndMetadataDoNotAuthorizeChangedDeployedBodies()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowEventTriggerReviewIntegrationTest :: rollbackFailureDoesNotPersistSourceOrLeakExceptionText()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowEventTriggerReviewIntegrationTest :: malformedHelperSignatureIsBoundAndNotLoggedOrExecuted()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowEventTriggerReviewIntegrationTest :: readOnlyReferenceSqlExecutesAgainstAllSixActualMetadataShapes()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowIsolationIntegrationTest :: extraMigrationRejectedBeforeConnection()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowIsolationIntegrationTest :: unapprovedBundleRejectedBeforeConnection()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowIsolationIntegrationTest :: [1] table=workflow_definitions</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowIsolationIntegrationTest :: [2] table=workflow_definition_states</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowIsolationIntegrationTest :: [3] table=workflow_definition_transitions</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowIsolationIntegrationTest :: [4] table=workflow_instances</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowIsolationIntegrationTest :: [5] table=workflow_transition_history</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowIsolationIntegrationTest :: flywayRejectsUnreviewedInitializationAndCallbackConfiguration()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowIsolationIntegrationTest :: flywayRejectsSpoofedCallbackWithTheGuardNameBeforeDdl()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowIsolationIntegrationTest :: runtimeCreatePrivilegeStopsBeforeDdl()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowIsolationIntegrationTest :: jdbcCatalogPreflightIsReadOnlyOnPostgres()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowIsolationIntegrationTest :: jdbcCatalogPreflightDoesNotCreateMissingSchema()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowIsolationIntegrationTest :: customDefaultPrivilegesRequireReviewBeforeDdl()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowIsolationIntegrationTest :: flywayRejectsCustomResourceProviderWithAnApprovedScriptName()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowIsolationIntegrationTest :: localDisposableFlagCannotAuthorizeARemoteEmptyInventory()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowIsolationIntegrationTest :: flywayRejectsClassLoaderAndEncodingDrift()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowIsolationIntegrationTest :: existingUnknownObjectsPreventMigration()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowIsolationIntegrationTest :: [1] backendSsl=FALSE</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowIsolationIntegrationTest :: [2] backendSsl=NULL</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowIsolationIntegrationTest :: [3] backendSsl=NO_ROW</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowIsolationIntegrationTest :: runtimeWithoutTriggerPrivilegeIsAccepted()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowIsolationIntegrationTest :: flywayRejectsJavaMigrationsAndWorkingDirectoryOverrides()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowIsolationIntegrationTest :: unsafeMigrationConfigurationRejectedBeforeDdl()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowIsolationIntegrationTest :: checksumMismatchStopsBeforeWorkflowWrites()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowIsolationIntegrationTest :: runtimeOwnerIsRejected()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowIsolationIntegrationTest :: [1] override=public</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowIsolationIntegrationTest :: [2] override=other_schema</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowIsolationIntegrationTest :: [3] override=dxos_wf25_smoke_01,public</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowIsolationIntegrationTest :: flywayRejectsBundleChangedAfterConfigurationBeforeDdl()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowIsolationIntegrationTest :: jdbcCatalogPreflightDoesNotPrintCustomFunctionSettings()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowIsolationIntegrationTest :: jdbcEntrypointKeepsEveryCatalogQueryInVerifiedReadOnlyTransaction()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowIsolationIntegrationTest :: migrationAndSmokeStayPrivateAndPersistAcrossNewConnections()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowIsolationIntegrationTest :: immutableFunctionsAndAclRemainEffective()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowIsolationIntegrationTest :: wrongPropertiesSchemaRejectedBeforeReads()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowIsolationIntegrationTest :: enabledEventTriggerRequiresReviewBeforeDdl()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowIsolationIntegrationTest :: smokeRunnerRejectsWrongRuntimeSchema()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowIsolationIntegrationTest :: missingRuntimePermissionsStopBeforeWrites()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowIsolationIntegrationTest :: smokeAndRuntimeRejectTriggerAddedAfterMigrationBeforeWriting()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowIsolationIntegrationTest :: [1] table=workflow_definitions</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowIsolationIntegrationTest :: [2] table=workflow_definition_states</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowIsolationIntegrationTest :: [3] table=workflow_definition_transitions</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowIsolationIntegrationTest :: [4] table=workflow_instances</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowIsolationIntegrationTest :: [5] table=workflow_transition_history</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowIsolationIntegrationTest :: verifyFullRejectsUntrustedCaAndWrongHostname()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowIsolationIntegrationTest :: flywayRejectsTriggerCreatedAfterConfigurationBeforeDdl()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowIsolationIntegrationTest :: migratedSchemaCannotBeMigratedAgainByRunner()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowLiveGuardTest :: [1] key=DB_HOST</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowLiveGuardTest :: [2] key=DB_PORT</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowLiveGuardTest :: [3] key=DB_NAME</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowLiveGuardTest :: [4] key=PGSSLROOTCERT</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowLiveGuardTest :: directConnectionReportsDirectTlsWithoutPoolerLabelsOrCredentials()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowLiveGuardTest :: [1] mode=off</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowLiveGuardTest :: [2] mode=</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowLiveGuardTest :: [3] mode=ON</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowLiveGuardTest :: bundleDriftStopsBeforeConnect()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowLiveGuardTest :: catalogDriftIsSanitizedAndRollsBack()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowLiveGuardTest :: [1] local=true</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowLiveGuardTest :: [2] local=false</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowLiveGuardTest :: [3] local=</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowLiveGuardTest :: [1] phase=rollback</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowLiveGuardTest :: [2] phase=close</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowLiveGuardTest :: verifiesServerReadOnlyBeforeCatalogAndRollsBackBeforePass()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowLiveGuardTest :: invalidSslIsSanitizedAndCannotPass()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowReadOnlyPreflightTest :: rollbackAndCloseFailuresDoNotClaimCompletion()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowReadOnlyPreflightTest :: directConnectionUsesExistingCredentialsWithVerifiedTlsAndReadOnly()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowReadOnlyPreflightTest :: connectFailureReportsSafePhaseAndSqlState()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowReadOnlyPreflightTest :: sqlErrorsIdentifyTransactionCatalogAndPrivilegePhases()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowReadOnlyPreflightTest :: [1] name=DB_HOST</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowReadOnlyPreflightTest :: [2] name=DB_PORT</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowReadOnlyPreflightTest :: [3] name=DB_NAME</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowReadOnlyPreflightTest :: [4] name=DB_USER</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowReadOnlyPreflightTest :: [5] name=DB_PASSWORD</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowReadOnlyPreflightTest :: [6] name=PGSSLROOTCERT</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowReadOnlyPreflightTest :: invalidSqlStateCannotInjectOutput()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowReadOnlyPreflightTest :: tlsHandshakeFailureReportsPhaseWithoutDriverMessage()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowReadOnlyPreflightTest :: rollbackFailureDoesNotHideOriginalCatalogFailure()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowReadOnlyPreflightTest :: verifiedTlsAndReadOnlyCannotBeOverriddenByCredentials()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowReadOnlyPreflightTest :: [1] host=127.0.0.1</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowReadOnlyPreflightTest :: [2] host=other.example.com</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowReadOnlyPreflightTest :: [3] host=[REDACTED-PROVIDER-HOST]m?sslmode=disable</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowReadOnlyPreflightTest :: [4] host=user@[REDACTED-PROVIDER-HOST]m</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowReadOnlyPreflightTest :: [5] host=[REDACTED-PROVIDER-HOST]?sslmode=disable</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowReadOnlyPreflightTest :: [6] host=[REDACTED-PROVIDER-HOST].evil.example</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowReadOnlyPreflightTest :: transactionAndDatabaseIdentityFailuresAreClassified()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowReadOnlyPreflightTest :: [1] backendSsl=TRUE</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowReadOnlyPreflightTest :: [2] backendSsl=FALSE</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowReadOnlyPreflightTest :: [3] backendSsl=NULL</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowReadOnlyPreflightTest :: [4] backendSsl=NO_ROW</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowReadOnlyPreflightTest :: validationAndUnexpectedFailuresNeverPrintSecrets()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowReadOnlyPreflightTest :: missingCaStopsBeforeConnection()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowReadOnlyPreflightTest :: [1] database=postgres?sslmode=require</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowReadOnlyPreflightTest :: [2] database=postgres?sslmode=disable</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowRuntimePrivilegeAuditIntegrationTest :: [1] mismatch=ca</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowRuntimePrivilegeAuditIntegrationTest :: [2] mismatch=hostname</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowRuntimePrivilegeAuditIntegrationTest :: actualTlsAuditReportsUnprovisionedRolesWithoutCreatingThem()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowRuntimePrivilegeAuditLauncherTest :: filtersNativeOutputAndKeepsSecretsOutOfArguments()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowRuntimePrivilegeAuditLauncherTest :: [1] key=DB_PASSWORD</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowRuntimePrivilegeAuditLauncherTest :: [2] key=WORKFLOW_EVENT_GUARD_LOCAL_DISPOSABLE</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowRuntimePrivilegeAuditLauncherTest :: [1] batch=@echo off
+echo private-secret
+exit /b 0
+</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowRuntimePrivilegeAuditLauncherTest :: [2] batch=@echo off
+echo RUNTIME_PRIVILEGE_AUDIT=FAIL phase=connect_tls
+echo private-secret 1&gt;&amp;2
+exit /b 1
+</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowRuntimePrivilegeAuditTest :: [1] value=true</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowRuntimePrivilegeAuditTest :: [2] value=false</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowRuntimePrivilegeAuditTest :: [3] value=</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowRuntimePrivilegeAuditTest :: [1] mode=off</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowRuntimePrivilegeAuditTest :: [2] mode=</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowRuntimePrivilegeAuditTest :: [3] mode=ON</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowRuntimePrivilegeAuditTest :: [1] phase=rollback</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowRuntimePrivilegeAuditTest :: [2] phase=close</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowRuntimePrivilegeAuditTest :: reviewedSqlContainsFifteenCatalogQueriesAndNoExecutableTransactionCommands()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowRuntimePrivilegeAuditTest :: publicSchemaCreateIsReportedBeforeRolesExist()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowRuntimePrivilegeAuditTest :: publicSecurityDefinerCallabilityIsReportedBeforeRolesExist()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowRuntimePrivilegeAuditTest :: catalogFailureDiscardsPartialReportAndRollsBack()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowRuntimePrivilegeAuditTest :: [1] change=
+CREATE ROLE unsafe;</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowRuntimePrivilegeAuditTest :: [2] change=
+SELECT pg_catalog.pg_advisory_lock(1);</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowRuntimePrivilegeAuditTest :: [3] change=
+WITH x AS (DELETE FROM secret RETURNING *) SELECT * FROM x;</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowRuntimePrivilegeAuditTest :: presentRolesAndEffectiveColumnGrantOptionsStillRequireManualReview()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowRuntimePrivilegeAuditTest :: driverErrorsCannotExposeConnectionOrPassword()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowRuntimePrivilegeAuditTest :: reportsMissingRolesAndPublicTempWithoutExposingIdentifiersOrSecrets()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowSchemaBootstrapIntegrationTest :: existingSchemaStopsWithoutAnySchemaWrite()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowSchemaBootstrapIntegrationTest :: [1] failure=public-acl</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowSchemaBootstrapIntegrationTest :: [2] failure=unexpected-table</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowSchemaBootstrapIntegrationTest :: [3] failure=outside-catalog</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowSchemaBootstrapIntegrationTest :: independentAuditFailureNeverReturnsOverallSuccess()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowSchemaBootstrapIntegrationTest :: [1] failure=wrong-ca</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowSchemaBootstrapIntegrationTest :: [2] failure=wrong-hostname</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowSchemaBootstrapIntegrationTest :: manifestDriftStopsBeforeWrite()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowSchemaBootstrapIntegrationTest :: observesOnlyOwnPgrstNotificationAfterCommit()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowSchemaBootstrapIntegrationTest :: commitsOnlyOneEmptyPrivateSchemaAndAuditsOnNewReadOnlyConnection()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowSchemaBootstrapIntegrationTest :: [1] when=before</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowSchemaBootstrapIntegrationTest :: [2] when=after</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowSchemaBootstrapIntegrationTest :: loginCustomRoleStopsBeforeWrite()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowSchemaBootstrapTest :: [1] key=DB_PORT</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowSchemaBootstrapTest :: [2] key=DB_NAME</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowSchemaBootstrapTest :: [3] key=DB_USER</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowSchemaBootstrapTest :: [4] key=DB_PASSWORD</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowSchemaBootstrapTest :: [5] key=PGSSLROOTCERT</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowSchemaBootstrapTest :: [6] key=WORKFLOW_SCHEMA_BOOTSTRAP_APPROVAL</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowSchemaBootstrapTest :: [1] host=[REDACTED-PROVIDER-HOST]m</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowSchemaBootstrapTest :: [2] host=[REDACTED-PROVIDER-HOST]</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowSchemaBootstrapTest :: [3] host=127.0.0.1</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowSchemaBootstrapTest :: [4] host=[REDACTED-PROVIDER-HOST]?sslmode=disable</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowSchemaBootstrapTest :: [1] failure=no-opt-in</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowSchemaBootstrapTest :: [2] failure=wrong-host</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowSchemaBootstrapTest :: [3] failure=missing-ca</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowSchemaBootstrapTest :: connectionFailuresNeverExposeSecretsOrClaimCloudSuccess()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowSchemaBootstrapTest :: bundleDriftStopsBeforeConnect()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowSchemaBootstrapTest :: [1] key=WORKFLOW_EVENT_GUARD_LOCAL_DISPOSABLE</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowSchemaBootstrapTest :: [2] key=WF25_DISPOSABLE_TEST</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowSchemaBootstrapTest :: [3] key=WORKFLOW_DEV_LOCAL_DISPOSABLE</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowSchemaBootstrapTest :: exactApprovedEndpointCannotDowngradeTlsOrReadOnlyPrechecks()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowSchemaBootstrapTest :: missingChildReportIsUnknownRatherThanClaimingNoSchemaWrite()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowSchemaTest :: applicationRejectsPublicSchemaBeforeOpeningAConnection()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowSchemaTest :: [1] url=jdbc:postgresql://localhost:5432/test?currentSchema=public</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowSchemaTest :: [2] url=jdbc:postgresql://localhost:5432/test?currentSchema=private,public</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowSchemaTest :: [3] url=jdbc:postgresql://localhost:5432/test?currentSchema=private&amp;currentSchema=public</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowSchemaTest :: [4] url=jdbc:postgresql://localhost:5432/test?options=-c%20search_path%3Dpublic</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowSchemaTest :: [5] url=jdbc:postgresql://localhost:5432/test?password=[REDACTED]</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowSchemaTest :: [6] url=jdbc:postgresql://[REDACTED]@localhost:5432/test</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowSchemaTest :: [1] name=</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowSchemaTest :: [2] name=public</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowSchemaTest :: [3] name=extensions</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowSchemaTest :: [4] name=information_schema</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowSchemaTest :: [5] name=pg_catalog</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowSchemaTest :: [6] name=pg_private</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowSchemaTest :: [7] name=bad&quot;; DROP SCHEMA public; --</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowSchemaTest :: [8] name=bad&#39;; --</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowSchemaTest :: [9] name=UPPER</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowSchemaTest :: [10] name=a,b</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowSchemaTest :: approvedBundleAcceptsWindowsCheckoutLineEndings(Path)</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowSecurityDefinerReviewIntegrationTest :: falseExecuteIsOnlyReportedWhenRuntimeActuallyExists()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowSecurityDefinerReviewIntegrationTest :: validBaselineAllowsProtectedPrivateCaptureAndBoundManualHelpers()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowSecurityDefinerReviewIntegrationTest :: changedBodyBlocksPrivateCapture()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowSecurityDefinerReviewIntegrationTest :: actualMetadataIdentifiesDefinersAndPotentialPublicAccessWithoutBodies()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowSecurityDefinerReviewIntegrationTest :: [1] mismatch=ca</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowSecurityDefinerReviewIntegrationTest :: [2] mismatch=hostname</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowSecurityDefinerReviewIntegrationTest :: malformedHelperIsBoundNeverExecutedOrLogged()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowSecurityDefinerReviewLauncherTest :: [1] batch=@echo off
+exit /b 0
+</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowSecurityDefinerReviewLauncherTest :: [2] batch=@echo off
+echo SECURITY_DEFINER_CAPTURE=PASS scope=READ_ONLY_CATALOG client_tls=VERIFIED_VERIFY_FULL
+exit /b 0
+</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowSecurityDefinerReviewLauncherTest :: [3] batch=@echo off
+echo SECURITY_DEFINER_CAPTURE=FAIL phase=connect_tls
+echo fixture-password 1&gt;&amp;2
+exit /b 1
+</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowSecurityDefinerReviewLauncherTest :: nativeOutputIsFilteredAndCredentialsStayOutOfArguments()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowSecurityDefinerReviewLauncherTest :: privateModeUsesEnvironmentAndNeverPrintsBodies()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowSecurityDefinerReviewLauncherTest :: nativeFailureAfterSuccessMarkerIsStillFailure()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowSecurityDefinerReviewLauncherTest :: [1] key=DB_PASSWORD</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowSecurityDefinerReviewLauncherTest :: [2] key=WORKFLOW_EVENT_GUARD_LOCAL_DISPOSABLE</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowSecurityDefinerReviewTest :: falseForUnprovisionedRuntimeIsRejectedRatherThanPublished()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowSecurityDefinerReviewTest :: [1] phase=rollback</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowSecurityDefinerReviewTest :: [2] phase=close</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowSecurityDefinerReviewTest :: driftStopsBeforeFetchingPrivateBodies()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowSecurityDefinerReviewTest :: pinnedSqlIncludesBoundHelpersAndNeverReturnsBodiesOrArbitraryConfiguration()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowSecurityDefinerReviewTest :: capturesUnknownPrivilegesAsNullAndPublishesOnlyAfterCleanup()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowSecurityDefinerReviewTest :: driverErrorsAndLocalBypassCannotExposeSecrets()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowSecurityDefinerReviewTest :: unexpectedPrivateColumnsAreRejected()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowSecurityDefinerReviewTest :: [1] mutation=
+CREATE ROLE unsafe;</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowSecurityDefinerReviewTest :: [2] mutation=
+SELECT pg_catalog.pg_advisory_lock(1);</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowSecurityDefinerReviewTest :: [3] mutation=
+WITH x AS (DELETE FROM secret RETURNING *) SELECT * FROM x;</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowSecurityDefinerReviewTest :: [1] mode=off</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowSecurityDefinerReviewTest :: [2] mode=ON</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowSecurityDefinerReviewTest :: [3] mode=</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowSecurityDefinerReviewTest :: tamperedBaselineStopsBeforeConnect()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowSmokeRunnerEndpointTest :: cloudAcceptsOnlyTheExactDirectEndpoint()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowSmokeRunnerEndpointTest :: preflightRejectsSetRoleInsteadOfARealLogin()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.workflow.WorkflowSmokeRunnerEndpointTest :: disposableLocalEndpointRemainsAvailable()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.request.controller.RequestControllerTest :: returnsExistingRequest()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.request.controller.RequestControllerTest :: rejectsBlankRequiredFields()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.request.controller.RequestControllerTest :: returns404ForMissingRequest()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.request.controller.RequestControllerTest :: [1] field=resolution</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.request.controller.RequestControllerTest :: [2] field=assigneeId</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.request.controller.RequestControllerTest :: [3] field=version</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.request.controller.RequestControllerTest :: returnsEmptyJsonArrayWhenThereAreNoRequests()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.request.controller.RequestControllerTest :: listsRequests()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.request.controller.RequestControllerTest :: acceptsMaximumFieldLengths()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.request.controller.RequestControllerTest :: [1] body={</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.request.controller.RequestControllerTest :: [2] body=null</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.request.controller.RequestControllerTest :: [3] body=</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.request.controller.RequestControllerTest :: [4] body=[]</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.request.controller.RequestControllerTest :: [1] body={}</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.request.controller.RequestControllerTest :: [2] body={&quot;title&quot;:null,&quot;description&quot;:null,&quot;requestType&quot;:null}
+</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.request.controller.RequestControllerTest :: [3] body={&quot;description&quot;:&quot;Details&quot;,&quot;requestType&quot;:&quot;IT_SUPPORT&quot;}
+</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.request.controller.RequestControllerTest :: [4] body={&quot;title&quot;:&quot;Printer&quot;,&quot;requestType&quot;:&quot;IT_SUPPORT&quot;}
+</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.request.controller.RequestControllerTest :: [5] body={&quot;title&quot;:&quot;Printer&quot;,&quot;description&quot;:&quot;Details&quot;}
+</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.request.controller.RequestControllerTest :: [6] body={&quot;title&quot;:&quot;aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa&quot;,&quot;description&quot;:&quot;Details&quot;,&quot;requestType&quot;:&quot;IT_SUPPORT&quot;}</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.request.controller.RequestControllerTest :: [7] body={&quot;title&quot;:&quot;Printer&quot;,&quot;description&quot;:&quot;Details&quot;,&quot;requestType&quot;:&quot;aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa&quot;}</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.request.controller.RequestControllerTest :: rejectsClientSuppliedStatus()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.request.controller.RequestControllerTest :: createsRequestWithLocationAndResponseDto()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.request.controller.RequestControllerTest :: rejectsMalformedId()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.request.controller.RequestWorkflowControllerTest :: assignsRequest()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.request.controller.RequestWorkflowControllerTest :: [1] action=ASSIGN</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.request.controller.RequestWorkflowControllerTest :: [2] action=START</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.request.controller.RequestWorkflowControllerTest :: [3] action=RESOLVE</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.request.controller.RequestWorkflowControllerTest :: [4] action=CONFIRM</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.request.controller.RequestWorkflowControllerTest :: [5] action=CLOSE</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.request.controller.RequestWorkflowControllerTest :: returnsHistoryDtos()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.request.controller.RequestWorkflowControllerTest :: [1] action=ASSIGN</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.request.controller.RequestWorkflowControllerTest :: [2] action=START</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.request.controller.RequestWorkflowControllerTest :: [3] action=RESOLVE</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.request.controller.RequestWorkflowControllerTest :: [4] action=CONFIRM</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.request.controller.RequestWorkflowControllerTest :: [5] action=CLOSE</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.request.controller.RequestWorkflowControllerTest :: missingRequestReturns404()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.request.controller.RequestWorkflowControllerTest :: resolvesRequest()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.request.controller.RequestWorkflowControllerTest :: rejectsBlankAssignee()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.request.controller.RequestWorkflowControllerTest :: startsAssignedRequestWithoutBody()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.request.controller.RequestWorkflowControllerTest :: [1] route=assign, field=assigneeId, body={}</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.request.controller.RequestWorkflowControllerTest :: [2] route=assign, field=assigneeId, body={&quot;assigneeId&quot;:null}</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.request.controller.RequestWorkflowControllerTest :: [3] route=assign, field=assigneeId, body={&quot;assigneeId&quot;:&quot;aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa&quot;}</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.request.controller.RequestWorkflowControllerTest :: [4] route=resolve, field=resolution, body={}</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.request.controller.RequestWorkflowControllerTest :: [5] route=resolve, field=resolution, body={&quot;resolution&quot;:null}</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.request.controller.RequestWorkflowControllerTest :: [6] route=resolve, field=resolution, body={&quot;resolution&quot;:&quot;aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa…</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.request.controller.RequestWorkflowControllerTest :: rejectsBlankResolution()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.request.controller.RequestWorkflowControllerTest :: missingRequestHistoryReturns404()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.request.controller.RequestWorkflowControllerTest :: invalidTransitionReturns409()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.request.controller.RequestWorkflowControllerTest :: [1] conflict=org.springframework.orm.ObjectOptimisticLockingFailureException: Object of class [Request] with identifier [c8bebd65-204b-4b26-9d8b-b5d4f99e0ef9]: optimistic locking failed</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.request.controller.RequestWorkflowControllerTest :: [2] conflict=jakarta.persistence.OptimisticLockException: Internal persistence detail</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.request.controller.RequestWorkflowControllerTest :: rejectsMalformedUuidAndReturnsEmptyHistoryArray()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.request.controller.RequestWorkflowControllerTest :: [1] route=assign</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.request.controller.RequestWorkflowControllerTest :: [2] route=resolve</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.request.controller.RequestWorkflowControllerTest :: closesConfirmedRequestWithoutBody()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.request.controller.RequestWorkflowControllerTest :: confirmsResolvedRequestWithoutBody()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.request.domain.RequestTest :: definesTheEstablishedLifecycleStatuses()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.request.domain.RequestTest :: mapsLongVersionForJpaOptimisticLocking()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.request.domain.RequestTest :: newRequestHasNewStatusAndMatchingTimestamps()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.request.domain.RequestWorkflowTest :: followsLifecycleAndUpdatesWorkflowDataAndTimestamps()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.request.domain.RequestWorkflowTest :: [1] status=NEW, action=START</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.request.domain.RequestWorkflowTest :: [2] status=NEW, action=RESOLVE</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.request.domain.RequestWorkflowTest :: [3] status=NEW, action=CONFIRM</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.request.domain.RequestWorkflowTest :: [4] status=NEW, action=CLOSE</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.request.domain.RequestWorkflowTest :: [5] status=ASSIGNED, action=ASSIGN</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.request.domain.RequestWorkflowTest :: [6] status=ASSIGNED, action=RESOLVE</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.request.domain.RequestWorkflowTest :: [7] status=ASSIGNED, action=CONFIRM</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.request.domain.RequestWorkflowTest :: [8] status=ASSIGNED, action=CLOSE</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.request.domain.RequestWorkflowTest :: [9] status=IN_PROGRESS, action=ASSIGN</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.request.domain.RequestWorkflowTest :: [10] status=IN_PROGRESS, action=START</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.request.domain.RequestWorkflowTest :: [11] status=IN_PROGRESS, action=CONFIRM</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.request.domain.RequestWorkflowTest :: [12] status=IN_PROGRESS, action=CLOSE</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.request.domain.RequestWorkflowTest :: [13] status=RESOLVED, action=ASSIGN</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.request.domain.RequestWorkflowTest :: [14] status=RESOLVED, action=START</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.request.domain.RequestWorkflowTest :: [15] status=RESOLVED, action=RESOLVE</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.request.domain.RequestWorkflowTest :: [16] status=RESOLVED, action=CLOSE</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.request.domain.RequestWorkflowTest :: [17] status=CONFIRMED, action=ASSIGN</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.request.domain.RequestWorkflowTest :: [18] status=CONFIRMED, action=START</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.request.domain.RequestWorkflowTest :: [19] status=CONFIRMED, action=RESOLVE</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.request.domain.RequestWorkflowTest :: [20] status=CONFIRMED, action=CONFIRM</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.request.domain.RequestWorkflowTest :: [21] status=CLOSED, action=ASSIGN</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.request.domain.RequestWorkflowTest :: [22] status=CLOSED, action=START</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.request.domain.RequestWorkflowTest :: [23] status=CLOSED, action=RESOLVE</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.request.domain.RequestWorkflowTest :: [24] status=CLOSED, action=CONFIRM</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.request.domain.RequestWorkflowTest :: [25] status=CLOSED, action=CLOSE</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.request.domain.RequestWorkflowTest :: rejectsInvalidAssignmentAndResolutionWithoutMutating()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.request.service.RequestServiceTest :: getsPersistedRequestAsDto()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.request.service.RequestServiceTest :: createsAndSavesNewRequestAndMapsSavedResult()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.request.service.RequestServiceTest :: returnsEmptyListWhenNoRequestsExist()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.request.service.RequestServiceTest :: throwsNotFoundWhenRepositoryHasNoRequest()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.request.service.RequestServiceTest :: listsPersistedRequestsAsDtos()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.request.service.RequestWorkflowServiceTest :: existingRequestWithNoTransitionsHasEmptyHistory()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.request.service.RequestWorkflowServiceTest :: optimisticConflictPropagatesWithoutInsertingHistory()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.request.service.RequestWorkflowServiceTest :: missingRequestCreatesNoHistory()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.request.service.RequestWorkflowServiceTest :: failedResolveSavesNothingAndDoesNotChangeTimestamp()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.request.service.RequestWorkflowServiceTest :: assignmentSavesRequestAndExactlyOneHistoryEntry()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.request.service.RequestWorkflowServiceTest :: invalidAssignmentLeavesRequestUnchangedAndSavesNoHistory()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.request.service.RequestWorkflowServiceTest :: completesLifecycleSavingOneMatchingHistoryRecordPerAction()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.request.service.RequestWorkflowServiceTest :: responseMapsVersionAfterRepositoryFlush()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.request.service.RequestWorkflowServiceTest :: historyOfMissingRequestReturnsNotFound()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.request.service.RequestWorkflowServiceTest :: historyUsesDeterministicQueryAndMapsChronologicalResults()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.request.service.RequestWorkflowTransactionTest :: historyRunsInReadOnlyTransaction()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.request.service.RequestWorkflowTransactionTest :: [1] action=ASSIGN</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.request.service.RequestWorkflowTransactionTest :: [2] action=START</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.request.service.RequestWorkflowTransactionTest :: [3] action=RESOLVE</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.request.service.RequestWorkflowTransactionTest :: [4] action=CONFIRM</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.request.service.RequestWorkflowTransactionTest :: [5] action=CLOSE</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.request.service.RequestWorkflowTransactionTest :: invalidTransitionRollsBackWithoutSavingAnything()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.request.service.RequestWorkflowTransactionTest :: historyInsertFailureRollsBackTransactionAfterRequestFlush()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.request.service.RequestWorkflowTransactionTest :: optimisticConflictRollsBackWithoutHistoryInsert()</td><td>passed</td></tr></table></html>

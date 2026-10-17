@@ -1,0 +1,76 @@
+<!doctype html><html lang='en'><meta charset='utf-8'><title>Issue 26 focused</title><style>body{font:14px system-ui;margin:2rem}td,th{padding:4px 12px;text-align:left;border-bottom:1px solid #ddd}</style><h1>Gradle focused results (sanitized)</h1><p>Passed: 76; failed: 0; errors: 0; skipped: 0. Derived from Gradle test XML. Logs, properties, hostnames, failure messages and stack traces omitted.</p><table><tr><th>Test</th><th>Result</th></tr><tr><td>com.tricore.dxos.core.data.ObjectStoragePortTest :: rejectsLengthMismatchWithoutClosingCallerInput()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.data.ObjectStoragePortTest :: inputReadFailureIsSanitizedWithoutTakingOwnership()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.data.ObjectStoragePortTest :: zeroLengthContentAndOpaqueKeysAndDefensiveMetadataAreSupported()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.data.ObjectStoragePortTest :: concurrentCreateOnlyWritersHaveExactlyOneWinner()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.data.ObjectStoragePortTest :: deletesContentAndMetadataAndReportsMissingObjects()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.data.ObjectStoragePortTest :: overwriteCreatesOrReplacesContentAndAllMetadata()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.data.ObjectStoragePortTest :: storesReadsAndLooksUpMatchingMetadata()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.data.ObjectStoragePortTest :: callerClosesInputAndReadResourceReleasesStreamIdempotently()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.data.ObjectStoragePortTest :: readSnapshotKeepsContentAndMetadataTogetherAcrossOverwriteAndDelete()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.data.ObjectStoragePortTest :: createOnlyConflictPreservesContentMetadataAndCallerStream()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.data.ObjectStoragePortTest :: rejectsInvalidKeysMetadataCommandsAndPortInputs()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.data.ObjectStoragePortTest :: normalizedErrorsExposeOnlyStableCodes()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.data.ObjectStoragePortTest :: runtimeInputReadFailureIsSanitizedWithoutClosingInputOrOverwritingObject()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.core.data.ObjectStoragePortTest :: consumesFromCurrentPositionAndClosesReadResourceAfterConsumerFailure()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseHttpTest :: serverFaultIsSanitizedAndStagingCleaned()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseHttpTest :: pinnedReadAfterMutationKeepsOldMetadataAndBody()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseHttpTest :: fullHttpCrudReplacesMapAndDeletesStrictly()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseHttpTest :: invalidLengthPreservesExistingObjectWithoutNetworkMutation()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseHttpTest :: zeroLengthAndCallerOwnershipOnSuccessAndConflict()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseMetadataCodecTest :: oversizedCustomNameIsRejectedBeforeBuildingEnvelope()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseMetadataCodecTest :: providerJsonByteBoundaryIsPreserved()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseMetadataCodecTest :: emptyMapBoundaryIncludesEnvelopeOverhead()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseMetadataCodecTest :: aggregateSizeIsCheckedBeforeSortingOrBuildingEnvelope()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseMetadataCodecTest :: exactEncodedBoundaryPreservesCodeUnitsAndCanonicalOrdering()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseMetadataCodecTest :: serializerExpansionIsStillBoundedAndSanitized()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseMetadataCodecTest :: oversizedCustomValueIsRejectedBeforeBuildingEnvelope()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseMetadataCodecTest :: oversizedProviderTreeIsRejectedWithoutMaterializingSerializedBytes()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseMetadataCodecTest :: oversizedContentTypeIsRejectedBeforeBuildingEnvelope()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseProcessLauncherTest :: launchesWorkerWithCurrentJdkAndClasspathWithoutProviderConfiguration()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseResponseBodyTest :: singleLargeBufferPreservesContentWithoutAdditionalDemand()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseResponseBodyTest :: closeDiscardsUnreadLargeBatchAndRejectsLateDelivery()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseResponseBodyTest :: aggregateLargeBatchHonorsPositionsLimitsAndEmptyBuffers()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseResponseBodyTest :: closeCancelsExactlyOnceAndRemovesScheduledTask()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseResponseBodyTest :: providerErrorDiscardsLargeBatchWithSanitizedFailure()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseResponseBodyTest :: manyLargeBatchesStreamWithOneOutstandingDeliveryAndExactIntegrity()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseResponseBodyTest :: emptyDeliveriesDoNotRecurseOrLoseDemand()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseResponseBodyTest :: unsolicitedSecondBatchIsCancelledRatherThanQueued()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseResponseBodyTest :: providerStallAfterLargePartialDownloadWakesBlockedReader()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseResponseBodyTest :: backpressureKeepsOnlyOneChunkAndEofIsRepeatable()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseResponseBodyTest :: absoluteDeadlineDiscardsCompletedButUnreadLargeBatch()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseResponseBodyTest :: closeWakesBlockedReaderAfterLargeBatch()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseStorageTest :: secretKeyModeUsesApiKeyWithoutUserAuthAndNoWriteRetry()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseStorageTest :: readsKeepMetadataAndCloseIdempotently()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseStorageTest :: excessiveStagingStillDrainsToEofWithoutFurtherDiskWrites()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseStorageTest :: runtimeProviderFailuresAndBulkReadArgumentsAreNormalized()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseStorageTest :: stagingShortLongAndZeroBytes()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseStorageTest :: vanishedPinnedVersionDoesNotRetryCurrentKey()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseStorageTest :: invalidUploadNeverMutatesNetwork()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseStorageTest :: configurationValidRegistersOneRealPort()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseStorageTest :: overwriteSendsCompleteEnvelopeAndExactLength()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseStorageTest :: lazyReadAndCloseFaultsAreSanitizedAndReleased()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseStorageTest :: truncatedAndExcessProviderBytesAreUnavailable()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseStorageTest :: missingDeleteAndTransportFailuresAreNormalized()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseStorageTest :: errorCodesAreDeterministicAndNeverExposeBodies()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseStorageTest :: oversizedMetadataIsRejectedBeforeTransport()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseStorageTest :: configurationDisabledDoesNotRegisterFakeAndEnabledMissingConfigFailsClosed()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseStorageTest :: readPinsInfoAndDownloadToResolvedVersionNeverCurrentFallback()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseStorageTest :: stagingReadsCurrentPositionNeverClosesAndCleansUp()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseStorageTest :: providerConflictCleansStagingAndNeverHead()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseStorageTest :: keysRoundTripAllCodeUnitsAndTraversalWithoutCollisions()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseStorageTest :: versionMismatchFailsClosedBeforeDownload()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseStorageTest :: stagingInputFailuresRemainInvalidAndCallerOwned()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseStorageTest :: metadataRoundTripsCaseUnicodeEmptyAndIsolatedSurrogates()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseStorageTest :: configurationRejectsInsecureEndpointAndTraversalPrefix()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseStorageTest :: malformedAndOversizedResponsesAreSanitized()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseTimeoutTest :: lazyPartialDownloadExpiresAndCancels()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseTimeoutTest :: [1] operation=create</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseTimeoutTest :: [2] operation=overwrite</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseTimeoutTest :: [3] operation=delete</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseTimeoutTest :: idleLazyHandleExpiresBeforeFirstRead()</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseTimeoutTest :: [1] status=200</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseTimeoutTest :: [2] status=503</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseTimeoutTest :: [3] status=409</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseTimeoutTest :: [4] status=404</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseTimeoutTest :: [5] status=403</td><td>passed</td></tr>
+<tr><td>com.tricore.dxos.infrastructure.storage.supabase.SupabaseTimeoutTest :: largePartialDownloadExpiresAndCancelsSocket()</td><td>passed</td></tr></table></html>
