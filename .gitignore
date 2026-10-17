@@ -17,3 +17,6 @@ backend/build/
 .DS_Store
 Thumbs.db
 .serena/
+
+# Local demo object data: never commit uploaded files or metadata.
+/backend/.dxos-storage/
