@@ -12,8 +12,8 @@ Set-StrictMode -Version Latest
 $root = Split-Path -Parent $PSScriptRoot
 $backend = Join-Path $root 'backend'
 $gradle = Join-Path $backend 'gradlew.bat'
-$originalPrefix = $env:SUPABASE_STORAGE_KEY_PREFIX
-$originalStaging = $env:SUPABASE_STORAGE_STAGING_DIRECTORY
+$originalPrefix = $null
+$originalStaging = $null
 $runPrefix = $null
 $staging = $null
 $privateLogs = $null
@@ -100,6 +100,9 @@ if (-not $Execute) {
   return
 }
 try {
+  # Dry-run returned before reading any private process environment.
+  $originalPrefix = $env:SUPABASE_STORAGE_KEY_PREFIX
+  $originalStaging = $env:SUPABASE_STORAGE_STAGING_DIRECTORY
   Require $OperatorApproved.IsPresent 'explicit operator approval required'
   Require ($ApprovedCommit -match '^[0-9a-f]{40}$') 'explicit approved source SHA required'
   Require (Test-Path -LiteralPath $gradle -PathType Leaf) 'Gradle wrapper not found'
