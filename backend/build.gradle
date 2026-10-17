@@ -19,6 +19,8 @@ repositories {
 dependencies {
     implementation platform(org.springframework.boot.gradle.plugin.SpringBootPlugin.BOM_COORDINATES)
     implementation 'org.springframework.boot:spring-boot-starter-web'
+    // Spring Boot 3.5.x: springdoc 2.8.x; documentation remains disabled by default.
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.17'
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
@@ -145,4 +147,13 @@ tasks.register('workflowSecurityDefinerReview', JavaExec) {
     classpath = sourceSets.main.runtimeClasspath
     mainClass = 'com.tricore.dxos.infrastructure.workflow.WorkflowSecurityDefinerReview'
     args rootProject.file('../docs/evidence/issue-25-security-definer-review.sql').absolutePath
+}
+
+tasks.register('docsPreview', JavaExec) {
+    description = 'Show registered Health/Request HTTP documentation on loopback without a DB, Flyway or API execution.'
+    group = 'documentation'
+    dependsOn testClasses
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'com.tricore.dxos.common.docs.DocsPreviewApplication'
+    args '--server.port=18080'
 }

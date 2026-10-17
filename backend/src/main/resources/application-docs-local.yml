@@ -1,0 +1,16 @@
+# Enable ONLY for controlled local documentation against an isolated disposable database.
+# Binding loopback intentionally makes API endpoints inaccessible off-machine.
+server:
+  address: 127.0.0.1
+
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
+    disable-swagger-default-url: true
+    # Disable Try it out, especially POST operations, to avoid accidental writes.
+    supported-submit-methods: []
+    # Springdoc discovers the "active" GroupedOpenApi automatically.
+    # Do not add a second manual urls entry for the same OpenAPI document.

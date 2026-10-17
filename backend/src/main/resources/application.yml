@@ -25,3 +25,11 @@ management:
     health:
       show-details: never
       show-components: never
+
+# Documentation endpoints are OFF by default, including production deployments.
+# Enable only through the guarded docs-local profile (bound to loopback).
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
