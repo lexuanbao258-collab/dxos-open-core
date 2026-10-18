@@ -60,3 +60,33 @@ jobs:
           bash ./gradlew --no-daemon --stacktrace test \
             --tests 'com.tricore.dxos.infrastructure.workflow.WorkflowSqlProofPrototypeTest' \
             --tests 'com.tricore.dxos.infrastructure.workflow.WorkflowSqlPrivilegeDisposableIntegrationTest'
+      - name: Verify JUnit XML proves both suites ran (zero skipped)
+        working-directory: backend
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import pathlib
+          import xml.etree.ElementTree as ET
+          base = pathlib.Path("build/test-results/test")
+          suites = (
+              "com.tricore.dxos.infrastructure.workflow.WorkflowSqlProofPrototypeTest",
+              "com.tricore.dxos.infrastructure.workflow.WorkflowSqlPrivilegeDisposableIntegrationTest",
+          )
+          for suite in suites:
+              path = base / ("TEST-" + suite + ".xml")
+              root = ET.parse(path).getroot()
+              nums = {name: int(root.attrib.get(name, "0"))
+                      for name in ("tests", "failures", "errors", "skipped")}
+              assert nums == {"tests": 1, "failures": 0, "errors": 0, "skipped": 0}, (suite, nums)
+              print(suite, nums)
+          print("JUNIT_TWO_SUITES_PASS_NO_SKIP")
+          PY
+      - name: Save sanitized JUnit XML evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: issue23-disposable-pg17-proof-junit
+          path: backend/build/test-results/test/TEST-*.xml
+          if-no-files-found: warn
+          retention-days: 7
