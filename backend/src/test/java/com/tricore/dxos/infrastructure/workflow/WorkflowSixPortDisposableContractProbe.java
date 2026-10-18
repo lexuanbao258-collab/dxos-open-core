@@ -314,7 +314,7 @@ public final class WorkflowSixPortDisposableContractProbe {
                 + " RAISE EXCEPTION 'denied' USING ERRCODE='42501'; END IF;"
                 + " PERFORM 1 FROM " + s + ".guards WHERE tenant='tenant-a' FOR UPDATE;"
                 + " UPDATE " + s + ".acl SET allowed=" + enabled
-                + " WHERE tenant='tenant-a' AND actor='" + ACTOR + "' AND acl.action=policyFunction.action;"
+                + " WHERE tenant='tenant-a' AND actor='" + ACTOR + "' AND acl.action=" + name + ".action;"
                 + " UPDATE " + s + ".guards SET revision=revision+1 WHERE tenant='tenant-a';"
                 + " END $policy$";
     }
@@ -366,6 +366,7 @@ public final class WorkflowSixPortDisposableContractProbe {
             Proof existing=sign(old,METHODS[0],RESOURCE,DEFINITION,"key-a",keyA);
             update(admin,"UPDATE "+s+".keys SET state='VERIFY_ONLY' WHERE kid='key-a'");
             update(admin,"INSERT INTO "+s+".keys(kid,secret,state) VALUES('key-b',?,'ACTIVE')",keyB);
+            admin.commit();
             assertResult(old,s,METHODS[0],RESOURCE,DEFINITION,existing,"START");
             old.commit();
         }
@@ -374,6 +375,7 @@ public final class WorkflowSixPortDisposableContractProbe {
             old.setAutoCommit(false);
             Proof existing=sign(old,METHODS[0],RESOURCE,DEFINITION,"key-a",keyA);
             update(admin,"UPDATE "+s+".keys SET state='REVOKED' WHERE kid='key-a'");
+            admin.commit();
             expectRejected(old,s,METHODS[0],RESOURCE,DEFINITION,existing);
         }
         // Expiration is verified independently from a valid MAC and transaction binding.
