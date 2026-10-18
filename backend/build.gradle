@@ -35,6 +35,13 @@ dependencies {
 
 tasks.named('test') {
     useJUnitPlatform()
+
+    environment 'OIDC_ISSUER_URI',
+            System.getenv('OIDC_ISSUER_URI') ?: 'https://issuer.example.test'
+    environment 'OIDC_AUDIENCE',
+            System.getenv('OIDC_AUDIENCE') ?: 'tricore-api'
+    environment 'OIDC_RESOURCE_CLIENT_ID',
+            System.getenv('OIDC_RESOURCE_CLIENT_ID') ?: 'tricore-api'
     systemProperty 'workflow.test.runtimeClasspath', sourceSets.test.runtimeClasspath.asPath
     outputs.upToDateWhen { !System.getenv('WORKFLOW_TEST_JDBC_URL') }
     outputs.cacheIf { !System.getenv('WORKFLOW_TEST_JDBC_URL') }
