@@ -3,9 +3,8 @@ name: Issue 23 HMAC + SQL role disposable PG17 proof
 # This test deliberately uses its OWN disposable PostgreSQL service container.
 # Never references DB_*, Supabase, staging, Keycloak or any repository secrets.
 on:
-  push:
-    branches:
-      - feature/issue23-secure-instance-id-foundation
+  pull_request:
+    types: [opened, synchronize, reopened]
     paths:
       - '.github/workflows/issue23-hmac-disposable-pg17.yml'
       - 'backend/src/test/java/com/tricore/dxos/infrastructure/workflow/WorkflowSqlProofPrototype.java'
@@ -28,7 +27,7 @@ jobs:
           POSTGRES_PASSWORD: wfproof-ci-local-only
           POSTGRES_DB: wfproof_test_ci_20261018
         ports:
-          - 127.0.0.1:65521:5432
+          - 65521:5432
         options: >-
           --health-cmd "pg_isready -U postgres -d wfproof_test_ci_20261018"
           --health-interval 5s
