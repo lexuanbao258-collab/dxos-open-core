@@ -10,6 +10,10 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.stereotype.Component;
 
+import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
+import java.nio.charset.CharacterCodingException;
+import java.nio.charset.CodingErrorAction;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.List;
@@ -68,8 +72,26 @@ final class SpringSecurityCurrentPrincipal implements CurrentPrincipal {
 
     private static String canonicalSubjectId(String issuer, String subject) {
         Base64.Encoder encoder = Base64.getUrlEncoder().withoutPadding();
-        return "oidc:" + encoder.encodeToString(issuer.getBytes(StandardCharsets.UTF_8))
-                + "." + encoder.encodeToString(subject.getBytes(StandardCharsets.UTF_8));
+        return "oidc:" + encoder.encodeToString(strictUtf8(issuer))
+                + "." + encoder.encodeToString(strictUtf8(subject));
+    }
+
+    private static byte[] strictUtf8(String value) {
+        try {
+            ByteBuffer encoded = StandardCharsets.UTF_8.newEncoder()
+                    .onMalformedInput(CodingErrorAction.REPORT)
+                    .onUnmappableCharacter(CodingErrorAction.REPORT)
+                    .encode(CharBuffer.wrap(value));
+
+            byte[] bytes = new byte[encoded.remaining()];
+            encoded.get(bytes);
+            return bytes;
+        } catch (CharacterCodingException exception) {
+            throw new IllegalStateException(
+                    "Verified OIDC identity contains invalid Unicode",
+                    exception
+            );
+        }
     }
 
     private Set<Authority> workflowAuthorities(Jwt jwt) {

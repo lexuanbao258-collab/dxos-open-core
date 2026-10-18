@@ -251,6 +251,34 @@ class SpringSecurityCurrentPrincipalTest {
     }
 
     @Test
+    void rejectsLoneHighSurrogateBeforeCanonicalIdentityEncoding() {
+        assertThrows(
+                IllegalStateException.class,
+                () -> principalFromClaims(Map.of("iss", ISSUER, "sub", "\uD800"))
+        );
+    }
+
+    @Test
+    void rejectsLoneLowSurrogateBeforeCanonicalIdentityEncoding() {
+        assertThrows(
+                IllegalStateException.class,
+                () -> principalFromClaims(Map.of("iss", ISSUER, "sub", "\uDC00"))
+        );
+    }
+
+    @Test
+    void preservesValidSupplementaryUnicodeWithoutCanonicalIdCollision() {
+        String emoji = principalFromClaims(
+                Map.of("iss", ISSUER, "sub", "user-\uD83D\uDE00")
+        ).subjectId();
+
+        String replacementCandidate = principalFromClaims(
+                Map.of("iss", ISSUER, "sub", "user-?")
+        ).subjectId();
+
+        assertNotEquals(emoji, replacementCandidate);
+    }
+    @Test
     void encodedComponentsContainNoPadding() {
         String subjectId = principalFromClaims(Map.of("iss", ISSUER, "sub", "user-123")).subjectId();
 

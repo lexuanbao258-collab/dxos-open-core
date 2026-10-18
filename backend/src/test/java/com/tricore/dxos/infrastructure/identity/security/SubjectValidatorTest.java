@@ -60,6 +60,29 @@ class SubjectValidatorTest {
 
         assertTrue(result.hasErrors());
     }
+    @Test
+    void acceptsValidSupplementaryUnicodeSubject() {
+        OAuth2TokenValidatorResult result =
+                validator.validate(jwtWithSubject("user-\uD83D\uDE00"));
+
+        assertFalse(result.hasErrors());
+    }
+
+    @Test
+    void rejectsLoneHighSurrogateSubject() {
+        OAuth2TokenValidatorResult result =
+                validator.validate(jwtWithSubject("\uD800"));
+
+        assertTrue(result.hasErrors());
+    }
+
+    @Test
+    void rejectsLoneLowSurrogateSubject() {
+        OAuth2TokenValidatorResult result =
+                validator.validate(jwtWithSubject("\uDC00"));
+
+        assertTrue(result.hasErrors());
+    }
     private Jwt jwtWithSubject(String subject) {
         Instant now = Instant.now();
 

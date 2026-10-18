@@ -17,10 +17,30 @@ final class SubjectValidator implements OAuth2TokenValidator<Jwt> {
     public OAuth2TokenValidatorResult validate(Jwt jwt) {
         Object subjectClaim = jwt.getClaim("sub");
 
-        if (!(subjectClaim instanceof String subject) || subject.isBlank()) {
+        if (!(subjectClaim instanceof String subject)
+                || subject.isBlank()
+                || !isWellFormedUtf16(subject)) {
             return OAuth2TokenValidatorResult.failure(INVALID_SUBJECT);
         }
 
         return OAuth2TokenValidatorResult.success();
+    }
+
+    private static boolean isWellFormedUtf16(String value) {
+        for (int index = 0; index < value.length(); index++) {
+            char current = value.charAt(index);
+
+            if (Character.isHighSurrogate(current)) {
+                if (index + 1 >= value.length()
+                        || !Character.isLowSurrogate(value.charAt(index + 1))) {
+                    return false;
+                }
+                index++;
+            } else if (Character.isLowSurrogate(current)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }

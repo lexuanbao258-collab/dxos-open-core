@@ -5,6 +5,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.JsonNodeType;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;
+import com.nimbusds.jose.JWSObject;
+import com.nimbusds.jose.Payload;
 import com.nimbusds.jose.proc.SecurityContext;
 import com.nimbusds.jose.crypto.RSASSASigner;
 import com.nimbusds.jwt.JWTClaimsSet;
@@ -32,6 +34,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.isNull;
@@ -120,6 +123,22 @@ class RawSubjectJwtDecoderTest {
     }
 
     @Test
+    void rejectsSignedJwtWithEscapedLoneHighSurrogateSubject() throws Exception {
+        String token = signedRawPayloadWithSubjectJsonEscape("\\uD800");
+
+        String payload = new String(
+                Base64.getUrlDecoder().decode(token.split("\\.")[1]),
+                StandardCharsets.UTF_8
+        );
+
+        assertTrue(
+                payload.contains("\"sub\":\"\\uD800\""),
+                "The signed JWT must retain the escaped malformed surrogate"
+        );
+
+        assertThrows(JwtException.class, () -> decoder.decode(token));
+    }
+    @Test
     void rejectsRawJsonNumericSubject() throws Exception {
         assertRawSubjectRejected(123, JsonNodeType.NUMBER);
     }
@@ -147,6 +166,27 @@ class RawSubjectJwtDecoderTest {
         assertEquals(expectedType, rawSubject.getNodeType(), "The signed JWT must retain the raw JSON type");
 
         assertThrows(JwtException.class, () -> decoder.decode(token));
+    }
+
+    private String signedRawPayloadWithSubjectJsonEscape(String subjectJsonEscape) throws Exception {
+        Instant now = Instant.now();
+
+        String payload = "{"
+                + "\"iss\":\"" + ISSUER + "\","
+                + "\"aud\":\"" + AUDIENCE + "\","
+                + "\"iat\":" + now.minusSeconds(30).getEpochSecond() + ","
+                + "\"exp\":" + now.plusSeconds(300).getEpochSecond() + ","
+                + "\"typ\":\"Bearer\","
+                + "\"sub\":\"" + subjectJsonEscape + "\""
+                + "}";
+
+        JWSObject jws = new JWSObject(
+                new JWSHeader(JWSAlgorithm.RS256),
+                new Payload(payload)
+        );
+        jws.sign(new RSASSASigner((RSAPrivateKey) keyPair.getPrivate()));
+
+        return jws.serialize();
     }
 
     private String signedToken(Object subject, boolean includeSubject) throws Exception {
