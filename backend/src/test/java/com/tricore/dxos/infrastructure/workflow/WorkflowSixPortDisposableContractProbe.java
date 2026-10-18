@@ -525,11 +525,24 @@ public final class WorkflowSixPortDisposableContractProbe {
             pid=rows.getString(1);xid=rows.getString(2);
         }
         String nonce=hex(12);
-        byte[] input=canonical(DOMAIN,ACTOR,op,target,payload,kid,pid,xid,nonce,
+        byte[] input=canonical(DOMAIN,ACTOR,portAction(op),target,payload,kid,pid,xid,nonce,
                 Long.toString(issued),Long.toString(expires));
         Mac mac=Mac.getInstance("HmacSHA256");
         mac.init(new SecretKeySpec(key,"HmacSHA256"));
         return new Proof(kid,nonce,issued,expires,mac.doFinal(input));
+    }
+
+
+    private static String portAction(String method) {
+        return switch (method) {
+            case "wf_port_load_definition" -> "LOAD_DEFINITION";
+            case "wf_port_load_instance" -> "LOAD_INSTANCE";
+            case "wf_port_load_history" -> "LOAD_HISTORY";
+            case "wf_port_create_instance" -> "CREATE_INSTANCE";
+            case "wf_port_commit_activation" -> "COMMIT_ACTIVATION";
+            case "wf_port_commit_transition" -> "COMMIT_TRANSITION";
+            default -> throw new IllegalArgumentException("Not a vetted test port method");
+        };
     }
 
     private static byte[] canonical(String... fields) throws Exception {
