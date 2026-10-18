@@ -50,6 +50,15 @@ jobs:
           docker exec "$CID" psql -v ON_ERROR_STOP=1 -U postgres \
             -d wfproof_test_ci_20261018 \
             -c "ALTER DATABASE wfproof_test_ci_20261018 SET dxos.wfproof_disposable = 'on';"
+      - name: Create disposable-only Core runtime login
+        shell: bash
+        run: |
+          set -euo pipefail
+          CID="$(docker ps -q --filter 'publish=65521' | head -n1)"
+          test -n "$CID"
+          docker exec "$CID" psql -v ON_ERROR_STOP=1 -U postgres \
+            -d wfproof_test_ci_20261018 \
+            -c "CREATE ROLE wfcore_disposable_runtime LOGIN NOINHERIT PASSWORD 'wfcore-ci-disposable-only';"
       - name: Run test-only HMAC + real runtime SQL role assertions
         working-directory: backend
         env:
@@ -57,13 +66,19 @@ jobs:
           WORKFLOW_SQL_PROOF_DISPOSABLE_URL: jdbc:postgresql://127.0.0.1:65521/wfproof_test_ci_20261018
           WORKFLOW_SQL_PROOF_ADMIN_USER: postgres
           WORKFLOW_SQL_PROOF_ADMIN_PASSWORD: wfproof-ci-local-only
+          WORKFLOW_TEST_JDBC_URL: jdbc:postgresql://127.0.0.1:65521/wfproof_test_ci_20261018
+          WORKFLOW_TEST_DB_USER: wfcore_disposable_runtime
+          WORKFLOW_TEST_DB_PASSWORD: wfcore-ci-disposable-only
+          WORKFLOW_TEST_MIGRATION_USER: postgres
+          WORKFLOW_TEST_MIGRATION_PASSWORD: wfproof-ci-local-only
         run: |
           set -euo pipefail
           bash ./gradlew --no-daemon --stacktrace test \
             --tests 'com.tricore.dxos.infrastructure.workflow.WorkflowSqlProofPrototypeTest' \
             --tests 'com.tricore.dxos.infrastructure.workflow.WorkflowSqlPrivilegeDisposableIntegrationTest' \
-            --tests 'com.tricore.dxos.infrastructure.workflow.WorkflowSixPortDisposableContractIntegrationTest'
-      - name: Verify all three isolated JUnit suites ran (zero skipped)
+            --tests 'com.tricore.dxos.infrastructure.workflow.WorkflowSixPortDisposableContractIntegrationTest' \
+            --tests 'com.tricore.dxos.infrastructure.workflow.PostgresWorkflowPersistenceIntegrationTest'
+      - name: Verify 3 security suites plus full V3 Core adapter suite (zero skipped)
         working-directory: backend
         shell: bash
         run: |
@@ -76,15 +91,19 @@ jobs:
               "com.tricore.dxos.infrastructure.workflow.WorkflowSqlProofPrototypeTest",
               "com.tricore.dxos.infrastructure.workflow.WorkflowSqlPrivilegeDisposableIntegrationTest",
               "com.tricore.dxos.infrastructure.workflow.WorkflowSixPortDisposableContractIntegrationTest",
+              "com.tricore.dxos.infrastructure.workflow.PostgresWorkflowPersistenceIntegrationTest",
           )
           for suite in suites:
               path = base / ("TEST-" + suite + ".xml")
               root = ET.parse(path).getroot()
               nums = {name: int(root.attrib.get(name, "0"))
                       for name in ("tests", "failures", "errors", "skipped")}
-              assert nums == {"tests": 1, "failures": 0, "errors": 0, "skipped": 0}, (suite, nums)
+              if suite.endswith("PostgresWorkflowPersistenceIntegrationTest"):
+                  assert nums["tests"] >= 15 and all(nums[k] == 0 for k in ("failures", "errors", "skipped")), (suite, nums)
+              else:
+                  assert nums == {"tests": 1, "failures": 0, "errors": 0, "skipped": 0}, (suite, nums)
               print(suite, nums)
-          print("JUNIT_THREE_SUITES_PASS_NO_SKIP")
+          print("JUNIT_FOUR_SUITES_INCLUDE_V3_CORE_PASS_NO_SKIP")
           PY
       - name: Save sanitized JUnit XML evidence
         if: always()
