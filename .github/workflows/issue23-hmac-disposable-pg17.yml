@@ -1,0 +1,63 @@
+name: Issue 23 HMAC + SQL role disposable PG17 proof
+
+# This test deliberately uses its OWN disposable PostgreSQL service container.
+# Never references DB_*, Supabase, staging, Keycloak or any repository secrets.
+on:
+  push:
+    branches:
+      - feature/issue23-secure-instance-id-foundation
+    paths:
+      - '.github/workflows/issue23-hmac-disposable-pg17.yml'
+      - 'backend/src/test/java/com/tricore/dxos/infrastructure/workflow/WorkflowSqlProofPrototype.java'
+      - 'backend/src/test/java/com/tricore/dxos/infrastructure/workflow/WorkflowSqlProofPrototypeTest.java'
+      - 'backend/src/test/java/com/tricore/dxos/infrastructure/workflow/WorkflowSqlPrivilegeDisposableProbe.java'
+      - 'backend/src/test/java/com/tricore/dxos/infrastructure/workflow/WorkflowSqlPrivilegeDisposableIntegrationTest.java'
+
+permissions:
+  contents: read
+
+jobs:
+  disposable-proof:
+    name: JDK 21 / PG17 isolated runtime-role negative tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: wfproof-ci-local-only
+          POSTGRES_DB: wfproof_test_ci_20261018
+        ports:
+          - 127.0.0.1:65521:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d wfproof_test_ci_20261018"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Mark the disposable PG17 database at server scope
+        shell: bash
+        run: |
+          set -euo pipefail
+          CID="$(docker ps -q --filter 'publish=65521' | head -n1)"
+          test -n "$CID"
+          docker exec "$CID" psql -v ON_ERROR_STOP=1 -U postgres \
+            -d wfproof_test_ci_20261018 \
+            -c "ALTER DATABASE wfproof_test_ci_20261018 SET dxos.wfproof_disposable = 'on';"
+      - name: Run test-only HMAC + real runtime SQL role assertions
+        working-directory: backend
+        env:
+          WORKFLOW_SQL_PROOF_DISPOSABLE_ACK: ONLY_DISPOSABLE_PG17
+          WORKFLOW_SQL_PROOF_DISPOSABLE_URL: jdbc:postgresql://127.0.0.1:65521/wfproof_test_ci_20261018
+          WORKFLOW_SQL_PROOF_ADMIN_USER: postgres
+          WORKFLOW_SQL_PROOF_ADMIN_PASSWORD: wfproof-ci-local-only
+        run: |
+          set -euo pipefail
+          bash ./gradlew --no-daemon --stacktrace test \
+            --tests 'com.tricore.dxos.infrastructure.workflow.WorkflowSqlProofPrototypeTest' \
+            --tests 'com.tricore.dxos.infrastructure.workflow.WorkflowSqlPrivilegeDisposableIntegrationTest'
