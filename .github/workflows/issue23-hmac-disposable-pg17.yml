@@ -78,6 +78,27 @@ jobs:
             --tests 'com.tricore.dxos.infrastructure.workflow.WorkflowSqlPrivilegeDisposableIntegrationTest' \
             --tests 'com.tricore.dxos.infrastructure.workflow.WorkflowSixPortDisposableContractIntegrationTest' \
             --tests 'com.tricore.dxos.infrastructure.workflow.PostgresWorkflowPersistenceIntegrationTest'
+      - name: Summarize baseline failure stage without exposing SQL or credentials
+        if: failure()
+        working-directory: backend
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import pathlib, xml.etree.ElementTree as ET
+          name = "TEST-com.tricore.dxos.infrastructure.workflow.PostgresWorkflowPersistenceIntegrationTest.xml"
+          path = pathlib.Path("build/test-results/test") / name
+          if path.exists():
+              root = ET.parse(path).getroot()
+              print("CORE_BASELINE_FAILURE_COUNTS=" + str({k:root.attrib.get(k) for k in ("tests","failures","errors","skipped")}))
+              failures = root.findall(".//failure")
+              for e in failures[:2]:
+                  message = (e.attrib.get("message") or "").splitlines()[0][:260]
+                  # Only sanitized fixture phase/class names are printed.
+                  print("CORE_BASELINE_FAILURE_TYPE=" + (e.attrib.get("type") or "")[:110])
+                  print("CORE_BASELINE_FAILURE_CAUSE=" + message.replace("password","[redacted]"))
+          else:
+              print("CORE_BASELINE_JUNIT_XML_NOT_PRODUCED")
+          PY
       - name: Verify 3 security suites plus full V3 Core adapter suite (zero skipped)
         working-directory: backend
         shell: bash
