@@ -133,7 +133,7 @@ public final class WorkflowSqlPrivilegeDisposableProbe {
                 "SELECT current_database(), current_setting('server_version_num'), "
                         + "current_setting('dxos.wfproof_disposable',true), "
                         + "pg_catalog.pg_is_in_recovery(), "
-                        + "pg_catalog.current_user = pg_catalog.session_user")) {
+                        + "current_user = session_user")) {
             if (!result.next() || !expectedDatabase.equals(result.getString(1))
                     || Integer.parseInt(result.getString(2)) / 10000 != 17
                     || !"on".equals(result.getString(3))
@@ -182,8 +182,7 @@ public final class WorkflowSqlPrivilegeDisposableProbe {
                     pg_catalog.pg_current_xact_id()::TEXT, p_nonce
                 ];
                 FOREACH f IN ARRAY fields LOOP
-                    IF pg_catalog.position(chr(0) IN f) > 0
-                            OR pg_catalog.octet_length(pg_catalog.convert_to(f,'UTF8')) > 4096 THEN
+                    IF pg_catalog.octet_length(pg_catalog.convert_to(f,'UTF8')) > 4096 THEN
                         RAISE EXCEPTION 'denied' USING ERRCODE='42501';
                     END IF;
                     packet := packet
@@ -207,9 +206,8 @@ public final class WorkflowSqlPrivilegeDisposableProbe {
                 RETURN value;
             END
             $wfproof$
-            """.formatted(schema, schema, crypto, schema)
-                .replace("pg_catalog.position(chr(0) IN f) > 0", "FALSE");
-        // PostgreSQL TEXT itself rejects NUL, so no SQL string-NUL condition is needed.
+            """.formatted(schema, schema, crypto, schema);
+        // PostgreSQL TEXT itself rejects NUL; the Java canonical codec also rejects it.
     }
 
     private static void proveNoDirectDml(String url, String user, String password, String schema)
