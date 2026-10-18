@@ -1,5 +1,6 @@
 param(
-    [switch]$RunBackendIntegration
+    [switch]$RunBackendIntegration,
+    [switch]$WrongVerifier
 )
 
 $ErrorActionPreference = "Stop"
@@ -16,13 +17,46 @@ try {
 
     $state = [Guid]::NewGuid().ToString("N")
 
+    # RFC 7636 PKCE: generate a cryptographically random verifier and
+    # derive the S256 challenge. Never print or persist the verifier.
+    $verifierBytes = [byte[]]::new(32)
+    $rng = [System.Security.Cryptography.RandomNumberGenerator]::Create()
+    try {
+        $rng.GetBytes($verifierBytes)
+    }
+    finally {
+        $rng.Dispose()
+    }
+
+    $codeVerifier = [Convert]::ToBase64String($verifierBytes).
+        TrimEnd("=").
+        Replace("+", "-").
+        Replace("/", "_")
+
+    $sha256 = [System.Security.Cryptography.SHA256]::Create()
+    try {
+        $challengeBytes = $sha256.ComputeHash(
+            [System.Text.Encoding]::ASCII.GetBytes($codeVerifier)
+        )
+    }
+    finally {
+        $sha256.Dispose()
+    }
+
+    $codeChallenge = [Convert]::ToBase64String($challengeBytes).
+        TrimEnd("=").
+        Replace("+", "-").
+        Replace("/", "_")
+
     $authUrl =
         "$issuer/protocol/openid-connect/auth" +
         "?client_id=$clientId" +
         "&response_type=code" +
         "&scope=openid" +
         "&redirect_uri=$([uri]::EscapeDataString($redirectUri))" +
-        "&state=$state"
+        "&state=$state" +
+        "&code_challenge=$([uri]::EscapeDataString($codeChallenge))" +
+        "&code_challenge_method=S256"
 
     Write-Host "OIDC POC started"
     Write-Host "Listener active: $($listener.IsListening)"
@@ -65,15 +99,72 @@ try {
     Write-Host "Code present: True"
     Write-Host "Exchanging code immediately..."
 
+    $exchangeVerifier = $codeVerifier
+
+    if ($WrongVerifier) {
+        # Negative PKCE test: exchange the valid authorization code with a
+        # different cryptographically random verifier. Never print either verifier.
+        $wrongVerifierBytes = [byte[]]::new(32)
+        $wrongVerifierRng = [System.Security.Cryptography.RandomNumberGenerator]::Create()
+        try {
+            $wrongVerifierRng.GetBytes($wrongVerifierBytes)
+        }
+        finally {
+            $wrongVerifierRng.Dispose()
+        }
+
+        $exchangeVerifier = [Convert]::ToBase64String($wrongVerifierBytes).
+            TrimEnd("=").
+            Replace("+", "-").
+            Replace("/", "_")
+
+        try {
+            $null = Invoke-RestMethod `
+                -Method Post `
+                -Uri "$issuer/protocol/openid-connect/token" `
+                -ContentType "application/x-www-form-urlencoded" `
+                -Body @{
+                    grant_type    = "authorization_code"
+                    client_id     = $clientId
+                    code          = $query["code"]
+                    redirect_uri  = $redirectUri
+                    code_verifier = $exchangeVerifier
+                }
+
+            throw "SECURITY FAILURE: token exchange accepted a wrong PKCE verifier"
+        }
+        catch {
+            if ($_.Exception.Message -like "SECURITY FAILURE:*") {
+                throw
+            }
+
+            if (-not $_.Exception.Response) {
+                throw "PKCE negative test inconclusive: token endpoint returned no HTTP response"
+            }
+
+            $statusCode = [int]$_.Exception.Response.StatusCode
+
+            if ($statusCode -ne 400) {
+                throw "PKCE negative test inconclusive: unexpected HTTP status $statusCode"
+            }
+
+            Write-Host "Wrong verifier rejected: True"
+            Write-Host "Token endpoint HTTP status: 400"
+            Write-Host "PKCE negative test: PASS"
+            return
+        }
+    }
+
     $tokenResponse = Invoke-RestMethod `
         -Method Post `
         -Uri "$issuer/protocol/openid-connect/token" `
         -ContentType "application/x-www-form-urlencoded" `
         -Body @{
-            grant_type   = "authorization_code"
-            client_id    = $clientId
-            code         = $query["code"]
-            redirect_uri = $redirectUri
+            grant_type    = "authorization_code"
+            client_id     = $clientId
+            code          = $query["code"]
+            redirect_uri  = $redirectUri
+            code_verifier = $exchangeVerifier
         }
 
     Write-Host "Token exchange: SUCCESS"
