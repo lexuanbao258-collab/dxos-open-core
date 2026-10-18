@@ -71,6 +71,7 @@ jobs:
           WORKFLOW_TEST_DB_PASSWORD: wfcore-ci-disposable-only
           WORKFLOW_TEST_MIGRATION_USER: postgres
           WORKFLOW_TEST_MIGRATION_PASSWORD: wfproof-ci-local-only
+          WORKFLOW_EVENT_GUARD_LOCAL_DISPOSABLE: 'true'
         run: |
           set -euo pipefail
           bash ./gradlew --no-daemon --stacktrace test \
