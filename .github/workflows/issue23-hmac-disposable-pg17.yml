@@ -13,6 +13,8 @@ on:
       - 'backend/src/test/java/com/tricore/dxos/infrastructure/workflow/WorkflowSqlPrivilegeDisposableIntegrationTest.java'
       - 'backend/src/test/java/com/tricore/dxos/infrastructure/workflow/WorkflowSixPortDisposableContractProbe.java'
       - 'backend/src/test/java/com/tricore/dxos/infrastructure/workflow/WorkflowSixPortDisposableContractIntegrationTest.java'
+      - 'backend/src/test/java/com/tricore/dxos/infrastructure/workflow/WorkflowV3SixPortSqlParityIntegrationTest.java'
+      - 'backend/src/test/resources/workflow-sql-parity/v3-six-port-exact-wire.sql'
 
 permissions:
   contents: read
@@ -78,7 +80,8 @@ jobs:
             --tests 'com.tricore.dxos.infrastructure.workflow.WorkflowSqlProofPrototypeTest' \
             --tests 'com.tricore.dxos.infrastructure.workflow.WorkflowSqlPrivilegeDisposableIntegrationTest' \
             --tests 'com.tricore.dxos.infrastructure.workflow.WorkflowSixPortDisposableContractIntegrationTest' \
-            --tests 'com.tricore.dxos.infrastructure.workflow.PostgresWorkflowPersistenceIntegrationTest'
+            --tests 'com.tricore.dxos.infrastructure.workflow.PostgresWorkflowPersistenceIntegrationTest' \
+            --tests 'com.tricore.dxos.infrastructure.workflow.WorkflowV3SixPortSqlParityIntegrationTest'
       - name: Summarize baseline failure stage without exposing SQL or credentials
         if: failure()
         working-directory: backend
@@ -114,18 +117,21 @@ jobs:
               "com.tricore.dxos.infrastructure.workflow.WorkflowSqlPrivilegeDisposableIntegrationTest",
               "com.tricore.dxos.infrastructure.workflow.WorkflowSixPortDisposableContractIntegrationTest",
               "com.tricore.dxos.infrastructure.workflow.PostgresWorkflowPersistenceIntegrationTest",
+              "com.tricore.dxos.infrastructure.workflow.WorkflowV3SixPortSqlParityIntegrationTest",
           )
           for suite in suites:
               path = base / ("TEST-" + suite + ".xml")
               root = ET.parse(path).getroot()
               nums = {name: int(root.attrib.get(name, "0"))
                       for name in ("tests", "failures", "errors", "skipped")}
-              if suite.endswith("PostgresWorkflowPersistenceIntegrationTest"):
+              if suite.endswith("WorkflowV3SixPortSqlParityIntegrationTest"):
+                  assert nums == {"tests": 1, "failures": 0, "errors": 0, "skipped": 0}, (suite, nums)
+              elif suite.endswith("PostgresWorkflowPersistenceIntegrationTest"):
                   assert nums["tests"] >= 15 and all(nums[k] == 0 for k in ("failures", "errors", "skipped")), (suite, nums)
               else:
                   assert nums == {"tests": 1, "failures": 0, "errors": 0, "skipped": 0}, (suite, nums)
               print(suite, nums)
-          print("JUNIT_FOUR_SUITES_INCLUDE_V3_CORE_PASS_NO_SKIP")
+          print("JUNIT_FIVE_SUITES_INCLUDE_V3_SQL_PARITY_PASS_NO_SKIP")
           PY
       - name: Save sanitized JUnit XML evidence
         if: always()
