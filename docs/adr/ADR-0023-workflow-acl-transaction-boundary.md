@@ -1,11 +1,11 @@
 # ADR-0023: Authorization at the durable persistence boundary for Workflow
 
-**Status:** PROPOSED — architecture review required; **not implementation approval**  
+**Status:** TRANSACTION BOUNDARY DECISION RECORDED — Option A selected for design planning; **not physical PostgreSQL/SQL-role/production implementation approval**  
 **Date:** 2026-10-18  
 **Issue:** [#23 Gateway ACL](https://github.com/lexuanbao258-collab/dxos-open-core/issues/23)  
 **Related:** [#22 Workflow HTTP](https://github.com/lexuanbao258-collab/dxos-open-core/issues/22), [#24 Identity / PR #33](https://github.com/lexuanbao258-collab/dxos-open-core/pull/33), [Draft PR #36](https://github.com/lexuanbao258-collab/dxos-open-core/pull/36)  
 **Review baseline:** `main` at `2115de355e8df4f0567e8e8421dae8465da9cea8`; draft V5 design v2 at `6e8ca01d2a264da6c5bdbd846b083bdc596b68ef`.  
-**Decision owner:** Bảo; technical sign-off required from independent PostgreSQL/concurrency reviewer, with Yến re-reviewing Identity integration **after it is implemented**.
+**Issue owner:** Bảo. **Decision authority:** this document records a technical architecture recommendation for Issue #23; it must not be mistaken for a separate human DBA/security sign-off or approval of SQL deployment. Independent PostgreSQL/concurrency sign-off is still required, and Yến re-reviews the Identity integration **after implementation**.
 
 > **DESIGN ONLY.** Do not implement this ADR as a V5 Flyway migration or change privileges on staging/shared Supabase. Do not edit V1–V4, register Workflow HTTP, merge PR #36, or represent this as passing PG17/JWKS tests. This ADR addresses the *durable port contract* contradiction found in the [v2 independent review](https://github.com/lexuanbao258-collab/dxos-open-core/pull/36#issuecomment-6249635681), not all remaining DB/Identity blockers.
 
@@ -13,7 +13,7 @@
 
 ### Source facts
 
-1. `WorkflowPersistencePort.createInstance`, `commitActivation` and `commitTransition` contractually **return success only after confirmed durable COMMIT**. `OPERATION_FAILURE` requires confirmed no-commit/rollback; an ambiguous write COMMIT or failed rollback must yield `COMMIT_OUTCOME_UNKNOWN` and **must not be blindly retried**. Transition snapshot/history write is atomic. See [port source](../..//backend/src/main/java/com/tricore/dxos/core/workflow/WorkflowPersistencePort.java).
+1. `WorkflowPersistencePort.createInstance`, `commitActivation` and `commitTransition` contractually **return success only after confirmed durable COMMIT**. `OPERATION_FAILURE` requires confirmed no-commit/rollback; an ambiguous write COMMIT or failed rollback must yield `COMMIT_OUTCOME_UNKNOWN` and **must not be blindly retried**. Transition snapshot/history write is atomic. See [port source](../../backend/src/main/java/com/tricore/dxos/core/workflow/WorkflowPersistencePort.java).
 2. `WorkflowRuntime` performs multiple port calls per operation (CREATE: collision probe, exact definition, then create; ACTIVATE: load, definition, then commit activation; TRANSITION: load, definition, then commit transition). It has *no* outer transaction guarantee. See [Runtime source](../../backend/src/main/java/com/tricore/dxos/core/workflow/WorkflowRuntime.java).
 3. `PostgresWorkflowPersistence` currently opens/commits/closes **its own JDBC connection per method**; writes use `READ COMMITTED` and a single JDBC commit; unguarded reads use `REPEATABLE READ`. The adapter's generic transaction catch erases non-Workflow authorization failures into `OPERATION_FAILURE`. See [JDBC source](../../backend/src/main/java/com/tricore/dxos/infrastructure/workflow/PostgresWorkflowPersistence.java).
 4. V3 Workflow instances store `instance_id` and `(resource_type, resource_id)`, not `tenant_id`. No existing production tenant/ACL source guarantees visibility. [V3 migration](../../backend/src/main/resources/db/migration/V3__create_workflow_persistence.sql).
@@ -37,7 +37,7 @@
 | **C — Change Core-port transactional semantics** | Change public port so write methods can return before durable commit, add a higher commit owner and change semantics across callers. | **Not acceptable under D1 and existing port contract** absent concrete failing contract and explicit Core architecture re-approval. |
 | **Rejected shortcut** | An outer Spring `@Transactional`, standalone Java `WorkflowAuthorization` check, or v2 `Function<WorkflowRuntime,T>` callback wrapping an inner-committing persistence adapter. | Still permits revoke-to-write TOCTOU; callback risks authorizing A and acting on B; deferred commit contradicts the Core write port contract. |
 
-**Proposed ADR choice: A, subject to DB/security sign-off and executable tests.** This is not a claim that a complete request/`WorkflowRuntime` call is one transaction. The **final write port call** is the atomic authorization + durability boundary; preliminary reads are separately guarded and may become stale. Existing final write methods already revalidate authoritative snapshots/proposals and must also revalidate **current** ACL within their transaction.
+**Selected direction: Option A for transaction-boundary design and implementation planning, conditional on DB/security sign-off and executable tests.** This is not a claim that a complete request/`WorkflowRuntime` call is one transaction. The **final write port call** is the atomic authorization + durability boundary; preliminary reads are separately guarded and may become stale. Existing final write methods already revalidate authoritative snapshots/proposals and must also revalidate **current** ACL within their transaction.
 
 ## 3. Concrete application and persistence contracts
 
@@ -99,6 +99,17 @@ The current `PostgresWorkflowPersistence.transaction()` retains only `WorkflowEx
 
 Maintain existing Core error precedence for authorized callers *as proven by equivalence tests*, never let a domain error leak a hidden target. `COMMIT_OUTCOME_UNKNOWN` supersedes other errors when write commitment is uncertain; HTTP uncertain-write mapping/idempotency and reconciliation stay a separate explicit approval gate.
 
+### 3.6 Security/concurrency refinements from independent architectural review
+
+These are **mandatory design invariants**, not assertions of passed tests:
+
+1. **One verified HTTP caller, multiple independent JDBC transactions.** A request may perform an internal collision probe, definition lookup, a preliminary instance read and then a final guarded write on different JDBC connections. The application's private request scope must remain immutable across those calls. **Each physical transaction** must independently establish and validate its operation/target/caller provenance and current ACL. If v2's transaction-bound cryptographic SQL proof is retained, mint/verify a **fresh proof bound to each actual transaction**; reusing a preliminary read's proof in the final write is prohibited. Do not derive trust from an SQL actor argument or PostgreSQL GUC. Define what occurs if a proof expires between calls: deny without retrying an unknown write.
+2. **Guard lock lifetime cannot be reduced by savepoints.** PostgreSQL [releases locks taken after a savepoint on rollback to that savepoint, including in PL/pgSQL exception blocks](https://www.postgresql.org/docs/17/explicit-locking.html). Therefore a trusted function must not acquire tenant guard `FOR SHARE`, catch/rollback to a prior savepoint, then continue a protected read or write on the assumption it still holds the guard. Require no such flow, or a provable guard reacquisition and complete policy recheck. Test a function exception/savepoint scenario and both revoke interleavings.
+3. **Guarded reads must use a lock-capable transaction.** Configure a distinct guarded `READ COMMITTED` path: `setReadOnly(false)` (the PostgreSQL `READ ONLY` transaction mode rejects locking `SELECT ... FOR SHARE`), `autoCommit=false`, and **function/operation scope restricts writes**. Existing unguarded `transaction(false)` still uses `setReadOnly(true)` with `REPEATABLE READ` and cannot substitute. Keep the single materialization within its guarded lifetime. Do not assume the `FOR SHARE` tenant guard serializes *other Workflow writes*: it conflicts with policy mutator `FOR UPDATE`, not another Workflow `FOR SHARE`. Preserve complete-state/history invariants through atomic write transactions and per-result coherent queries.
+4. **No trusted internal read as independent public READ entitlement.** An ACTIVATE or TRANSITION scope may internally fetch **only its bound target** and pinned definition to compute a proposal, without granting the caller a separate snapshot/history endpoint. The result of that internal read cannot escape externally. A business error raised before the final write must pass the **fresh, operation-specific guarded error-classification check** described in `3.4. Keep that classification narrowly scoped and protected from source/SQL error leakage.
+5. **Production dependency graph and SQL-function mapping.** The current production controller calls plain `WorkflowRuntime` and the existing JDBC port is also available as a Spring component. Before wiring HTTP, prove there is **no alternate unguarded bean/endpoint/job path** into protected instances/history. Provide for each port method a concrete SQL function signature, the approved role, proof target+operation, read/write authority, transaction owner, error/result mapping, and no scope escape. Keep legacy infrastructure smoke/provisioning separately gated and do not broadly revoke role rights before replacing their JDBC path.
+6. **No inference of database release approval.** Core contract preservation is supported by the observed port/runtime source and Option A's separate final-commit boundary, **conditional on implementation matching this ADR**. SQL credential threat resistance, ACL guard immutability, the V5 migration gate/manifest, physical role GRANT/REVOKE, real PostgreSQL races and JWT/JWKS tests remain blocking. Do not treat this technical record as PostgreSQL conformance evidence or independent human reviewer approval.
+
 ## 4. Dependencies, hard blockers and tests before implementation approval
 
 Option A intentionally **does not** solve every v2 blocker. Explicit gates:
@@ -119,9 +130,9 @@ Option A intentionally **does not** solve every v2 blocker. Explicit gates:
 
 ## 5. Decision / sign-off request
 
-**Proposed decision:** **Option A** — *transaction and durable COMMIT remain owned by the **final guarded write persistence method**; no deferred-commit port, and no whole-`WorkflowRuntime` transaction illusion.* Protected reads are guarded separately and final write re-authorizes after tenant lock. This preserves `WorkflowPersistencePort` observable durability semantics, but requires a new precisely scoped adapter, secure SQL functions/role design, safe pre-write error mapping and concurrency tests.
+**Recorded architectural choice:** **Option A** — *transaction and durable COMMIT remain owned by the **final guarded write persistence method**; no deferred-commit port, and no whole-`WorkflowRuntime` transaction illusion.* Protected reads are guarded separately and final write re-authorizes after tenant lock. This preserves `WorkflowPersistencePort` observable durability semantics, but requires a new precisely scoped adapter, secure SQL functions/role design, safe pre-write error mapping and concurrency tests.
 
-**Status: ADR PROPOSED / TECHNICAL SECURITY SIGN-OFF PENDING.** Please review explicitly:
+**Status: OPTION A CHOSEN FOR TRANSACTION-BOUNDARY PLANNING; INDEPENDENT DB/SECURITY SIGN-OFF AND IMPLEMENTATION AUTHORIZATION REMAIN PENDING.** Please review explicitly:
 - **TX-ADR-1:** Does a one-write-method transaction satisfy #23's revoke/TOCTOU and durable port requirements under all provided counterexamples?
 - **TX-ADR-2:** Is the pre-write guarded read + final reauthorization + error-before-write masking contract sufficient? Supply one concrete failing scenario otherwise.
 - **TX-ADR-3:** Can the SQL-A/B caller-proof and restricted function API be enforced independently for *every port method* without compromising Core semantics, including admin/provisioners?
