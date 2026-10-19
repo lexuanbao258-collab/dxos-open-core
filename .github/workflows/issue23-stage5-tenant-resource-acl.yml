@@ -1,0 +1,81 @@
+name: Issue 23 Stage 5 tenant resource ACL policy
+
+on:
+  push:
+    branches:
+      - feature/issue23-stage5-tenant-resource-acl
+    paths:
+      - '.github/workflows/issue23-stage5-tenant-resource-acl.yml'
+      - 'backend/src/**'
+      - 'docs/contracts/issue-23-stage5-tenant-resource-policy-candidate.md'
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches:
+      - feature/issue23-stage4-exact-authority
+    paths:
+      - '.github/workflows/issue23-stage5-tenant-resource-acl.yml'
+      - 'backend/src/**'
+      - 'docs/contracts/issue-23-stage5-tenant-resource-policy-candidate.md'
+
+permissions:
+  contents: read
+
+jobs:
+  stage5-acl-application:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Run Stage 5 policy and prior Stage 3/4 identity authorization regressions
+        working-directory: backend
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash ./gradlew test --no-daemon --rerun-tasks --no-build-cache \
+            --tests '*TenantResourceWorkflowAccessPolicyTest' \
+            --tests '*WorkflowStage5ServiceAclIntegrationTest' \
+            --tests '*WorkflowStage4ExactAuthorityTest' \
+            --tests '*WorkflowGatewayExactAuthorityTest' \
+            --tests '*AuthorizedWorkflowServiceTest' \
+            --tests '*AuthorizedWorkflowServiceIntegrationTest' \
+            --tests '*WorkflowAuthorizationTest' \
+            --tests '*GatewayIdentityHandoffHttpTest' \
+            --tests '*SpringSecurityCurrentPrincipalTest' \
+            --tests '*WorkflowHttpExposureTest'
+      - name: Assert selected suites executed with no failures errors or skips
+        working-directory: backend
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          from xml.etree import ElementTree as ET
+          names = [
+              "TenantResourceWorkflowAccessPolicyTest",
+              "WorkflowStage5ServiceAclIntegrationTest",
+              "WorkflowStage4ExactAuthorityTest",
+              "WorkflowGatewayExactAuthorityTest",
+              "AuthorizedWorkflowServiceTest",
+              "AuthorizedWorkflowServiceIntegrationTest",
+              "WorkflowAuthorizationTest",
+              "GatewayIdentityHandoffHttpTest",
+              "SpringSecurityCurrentPrincipalTest",
+              "WorkflowHttpExposureTest",
+          ]
+          folder = Path("build/test-results/test")
+          total = 0
+          for name in names:
+              found = list(folder.glob("TEST-*." + name + ".xml"))
+              assert len(found) == 1, (name, found)
+              suite = ET.parse(found[0]).getroot()
+              counts = {k: int(suite.attrib.get(k, "0")) for k in (
+                  "tests", "failures", "errors", "skipped")}
+              assert counts["tests"] > 0
+              assert counts["failures"] == counts["errors"] == counts["skipped"] == 0, (name, counts)
+              total += counts["tests"]
+              print(name, counts)
+          print(f"STAGE5_APPLICATION_ACL_TESTS_PASS {total} tests 0 failures errors skips")
+          print("NO production SQL ACL/TOCTOU or real Keycloak/PostgreSQL evidence claimed")
+          PY
