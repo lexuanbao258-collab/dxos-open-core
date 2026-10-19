@@ -1,0 +1,135 @@
+# Issue #23 — Stage 6.1: PostgreSQL authoritative ACL and transaction contract
+
+**Status: REVIEW CANDIDATE / DESIGN ONLY — NOT DDL OR PRODUCTION APPROVAL**  
+**Date:** 2026-10-19  
+**Owner:** Bảo, Issue #23. **Identity/application reviewer:** Yến. **PostgreSQL/cryptography independent sign-off:** not established; owner-led review is not independent DB certification.  
+**Base:** Stage 5 [PR #49](https://github.com/lexuanbao258-collab/dxos-open-core/pull/49), reviewed exact HEAD `32ca73fa8444ab51cf7cf30baa90fb39938b627b`.  
+**Reference architecture:** Draft [PR #36](https://github.com/lexuanbao258-collab/dxos-open-core/pull/36) at `ff824fc827cdef448fff82d907cef0d50113d81a`: [ADR-0023 Option A](https://github.com/lexuanbao258-collab/dxos-open-core/blob/ff824fc827cdef448fff82d907cef0d50113d81a/docs/adr/ADR-0023-workflow-acl-transaction-boundary.md), [ADR-0024 C3 + HMAC proposal](https://github.com/lexuanbao258-collab/dxos-open-core/blob/ff824fc827cdef448fff82d907cef0d50113d81a/docs/adr/ADR-0024-workflow-create-and-sql-principal-attestation.md), [six-port SQL matrix](https://github.com/lexuanbao258-collab/dxos-open-core/blob/ff824fc827cdef448fff82d907cef0d50113d81a/docs/contracts/issue-23-workflow-port-sql-authorization-matrix-v1.md), and [V5 v2 candidate](https://github.com/lexuanbao258-collab/dxos-open-core/blob/ff824fc827cdef448fff82d907cef0d50113d81a/docs/contracts/issue-23-v5-ddl-guarded-tx-review-v2.md).
+
+> **STOP RULE:** Do not create or run `V5__*.sql`, modify V1–V4, grant SQL roles, create signing keys, cherry-pick PR #36 SQL fixtures into production, touch shared Supabase/staging, or register Workflow HTTP from this document. Execution is deferred until explicitly approved design, migration compatibility, privileges, and isolated PostgreSQL 17 evidence. No Spring `@Transactional` wrapper can substitute for the durable port boundary.
+
+## 1. Baseline and scope
+
+The Stage 3 `AuthorizedWorkflowService` is a **non-registered** application seam with a precheck; Stage 4 pins exact verified operation authorities; Stage 5 adds `WorkflowAclSnapshotReader` contract and `TenantResourceWorkflowAccessPolicy` with synthetic authoritative facts, **not a PostgreSQL implementation**. Stage 5's precheck can become stale before execution. `PostgresWorkflowPersistence` in current production source performs direct V3 table SQL, owns a separate JDBC transaction per port method and maps non-`WorkflowException` failures generically. V3 instances carry global `instance_id` and resource reference, **no tenant ID**. Hence none of Stages 3–5 demonstrates a safe live tenant/ACL write.
+
+**S6.1 outcome:** pin the V5 candidate data invariants, target+actor+operation SQL boundary, one-port/one-transaction protocol, error bridge, mutator lock obligations, CREATE C3 route and deterministic PG17 evidence **before writing executable migration or guarded JDBC code**. S6.2 onwards will implement only after review.
+
+The service remains a Spring Boot modular monolith for the OLP MVP; no additional microservice, message broker, distributed transaction, custom IAM, or new Core signatures.
+
+## 2. Stage 5 decisions: status and provisional behavior
+
+**Already owner-approved:** (a) owner with active tenant membership may see resource existence, but owner is **not** implicitly allowed a Workflow operation; exact JWT-derived authority AND explicit resource grant required; (b) CREATE requires exact active `(tenant_id, resource_type, definition_id, definition_version)` binding; its revocation blocks subsequent CREATE but does not automatically revoke existing instances; (c) no tenant transfer in MVP v1, permanent tombstone, no reuse of resource/tenant identities.
+
+**Two remaining owner/security policy decisions (not ratified by Yến's Stage-5-only PASS):**
+
+| ID | Recommended MVP rule (Stage 5 candidate) | Status / acceptance action |
+|---|---|---|
+| DEC-VIS | A resource exists for a viewer only if the registry entry is ACTIVE, viewer has active **membership of that exact tenant** and (viewer is persisted owner OR has >=1 current positive explicit Workflow ACL grant). A visible caller without the *requested* operation's grant returns FORBIDDEN; foreign/nonmember/nonvisible returns HIDDEN. `workflow:read` alone does not grant resource visibility. | **PENDING explicit owner ratification**, security review; validate no information leakage via identity/tenant hints and public 404 parity. |
+| DEC-CREATE | If an exact requested CREATE definition binding is absent/inactive, classify HIDDEN even when resource itself is visible and CREATE grant exists, to avoid leaking definition binding state. No alias, latest-version fallback or binding inference. | **PENDING explicit owner ratification**; review error precedence for authorized caller and missing definitions. |
+
+These recommendations are *not recorded as approved policy* by creating this draft. If either is rejected, update Stage 5 policy/tests in a separate PR and re-review; do not silently change the SQL design.
+
+**Also OPEN:** physical global `(resource_type,resource_id)` namespace compatibility across consumers, manual V3 legacy mapping/reconciliation, grant delete vs `granted=false` semantics/audit, membership deactivation handling and active-owner reassignment. Unmapped or inconsistent historical rows **fail closed**; no automatic backfill that guesses a tenant.
+
+## 3. Proposed V5 physical relations (schema contract; NOT executable DDL)
+
+Use the existing private Workflow Flyway schema **candidate**, not `public`, and keep V1–V4 byte/checksum immutable. Definitions and instances continue under existing V3/V4. Proposed *five relations*, with actual DDL/FKs/indexes/collation still subject to review:
+
+| Relation | Keys and facts | Required invariant |
+|---|---|---|
+| `tenant_guards` | `tenant_id` PK; nonnegative monotonic `acl_revision` | Permanent, never deleted/recreated or ID reused; all protected operations take guard `FOR SHARE`, all policy mutators `FOR UPDATE`. |
+| `tenant_memberships` | `(tenant_id, actor_id)` PK, active flag; FK tenant guard | Membership must match exact canonical OIDC actor; deactivation invalidates **all** resource grants even if rows remain. |
+| `resource_registry` | Global PK `(resource_type, resource_id)`, tenant FK, owner metadata, ACTIVE/TOMBSTONED; unique tenant/resource composite | Resource-to-tenant binding and keys immutable; tombstone one-way, no resurrection/delete/reuse; owner is *not* a grant. |
+| `resource_acl` | `(tenant_id, resource_type, resource_id, actor_id, operation)` PK; FKs registry+membership | Only four exact `workflow:*` operation values; positive current grant distinct from mere owner/authority. Revoke/membership mutations must share tenant guard + audit. |
+| `workflow_definition_bindings` | `(tenant_id, resource_type, definition_id, definition_version)` PK; FK guard+V3 exact definition; active | CREATE requires exact active binding; deactivation does not invalidate existing pinned instances alone. |
+
+**DDL review requirements:** exact constraints for permanent tenant/resource keys and tombstone, SQL `COLLATE "C"` vs V3 PostgreSQL collations/FK operator semantics, composite tenant equality, owner lifecycle, no TRUNCATE/direct trigger bypass, default privileges and migration rollback policy. A normal FK alone cannot enforce irreversible tombstone or prove guard locking. If existing V3 instances have no authoritative registry entry, do not expose them or guess ownership. A candidate V5 must not modify V3 history or alter its immutable snapshot semantics.
+
+**Provision/admin mutators to enumerate** (no generic policy SQL executor): tenant creation/disable lifecycle; resource registration, tombstone, owner change; membership grant/deactivate; resource ACL grant/revoke; exact definition binding grant/revoke; definition provisioning. Every mutator, including batch jobs/backfills/admin operations, must take the same permanent tenant guard `FOR UPDATE` *before child rows* and increment revision, audit and commit on that same connection. Never allow an online runtime user to directly DML those tables or `SET ROLE` into owner/migrator.
+
+## 4. SQL trust and privilege boundary
+
+**Threat model to preserve until explicitly revised:** an attacker with only the online PostgreSQL `dxos_wf_runtime` password and arbitrary SQL must be unable to SELECT/DML protected V3/V5 tables or forge another actor/action/target through callable functions. A compromised trusted Java signer or SQL owner/superuser is outside that narrower claim.
+
+Candidate roles, mutually separated:
+- `dxos_wf_owner` NOLOGIN owns trusted SQL functions and protected schema/tables.
+- `dxos_wf_migrator` deployment-only DDL; not used by the HTTP connection pool.
+- `dxos_wf_runtime` LOGIN only schema USAGE + exact vetted `wf_port_*` EXECUTE; **no protected table SELECT/DML/ALTER/TRUNCATE, SQL schema CREATE, owner/role inheritance, helper EXECUTE, BYPASSRLS, or key access**.
+- `dxos_wf_policy_admin` invokes only authenticated and guard-locking `wf_policy_*` allowlist.
+- `dxos_wf_provisioner` invokes only authenticated provisioning allowlist.
+- `PUBLIC`, Supabase API roles and unrelated Request roles have **no** protected function or table privileges.
+
+Harden each `SECURITY DEFINER`: fixed search path `pg_catalog,pg_temp`; fully qualified trusted references; no attacker-controlled dynamic SQL; owner non-login and non-inheritable; REVOKE PUBLIC EXECUTE **within function-creation transaction**, audit existing/default grants and role inheritance, test with actual runtime LOGIN. Switching grants before the guarded adapter exists would break current V3 `PostgresWorkflowPersistence`; plan and test an atomic runtime-role switchover in an isolated database first.
+
+### Caller authenticity at SQL boundary — **open independent cryptography gate**
+
+A Java `AuthenticatedPrincipal` constructor, free-form SQL `actor_id`, caller-controlled tenant, JWT string parameter, or custom GUC is **not** DB-verifiable authentication. ADR-0024 proposes a **per-physical-transaction HMAC-SHA-256** envelope minted only after `CurrentPrincipal.requireVerified()`. It cryptographically binds canonical UTF-8 issuer+subject, actor, exact authority, port action, target/definition/proposal, backend PID + PostgreSQL transaction ID, deployment/key-id, timestamp and nonce.
+
+One port invocation => one fresh checked JDBC connection/transaction => **new proof**; never reuse a proof from preliminary read for final write. Each vetted SQL function verifies proof and full typed arguments **before** protected materialization, then *after guard lock* rechecks live ACL. An SQL runtime credential alone cannot mint valid proof **only if** distinct key custody/least privilege and verifier implementation actually hold. **P0 OPEN:** exact cross-language strict UTF-8 vector, key custody/rotation, MAC comparison timing, nonce/replay, expiry under lock waits, transaction-pooler backend affinity, SQL function privilege and grant evidence. The isolated PR #36 HMAC fixture and six-port V3 parity fixture are separate and do not prove this combined path. If the team later elects a weaker trusted-backend threat model, record a *separate owner-approved ADR revision* and explicitly give up DB-credential-compromise resistance; never silently accept SQL-provided actor.
+
+## 5. Durable JDBC authorization — ADR-0023 Option A (binding)
+
+**One physical JDBC transaction PER protected port call.** The public `WorkflowPersistencePort` and `WorkflowRuntime` Core contracts remain provider-neutral. A multi-step Runtime call is **NOT one global transaction**; its preliminary authorized reads and final durable write may use distinct connections. The *final write-port method* must re-authorize after locking, perform state/history mutation and complete durable COMMIT on **its own same physical connection**. Never implement an outer `@Transactional` that defers the port's durable success.
+
+Proposed operation protocol (pseudocode, NOT implementation):
+
+```text
+VerifiedIdentity -> operation/target scope (non-forgeable application boundary)
+  begin checked Connection C for ONE port method:
+    READ COMMITTED; autoCommit=false; lock-capable, bounded timeouts
+    bind fresh per-C actual transaction actor/action/target proof
+    read only minimal PRIVATE target->candidate tenant locator
+    SELECT permanent tenant guard FOR SHARE
+    RE-READ current resource/tenant key, membership, visibility, explicit ACL,
+      exact authority and (if CREATE) exact active definition binding
+    if missing/changed/forbidden/unavailable: fail CLOSED, confirm rollback
+    now and only now materialize target or (for writes) lock instance FOR UPDATE
+    verify complete version/lifecycle/proposal and canonical actor
+    mutate snapshot/history atomically (WRITE only)
+    COMMIT via C (WRITE); success only after CONFIRMED durable COMMIT
+  close C after transaction completes
+```
+
+**Lock ordering** across Workflow and policy admin: tenant guard -> resource -> instance -> history, including implicit FK/trigger locks. No protected snapshot/history materialized before final post-guard check. Guard must remain held until confirmed COMMIT/ROLLBACK. PostgreSQL `READ COMMITTED` and recheck **after** waiting for guard avoids stale membership/ACL. Guarded READ/HISTORY needs lock-capable `READ COMMITTED` transaction (`setReadOnly(false)` at JDBC transaction level for `SELECT ... FOR SHARE`), with *application/SQL-role privileges* still prohibiting writes; read materialization uses that single coherent guard transaction. Never roll back to a savepoint created before lock acquisition and continue believing guard remains held.
+
+### Port-by-port enforcement map
+
+| Existing Java method | Bound scope and guarded SQL function candidate | Transaction notes |
+|---|---|---|
+| `loadDefinition(id,version)` | `wf_port_load_definition`; only exact definition pinned to authenticated CREATE/ACTIVATE/TRANSITION target; not a public list | Guarded READ under originating operation scope; CREATE additionally verifies active binding. |
+| `loadInstance(id)` | `wf_port_load_instance`; public SNAPSHOT requires READ; internal ACTIVATE/TRANSITION may read under their own exact scope | Guarded READ; **never called in secured C3 CREATE** even as collision probe. |
+| `loadHistory(id)` | `wf_port_load_history`; READ only | Guarded READ and history materialization with same snapshot/lock; zero history must not reveal hidden instance. |
+| `createInstance(initial)` | `wf_port_create_instance`; CREATE, generated ID + exact resource/definition | Final ACL/binding recheck + global unique INSERT + durable COMMIT within same port call. Do not read existing collision target. |
+| `commitActivation(expected, activated)` | `wf_port_commit_activation`; ACTIVATE scope for exact instance | Recheck guard/ACL + full previous snapshot/current version/activation, durable COMMIT. |
+| `commitTransition(result)` | `wf_port_commit_transition`; TRANSITION scope, verified actor and exact proposal/version | Re-derive canonical transition/snapshot/history, atomic state + *one* record COMMIT, never accept client actor. |
+
+`loadDefinition`, `loadInstance` and `loadHistory` have independently completed guarded read transactions. `createInstance`, `commitActivation` and `commitTransition` each own durable write transaction and committed result. Any `OperationScope` must bind target and method; no generic arbitrary `Function<WorkflowRuntime,T>` callback or unbound SQL function capable of using proof for resource A against B.
+
+**Concurrency contract:** (a) revoke `FOR UPDATE` commits before guarded final `FOR SHARE`: operation rechecks revised ACL and writes nothing; (b) operation obtains `FOR SHARE` first: revoke waits until operation's commit/rollback. A revoke between pre-read and write is caught by the **final** port guard. All owner/membership/grant/binding/tombstone mutators must take the same guard lock or this guarantee fails. The Stage 5 immutable ACL snapshot is only preliminary application policy, not this transaction lock.
+
+## 6. CREATE C3 and error classification
+
+Secured CREATE **must not invoke** `WorkflowRuntime.createInstance` because its existing duplicate-ID probe calls `loadInstance(generatedId)`, which can expose a hidden existing row. In the trusted application boundary, generate server-owned opaque ID from PR #36's `WorkflowInstanceIdGenerator` (192-bit random), guard-load only exact authorized definition, construct `WorkflowInstance.notStarted` and call `createInstance(initial)` through a narrowly scoped guarded port. Domain Core and public port method signatures remain unchanged. Require separate equivalence/security tests for re-ordered duplicate-vs-definition errors; **do not** wire current Stage 3 `createInstance(instanceId,...)` to production HTTP.
+
+**Error precedence:** missing/hidden/foreign/nonmember/tombstoned/unmapped -> HIDDEN (eventual indistinguishable 404), visible missing operation ACL/authority -> FORBIDDEN (eventual 403), null/timeout/DB/proof verification failure -> fail-closed UNAVAILABLE (candidate sanitized 503, not a finalized HTTP API contract). On a *known* rollback, the infrastructure bridge transports typed outcomes; existing `PostgresWorkflowPersistence.transaction()` would otherwise wrap a bare `WorkflowAccessException` as `OPERATION_FAILURE`. Must preserve canonical Core failure precedence for authorized callers without releasing state-dependent domain errors after revocation: do a new guarded read-only classification for such errors, **not a write retry**.
+
+**Commit uncertainty dominates:** if `commit()` was attempted but the outcome is unknown, or failed rollback leaves possible commitment, return `COMMIT_OUTCOME_UNKNOWN` and never auto-retry, even when an earlier ACL or domain error occurred. Preserve transition+history atomicity and exact nanosecond timestamp fields. Generated-ID collision on confirmed no-commit is internal sanitized denial; no hidden ID/snapshot or leaked SQLSTATE. Lost-response/idempotency and unknown-commit HTTP semantics remain separate P0 approval gates.
+
+## 7. S6.1 review gates (DESIGN acceptance only)
+
+- **S6.1-D1:** two outstanding Stage 5 public policy decisions DEC-VIS / DEC-CREATE ratified or explicitly rejected by owner; unresolved = no executable SQL.
+- **S6.1-D2:** reviewed schema physical DDL draft includes FK/collation, immutable tenant/resource/tombstone, legacy V3 fail-closed reconciliation and V1–V4 manifest compatibility.
+- **S6.1-D3:** runtime/admin/provisioner/migrator/owner SQL role and exact function allowlists reviewed; no table/function or credential bypass and no premature privilege switchover.
+- **S6.1-D4:** six-port API exact target/method/actor and transaction proof design reviewed, consistent with ADR-0023/0024; key/proof P0 open until independently verified.
+- **S6.1-D5:** each write port's **own** verified COMMIT after final guard and mutation, READ/HISTORY guard coherence, all mutators `FOR UPDATE`, no savepoint bypass, fresh proof for every physical transaction.
+- **S6.1-D6:** HIDDEN/FORBIDDEN/UNAVAILABLE typed bridge and `COMMIT_OUTCOME_UNKNOWN` precedence documented, plus ADR-0024 C3 CREATE and lost response.
+- **S6.1-D7:** isolated PG17 two-connection, role/privilege and negative/fault test plan reviewed; exact HEAD and scope identified; **no claim of tests at this design HEAD**.
+- **S6.1-D8:** no code, SQL migration, DB/staging operations, HTTP registration or Core signature modifications. This design-only change is ready for *architectural feedback*, not Stage-6-wide PASS.
+
+### Specific review requests
+
+**Yến:** please independently review compatibility with verified Identity/canonical issuer+subject UTF-8 and exact role mapping, Stage 5 visibility/denial candidate, operation scope/delegation and error priorities. Yến's review alone is **not** PostgreSQL/cryptography sign-off.
+
+**Bảo / PostgreSQL-security competent reviewer:** decide DEC-VIS and DEC-CREATE explicitly; review V5 DDL FK/collation/migration path, all SQL privileges and actor-proof threat model, tenant-lock/savepoint semantics, rollback/COMMIT ambiguity, privilege revocation sequence, and actual disposable-PG17 evidence before S6.2 deployment. If only owner-led self-review occurs, label it as such and retain any P0 without independent security evidence.
+
+**Current decision: S6.1 REVIEW DRAFT; S6.2 IMPLEMENTATION BLOCKED until designated gates are approved.**
