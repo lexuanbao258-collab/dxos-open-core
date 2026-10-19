@@ -1,0 +1,75 @@
+name: Issue 23 Stage 4 exact Workflow authorities
+
+on:
+  push:
+    branches:
+      - feature/issue23-stage4-exact-authority
+    paths:
+      - '.github/workflows/issue23-stage4-exact-authorities.yml'
+      - 'backend/src/**'
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches:
+      - feature/issue23-stage3-authorized-workflow-service
+    paths:
+      - '.github/workflows/issue23-stage4-exact-authorities.yml'
+      - 'backend/src/**'
+
+permissions:
+  contents: read
+
+jobs:
+  stage4-authority-regressions:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Run Stage 4 matrix and prior security boundary tests
+        working-directory: backend
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash ./gradlew test --no-daemon --rerun-tasks --no-build-cache \
+            --tests '*WorkflowStage4ExactAuthorityTest' \
+            --tests '*WorkflowGatewayExactAuthorityTest' \
+            --tests '*AuthorizedWorkflowServiceTest' \
+            --tests '*AuthorizedWorkflowServiceIntegrationTest' \
+            --tests '*WorkflowAuthorizationTest' \
+            --tests '*GatewayIdentityHandoffHttpTest' \
+            --tests '*SpringSecurityCurrentPrincipalTest' \
+            --tests '*WorkflowHttpExposureTest'
+      - name: Assert all selected JUnit suites ran without skips or failures
+        working-directory: backend
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          from xml.etree import ElementTree
+          names = (
+              "WorkflowStage4ExactAuthorityTest",
+              "WorkflowGatewayExactAuthorityTest",
+              "AuthorizedWorkflowServiceTest",
+              "AuthorizedWorkflowServiceIntegrationTest",
+              "WorkflowAuthorizationTest",
+              "GatewayIdentityHandoffHttpTest",
+              "SpringSecurityCurrentPrincipalTest",
+              "WorkflowHttpExposureTest",
+          )
+          total = 0
+          path = Path("build/test-results/test")
+          for name in names:
+              files = list(path.glob("TEST-*." + name + ".xml"))
+              assert len(files) == 1, (name, len(files))
+              suite = ElementTree.parse(files[0]).getroot()
+              values = {key: int(suite.attrib.get(key, "0"))
+                        for key in ("tests", "failures", "errors", "skipped")}
+              assert values["tests"] > 0, (name, values)
+              assert all(values[k] == 0 for k in ("failures", "errors", "skipped")), (name, values)
+              total += values["tests"]
+              print(name, values)
+          print(f"STAGE4_EXACT_AUTHORITY_REGRESSION_PASS: {total} tests, 0 fail/error/skip")
+          print("This is not production ACL, transaction, or live Keycloak/PG evidence.")
+          PY
