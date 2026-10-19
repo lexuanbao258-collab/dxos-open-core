@@ -1,0 +1,55 @@
+name: Issue 23 Identity to Gateway token handoff
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - '.github/workflows/issue23-identity-gateway-token-handoff.yml'
+      - 'backend/src/main/java/com/tricore/dxos/gateway/workflow/security/**'
+      - 'backend/src/test/java/com/tricore/dxos/infrastructure/identity/security/Gateway*Http*.java'
+      - 'backend/src/main/java/com/tricore/dxos/application/identity/**'
+      - 'backend/src/main/java/com/tricore/dxos/infrastructure/identity/security/**'
+
+permissions:
+  contents: read
+
+jobs:
+  filter-chain-handoff:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Run mocked-decoder filter-chain and closed-Workflow-HTTP regressions
+        working-directory: backend
+        run: |
+          set -euo pipefail
+          bash ./gradlew test --no-daemon --stacktrace --rerun-tasks \
+            --tests '*GatewayIdentityHandoffHttpTest' \
+            --tests '*SpringSecurityCurrentPrincipalTest' \
+            --tests '*WorkflowHttpExposureTest'
+      - name: Confirm test suites executed, with no skips or failures
+        working-directory: backend
+        run: |
+          python3 - <<'PY'
+          import pathlib
+          import xml.etree.ElementTree as ET
+          root = pathlib.Path("build/test-results/test")
+          for simple in ("GatewayIdentityHandoffHttpTest",
+                         "SpringSecurityCurrentPrincipalTest",
+                         "WorkflowHttpExposureTest"):
+              matches = list(root.glob("TEST-*." + simple + ".xml"))
+              assert len(matches) == 1, (simple, len(matches))
+              suite = ET.parse(matches[0]).getroot()
+              values = {key: int(suite.attrib.get(key, "0"))
+                        for key in ("tests", "failures", "errors", "skipped")}
+              assert values["tests"] > 0 and all(
+                  values[k] == 0 for k in ("failures", "errors", "skipped")
+              ), (simple, values)
+              print(simple, values)
+          print("IDENTITY_GATEWAY_MOCKED_FILTER_HANDOFF_PASS")
+          print("Real Keycloak/JWKS HTTP test is intentionally NOT covered by this workflow.")
+          PY
