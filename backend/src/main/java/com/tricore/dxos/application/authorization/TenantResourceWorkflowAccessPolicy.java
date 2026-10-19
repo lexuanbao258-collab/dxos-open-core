@@ -29,14 +29,12 @@ public final class TenantResourceWorkflowAccessPolicy implements WorkflowAccessP
     public WorkflowAccessDecision forCreation(AuthenticatedPrincipal caller, WorkflowDefinition definition,
                                               ResourceReference resource) {
         Objects.requireNonNull(definition, "definition");
-        WorkflowAccessDecision decision = evaluate(caller, resource, WorkflowOperation.CREATE);
+        // ONE authoritative snapshot per operation: never compare a grant read at
+        // time A with a definition binding read at time B.
+        WorkflowAclSnapshotReader.ResourceAclSnapshot facts = facts(caller, resource);
+        WorkflowAccessDecision decision = evaluate(facts, WorkflowOperation.CREATE);
         if (decision != WorkflowAccessDecision.ALLOWED) {
             return decision;
-        }
-        // Use the same actor/resource-scoped facts for both CREATE ACL and exact binding.
-        WorkflowAclSnapshotReader.ResourceAclSnapshot facts = facts(caller, resource);
-        if (facts == null) {
-            return WorkflowAccessDecision.HIDDEN;
         }
         if (!facts.activeDefinitionBindings().contains(
                 new WorkflowAclSnapshotReader.DefinitionBinding(
@@ -56,12 +54,11 @@ public final class TenantResourceWorkflowAccessPolicy implements WorkflowAccessP
         }
         // The instance's resource reference must come from authoritative persistence,
         // not from a request-provided owner/tenant or client-supplied resource.
-        return evaluate(caller, instance.resourceReference(), operation);
+        return evaluate(facts(caller, instance.resourceReference()), operation);
     }
 
-    private WorkflowAccessDecision evaluate(AuthenticatedPrincipal caller, ResourceReference resource,
-                                            WorkflowOperation operation) {
-        WorkflowAclSnapshotReader.ResourceAclSnapshot facts = facts(caller, resource);
+    private static WorkflowAccessDecision evaluate(
+            WorkflowAclSnapshotReader.ResourceAclSnapshot facts, WorkflowOperation operation) {
         if (facts == null || !facts.resourceActive() || !facts.memberActive()) {
             return WorkflowAccessDecision.HIDDEN;
         }
