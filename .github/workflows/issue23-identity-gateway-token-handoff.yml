@@ -9,6 +9,7 @@ on:
       - 'backend/src/test/java/com/tricore/dxos/infrastructure/identity/security/Gateway*Http*.java'
       - 'backend/src/main/java/com/tricore/dxos/application/identity/**'
       - 'backend/src/main/java/com/tricore/dxos/infrastructure/identity/security/**'
+      - 'scripts/poc/keycloak-auth-code-poc.ps1'
 
 permissions:
   contents: read
@@ -23,6 +24,21 @@ jobs:
         with:
           distribution: temurin
           java-version: '21'
+      - name: Parse PowerShell PKCE handoff script
+        shell: pwsh
+        run: |
+          $tokens = $null
+          $errors = $null
+          $null = [System.Management.Automation.Language.Parser]::ParseFile(
+            './scripts/poc/keycloak-auth-code-poc.ps1',
+            [ref]$tokens,
+            [ref]$errors
+          )
+          if ($errors.Count -ne 0) {
+            $errors | ForEach-Object { Write-Error $_ }
+            exit 1
+          }
+          Write-Host 'PKCE_POC_SYNTAX_PASS'
       - name: Run mocked-decoder filter-chain and closed-Workflow-HTTP regressions
         working-directory: backend
         run: |
