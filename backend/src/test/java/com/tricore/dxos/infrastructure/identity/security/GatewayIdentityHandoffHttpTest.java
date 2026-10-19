@@ -42,7 +42,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         "OIDC_AUDIENCE=tricore-api",
         "OIDC_RESOURCE_CLIENT_ID=tricore-api"
 })
-@Import({SecurityConfig.class,
+@Import({ProbeController.class, SecurityConfig.class,
         SpringSecurityCurrentPrincipal.class,
         WorkflowGatewayPrincipalGate.class})
 class GatewayIdentityHandoffHttpTest {
