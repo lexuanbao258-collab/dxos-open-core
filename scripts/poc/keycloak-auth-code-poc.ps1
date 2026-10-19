@@ -292,13 +292,36 @@ try {
                 -p $backendDir `
                 test `
                 --rerun-tasks `
-                --tests "com.tricore.dxos.infrastructure.identity.security.OidcKeycloakIntegrationTest"
+                --tests "com.tricore.dxos.infrastructure.identity.security.OidcKeycloakIntegrationTest" `
+                --tests "com.tricore.dxos.infrastructure.identity.security.GatewayKeycloakTokenHttpIntegrationTest"
 
             if ($LASTEXITCODE -ne 0) {
-                throw "Spring OIDC integration test failed with exit code $LASTEXITCODE"
+                throw "Spring OIDC + Gateway integration test failed with exit code $LASTEXITCODE"
             }
 
-            Write-Host "Spring OIDC integration test: SUCCESS"
+            # The authenticated HTTP gate and decoder tests must really execute.
+            # BUILD SUCCESSFUL is not enough if an environment gate skipped either suite.
+            foreach ($suite in @(
+                "com.tricore.dxos.infrastructure.identity.security.OidcKeycloakIntegrationTest",
+                "com.tricore.dxos.infrastructure.identity.security.GatewayKeycloakTokenHttpIntegrationTest"
+            )) {
+                $xmlPath = Join-Path $backendDir ("build\test-results\test\TEST-" + $suite + ".xml")
+                if (-not (Test-Path -LiteralPath $xmlPath -PathType Leaf)) {
+                    throw "Expected JUnit suite result is missing"
+                }
+                [xml]$report = Get-Content -LiteralPath $xmlPath -Raw
+                $summary = $report.testsuite
+                $total = [int]$summary.tests
+                $failed = [int]$summary.failures
+                $errors = [int]$summary.errors
+                $skipped = [int]$summary.skipped
+                if ($total -ne 3 -or $failed -ne 0 -or $errors -ne 0 -or $skipped -ne 0) {
+                    throw "OIDC/Gateway JUnit gate did not execute three clean tests"
+                }
+                Write-Host ("JUnit " + $suite.Split(".")[-1] + ": 3 PASS / 0 FAIL / 0 ERROR / 0 SKIP")
+            }
+
+            Write-Host "Spring OIDC + Gateway HTTP integration: SUCCESS"
         }
         finally {
             # Do not leave the temporary access token in this process.
