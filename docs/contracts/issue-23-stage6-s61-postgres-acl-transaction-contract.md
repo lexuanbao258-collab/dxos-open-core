@@ -183,7 +183,7 @@ Secured CREATE **must not invoke** `WorkflowRuntime.createInstance` because its 
 
 ## 10. Error classification — baseline and pending CREATE precedence
 
-The classes below document the existing design baseline. The owner has now **selected DEC-D2-04 as a design direction**, but Yến/security review and Stage-5 implementation changes are still PENDING. The prior §10 rule “hidden existence/binding before authority denial” conflicts with parts of Stage 5 source and with DEC-D2-04; the comparison below makes that conflict explicit rather than silently replacing an approved rule.
+The classes below document the existing design baseline. The owner selected DEC-D2-04 Option 2 and Yến **AGREED to its semantics** at [PR #50 review comment](https://github.com/lexuanbao258-collab/dxos-open-core/pull/50#issuecomment-6289261865). However, Yến confirmed that the **orchestration/data-access compatibility contract is still OPEN**, and Stage-5 source/test changes and SQL security sign-off remain pending. The prior §10 rule “hidden existence/binding before authority denial” conflicts with parts of Stage 5 source and with DEC-D2-04; the comparison below makes that conflict explicit rather than silently replacing an approved rule.
 
 - **Authn:** absent/expired/forged/wrong issuer-or-audience JWT -> authentication failure (intended safe HTTP **401**) before any ACL lookup; exact JWT authority alone cannot grant resource permission.
 - **UNAVAILABLE** (fail-closed): provider/ACL source null, throws, timeout, unverifiable SQL proof, actor/resource mismatch, DB availability fault, or lock uncertainty. No ALLOWED fallback. Candidate sanitized HTTP 503 is **not yet signed-off**.
@@ -195,7 +195,7 @@ The classes below document the existing design baseline. The owner has now **sel
 
 **Prior §10 baseline, superseded for proposed CREATE decision-order design only once D2-04 re-review passes:** when no write may have committed, provider/proof uncertainty => UNAVAILABLE; otherwise hidden existence/binding before authority denial; visible caller's absent grant/authority => FORBIDDEN; only positively authorized operations may surface safe domain results. **After an attempted write whose COMMIT may be unknown, COMMIT_OUTCOME_UNKNOWN always dominates.**
 
-### DEC-D2-04 — OWNER DESIGN DIRECTION; YẾN RE-REVIEW PENDING
+### DEC-D2-04 — OPTION 2 SEMANTICS AGREEMENT (YẾN); DATA-ACCESS CONTRACT STILL OPEN
 
 Owner-selected CREATE decision order **for design review**, not yet the deployed policy (known no-commit only):
 
@@ -228,7 +228,7 @@ This refinement changes only the three existing Stage 6.1 documents against sour
 
 ## 12. Owner decision / MVP simplification review handoff (2026-10-20)
 
-**Owner record:** [Issue #23 comment](https://github.com/lexuanbao258-collab/dxos-open-core/issues/23#issuecomment-6288471117). This section is the **owner-selected D2-04 design direction**, not Yến's review and not PostgreSQL/security sign-off. The rule may become the product contract only after Stage-5 conflict and ADR-0024 C3/proof semantics are reconciled and reviewed. DEC-VIS, DEC-CREATE, ADR-0023 Option A and all S6.1 SQL safety stops continue unchanged.
+**Owner record:** [Issue #23 comment](https://github.com/lexuanbao258-collab/dxos-open-core/issues/23#issuecomment-6288471117). This section is the **owner-selected D2-04 design direction**, not Yến's review and not PostgreSQL/security sign-off. The owner-selected ordering has Yến's **semantics agreement**, but cannot be marked D2-04 RESOLVED until the source/data-access contract explicitly guarantees no binding/definition materialization before CREATE grant + exact JWT authority and an interaction-level test specification is reviewed. DEC-VIS, DEC-CREATE, ADR-0023 Option A and all S6.1 SQL safety stops continue unchanged.
 
 ### D2-04 denial truth table — reliable source, no attempted write
 
@@ -258,4 +258,43 @@ Keep one closed SQL permission surface for the actual Core persistence ports (cu
 
 See [ADR-0025 PROPOSED trusted-backend model](../adr/ADR-0025-proposed-mvp-trusted-backend-threat-model.md). The owner requests Yến and an appropriate PostgreSQL/security reviewer to assess whether a student-run isolated MVP may defer HMAC/PID/XID. **There is no accepted security downgrade.** In particular, a stolen runtime DB password could allow actor spoofing via allowed SQL functions under the proposed weaker model; effective narrow grants and the backend OIDC check do not independently solve that threat. Unless separately ratified and recorded against ADR-0024, preserve D4 as **BLOCKED P0**, and do not assert SQL-level verified actor proof.
 
-**Exit conditions:** Yến ACCEPT/CHANGES REQUIRED at the **new exact PR #50 HEAD** for D2-04 and ADR direction; owner records ratification or rejection of D4 threat model; independent DB reviewer examines D2 physical invariants, D3 effective grants and D4 risk. Stage 6.1 remains **NOT PASS**, Stage 6.2 **BLOCKED**, PR #50 Draft. No productive SQL, Flyway V5, credential/role changes, public HTTP, or merge.
+**Exit conditions:** Yến has agreed to **Option 2 semantics only** at HEAD `fb53f6f57b6326c36e31d706dfcf0eebb88d9899`; source/data-access contract requires exact-HEAD re-review after this addendum, while D4 remains separately undecided; owner records ratification or rejection of D4 threat model; independent DB reviewer examines D2 physical invariants, D3 effective grants and D4 risk. Stage 6.1 remains **NOT PASS**, Stage 6.2 **BLOCKED**, PR #50 Draft. No productive SQL, Flyway V5, credential/role changes, public HTTP, or merge.
+
+
+## 13. DEC-D2-04 Option 2: binding/definition non-materialization contract (2026-10-20)
+
+**Reviewer finding (exact HEAD `fb53f6f57b6326c36e31d706dfcf0eebb88d9899`):** [Yến agrees to Option 2 semantics, but confirms a compatibility gap and keeps D2-04 OPEN](https://github.com/lexuanbao258-collab/dxos-open-core/pull/50#issuecomment-6289261865). This section provides the missing design-contract obligation **without adding a Core port, business workflow or executable SQL**. The proof/SQL trust-model and independent physical review remain distinct gates.
+
+### Normative orchestration and data-access MUST/MUST NOT (CREATE only)
+
+1. **Trusted identity FIRST.** The application uses the already verified `CurrentPrincipal.requireVerified()` issuer/subject and exact JWT authorities; it MUST NOT accept client actor, tenant, JWT/GUC or a second token validator. Missing/invalid authentication MUST terminate before private ACL/definition queries.
+2. **Pre-authorization facts must be minimal.** The source-backed preliminary CREATE classification MUST obtain **only** the private target→tenant locator, current membership, active-resource state/visibility and whether the verified actor possesses the **requested explicit CREATE ACL grant**. The returned authorization facts MUST NOT contain, preload, batch-join, cache-populate or materialize any `workflow_definition_bindings` row/active-binding set or V3 definition payload, even if an application field is not subsequently accessed. A source fault or target/actor mismatch remains sanitized UNAVAILABLE.
+3. **Visibility BEFORE forbidden classification.** For missing/foreign/nonmember/tombstoned/nonvisible resource, return HIDDEN with no binding/definition access, irrespective of claimed JWT authority. On a visible resource, missing explicit CREATE grant **or** missing exact verified `workflow:create` authority returns FORBIDDEN; do not look up either binding or definition to distinguish these cases. Merely delaying access to `snapshot.activeDefinitionBindings()` in Java is **insufficient** if the `WorkflowAclSnapshotReader.read()` implementation already populated that set.
+4. **Definition/binding only AFTER both checks.** A fully visible, explicitly CREATE-granted, exact-JWT-authorized operation may request the **specific tuple** `(tenant_id, resource_type, definition_id, definition_version)` from the trusted guarded data source, and only then privately load the exact Workflow definition. Missing/inactive/wrong exact binding is HIDDEN; definition-source failure is UNAVAILABLE; no latest-version/alias substitution or public definition-listing endpoint. Operation/target context MUST be bound to the verified actor and must not be reusable for another tenant/resource.
+5. **Final transaction is authoritative.** Preliminary classification is never a durable write permission. The secured C3 CREATE path MUST generate the server ID and use the existing `WorkflowPersistencePort.createInstance` write, with **fresh** tenant guard `FOR SHARE`, authoritative resource/member/ACL/authority/binding recheck **after** lock and atomic insert + confirmed COMMIT on that physical JDBC transaction. The permitted definition/binding check in this final transaction occurs **after its own successful visibility+grant+authority check**, not merely after a precheck in another connection. Admin/policy mutators keep guard `FOR UPDATE`. No old Core `WorkflowRuntime.createInstance` hidden collision read, no extra public Core port, no blind retry after unknown COMMIT.
+6. **SQL actor authenticity is a separate unresolved gate.** Under pending ADR-0024, a capability bound to exact CREATE authority cannot be fabricated for a missing-authority user merely to classify a 403. The future trusted classifier/SQL function design MUST preserve private resource visibility and fail closed **without pretending unauthorized requests carry valid CREATE capability**. D4 HMAC vs ADR-0025 risk acceptance is **NOT** resolved by this ordering; a reviewer must approve how private classification works under the chosen model before implementing SQL.
+
+### Existing Stage-5 seams are NOT compliant as currently written
+
+- `AuthorizedWorkflowService.createInstance()` preloads `persistence.loadDefinition()` before ACL/JWT authorization; the current method also invokes `WorkflowRuntime.createInstance()`. Neither behavior satisfies secured C3 CREATE.
+- `TenantResourceWorkflowAccessPolicy.forCreation()` evaluates ACL then checks the binding field, but its current `WorkflowAclSnapshotReader.ResourceAclSnapshot` **includes** `Set<DefinitionBinding> activeDefinitionBindings` filled by one `reader.read()`. A future PostgreSQL implementation of this eager snapshot is **not allowed** to claim the no-materialization guarantee. A narrow application/infrastructure contract adjustment is REQUIRED: expose **minimal authorization facts independently of authorized exact-binding/definition lookup**. Implementation details need separate review; this is not approval to add a public API or change any Workflow Core signature.
+- `WorkflowAuthorization.authorizeCreation()` checks exact JWT authority only after the existing `policy.forCreation()` binding decision. That order must be reconciled with Option 2 without returning FORBIDDEN for hidden resources and without granting an unauthorized capability.
+- Current Stage-5 mock tests assert decision codes/Runtime delegation, not actual definition/binding read order. No source behavior or PG17 test is claimed fixed by this document.
+
+### Acceptance at the existing CREATE-03/CREATE-04 gates
+
+| Scenario | Result | Required **observable** read/call ordering (not merely status code) |
+|---|---|---|
+| Unverified actor | Authn failure | No private ACL, binding, definition, runtime read or write |
+| Reliable hidden/nonmember/foreign/tombstoned target | HIDDEN | Minimal resource/membership/visibility lookup only; **zero binding/definition reads** |
+| Visible + CREATE grant missing; any binding state / JWT state | FORBIDDEN | Minimal ACL facts then decision; **zero binding/definition reads**, no CREATE write |
+| Visible + CREATE grant present + exact JWT authority missing; binding active/missing/inactive/wrong | FORBIDDEN | Minimal ACL facts and exact authority check; **zero binding/definition reads**, no false signed CREATE capability |
+| Visible + grant+authority present + binding missing/inactive/wrong exact tuple | HIDDEN | Binding lookup only AFTER both authorization conditions; no V3 definition materialization on binding denial |
+| Visible + grant+authority+binding present | Authorized domain checks only | Exact binding and definition read AFTER successful authorization; final guarded SQL transaction separately repeats facts and confirms COMMIT |
+| Provider/SQL proof error at a required stage | UNAVAILABLE | No fallback ALLOWED/HIDDEN; log/response contain no privileged payload |
+| Policy revoke between pre-read and final CREATE | Deny at final guard | No CREATE row/history committed, regardless of earlier preliminary allow |
+| COMMIT attempted, outcome uncertain | COMMIT_OUTCOME_UNKNOWN | No blind retry/collision probe; later reconciliation requires separately approved contract |
+
+**Test method:** add *interaction-level* spy/recorded-call assertions on app reader and definition persistence, plus future **actual SQL trace/spy** on disposable PG17 with representative secret binding/definition rows to prove the absence of lookup/materialization. Include missing/inactive/wrong exact binding, visible/hidden, 2×2 grant×authority and source/proof failures, not only equality of 403/404. Assert no hidden existence oracle and no cross-tenant privilege escalation. These tests are **specified**, NOT EXECUTED.
+
+**D2-04 disposition:** `SEMANTICS AGREED BY YẾN / CONTRACT REVIEW CANDIDATE / IMPLEMENTATION AND INTERACTION EVIDENCE BLOCKED`. D2/D3/D4 remain blocked as applicable; Stage 6.1 overall **NOT YET PASS** and Stage 6.2 **BLOCKED**. PR #50 stays Draft. No new workflow, executable V5, SQL roles, Java implementation or Workflow HTTP activation from this addendum.
