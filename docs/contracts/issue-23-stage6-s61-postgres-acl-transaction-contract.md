@@ -20,14 +20,14 @@ The service remains a Spring Boot modular monolith for the OLP MVP; no additiona
 
 **Already owner-approved:** (a) owner with active tenant membership may see resource existence, but owner is **not** implicitly allowed a Workflow operation; exact JWT-derived authority AND explicit resource grant required; (b) CREATE requires exact active `(tenant_id, resource_type, definition_id, definition_version)` binding; its revocation blocks subsequent CREATE but does not automatically revoke existing instances; (c) no tenant transfer in MVP v1, permanent tombstone, no reuse of resource/tenant identities.
 
-**Two remaining owner/security policy decisions (not ratified by Yến's Stage-5-only PASS):**
+**Two product policy decisions ratified by Issue #23 owner on 2026-10-20 (not SQL/HTTP security approval):**
 
 | ID | Recommended MVP rule (Stage 5 candidate) | Status / acceptance action |
 |---|---|---|
-| DEC-VIS | A resource exists for a viewer only if the registry entry is ACTIVE, viewer has active **membership of that exact tenant** and (viewer is persisted owner OR has >=1 current positive explicit Workflow ACL grant). A visible caller without the *requested* operation's grant returns FORBIDDEN; foreign/nonmember/nonvisible returns HIDDEN. `workflow:read` alone does not grant resource visibility. | **PENDING explicit owner ratification**, security review; validate no information leakage via identity/tenant hints and public 404 parity. |
-| DEC-CREATE | If an exact requested CREATE definition binding is absent/inactive, classify HIDDEN even when resource itself is visible and CREATE grant exists, to avoid leaking definition binding state. No alias, latest-version fallback or binding inference. | **PENDING explicit owner ratification**; review error precedence for authorized caller and missing definitions. |
+| DEC-VIS | A resource exists for a viewer only if the registry entry is ACTIVE, viewer has active **membership of that exact tenant** and (viewer is persisted owner OR has >=1 current positive explicit Workflow ACL grant). A visible caller without the *requested* operation's grant returns FORBIDDEN; foreign/nonmember/nonvisible returns HIDDEN. `workflow:read` alone does not grant resource visibility. | **OWNER APPROVED** ([record](https://github.com/lexuanbao258-collab/dxos-open-core/issues/23#issuecomment-6280476807)); production HTTP 404 equivalence and independent security integration evidence still BLOCKED. |
+| DEC-CREATE | If an exact requested CREATE definition binding is absent/inactive, classify HIDDEN even when resource itself is visible and CREATE grant exists, to avoid leaking definition binding state. No alias, latest-version fallback or binding inference. | **OWNER APPROVED** ([record](https://github.com/lexuanbao258-collab/dxos-open-core/issues/23#issuecomment-6280476807)); confirmed-domain-error equivalence and production SQL enforcement still BLOCKED. |
 
-These recommendations are *not recorded as approved policy* by creating this draft. If either is rejected, update Stage 5 policy/tests in a separate PR and re-review; do not silently change the SQL design.
+These two rules are now **explicit owner-approved product semantics**, matching the previously reviewed Stage-5 application-policy candidate. Yến's earlier Stage-5 PASS did not itself ratify them. This approval does not ratify V5 DDL, cryptography, PostgreSQL runtime privilege or Workflow HTTP.
 
 **Also OPEN:** physical global `(resource_type,resource_id)` namespace compatibility across consumers, manual V3 legacy mapping/reconciliation, grant delete vs `granted=false` semantics/audit, membership deactivation handling and active-owner reassignment. Unmapped or inconsistent historical rows **fail closed**; no automatic backfill that guesses a tenant.
 
@@ -117,6 +117,8 @@ Secured CREATE **must not invoke** `WorkflowRuntime.createInstance` because its 
 
 ## 7. S6.1 review gates (DESIGN acceptance only)
 
+> **Response to Yến's [S6.1 review](https://github.com/lexuanbao258-collab/dxos-open-core/pull/50#issuecomment-6280356582):** all eight requested items are **explicitly dispositioned** below; a proposed baseline is not equivalent to independent SQL/security sign-off. See [Physical V5 / SQL role / caller-proof review baseline](issue-23-stage6-s61-v5-physical-privilege-review.md) for detailed DB1/DB2 and SQL-A/SQL-B review tables. This document is the normative architecture request; code execution is still blocked.
+
 - **S6.1-D1:** two outstanding Stage 5 public policy decisions DEC-VIS / DEC-CREATE ratified or explicitly rejected by owner; unresolved = no executable SQL.
 - **S6.1-D2:** reviewed schema physical DDL draft includes FK/collation, immutable tenant/resource/tombstone, legacy V3 fail-closed reconciliation and V1–V4 manifest compatibility.
 - **S6.1-D3:** runtime/admin/provisioner/migrator/owner SQL role and exact function allowlists reviewed; no table/function or credential bypass and no premature privilege switchover.
@@ -133,3 +135,49 @@ Secured CREATE **must not invoke** `WorkflowRuntime.createInstance` because its 
 **Bảo / PostgreSQL-security competent reviewer:** decide DEC-VIS and DEC-CREATE explicitly; review V5 DDL FK/collation/migration path, all SQL privileges and actor-proof threat model, tenant-lock/savepoint semantics, rollback/COMMIT ambiguity, privilege revocation sequence, and actual disposable-PG17 evidence before S6.2 deployment. If only owner-led self-review occurs, label it as such and retain any P0 without independent security evidence.
 
 **Current decision: S6.1 REVIEW DRAFT; S6.2 IMPLEMENTATION BLOCKED until designated gates are approved.**
+
+
+## 8. S6.1 re-review addendum — eight findings and exact dispositions
+
+**Updated 2026-10-20 in response to Yến's PR #50 review at old HEAD ae5efb0.** The decision labels below distinguish accepted product/architectural requirements from blocked physical security gates; none is a claim that Stage 6 SQL implementation passes.
+
+| Gate | Resolution / artifact | Disposition at new HEAD | Responsible decision / review authority |
+|---|---|---|---|
+| **D1** — Stage 5 DEC-VIS / DEC-CREATE | Both ratified in [owner's Issue #23 decision](https://github.com/lexuanbao258-collab/dxos-open-core/issues/23#issuecomment-6280476807); hidden/forbidden criteria frozen below | **ACCEPTED — product rules only** | Bảo owner; Yến checks Identity/application consistency |
+| **D2** — V5 physical model | Five-table PK/FK/UNIQUE/CHECK, immutable resource/tenant/tombstone, private schema, V3 reconciliation and collation review baseline in [DB design file](issue-23-stage6-s61-v5-physical-privilege-review.md) | **BLOCKED — pending DB/DDL compatibility sign-off and disposable PG17 tests** | Bảo implementation owner + independent PostgreSQL reviewer |
+| **D3** — SQL privilege model | Owner/migrator/runtime/policy-admin/provisioner/PUBLIC explicit effective role matrix and function restrictions in [SQL-A matrix](issue-23-stage6-s61-v5-physical-privilege-review.md) | **BLOCKED — privileges are proposed, not implemented/audited** | Independent PostgreSQL/security reviewer; Bảo integrates |
+| **D4** — actor+target+transaction-bound proof | Six-port contract remains ADR-0023 Option A / ADR-0024 conditional HMAC, with strict UTF-8 fields, key custody, replay/expiry and PID/XID review questions detailed in [SQL-B](issue-23-stage6-s61-v5-physical-privilege-review.md) | **BLOCKED (P0) — no approved verifier/key protocol, no downgrade of threat model** | Independent security/cryptography reviewer; Bảo decision owner |
+| **D5** — final guarded transaction invariants | MUST/MUST NOT requirements frozen in §9 below, ADR-0023 Option A | **ACCEPTED — architecture contract only; implementation and concurrency evidence BLOCKED** | Bảo + independent PostgreSQL/concurrency reviewer |
+| **D6** — failure precedence, C3 CREATE | §10 below freezes HIDDEN/FORBIDDEN/UNAVAILABLE and COMMIT_OUTCOME_UNKNOWN behavior; approved DEC-CREATE incorporated | **ACCEPTED — design contract only; JDBC/HTTP fault evidence BLOCKED** | Bảo + Yến on HTTP/Identity + independent DB reviewer |
+| **D7** — PG17 evidence | [Test matrix](../verification/issue-23-stage6-pg17-acceptance-matrix.md) enumerates two-connection barrier, role/proof negatives, fault injection and exact JUnit evidence | **DEFERRED to S6.2–S6.5 after physical design approval; no Stage 6 test PASS** | Bảo executor, independent DB reviewer |
+| **D8** — scope and safety | This PR updates **documentation only**. No V5 executable migration, V1–V4 edit, PostgreSQL role/secret/live DB change, production HTTP registration, or merge | **ACCEPTED — process boundary at this HEAD** | Bảo, verified by GitHub diff |
+
+**S6.1 overall status remains NOT YET PASS** until D2/D3/D4 physical security architecture and relevant design sign-offs are obtained. D7 execution is deferred by agreement: Yến explicitly did **not** request running PG17 during this documentation-only review. **S6.2 is BLOCKED**, and no GitHub comment/owner decision overrides these gates.
+
+## 9. Normative transaction invariants — MUST / MUST NOT
+
+1. **MUST** use the verified Identity actor (issuer+subject) and exact Workflow authority from `CurrentPrincipal.requireVerified()`; **MUST NOT** trust client actor/tenant/role, JWT parsed a second time, SQL actor string/GUC as principal proof.
+2. **MUST** start each protected port method in a checked **new physical JDBC connection transaction** (READ COMMITTED, autoCommit=false, finite configured deadlines). Each transaction MUST have its own transaction-bound actor/action/target proof, independently verifiable by trusted SQL. A request may have multiple such transactions; **MUST NOT** reuse a proof from a preliminary Runtime read for a later final write.
+3. **MUST** resolve minimal private target->candidate tenant without disclosing protected snapshot/history; lock permanent tenant guard `FOR SHARE`, then **re-read current authoritative** resource binding, active membership, visibility, operation grant, exact JWT authority and exact CREATE binding if applicable. A changed tenant/target, missing guard, timeout or verifier fault **MUST fail closed**; **MUST NOT** continue based on a stale earlier snapshot.
+4. **MUST** perform the **final** ACL recheck, instance row lock/version/lifecycle/proposal revalidation, state mutation, history append and confirmed durable **COMMIT all within the same physical JDBC transaction** of the final `createInstance`, `commitActivation` or `commitTransition` port invocation. Never return port write success before confirmed COMMIT. **MUST NOT** substitute an outer Spring `@Transactional` that permits deferred commit or blind retries.
+5. Every grant/revoke, membership, owner, binding, tombstone, provisioning/admin/batch mutation **MUST** take the same tenant guard `FOR UPDATE` before dependent rows; revision and audit + COMMIT MUST be atomic. **MUST NOT** permit direct runtime SQL DML bypass or a savepoint rollback that releases guard then continues without full reacquisition/revalidation.
+6. READ and HISTORY **MUST** use a separately completed coherent guarded `READ COMMITTED` transaction with lock-capable `FOR SHARE` before protected materialization, and release only authorized detached results. An internal ACTIVATE/TRANSITION preliminary instance read is restricted by **its own operation scope**, not automatically a public READ grant.
+7. **MUST** keep the port Core semantics/returned confirmed-write durability, actor provenance, error equivalence for authorized requests, timestamp nanos and transition+history atomicity. **MUST NOT** expose a generic target-swapping callback or expose `WorkflowRuntime.createInstance` collision probe in secured CREATE HTTP.
+8. **MUST** lock in deterministic tenant guard -> resource -> instance -> history order (including FK/trigger effects), with no unreviewed online superuser/owner access; demonstrate revoke-first and writer-first with two actual physical PG17 connections before production.
+9. The production WorkflowController **MUST NOT** be registered, and no V5 SQL privilege cutover/migration is authorized, until the actual SQL-A/SQL-B, TX-A, API-A and HTTP gates pass. No P0 can be waived merely because earlier mock Java tests passed.
+
+## 10. Normative error classification and priority
+
+- **Authn:** absent/expired/forged/wrong issuer-or-audience JWT -> authentication failure (intended safe HTTP **401**) before any ACL lookup; exact JWT authority alone cannot grant resource permission.
+- **UNAVAILABLE** (fail-closed): provider/ACL source null, throws, timeout, unverifiable SQL proof, actor/resource mismatch, DB availability fault, or lock uncertainty. No ALLOWED fallback. Candidate sanitized HTTP 503 is **not yet signed-off**.
+- **HIDDEN**: missing/foreign/inactive-member/tombstoned/unmapped legacy V3/nonvisible resource, or approved DEC-CREATE absent/inactive wrong exact binding. No protected materialization; eventual external response must be indistinguishable from nonexistent resource (**404** same body/headers/cache policy).
+- **FORBIDDEN**: caller has resource visibility (approved DEC-VIS) but lacks requested explicit resource operation ACL **or** exact verified operation authority, once source is reliable and lookup done. Proposed eventual **403**.
+- **Authorized domain errors** (VERSION_CONFLICT, INVALID_TRANSITION, etc.) may only be returned after it is safe to release state-dependent details. If a preliminary read error occurs after ACL revocation, MUST perform a *fresh separately guarded classification* before returning; **MUST NOT retry the write**.
+- **COMMIT_OUTCOME_UNKNOWN overrides all preceding policy/domain classifications** if a write COMMIT was attempted with uncertain outcome or rollback failure leaves the write possibly committed. **MUST NOT** automatically retry, mark a certain 403/404, or fabricate a success. The exact public HTTP/idempotency/reconciliation contract remains **BLOCKED** pending explicit approval.
+- **Known-rollback generated CREATE collision:** classify as a sanitized internal collision, never disclose colliding instance ID or probe hidden data. Secured C3 CREATE generates its own ID and bypasses Runtime CREATE collision probe. Lost-response behavior must be explicitly approved before production.
+
+**Decision precedence:** when no write may have committed, provider/proof uncertainty => UNAVAILABLE; otherwise hidden existence/binding before authority denial; visible caller's absent grant/authority => FORBIDDEN; only positively authorized operations may surface safe domain results. **After an attempted write whose COMMIT may be unknown, COMMIT_OUTCOME_UNKNOWN always dominates.**
+
+## 11. Change boundary and next review
+
+This PR's only change from previously accepted Stage 5 is **design documentation**. Owner ratification of DEC-VIS/DEC-CREATE affects product/error policy, not credentials or SQL approval. The companion V5 baseline supplies reviewable keys/FKs/role matrix but **does not implement physical SQL or establish independent cryptographic proof**. Request Yến to re-review the updated **Identity/Application and error-precedence design at exact new HEAD**; separately engage PostgreSQL/cryptography review for D2/D3/D4. No S6.2 implementation, staging/shared Supabase, Keycloak writes, V5 migration, Workflow HTTP, or merge.
