@@ -179,6 +179,23 @@ class Stage6TransactionSafetyIntegrationTest {
     }
 
     @Test
+    void confirmedCreateRollbackLeavesNoInstanceOrHistory() throws Exception {
+        try (Connection creator = open()) {
+            assertThat(create(creator, newId())).isEqualTo("SNAPSHOT");
+            assertThat(queryInt(creator, "SELECT count(*) FROM " + schema
+                    + ".workflow_instances")).isEqualTo(1);
+            creator.rollback();
+        }
+        try (Connection observer = open()) {
+            assertThat(queryInt(observer, "SELECT count(*) FROM " + schema
+                    + ".workflow_instances")).isZero();
+            assertThat(queryInt(observer, "SELECT count(*) FROM " + schema
+                    + ".workflow_transition_history")).isZero();
+            observer.rollback();
+        }
+    }
+
+    @Test
     void rejectedAuditMustRollbackAclAndRevisionTogether() throws Exception {
         try (Connection revoker = open()) {
             lockGuard(revoker);
