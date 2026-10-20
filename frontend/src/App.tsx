@@ -96,7 +96,7 @@ function Layout() {
           <img src="/favicon.svg" alt="" width="35" height="35" />
           <span>
             DX<span className="brand-dash">-</span>OS
-            <small>Service Portal</small>
+            <small>University Service Portal</small>
           </span>
           <span className="brand-version">β</span>
         </Link>
@@ -105,8 +105,8 @@ function Layout() {
             <Building2 size={18} />
           </span>
           <div>
-            <strong>TRICORE Workspace</strong>
-            <small>Không gian làm việc nội bộ</small>
+            <strong>Đại học CMC · DEMO</strong>
+            <small>Cổng dịch vụ trường học giả định</small>
           </div>
           <ChevronDown size={14} />
         </div>
@@ -149,7 +149,7 @@ function Layout() {
               <Workflow size={20} />
             </span>
             <strong>Một nền tảng. Nhiều dịch vụ.</strong>
-            <p>Hai quy trình mẫu, cùng trải nghiệm DX-Core.</p>
+            <p>Hỗ trợ CNTT và cơ sở vật chất trong trường đại học.</p>
             <Link to="/integration">
               Khám phá kiến trúc <ArrowUpRight size={14} />
             </Link>
@@ -168,7 +168,7 @@ function Layout() {
                 {role === "processor"
                   ? "Người xử lý · Demo"
                   : role
-                    ? "Nhân viên · Demo"
+                    ? "Người gửi yêu cầu · Demo"
                     : "Chưa vào phiên demo"}
               </small>
             </span>
@@ -187,7 +187,7 @@ function Layout() {
             >
               {menu ? <X size={21} /> : <Menu size={21} />}
             </button>
-            <span>Cổng dịch vụ</span>
+            <span>Dịch vụ trường học</span>
             <span className="breadcrumb-divider">/</span>
             <strong>
               {location.pathname === "/"
@@ -236,10 +236,10 @@ function Layout() {
         </main>
         <footer className="footer">
           <span>
-            DX-OS Open-Core <span className="footer-separator">/</span> Internal
+            DX-OS Open-Core <span className="footer-separator">/</span> University
             Service Portal
           </span>
-          <span>Ứng dụng Tầng 2 · Prototype cho OLP 2026</span>
+          <span>Bối cảnh Đại học CMC giả định · MOCK · OLP 2026</span>
         </footer>
       </div>
     </div>
