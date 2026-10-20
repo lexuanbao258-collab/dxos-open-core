@@ -36,7 +36,7 @@ These two rules are now **explicit owner-approved product semantics**, matching 
 | DEC-D2-01 | Separate new-resource registration from legacy reconciliation; use a reviewed authoritative manifest, exact inventory validation and a fenced legacy-writer cutover (§3 and companion DB1b). | **PENDING OWNER / PostgreSQL REVIEW** |
 | DEC-D2-02 | Enforce permanent tenant/resource keys, no transfer/reuse/resurrection through constraints, triggers, restricted privileges and narrow mutation protocol (companion DB1a). | Product no-transfer/no-reuse rule already approved; **physical enforcement PENDING PostgreSQL REVIEW** |
 | DEC-D2-03 | Deactivate membership and revoke every positive grant atomically; reactivate without restoring grants; reassign ACTIVE-resource ownership to active same-tenant members or reject deactivation; retain durable audit (companion DB2a). | **PENDING OWNER / YẾN / PostgreSQL REVIEW** |
-| DEC-D2-04 | CREATE order: authenticated identity → reliable source → resource visibility → explicit CREATE grant + exact JWT authority → exact active definition binding (§10). | **PENDING OWNER/YẾN APPROVAL**; changes mixed-failure precedence, not yet accepted policy |
+| DEC-D2-04 | CREATE order: authenticated identity → reliable source → resource visibility → explicit CREATE grant + exact JWT authority → exact active definition binding (§10). | **OWNER DESIGN DIRECTION RECORDED** in [Issue #23](https://github.com/lexuanbao258-collab/dxos-open-core/issues/23#issuecomment-6288471117); **YẾN RE-REVIEW PENDING**. Mixed-failure sequencing differs from Stage 5; no Java/DB implementation authorized. |
 
 Global resource namespace compatibility, physical audit storage and the above approvals remain open. **Tenant-disable has no approved physical lifecycle; propose DEFER from MVP v1 unless a demonstrated business requirement justifies reopening its design.** No tenant status column, disable mutator or schema change is implied. DEC-VIS / DEC-CREATE ratification does **not** settle DEC-D2-04's ordering when failures overlap.
 
@@ -163,7 +163,7 @@ Secured CREATE **must not invoke** `WorkflowRuntime.createInstance` because its 
 | **D3** — SQL privilege model | Owner/migrator/runtime/policy-admin/provisioner/PUBLIC explicit effective role matrix and function restrictions in [SQL-A matrix](issue-23-stage6-s61-v5-physical-privilege-review.md) | **BLOCKED — privileges are proposed, not implemented/audited** | Independent PostgreSQL/security reviewer; Bảo integrates |
 | **D4** — actor+target+transaction-bound proof | Six-port contract remains ADR-0023 Option A / ADR-0024 conditional HMAC, with strict UTF-8 fields, key custody, replay/expiry and PID/XID review questions detailed in [SQL-B](issue-23-stage6-s61-v5-physical-privilege-review.md) | **BLOCKED (P0) — no approved verifier/key protocol, no downgrade of threat model** | Independent security/cryptography reviewer; Bảo decision owner |
 | **D5** — final guarded transaction invariants | MUST/MUST NOT requirements frozen in §9 below, ADR-0023 Option A | **ACCEPTED — architecture contract only; implementation and concurrency evidence BLOCKED** | Bảo + independent PostgreSQL/concurrency reviewer |
-| **D6** — failure precedence, C3 CREATE | §10 retains error classes and COMMIT_OUTCOME_UNKNOWN; explicitly contrasts baseline with DEC-D2-04 CREATE proposal | **Existing design only; DEC-D2-04 PENDING OWNER/YẾN APPROVAL; JDBC/HTTP fault evidence BLOCKED** | Bảo + Yến on HTTP/Identity + independent DB reviewer |
+| **D6** — failure precedence, C3 CREATE | §10 retains error classes and COMMIT_OUTCOME_UNKNOWN; contrasts old baseline with owner-selected DEC-D2-04 direction | **OWNER DIRECTION RECORDED; YẾN/SECURITY RE-REVIEW PENDING; JDBC/HTTP fault evidence BLOCKED** | Bảo + Yến on HTTP/Identity + independent DB reviewer |
 | **D7** — PG17 evidence | [Test matrix](../verification/issue-23-stage6-pg17-acceptance-matrix.md) enumerates two-connection barrier, role/proof negatives, fault injection and exact JUnit evidence | **DEFERRED to S6.2–S6.5 after physical design approval; no Stage 6 test PASS** | Bảo executor, independent DB reviewer |
 | **D8** — scope and safety | This PR updates **documentation only**. No V5 executable migration, V1–V4 edit, PostgreSQL role/secret/live DB change, production HTTP registration, or merge | **ACCEPTED — process boundary at this HEAD** | Bảo, verified by GitHub diff |
 
@@ -183,7 +183,7 @@ Secured CREATE **must not invoke** `WorkflowRuntime.createInstance` because its 
 
 ## 10. Error classification — baseline and pending CREATE precedence
 
-The classes below retain the existing design baseline. They do **not** ratify the new CREATE order. The prior §10 rule “hidden existence/binding before authority denial” conflicts with parts of Stage 5 source and with DEC-D2-04; the comparison below makes that conflict explicit rather than silently replacing an approved rule.
+The classes below document the existing design baseline. The owner has now **selected DEC-D2-04 as a design direction**, but Yến/security review and Stage-5 implementation changes are still PENDING. The prior §10 rule “hidden existence/binding before authority denial” conflicts with parts of Stage 5 source and with DEC-D2-04; the comparison below makes that conflict explicit rather than silently replacing an approved rule.
 
 - **Authn:** absent/expired/forged/wrong issuer-or-audience JWT -> authentication failure (intended safe HTTP **401**) before any ACL lookup; exact JWT authority alone cannot grant resource permission.
 - **UNAVAILABLE** (fail-closed): provider/ACL source null, throws, timeout, unverifiable SQL proof, actor/resource mismatch, DB availability fault, or lock uncertainty. No ALLOWED fallback. Candidate sanitized HTTP 503 is **not yet signed-off**.
@@ -193,11 +193,11 @@ The classes below retain the existing design baseline. They do **not** ratify th
 - **COMMIT_OUTCOME_UNKNOWN overrides all preceding policy/domain classifications** if a write COMMIT was attempted with uncertain outcome or rollback failure leaves the write possibly committed. **MUST NOT** automatically retry, mark a certain 403/404, or fabricate a success. The exact public HTTP/idempotency/reconciliation contract remains **BLOCKED** pending explicit approval.
 - **Known-rollback generated CREATE collision:** classify as a sanitized internal collision, never disclose colliding instance ID or probe hidden data. Secured C3 CREATE generates its own ID and bypasses Runtime CREATE collision probe. Lost-response behavior must be explicitly approved before production.
 
-**Prior §10 baseline, not a resolution of CREATE mixed failures:** when no write may have committed, provider/proof uncertainty => UNAVAILABLE; otherwise hidden existence/binding before authority denial; visible caller's absent grant/authority => FORBIDDEN; only positively authorized operations may surface safe domain results. **After an attempted write whose COMMIT may be unknown, COMMIT_OUTCOME_UNKNOWN always dominates.**
+**Prior §10 baseline, superseded for proposed CREATE decision-order design only once D2-04 re-review passes:** when no write may have committed, provider/proof uncertainty => UNAVAILABLE; otherwise hidden existence/binding before authority denial; visible caller's absent grant/authority => FORBIDDEN; only positively authorized operations may surface safe domain results. **After an attempted write whose COMMIT may be unknown, COMMIT_OUTCOME_UNKNOWN always dominates.**
 
-### DEC-D2-04 — PENDING OWNER/YẾN APPROVAL
+### DEC-D2-04 — OWNER DESIGN DIRECTION; YẾN RE-REVIEW PENDING
 
-Proposed CREATE decision order (known no-commit only):
+Owner-selected CREATE decision order **for design review**, not yet the deployed policy (known no-commit only):
 
 1. **Authenticated identity:** require verified canonical caller first; authentication failure precedes ACL lookup. Possession of an identity does not imply exact `workflow:create` authority.
 2. **Reliable source:** establish trustworthy actor/resource-scoped facts and SQL proof. Null/exception/timeout, unverifiable proof or inconsistent actor/target -> UNAVAILABLE, never convert an unknown result into missing/forbidden. A confirmed missing resource is a reliable negative, not an outage.
@@ -223,4 +223,39 @@ DEC-D2-04 removes the binding-dependent HIDDEN/FORBIDDEN difference for a visibl
 
 ## 11. Change boundary and next review
 
-This refinement changes only the three existing Stage 6.1 documents against source HEAD `e3343de`. Owner ratification of DEC-VIS/DEC-CREATE affects product/error policy, not credentials or SQL approval; DEC-D2-01/03 and especially **DEC-D2-04 PENDING OWNER/YẾN APPROVAL** remain proposals. The companion baseline supplies constraints/triggers, manifest reconciliation, membership mutation and role review requirements but **does not implement SQL or establish independent security sign-off**. Stop for **Technical Lead review**, then owner/Yến and independent PostgreSQL/cryptography review of D2/D3/D4. **D2/D3/D4 and S6.2 remain BLOCKED.** No Java/SQL/Flyway or V1–V4 change, V5 creation, database/Keycloak access, Workflow HTTP, commit/push/merge or GitHub publication.
+This refinement changes only the three existing Stage 6.1 documents against source HEAD `e3343de`. Owner ratification of DEC-VIS/DEC-CREATE affects product/error policy, not credentials or SQL approval; DEC-D2-01/03 remain proposals and **DEC-D2-04 has owner direction but Yến/security re-review is pending**. The companion baseline supplies constraints/triggers, manifest reconciliation, membership mutation and role review requirements but **does not implement SQL or establish independent security sign-off**. Stop for **Technical Lead review**, then owner/Yến and independent PostgreSQL/cryptography review of D2/D3/D4. **D2/D3/D4 and S6.2 remain BLOCKED.** No Java/SQL/Flyway or V1–V4 change, V5 creation, database/Keycloak access, Workflow HTTP activation, PR merge or Stage 6.2 work is authorized. Documentation-only commits to this Draft PR are permitted.
+
+
+## 12. Owner decision / MVP simplification review handoff (2026-10-20)
+
+**Owner record:** [Issue #23 comment](https://github.com/lexuanbao258-collab/dxos-open-core/issues/23#issuecomment-6288471117). This section is the **owner-selected D2-04 design direction**, not Yến's review and not PostgreSQL/security sign-off. The rule may become the product contract only after Stage-5 conflict and ADR-0024 C3/proof semantics are reconciled and reviewed. DEC-VIS, DEC-CREATE, ADR-0023 Option A and all S6.1 SQL safety stops continue unchanged.
+
+### D2-04 denial truth table — reliable source, no attempted write
+
+| Verified authn | Resource visible under DEC-VIS | Explicit CREATE grant | Exact verified workflow:create authority | Active exact binding | Safe classification / lookup obligation |
+|---|---|---|---|---|---|
+| No | Any | Any | Any | Any | 401 before protected ACL/binding lookup |
+| Yes | Unknown because source/proof failed | Any | Any | Any | UNAVAILABLE (sanitized), no synthetic HIDDEN/403 |
+| Yes | No (foreign, nonmember, tombstoned, unmapped or no visibility) | Any | Any | Any | HIDDEN/404 with externally equivalent hidden/missing response; NO binding/definition read |
+| Yes | Yes | No | Yes or No | Present or absent | FORBIDDEN/403; no binding/definition read |
+| Yes | Yes | Yes | No | Present or absent | FORBIDDEN/403; no binding/definition read |
+| Yes | Yes | Yes | Yes | Missing/inactive/wrong ID/version | HIDDEN/404; exact lookup occurs only now |
+| Yes | Yes | Yes | Yes | Present/active/exact | Proceed to guarded exact definition/domain validation; write only after fresh post-guard authorization and durable commit |
+
+**Cross-branch failure precedence:** a source/proof outage returns UNAVAILABLE only when the reliable minimum needed to classify the request is unavailable; never query binding prematurely and turn its outage into UNAVAILABLE for unauthorized callers. On a write with possibly unknown COMMIT, COMMIT_OUTCOME_UNKNOWN always takes precedence and no blind retry is permitted. HIDDEN/403/404 equivalence must include body, headers/cache behavior and no secret-dependent materialization. A matching 403 alone **does not prove** that binding was not looked up.
+
+### Required Stage 5 and C3 discrepancy review (NO Java edits in S6.1)
+
+- At Stage 5 [PR #49 HEAD 32ca73fa](https://github.com/lexuanbao258-collab/dxos-open-core/pull/49), the service preloads the definition, the resource policy checks grant then binding, and only later the authorization wrapper checks JWT authority. Mixed denials can depend on binding presence and definition lookup. **Do not mark this table implemented**, nor use old single-negative tests as mixed-denial evidence.
+- Before coding the policy change, add a separate reviewed Stage 5 implementation plan for an authentication/visibility/CREATE grant/authority-first classification; only a fully authorized actor can cause exact definition/binding materialization. Preserve negative behavior of hidden/foreign resources and never permit unverified proof as a shortcut. Explicitly reconcile ADR-0024 C3 section 1's eager exact-authority check and actor-capability signing sequence; any inability to obtain reliable SQL proof must fail closed without leaking hidden resource existence.
+- Tests must use an instrumented reader/spy to assert **zero binding or definition lookups** for unauthorized actors and hidden resources, in addition to comparing public denials. Cover at least grant×authority×binding cross-product (2×2×active/inactive/missing/wrong-version), visible/nonvisible, source unavailable, target mismatch, proof failure, and post-lock revoke races. Only after acceptance may implementation and HTTP/PG17 tests be scheduled.
+
+### D3 simplification proposal — no loss of permission boundary
+
+Keep one closed SQL permission surface for the actual Core persistence ports (currently six load/write operations), provided exact signatures and protected READ/HISTORY are justified. **Reduce redundant administration/provisioning helper count only after** enumerating all necessary membership deactivation, owner reassignment, grant/binding/tombstone, legacy manifest/recovery and atomic audit mutations. No fixed function count is an MVP requirement, but no externally callable helper may have broader grants than its reviewed operation. Runtime direct V3/V5 DML, PUBLIC/default EXECUTE, role inheritance/SET ROLE escalation, arbitrary SQL and incomplete audit stay prohibited. Any simplification is a **review proposal**, not permission to weaken the current SQL role matrix.
+
+### D4 threat-model decision gate — PROPOSAL ONLY
+
+See [ADR-0025 PROPOSED trusted-backend model](../adr/ADR-0025-proposed-mvp-trusted-backend-threat-model.md). The owner requests Yến and an appropriate PostgreSQL/security reviewer to assess whether a student-run isolated MVP may defer HMAC/PID/XID. **There is no accepted security downgrade.** In particular, a stolen runtime DB password could allow actor spoofing via allowed SQL functions under the proposed weaker model; effective narrow grants and the backend OIDC check do not independently solve that threat. Unless separately ratified and recorded against ADR-0024, preserve D4 as **BLOCKED P0**, and do not assert SQL-level verified actor proof.
+
+**Exit conditions:** Yến ACCEPT/CHANGES REQUIRED at the **new exact PR #50 HEAD** for D2-04 and ADR direction; owner records ratification or rejection of D4 threat model; independent DB reviewer examines D2 physical invariants, D3 effective grants and D4 risk. Stage 6.1 remains **NOT PASS**, Stage 6.2 **BLOCKED**, PR #50 Draft. No productive SQL, Flyway V5, credential/role changes, public HTTP, or merge.
