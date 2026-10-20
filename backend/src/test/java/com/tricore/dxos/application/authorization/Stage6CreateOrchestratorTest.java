@@ -123,6 +123,56 @@ class Stage6CreateOrchestratorTest {
         verify(port, never()).loadInstance(anyString());
     }
 
+    @Test
+    void nullResultAfterWriteIsUnknownCommitAndNeverRetried() {
+        when(port.createInstance(any())).thenReturn(null);
+
+        assertThatThrownBy(this::create)
+                .isInstanceOf(WorkflowException.class)
+                .satisfies(error -> assertThat(((WorkflowException) error).code())
+                        .isEqualTo(WorkflowErrorCode.COMMIT_OUTCOME_UNKNOWN));
+        verify(port, times(1)).createInstance(any());
+        verify(port, never()).loadInstance(anyString());
+    }
+
+    @Test
+    void unexpectedCommittedInstanceIdIsUnknownAndNeverRetried() {
+        when(port.createInstance(any())).thenReturn(WorkflowInstance.notStarted(
+                "wf_unrelated", DEFINITION, RESOURCE, CLOCK.instant()));
+
+        assertThatThrownBy(this::create)
+                .isInstanceOf(WorkflowException.class)
+                .satisfies(error -> assertThat(((WorkflowException) error).code())
+                        .isEqualTo(WorkflowErrorCode.COMMIT_OUTCOME_UNKNOWN));
+        verify(port, times(1)).createInstance(any());
+        verify(port, never()).loadInstance(anyString());
+    }
+
+    @Test
+    void unexpectedCommittedResourceIsUnknownAndNeverRetried() {
+        when(port.createInstance(any())).thenAnswer(i -> {
+            WorkflowInstance proposal = i.getArgument(0);
+            return WorkflowInstance.notStarted(proposal.instanceId(), DEFINITION,
+                    new ResourceReference("item", "unrelated"), CLOCK.instant());
+        });
+
+        assertThatThrownBy(this::create)
+                .isInstanceOf(WorkflowException.class)
+                .satisfies(error -> assertThat(((WorkflowException) error).code())
+                        .isEqualTo(WorkflowErrorCode.COMMIT_OUTCOME_UNKNOWN));
+        verify(port, times(1)).createInstance(any());
+        verify(port, never()).loadInstance(anyString());
+    }
+
+    @Test
+    void absentBindingCannotMaterializeDefinitionOrOpenScopedPort() {
+        when(source.hasExactActiveBinding(RESOURCE, TENANT, "publication", 7)).thenReturn(false);
+
+        assertThatThrownBy(this::create).isInstanceOf(WorkflowAccessException.class)
+                .hasMessage(WorkflowAccessDecision.HIDDEN.name());
+        verifyNoInteractions(factory, port);
+    }
+
     private void verified(String authority) {
         when(identity.requireVerified()).thenReturn(new AuthenticatedPrincipal(
                 ACTOR, null, Set.of(new Authority(authority)), true));
