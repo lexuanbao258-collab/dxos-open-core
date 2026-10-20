@@ -148,7 +148,7 @@ class Stage6GuardedCreateCandidateIntegrationTest {
         assertThat(create(id, "member-a", true, "res-a").outcome()).isEqualTo("UNAVAILABLE");
         String valid = proposal(newId(), "res-a");
         Reply extraField = call("member-a", true,
-                valid.substring(0, valid.length() - 1) + ",\\\"unexpected\\\":true}");
+                valid.substring(0, valid.length() - 1) + "," + (char) 34 + "unexpected" + (char) 34 + ":true}");
         assertThat(extraField.outcome()).isEqualTo("UNAVAILABLE");
         assertThat(rows("workflow_instances")).isEqualTo(1);
     }
