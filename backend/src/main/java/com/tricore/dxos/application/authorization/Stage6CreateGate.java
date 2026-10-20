@@ -20,14 +20,16 @@ import java.util.Set;
 final class Stage6CreateGate {
     interface Source {
         Optional<Facts> classify(ResourceReference resource, String verifiedActorId);
-        boolean hasExactActiveBinding(ResourceReference resource, String definitionId, long version);
+        boolean hasExactActiveBinding(ResourceReference resource, String authoritativeTenantId,
+                                      String definitionId, long version);
     }
 
-    record Facts(ResourceReference resource, String verifiedActorId, boolean resourceActive,
+    record Facts(ResourceReference resource, String verifiedActorId, String tenantId, boolean resourceActive,
                  boolean memberActive, boolean owner, Set<WorkflowOperation> grants) {
         Facts {
             Objects.requireNonNull(resource, "resource");
-            if (verifiedActorId == null || verifiedActorId.isBlank()) {
+            if (verifiedActorId == null || verifiedActorId.isBlank()
+                    || tenantId == null || tenantId.isBlank()) {
                 throw new IllegalArgumentException("Unbound actor in ACL facts");
             }
             grants = Set.copyOf(Objects.requireNonNull(grants, "grants"));
@@ -78,7 +80,7 @@ final class Stage6CreateGate {
         // No binding/definition access was needed for any of the earlier denials.
         boolean active;
         try {
-            active = source.hasExactActiveBinding(resource, definitionId, definitionVersion);
+            active = source.hasExactActiveBinding(resource, facts.tenantId(), definitionId, definitionVersion);
         } catch (RuntimeException failure) {
             throw denied(WorkflowAccessDecision.UNAVAILABLE);
         }
