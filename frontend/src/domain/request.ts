@@ -40,7 +40,7 @@ export interface RequestAction {
   tone?: "danger";
 }
 export const kindLabels: Record<RequestKind, string> = {
-  it: "Hỗ trợ CNTT",
+  it: "Hỗ trợ CNTT trường học",
   facility: "Cơ sở vật chất",
 };
 export const statusLabels: Record<RequestStatus, string> = {
