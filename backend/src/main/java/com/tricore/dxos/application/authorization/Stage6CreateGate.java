@@ -44,7 +44,7 @@ final class Stage6CreateGate {
         this.source = Objects.requireNonNull(source, "source");
     }
 
-    void check(ResourceReference resource, String definitionId, long definitionVersion) {
+    AuthenticatedPrincipal check(ResourceReference resource, String definitionId, long definitionVersion) {
         Objects.requireNonNull(resource, "resource");
         if (definitionId == null || definitionId.isBlank() || definitionVersion < 0) {
             throw new IllegalArgumentException("Invalid exact definition key");
@@ -88,6 +88,7 @@ final class Stage6CreateGate {
             throw denied(WorkflowAccessDecision.HIDDEN);
         }
         // This is NOT final authorization; a future scoped port must recheck in its own tx.
+        return caller;
     }
 
     private static WorkflowAccessException denied(WorkflowAccessDecision decision) {
