@@ -1,9 +1,9 @@
 # Issue #23 — Stage 6.1: PostgreSQL authoritative ACL and transaction contract
 
-**Status: REVIEW CANDIDATE / DESIGN ONLY — NOT DDL OR PRODUCTION APPROVAL**  
-**Date:** 2026-10-19  
-**Owner:** Bảo, Issue #23. **Identity/application reviewer:** Yến. **PostgreSQL/cryptography independent sign-off:** not established; owner-led review is not independent DB certification.  
-**Base:** Stage 5 [PR #49](https://github.com/lexuanbao258-collab/dxos-open-core/pull/49), reviewed exact HEAD `32ca73fa8444ab51cf7cf30baa90fb39938b627b`.  
+**Status: REVIEW CANDIDATE / DESIGN ONLY — NOT DDL OR PRODUCTION APPROVAL**
+**Date:** 2026-10-19
+**Owner:** Bảo, Issue #23. **Identity/application reviewer:** Yến. **PostgreSQL/cryptography independent sign-off:** not established; owner-led review is not independent DB certification.
+**Base:** Stage 5 [PR #49](https://github.com/lexuanbao258-collab/dxos-open-core/pull/49), reviewed exact HEAD `32ca73fa8444ab51cf7cf30baa90fb39938b627b`.
 **Reference architecture:** Draft [PR #36](https://github.com/lexuanbao258-collab/dxos-open-core/pull/36) at `ff824fc827cdef448fff82d907cef0d50113d81a`: [ADR-0023 Option A](https://github.com/lexuanbao258-collab/dxos-open-core/blob/ff824fc827cdef448fff82d907cef0d50113d81a/docs/adr/ADR-0023-workflow-acl-transaction-boundary.md), [ADR-0024 C3 + HMAC proposal](https://github.com/lexuanbao258-collab/dxos-open-core/blob/ff824fc827cdef448fff82d907cef0d50113d81a/docs/adr/ADR-0024-workflow-create-and-sql-principal-attestation.md), [six-port SQL matrix](https://github.com/lexuanbao258-collab/dxos-open-core/blob/ff824fc827cdef448fff82d907cef0d50113d81a/docs/contracts/issue-23-workflow-port-sql-authorization-matrix-v1.md), and [V5 v2 candidate](https://github.com/lexuanbao258-collab/dxos-open-core/blob/ff824fc827cdef448fff82d907cef0d50113d81a/docs/contracts/issue-23-v5-ddl-guarded-tx-review-v2.md).
 
 > **STOP RULE:** Do not create or run `V5__*.sql`, modify V1–V4, grant SQL roles, create signing keys, cherry-pick PR #36 SQL fixtures into production, touch shared Supabase/staging, or register Workflow HTTP from this document. Execution is deferred until explicitly approved design, migration compatibility, privileges, and isolated PostgreSQL 17 evidence. No Spring `@Transactional` wrapper can substitute for the durable port boundary.
@@ -119,7 +119,7 @@ Secured CREATE **must not invoke** `WorkflowRuntime.createInstance` because its 
 
 > **Response to Yến's [S6.1 review](https://github.com/lexuanbao258-collab/dxos-open-core/pull/50#issuecomment-6280356582):** all eight requested items are **explicitly dispositioned** below; a proposed baseline is not equivalent to independent SQL/security sign-off. See [Physical V5 / SQL role / caller-proof review baseline](issue-23-stage6-s61-v5-physical-privilege-review.md) for detailed DB1/DB2 and SQL-A/SQL-B review tables. This document is the normative architecture request; code execution is still blocked.
 
-- **S6.1-D1:** two outstanding Stage 5 public policy decisions DEC-VIS / DEC-CREATE ratified or explicitly rejected by owner; unresolved = no executable SQL.
+- **S6.1-D1:** owner-ratified Stage 5 public rules DEC-VIS / DEC-CREATE recorded in Issue #23; physical SQL/HTTP proof remains a distinct gate.
 - **S6.1-D2:** reviewed schema physical DDL draft includes FK/collation, immutable tenant/resource/tombstone, legacy V3 fail-closed reconciliation and V1–V4 manifest compatibility.
 - **S6.1-D3:** runtime/admin/provisioner/migrator/owner SQL role and exact function allowlists reviewed; no table/function or credential bypass and no premature privilege switchover.
 - **S6.1-D4:** six-port API exact target/method/actor and transaction proof design reviewed, consistent with ADR-0023/0024; key/proof P0 open until independently verified.
@@ -130,9 +130,9 @@ Secured CREATE **must not invoke** `WorkflowRuntime.createInstance` because its 
 
 ### Specific review requests
 
-**Yến:** please independently review compatibility with verified Identity/canonical issuer+subject UTF-8 and exact role mapping, Stage 5 visibility/denial candidate, operation scope/delegation and error priorities. Yến's review alone is **not** PostgreSQL/cryptography sign-off.
+**Yến:** please independently review compatibility with verified Identity/canonical issuer+subject UTF-8 and exact role mapping, owner-ratified Stage 5 visibility/denial rules, operation scope/delegation and error priorities. Yến's review alone is **not** PostgreSQL/cryptography sign-off.
 
-**Bảo / PostgreSQL-security competent reviewer:** decide DEC-VIS and DEC-CREATE explicitly; review V5 DDL FK/collation/migration path, all SQL privileges and actor-proof threat model, tenant-lock/savepoint semantics, rollback/COMMIT ambiguity, privilege revocation sequence, and actual disposable-PG17 evidence before S6.2 deployment. If only owner-led self-review occurs, label it as such and retain any P0 without independent security evidence.
+**Bảo / PostgreSQL-security competent reviewer:** confirm the already recorded owner DEC-VIS and DEC-CREATE decisions are correctly carried into SQL; independently review V5 DDL FK/collation/migration path, all SQL privileges and actor-proof threat model, tenant-lock/savepoint semantics, rollback/COMMIT ambiguity, privilege revocation sequence, and actual disposable-PG17 evidence before S6.2 deployment. If only owner-led self-review occurs, label it as such and retain any P0 without independent security evidence.
 
 **Current decision: S6.1 REVIEW DRAFT; S6.2 IMPLEMENTATION BLOCKED until designated gates are approved.**
 
