@@ -199,7 +199,7 @@ Direct MATERIALIZE invocation, including a runtime caller that never invoked CLA
 | `createInstance(initial)` | `wf_port_create_instance`, CREATE scope; generated ID, resource/definition pin and complete initial proposal must match context. No hidden collision SELECT. |
 | `loadInstance(String)` | `wf_port_load_instance`, exact instance under READ or internal ACTIVATE/TRANSITION scope; forbidden in secured CREATE. |
 | `loadHistory(String)` | `wf_port_load_history`, exact READ instance; guarded existence/history materialization in one coherent transaction. |
-| `commitActivation(expected,activated)` | `wf_port_commit_activation`, ACTIVATE; recheck current ACL and full persisted/proposed snapshot, binding, version and lifecycle under the guard/instance lock. |
+| `commitActivation(expected,activated)` | `wf_port_commit_activation`, ACTIVATE; recheck current ACL and full persisted/proposed snapshot, pinned definition, version and lifecycle (no active CREATE binding) under the guard/instance lock. |
 | `commitTransition(result)` | `wf_port_commit_transition`, TRANSITION; context actor/instance/requested transition/version must agree with the proposal; rederive authoritative transition and commit state + exactly one matching history record. |
 
 CREATE sequence: verified principal -> immutable CREATE scope -> private CLASSIFY -> Core `loadDefinition`/MATERIALIZE with independent authorization -> `WorkflowInstance.notStarted` -> Core `createInstance` with final independent authorization and confirmed COMMIT. Never call the old `WorkflowRuntime.createInstance` collision probe. Every protected read uses its own checked, lock-capable READ COMMITTED transaction; the guard remains held until that transaction ends. ACTIVATE/TRANSITION Runtime calls use their original scope throughout; internal reads do not require an extra public READ grant.
@@ -209,6 +209,34 @@ Each final write must acquire its own tenant guard FOR SHARE, re-read live resou
 The infrastructure/application error bridge must preserve typed access denials without the current JDBC catch-all converting them into OPERATION_FAILURE; do not add Core error codes or fabricate return objects. Provider failures retain the Core contract and the secured boundary's sanitized UNAVAILABLE mapping only after known rollback/safe outcome. Any uncertain write COMMIT or failed rollback that leaves commitment possible takes precedence as COMMIT_OUTCOME_UNKNOWN, never reclassified as HIDDEN/FORBIDDEN/UNAVAILABLE or blindly replayed. SQL functions do not independently COMMIT; the owning port invocation confirms the JDBC transaction outcome.
 
 Runtime retains only schema USAGE and EXECUTE on the six exact reviewed signatures; no protected V3/V5/audit SELECT/DML, extra overload/helper EXECUTE, schema/role escalation or PUBLIC/default bypass. Use the existing SECURITY DEFINER owner/search_path/qualified-reference requirements in SQL-A; audit actual LOGIN effective grants, function creator defaults and inheritance/SET ROLE paths before any later cutover. Under ADR-0025 Option B, actor and authority arguments are assertions from the trusted verified backend, **not PostgreSQL cryptographic attestation**. Stolen runtime credentials plus DB connectivity may forge them; no HMAC/PID/XID/replay guarantee is reinstated. D2-A's fresh-install fence/cutover/recovery and D2-B's owner-selected audit design remain unchanged; neither grants runtime policy-admin access.
+
+#### D3 remaining five typed SQL signatures — compact DESIGN CANDIDATE
+
+These five candidates complete the **signature proposal** alongside the single `wf_port_load_definition` CLASSIFY/MATERIALIZE signature above. They preserve exactly six existing Core port identities / six runtime `wf_port_*` functions; **not executable DDL, not approved SQL, no helper or overload**.
+
+```text
+wf_port_load_instance(
+  p_actor_id TEXT, p_operation TEXT, p_authority_present BOOLEAN, p_instance_id TEXT)
+wf_port_load_history(
+  p_actor_id TEXT, p_authority_present BOOLEAN, p_instance_id TEXT)
+wf_port_create_instance(
+  p_actor_id TEXT, p_authority_present BOOLEAN, p_initial JSONB)
+wf_port_commit_activation(
+  p_actor_id TEXT, p_authority_present BOOLEAN, p_expected JSONB, p_activated JSONB)
+wf_port_commit_transition(
+  p_actor_id TEXT, p_authority_present BOOLEAN, p_previous JSONB, p_next JSONB, p_record JSONB)
+-- Each: exactly one row (outcome TEXT, body JSONB); no default arguments.
+```
+
+| Function | Positive `outcome` / typed `body` | Required operation and final guard |
+|---|---|---|
+| `load_instance` | SNAPSHOT / Core WorkflowInstance | READ or internal ACTIVATE/TRANSITION; check exact target + operation ACL + authority; internal use needs no separate public READ grant |
+| `load_history` | HISTORY / ordered Core TransitionRecord array (empty only when authorized instance exists) | READ; no instance/history read before authorization |
+| `create_instance` | SNAPSHOT / canonical inserted initial instance | CREATE; server-generated opaque instance ID; no duplicate-ID SELECT; exact binding checked only after visibility/CREATE ACL/authority |
+| `commit_activation` | SNAPSHOT / committed activated instance | ACTIVATE; compare full expected/persisted snapshots and pinned definition; **no active CREATE binding**; zero new history |
+| `commit_transition` | TRANSITION_RESULT / previous instance, new instance, matching record | TRANSITION; verify canonical actor, full previous/proposed snapshots, transition/version; atomic state + exactly one history record |
+
+**Closed transport and errors:** `p_initial`, `p_expected`, `p_activated`, `p_previous`, `p_next` encode exactly the fields of the existing V3 WorkflowInstance snapshot (IDs/resource/definition pin/state/version/lifecycle and two epoch-second+nanos pairs). `p_record` encodes the existing TransitionRecord (instance/transition/source/target/actor/resulting version/epoch-second+nanos); reject unknown fields, precision loss, mismatched IDs/actor/proposals, or invalid Core invariants. Read success and restored Core data must preserve provider-neutral semantics. Other result tags are `HIDDEN`/`FORBIDDEN`/`UNAVAILABLE` (NULL body), or `DOMAIN_ERROR` containing only an applicable existing WorkflowErrorCode. Unknown tag, wrong body or cardinality fails closed. Every call gets **only backend-verified immutable actor/action/target/authority scope**, not client assertions or SQL actor attestation under ADR-0025 Option B. Direct invocation rechecks ACL under tenant guard; write success requires confirmed durable physical COMMIT and `COMMIT_OUTCOME_UNKNOWN` must not become a retry. This signature/JSON candidate still needs **independent D3 review**, including full history transport/size (do not copy the 64KiB definition candidate limit), SQL privileges and Core parity. **NOT PASS / S6.2 BLOCKED**.
 
 #### Negative evidence within existing gates — NOT EXECUTED
 
