@@ -108,7 +108,10 @@ class Stage6GuardedCreateCandidateIntegrationTest {
         execute("UPDATE " + schema
                 + ".resource_registry SET owner_actor_id='other-member' WHERE resource_id='res-a'");
         execute("UPDATE " + schema
-                + ".resource_acl SET operation='workflow:read' WHERE operation='workflow:create'");
+                + ".resource_acl SET granted=false WHERE operation='workflow:create'");
+        execute("INSERT INTO " + schema + ".resource_acl "
+                + "(tenant_id,resource_type,resource_id,actor_id,operation,granted) "
+                + "VALUES('tenant-a','item','res-a','member-a','workflow:read',true)");
         assertThat(create(newId(), "member-a", true, "res-a").outcome()).isEqualTo("FORBIDDEN");
         assertThat(rows("workflow_instances")).isZero();
     }
@@ -116,7 +119,6 @@ class Stage6GuardedCreateCandidateIntegrationTest {
     @Test
     void missingAuthorityIsForbiddenBeforeDefinitionOrBinding() throws Exception {
         fixture();
-        execute("DELETE FROM " + schema + ".workflow_instances WHERE false"); // no data read
         assertThat(create(newId(), "member-a", false, "res-a").outcome()).isEqualTo("FORBIDDEN");
         assertThat(rows("workflow_instances")).isZero();
     }
@@ -144,8 +146,9 @@ class Stage6GuardedCreateCandidateIntegrationTest {
         String id = newId();
         assertThat(create(id, "member-a", true, "res-a").outcome()).isEqualTo("SNAPSHOT");
         assertThat(create(id, "member-a", true, "res-a").outcome()).isEqualTo("UNAVAILABLE");
+        String valid = proposal(newId(), "res-a");
         Reply extraField = call("member-a", true,
-                proposal(newId(), "res-a").replaceFirst("\\}$", ",\\\"unexpected\\\":true}"));
+                valid.substring(0, valid.length() - 1) + ",\\\"unexpected\\\":true}");
         assertThat(extraField.outcome()).isEqualTo("UNAVAILABLE");
         assertThat(rows("workflow_instances")).isEqualTo(1);
     }
