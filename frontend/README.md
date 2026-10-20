@@ -9,7 +9,7 @@
 Yêu cầu Node.js >= 22.12 (đã kiểm tra bằng Node 24.19.0), npm và trình duyệt hiện đại.
 
 ```powershell
-Set-Location D:\olp\issue39-ui\frontend
+Set-Location D:\olp\issue39-university-ui\frontend
 npm.cmd ci
 npm.cmd run dev
 ```
@@ -53,6 +53,8 @@ Hai workflow UX dùng chung form, bảng, metadata, action dialog và timeline. 
 | Route           | Nội dung                                                            |
 | --------------- | ------------------------------------------------------------------- |
 | `/session`      | Vào/kết thúc phiên demo, đổi vai trò, mô phỏng hết hạn; SSO bị chặn |
+| `/login`        | Form email/mật khẩu, ghi nhớ riêng email; submit và khôi phục mật khẩu bị chặn |
+| `/register`     | Form đăng ký Sinh viên/Giảng viên; không tạo tài khoản hoặc cấp quyền |
 | `/`             | Dashboard và truy cập nhanh hai dịch vụ                             |
 | `/requests`     | Search không dấu, filter dịch vụ/trạng thái, phân trang             |
 | `/requests/new` | Form dùng chung, validation, loading, success/error                 |
@@ -90,6 +92,34 @@ Smoke suite khởi chạy production preview tại `127.0.0.1:4173`, kiểm tra 
 Python không có trong môi trường triển khai nên browser suite dùng Playwright TypeScript, có thể chạy bằng dependencies đã khóa của dự án.
 
 ## Giới hạn
+
+### Email/mật khẩu: chỉ xem trước giao diện
+
+`/login` và `/register` dùng thương hiệu DX-OS, Be Vietnam Pro và Lucide, bố cục
+hai cột trên desktop và một cột trên mobile. Truy cập từ liên kết tại `/session`
+hoặc mở trực tiếp URL. Nút **Vào phiên Demo** luôn mở luồng Demo hiện có riêng.
+
+Email, họ tên, độ dài mật khẩu (đăng ký: 12–128 ký tự) và xác nhận mật khẩu được
+kiểm tra tại form. Đây là quy tắc UI tạm thời, không phải chính sách Identity đã
+được duyệt. Chỉ dùng dữ liệu giả; không nhập mật khẩu thật để thử nghiệm.
+
+Submit hợp lệ chỉ kiểm tra form cục bộ, xóa các ô mật khẩu rồi hiển thị
+**BLOCKED FEATURE**. Không gửi HTTP, không tạo JWT, không tạo tài khoản, không
+thay đổi vai trò/phiên Demo và không báo đăng nhập thành công. Quên mật khẩu cũng
+hiển thị **BLOCKED FEATURE**. Không có endpoint hoặc công tắc mở authentication.
+Luồng thật phải do backend Identity xử lý qua API được phê duyệt và bảo vệ.
+
+Chỉ khi người dùng chọn **Ghi nhớ email**, email hợp lệ được lưu trong
+`localStorage` dưới khóa `dxos-remembered-email-v1`; bỏ chọn sẽ xóa ngay. Mật khẩu
+chỉ tồn tại tạm trong ô nhập và bộ nhớ lúc validation, không được lưu vào browser
+storage, fixtures, logs hoặc gửi qua mạng. Đăng ký chỉ có Sinh viên/Giảng viên và
+từ chối giá trị vai trò bị sửa thành admin/processor. Không có quyền thực được cấp.
+
+Test mới nằm tại `src/pages/Auth.test.tsx` và `tests/auth.spec.ts`. Xem
+[ảnh Login/Register](../docs/evidence/issue39-portal/auth/README.md) ở desktop,
+tablet, mobile 390px và 320px. Bộ smoke hiện có tiếp tục kiểm tra tạo yêu cầu,
+phê duyệt, xử lý, timeline và `HttpApiClient` fail-closed. Theme chỉ tăng tương
+phản một số màu chữ phụ để các kiểm tra WCAG hiện có đạt; không đổi bố cục dashboard.
 
 - Request và lịch sử chỉ ở bộ nhớ trong **một tab**. Reload hoặc khôi phục demo sẽ reset fixtures; đổi route bằng sidebar giữ dữ liệu.
 - Phiên demo chỉ lưu lựa chọn vai trò trong tab, không có SSO, access token hay quyền thực.

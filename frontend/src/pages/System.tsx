@@ -156,6 +156,9 @@ export function Session() {
             MOCK / DEVELOPMENT · Vai trò này không chứng minh quyền truy cập
             thực.
           </p>
+          <Link className="text-link" to="/login">
+            Xem giao diện đăng nhập email/mật khẩu <ArrowRight size={14} />
+          </Link>
         </section>
       </div>
     </>

@@ -32,6 +32,7 @@ import { NewRequest } from "./pages/NewRequest";
 import { RequestDetail } from "./pages/RequestDetail";
 import { Session, Integration } from "./pages/System";
 import { Empty } from "./components/ui";
+import { AuthPage } from "./pages/Auth";
 
 const navItems = [
   { to: "/", label: "Tổng quan", icon: LayoutDashboard, end: true },
@@ -253,6 +254,11 @@ export function App() {
   return (
     <PortalProvider>
       <Routes>
+        <Route path="/login" element={<AuthPage key="login" mode="login" />} />
+        <Route
+          path="/register"
+          element={<AuthPage key="register" mode="register" />}
+        />
         <Route element={<Layout />}>
           <Route path="/session" element={<Session />} />
           <Route path="/integration" element={<Integration />} />
