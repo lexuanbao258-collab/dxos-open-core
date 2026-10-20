@@ -9,7 +9,7 @@ This note records the *scope* of Bảo's Windows/PowerShell test output supplied
 | Candidate / test suite | Repo commit at reported run | Observation | Boundaries |
 | --- | --- | --- | --- |
 | Stage6CreateGateTest and all ordinary backend tests | `7c7ce22` | Gradle `BUILD SUCCESSFUL` | Java-only; selected counts not verified here |
-| Stage6V5PhysicalCandidateIntegrationTest (4 cases) | `c1c419e` | `BUILD SUCCESSFUL`, disposable PG17 container `dxos-stage6-pg17-test` | Candidate V5 under rollback; no Flyway |
+| Stage6V5PhysicalCandidateIntegrationTest (4 cases) | `bb05663` | `BUILD SUCCESSFUL`, disposable PG17 container `dxos-stage6-pg17-test` | Candidate V5 under rollback; no Flyway |
 | Stage6GuardedCreateCandidateIntegrationTest (8 cases at that commit) | `8fcf506` | `BUILD SUCCESSFUL` on PG17 | One provisional CREATE function, not a production scoped JDBC port |
 | Stage6TransactionSafetyIntegrationTest (4 cases) | `6506a97` | `BUILD SUCCESSFUL` on PG17 | Two-session CREATE/revoke and policy audit rollback; not ACTIVATE/TRANSITION |
 | Stage6LeastPrivilegeCandidateIntegrationTest (3 cases) | `f585554` | `BUILD SUCCESSFUL` on PG17 | Simulated `SET ROLE`, not true runtime LOGIN |
