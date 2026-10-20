@@ -96,7 +96,7 @@ function Layout() {
           <img src="/favicon.svg" alt="" width="35" height="35" />
           <span>
             DX<span className="brand-dash">-</span>OS
-            <small>Service Portal</small>
+            <small>University Service Portal</small>
           </span>
           <span className="brand-version">β</span>
         </Link>
@@ -105,12 +105,12 @@ function Layout() {
             <Building2 size={18} />
           </span>
           <div>
-            <strong>TRICORE Workspace</strong>
-            <small>Không gian làm việc nội bộ</small>
+            <strong>University Workspace</strong>
+            <small>Cổng dịch vụ đại học · Demo</small>
           </div>
           <ChevronDown size={14} />
         </div>
-        <p className="nav-label">Không gian làm việc</p>
+        <p className="nav-label">Dịch vụ đại học</p>
         <nav>
           {navItems.map(({ to, label, icon: ItemIcon, end }) => (
             <NavLink
@@ -168,7 +168,7 @@ function Layout() {
                 {role === "processor"
                   ? "Người xử lý · Demo"
                   : role
-                    ? "Nhân viên · Demo"
+                    ? "Người gửi yêu cầu · Demo"
                     : "Chưa vào phiên demo"}
               </small>
             </span>
@@ -187,7 +187,7 @@ function Layout() {
             >
               {menu ? <X size={21} /> : <Menu size={21} />}
             </button>
-            <span>Cổng dịch vụ</span>
+            <span>Cổng dịch vụ đại học</span>
             <span className="breadcrumb-divider">/</span>
             <strong>
               {location.pathname === "/"
