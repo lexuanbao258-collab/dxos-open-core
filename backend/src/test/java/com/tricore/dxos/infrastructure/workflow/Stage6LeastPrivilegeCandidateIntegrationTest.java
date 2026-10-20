@@ -122,7 +122,7 @@ class Stage6LeastPrivilegeCandidateIntegrationTest {
     }
 
     @Test
-    void runtimeCanCallOnlyReviewedCreateEntrypointWithoutDirectDml() throws Exception {
+    void runtimeCanCallReviewedCreateEntrypointWithoutDirectDml() throws Exception {
         String id = "wf_" + UUID.randomUUID().toString().replace("-", "");
         String json = """
                 {"instance_id":"%s","definition_id":"publication","definition_version":7,
@@ -158,7 +158,10 @@ class Stage6LeastPrivilegeCandidateIntegrationTest {
         assertThat(scalar("SELECT has_function_privilege(current_user, '"
                 + schema + ".stage6_policy_immutability_guard()', 'EXECUTE')::int"))
                 .isZero();
-        rejected("SET ROLE " + "postgres", "42501");
+        // Cannot CREATE roles as the effective runtime role. SET ROLE itself is not
+        // a useful escalation test here: the test connection's session_user is a
+        // disposable superuser, unlike a real runtime LOGIN.
+        rejected("CREATE ROLE s6_escalate_probe NOLOGIN", "42501");
     }
 
     private void rejected(String sql, String expectedSqlState) throws Exception {
