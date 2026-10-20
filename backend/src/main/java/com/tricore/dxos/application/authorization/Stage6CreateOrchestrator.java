@@ -4,6 +4,8 @@ import com.tricore.dxos.core.identity.AuthenticatedPrincipal;
 import com.tricore.dxos.core.workflow.ResourceReference;
 import com.tricore.dxos.core.workflow.WorkflowDefinition;
 import com.tricore.dxos.core.workflow.WorkflowInstance;
+import com.tricore.dxos.core.workflow.WorkflowErrorCode;
+import com.tricore.dxos.core.workflow.WorkflowException;
 import com.tricore.dxos.core.workflow.WorkflowPersistencePort;
 
 import java.security.SecureRandom;
@@ -58,6 +60,25 @@ final class Stage6CreateOrchestrator {
         WorkflowInstance initial = WorkflowInstance.notStarted(instanceId, definition, resource, clock.instant());
         // The port must recheck live privileges after taking the guard and confirm COMMIT.
         // No pre-insert loadInstance / duplicate-ID collision probe.
-        return Objects.requireNonNull(port.createInstance(initial), "confirmed created instance");
+        WorkflowInstance result = port.createInstance(initial);
+        // A malformed response after the write call cannot establish a safe rollback.
+        // Do not report success or blindly repeat CREATE: its COMMIT may be durable.
+        if (!sameSnapshot(initial, result)) {
+            throw new WorkflowException(WorkflowErrorCode.COMMIT_OUTCOME_UNKNOWN);
+        }
+        return result;
+    }
+
+    private static boolean sameSnapshot(WorkflowInstance expected, WorkflowInstance actual) {
+        return actual != null
+                && expected.instanceId().equals(actual.instanceId())
+                && expected.definitionId().equals(actual.definitionId())
+                && expected.definitionVersion() == actual.definitionVersion()
+                && expected.resourceReference().equals(actual.resourceReference())
+                && expected.currentState().equals(actual.currentState())
+                && expected.runtimeVersion() == actual.runtimeVersion()
+                && expected.lifecycle() == actual.lifecycle()
+                && expected.createdAt().equals(actual.createdAt())
+                && expected.updatedAt().equals(actual.updatedAt());
     }
 }
