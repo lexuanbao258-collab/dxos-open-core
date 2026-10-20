@@ -4,7 +4,7 @@
 
 **D2 refinement baseline:** source `e3343de`, 2026-10-20. Decision IDs/statuses are recorded in [contract §2](issue-23-stage6-s61-postgres-acl-transaction-contract.md#2-stage-5-decisions-status-and-provisional-behavior). DB1a/DB1b/DB2a below are proposed acceptance requirements, not implemented constraints or independent approval. **D2/D3/D4 and S6.2 remain BLOCKED.**
 
-## DB1: Five-table physical model (proposed, not migrated)
+## DB1: Five business ACL relations + one audit-only relation (proposed, not migrated)
 
 Use the existing private Workflow Flyway schema (not public), subject to schema-guard/manifest and PostgreSQL 17 collation compatibility.
 
@@ -51,7 +51,7 @@ Guard creation is the sole bootstrap exception: a separately reviewed provisione
 
 #### Proposed fixture `d2a-synthetic-demo`, version `1`
 
-**DESIGN PROPOSED — PENDING OWNER APPROVAL.** Every ID, mapping and grant below is an example, not installed data or an owner decision. The eventual approved fixture is the team's declared source for these newly created synthetic facts only; it proves no historical enterprise ownership. This section specifies an artifact; it does not create a fixture file or database rows.
+**D2-A SYNTHETIC SCENARIO OWNER-APPROVED AT DESIGN LEVEL ONLY** ([Issue #23](https://github.com/lexuanbao258-collab/dxos-open-core/issues/23#issuecomment-6291019561)). The topology and grants below are approved as demo *scenario*, not as resolved actor identities, fixture bytes or permission to install rows. The eventual approved fixture is the team's declared source for these newly created synthetic facts only; it proves no historical enterprise ownership. This section specifies an artifact; it does not create a fixture file or database rows.
 
 | Fact / existing proposed relation | Example fixture entries |
 |---|---|
@@ -86,7 +86,7 @@ Apply this plan only after the existing design/DDL/execution gates permit dispos
 
 **Preserved rollback/recovery invariants:** rehearse failures after each application/privilege step in the later authorized disposable environment. Failed or incompatible rollback keeps affected traffic stopped and old writers fenced; application rollback must never restore unsafe direct V3 privileges, old pools or unguarded traffic. Reconcile committed state and audit, including every unknown COMMIT outcome without blind replay, before recovering a reviewed compatible guarded application/privilege configuration. If safe rollback is unavailable, retain the fence for reviewed forward recovery. Repeat actual-role privilege, inventory/policy/audit and fresh-connection guarded-behavior checks before any approved traffic resumes. No cutover, recovery execution or Workflow HTTP activation is authorized by this design.
 
-**D2-A disposition:** source limitations are **CONFIRMED BY SOURCE**; this fixture, approval process and boundary plan are **DESIGN PROPOSED / PENDING OWNER APPROVAL**. Resolved canonical actors, approved artifact/digest, disposable target identity, empty inventory, writer isolation, persistence, failure/race and post-COMMIT evidence are **NOT VERIFIED**. Failure to prove provenance or isolation means STOP provisioning; unmapped/ambiguous legacy stays HIDDEN. Independent PostgreSQL review must accept global-key absence/non-race, exact FK/collation/identity compatibility, active same-tenant owner membership and existing fail-closed requirements before later authorized execution. No D2/Stage 6.1 PASS: PR #50 remains Draft, Stage 6.2 BLOCKED, Workflow HTTP OFF. D2-B, D3, D4, ADR-0025 and reviewed D2-04 remain outside this edit.
+**D2-A disposition:** source limitations are **CONFIRMED BY SOURCE**; the synthetic fixture scenario is **OWNER APPROVED AT DESIGN LEVEL ONLY**, not an executable fixture/DDL/DB approval. Resolved canonical actors, approved artifact/digest, disposable target identity, empty inventory, writer isolation, persistence, failure/race and post-COMMIT evidence are **NOT VERIFIED**. Failure to prove provenance or isolation means STOP provisioning; unmapped/ambiguous legacy stays HIDDEN. Independent PostgreSQL review must accept global-key absence/non-race, exact FK/collation/identity compatibility, active same-tenant owner membership and existing fail-closed requirements before later authorized execution. No D2/Stage 6.1 PASS: PR #50 remains Draft, Stage 6.2 BLOCKED, Workflow HTTP OFF. D2-B, D3, D4, ADR-0025 and reviewed D2-04 remain outside this edit.
 
 ## DB2: Mandatory trusted policy mutation APIs
 
@@ -144,7 +144,7 @@ SQL audit MUST verify effective permissions including inherited role membership,
 
 SECURITY DEFINER functions must be owned by a non-login role; pin search_path to pg_catalog,pg_temp; fully qualify protected references; ban untrusted dynamic SQL; REVOKE PUBLIC EXECUTE **in the creation transaction**, then GRANT narrow EXECUTE per signature. Review globally set function creator default privileges and existing grants. Current PostgresWorkflowPersistence uses direct V3 SQL: REVOKE/switchover before the guarded adapter is ready would break the backend. Do not perform it.
 
-## SQL-B: Caller proof design (P0 — NOT approved)
+## SQL-B: Stronger ADR-0024 cryptographic caller proof — DEFERRED under MVP Option B
 
 Keep ADR-0024's conditional **HMAC-SHA-256** candidate for the explicit stronger threat: stolen runtime SQL credentials alone must not forge another principal or read/mutate protected rows. An actor string, boolean, arbitrary JWT parameter or GUC is not DB-verifiable. The proof is created by a trusted signer only *after* CurrentPrincipal.requireVerified(), with key custody separate from runtime DB password.
 
