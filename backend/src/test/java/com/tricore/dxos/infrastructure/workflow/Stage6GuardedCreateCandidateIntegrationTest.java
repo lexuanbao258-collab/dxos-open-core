@@ -153,6 +153,90 @@ class Stage6GuardedCreateCandidateIntegrationTest {
         assertThat(rows("workflow_instances")).isEqualTo(1);
     }
 
+    @Test
+    void crossTenantActorCannotCreateOrLearnOtherTenantResource() throws Exception {
+        fixture();
+        foreignTenant();
+        String leftId = newId();
+        String rightId = newId();
+
+        Reply leftAsForeign = create(leftId, "member-b", true, "res-a");
+        Reply rightAsForeign = create(rightId, "member-a", true, "res-b");
+        assertThat(leftAsForeign.outcome()).isEqualTo("HIDDEN");
+        assertThat(rightAsForeign.outcome()).isEqualTo("HIDDEN");
+        assertThat(leftAsForeign.body()).isNull();
+        assertThat(rightAsForeign.body()).isNull();
+        assertThat(rows("workflow_instances")).isZero();
+        assertThat(rows("workflow_transition_history")).isZero();
+        assertThat(create(newId(), "member-b", true, "res-b").outcome()).isEqualTo("SNAPSHOT");
+        assertThat(count("SELECT count(*) FROM " + schema
+                + ".workflow_instances WHERE resource_id='res-a'")).isZero();
+        assertThat(count("SELECT count(*) FROM " + schema
+                + ".workflow_instances WHERE resource_id='res-b'")).isEqualTo(1);
+    }
+
+    @Test
+    void visibleOwnerMissingCreateGrantTakesPrecedenceOverHiddenBinding() throws Exception {
+        fixture();
+        execute("UPDATE " + schema
+                + ".resource_acl SET granted=false WHERE operation='workflow:create'");
+        execute("UPDATE " + schema
+                + ".workflow_definition_bindings SET active=false");
+        Reply noAcl = create(newId(), "member-a", true, "res-a");
+        Reply noAuthority = create(newId(), "member-a", false, "res-a");
+        assertThat(noAcl.outcome()).isEqualTo("FORBIDDEN");
+        assertThat(noAuthority.outcome()).isEqualTo("FORBIDDEN");
+        assertThat(noAcl.body()).isNull();
+        assertThat(noAuthority.body()).isNull();
+        assertThat(rows("workflow_instances")).isZero();
+    }
+
+    @Test
+    void invisibleResourceRemainsHiddenEvenWithoutCreateAuthorityOrBinding() throws Exception {
+        fixture();
+        execute("UPDATE " + schema
+                + ".workflow_definition_bindings SET active=false");
+        Reply invisible = create(newId(), "no-member", false, "res-a");
+        assertThat(invisible.outcome()).isEqualTo("HIDDEN");
+        assertThat(invisible.body()).isNull();
+        assertThat(rows("workflow_instances")).isZero();
+        assertThat(rows("workflow_transition_history")).isZero();
+    }
+
+    @Test
+    void mixedAuthorizationDenialsLeaveWorkflowAclAndAuditStateUnchanged() throws Exception {
+        fixture();
+        int aclBefore = rows("resource_acl");
+        int auditBefore = rows("workflow_policy_audit");
+        int revisionBefore = count("SELECT acl_revision FROM " + schema
+                + ".tenant_guards WHERE tenant_id='tenant-a'");
+        assertThat(create(newId(), "no-member", true, "res-a").outcome()).isEqualTo("HIDDEN");
+        assertThat(create(newId(), "member-a", false, "res-a").outcome()).isEqualTo("FORBIDDEN");
+        assertThat(create(newId(), "member-a", true, "missing-resource").outcome())
+                .isEqualTo("HIDDEN");
+        assertThat(rows("workflow_instances")).isZero();
+        assertThat(rows("workflow_transition_history")).isZero();
+        assertThat(rows("resource_acl")).isEqualTo(aclBefore);
+        assertThat(rows("workflow_policy_audit")).isEqualTo(auditBefore);
+        assertThat(count("SELECT acl_revision FROM " + schema
+                + ".tenant_guards WHERE tenant_id='tenant-a'")).isEqualTo(revisionBefore);
+    }
+
+    private void foreignTenant() throws SQLException {
+        execute("INSERT INTO " + schema + ".tenant_guards(tenant_id) VALUES('tenant-b')");
+        execute("INSERT INTO " + schema + ".tenant_memberships(tenant_id,actor_id,active) "
+                + "VALUES('tenant-b','member-b',true)");
+        execute("INSERT INTO " + schema + ".resource_registry "
+                + "(resource_type,resource_id,tenant_id,owner_actor_id,lifecycle) "
+                + "VALUES('item','res-b','tenant-b','member-b','ACTIVE')");
+        execute("INSERT INTO " + schema + ".resource_acl "
+                + "(tenant_id,resource_type,resource_id,actor_id,operation,granted) "
+                + "VALUES('tenant-b','item','res-b','member-b','workflow:create',true)");
+        execute("INSERT INTO " + schema + ".workflow_definition_bindings "
+                + "(tenant_id,resource_type,definition_id,definition_version,active) "
+                + "VALUES('tenant-b','item','publication',7,true)");
+    }
+
     private void fixture() throws SQLException {
         execute("INSERT INTO " + schema + ".tenant_guards(tenant_id) VALUES('tenant-a')");
         execute("INSERT INTO " + schema + ".tenant_memberships(tenant_id,actor_id,active) "
