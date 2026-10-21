@@ -1,6 +1,7 @@
 package com.tricore.dxos.gateway.workflow.controller;
 
 import com.tricore.dxos.common.error.ApiError;
+import com.tricore.dxos.application.authorization.WorkflowAccessException;
 import com.tricore.dxos.core.workflow.WorkflowErrorCode;
 import com.tricore.dxos.core.workflow.WorkflowException;
 import org.springframework.http.ResponseEntity;
@@ -29,8 +30,7 @@ public class WorkflowExceptionHandler {
         String message = switch (code) {
             case INSTANCE_ALREADY_EXISTS -> "Workflow instance already exists";
             case VERSION_CONFLICT -> "Workflow version conflict";
-            case DEFINITION_NOT_FOUND -> "Workflow definition version not found";
-            case INSTANCE_NOT_FOUND -> "Workflow instance not found";
+            case DEFINITION_NOT_FOUND, INSTANCE_NOT_FOUND -> "Workflow resource not found";
             case INVALID_TRANSITION -> "Unknown workflow transition";
             case TRANSITION_NOT_ALLOWED -> "Workflow operation is not allowed in the current state";
             case INSTANCE_COMPLETED -> "Workflow instance is completed";
@@ -38,7 +38,18 @@ public class WorkflowExceptionHandler {
             case COMMIT_OUTCOME_UNKNOWN ->
                     "Commit outcome is unknown; the write may have committed. Reconcile authoritative instance/history; do not automatically retry";
         };
-        return error(status, code.name(), message, Map.of());
+        return error(status, status == 404 ? "NOT_FOUND" : code.name(), message, Map.of());
+    }
+
+    @ExceptionHandler(WorkflowAccessException.class)
+    public ResponseEntity<ApiError> authorization(WorkflowAccessException exception) {
+        return switch (exception.decision()) {
+            case HIDDEN -> error(404, "NOT_FOUND", "Workflow resource not found", Map.of());
+            case FORBIDDEN -> error(403, "FORBIDDEN", "Workflow operation is not permitted", Map.of());
+            // ALLOWED must never be thrown as a failure; fail closed if it is.
+            case UNAVAILABLE, ALLOWED -> error(503, "AUTHORIZATION_UNAVAILABLE",
+                    "Workflow authorization unavailable", Map.of());
+        };
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
