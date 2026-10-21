@@ -183,7 +183,7 @@ class Stage6GuardedActionsCandidateIntegrationTest {
     private Reply activate(String actor, boolean authority, String id, long version, long seconds)
             throws Exception {
         try (PreparedStatement statement = db.prepareStatement(
-                "SELECT outcome, body FROM " + schema + ".wf_port_activate_instance(?,?,?,?,?,?)")) {
+                "SELECT outcome, body FROM " + schema + ".wf_port_commit_activation(?,?,?,?,?,?)")) {
             statement.setString(1, actor);
             statement.setBoolean(2, authority);
             statement.setString(3, id);
@@ -197,7 +197,7 @@ class Stage6GuardedActionsCandidateIntegrationTest {
     private Reply transition(String actor, boolean authority, String id, long version,
                              String transitionId, long seconds) throws Exception {
         try (PreparedStatement statement = db.prepareStatement(
-                "SELECT outcome, body FROM " + schema + ".wf_port_transition_instance(?,?,?,?,?,?,?)")) {
+                "SELECT outcome, body FROM " + schema + ".wf_port_commit_transition(?,?,?,?,?,?,?)")) {
             statement.setString(1, actor);
             statement.setBoolean(2, authority);
             statement.setString(3, id);
