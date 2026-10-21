@@ -145,7 +145,9 @@ class Stage6GuardedCreateCandidateIntegrationTest {
         fixture();
         String id = newId();
         assertThat(create(id, "member-a", true, "res-a").outcome()).isEqualTo("SNAPSHOT");
-        assertThat(create(id, "member-a", true, "res-a").outcome()).isEqualTo("UNAVAILABLE");
+        Reply duplicate = create(id, "member-a", true, "res-a");
+        assertThat(duplicate.outcome()).isEqualTo("DOMAIN_ERROR");
+        assertThat(duplicate.body()).contains("INSTANCE_ALREADY_EXISTS");
         String valid = proposal(newId(), "res-a");
         Reply extraField = call("member-a", true,
                 valid.substring(0, valid.length() - 1) + "," + (char) 34 + "unexpected" + (char) 34 + ":true}");

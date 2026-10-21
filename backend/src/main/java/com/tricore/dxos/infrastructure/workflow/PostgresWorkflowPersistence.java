@@ -78,6 +78,15 @@ public final class PostgresWorkflowPersistence implements WorkflowPersistencePor
         if (readScope != null) throw denied(WorkflowAccessDecision.UNAVAILABLE);
     }
 
+    /** Isolated D3 candidate; not registered or wired to Workflow HTTP. */
+    public WorkflowPersistencePort forStage6(CurrentPrincipal principal, WorkflowOperation operation,
+            String instanceId, ResourceReference resource, String definitionId, Long definitionVersion,
+            String transitionId, Long expectedVersion) {
+        requireUnscoped();
+        return new Stage6WorkflowPersistence(this, schema.quoted(), principal, operation, instanceId,
+                resource, definitionId, definitionVersion, transitionId, expectedVersion);
+    }
+
     @Override
     public WorkflowDefinition loadDefinition(String definitionId, long definitionVersion) {
         requireUnscoped();
@@ -392,7 +401,7 @@ public final class PostgresWorkflowPersistence implements WorkflowPersistencePor
         return Instant.ofEpochSecond(rows.getLong(prefix + "_seconds"), rows.getInt(prefix + "_nanos"));
     }
 
-    private static void requireSnapshot(WorkflowInstance left, WorkflowInstance right) {
+    static void requireSnapshot(WorkflowInstance left, WorkflowInstance right) {
         if (!left.instanceId().equals(right.instanceId())
                 || !left.definitionId().equals(right.definitionId())
                 || left.definitionVersion() != right.definitionVersion()
@@ -444,6 +453,14 @@ public final class PostgresWorkflowPersistence implements WorkflowPersistencePor
     }
 
     private <T> T transaction(boolean write, SqlWork<T> work) {
+        return transaction(write, readScope != null, work);
+    }
+
+    <T> T guardedTransaction(boolean write, SqlWork<T> work) {
+        return transaction(write, true, work);
+    }
+
+    private <T> T transaction(boolean write, boolean guarded, SqlWork<T> work) {
         Connection connection = null;
         boolean started = false;
         boolean committing = false;
@@ -451,7 +468,7 @@ public final class PostgresWorkflowPersistence implements WorkflowPersistencePor
         int previousNetworkTimeout = -1;
         try {
             connection = dataSource.getConnection();
-            if (readScope != null) {
+            if (guarded) {
                 previousNetworkTimeout = connection.getNetworkTimeout();
                 int timeout = previousNetworkTimeout > 0
                         ? Math.min(previousNetworkTimeout, READ_NETWORK_TIMEOUT_MS) : READ_NETWORK_TIMEOUT_MS;
@@ -462,12 +479,12 @@ public final class PostgresWorkflowPersistence implements WorkflowPersistencePor
             if (!connection.getAutoCommit()) {
                 throw new SQLException();
             }
-            connection.setTransactionIsolation(write || readScope != null ? Connection.TRANSACTION_READ_COMMITTED
+            connection.setTransactionIsolation(write || guarded ? Connection.TRANSACTION_READ_COMMITTED
                     : Connection.TRANSACTION_REPEATABLE_READ);
-            connection.setReadOnly(!write && readScope == null);
+            connection.setReadOnly(!write && !guarded);
             connection.setAutoCommit(false);
             started = true;
-            if (readScope != null) {
+            if (guarded) {
                 try (var statement = connection.createStatement()) {
                     statement.execute("SET LOCAL lock_timeout = '5s'");
                     statement.execute("SET LOCAL statement_timeout = '15s'");
@@ -500,13 +517,14 @@ public final class PostgresWorkflowPersistence implements WorkflowPersistencePor
                     connection.rollback();
                     completed = true;
                 } catch (SQLException | RuntimeException rollbackFailure) {
-                    if (readScope != null) throw denied(WorkflowAccessDecision.UNAVAILABLE);
+                    if (guarded && !write) throw denied(WorkflowAccessDecision.UNAVAILABLE);
                     throw new WorkflowException(write ? WorkflowErrorCode.COMMIT_OUTCOME_UNKNOWN
                             : WorkflowErrorCode.OPERATION_FAILURE);
                 }
             }
-            if (readScope != null) {
+            if (guarded) {
                 if (failure instanceof WorkflowAccessException accessFailure) throw accessFailure;
+                if (readScope == null && failure instanceof WorkflowException workflowFailure) throw workflowFailure;
                 throw denied(WorkflowAccessDecision.UNAVAILABLE);
             }
             if (failure instanceof WorkflowException workflowFailure) {
@@ -516,12 +534,19 @@ public final class PostgresWorkflowPersistence implements WorkflowPersistencePor
         } finally {
             if (connection != null) {
                 try {
-                    if (readScope != null) finishReadConnection(connection, previousNetworkTimeout, completed);
+                    if (guarded) {
+                        try {
+                            finishReadConnection(connection, previousNetworkTimeout, completed);
+                        } catch (WorkflowAccessException cleanupFailure) {
+                            if (!write) throw cleanupFailure;
+                            // Cleanup cannot override a confirmed COMMIT or COMMIT_OUTCOME_UNKNOWN.
+                        }
+                    }
                 } finally {
                     try {
                         connection.close();
                     } catch (SQLException | RuntimeException ignored) {
-                        if (readScope != null) {
+                        if (guarded && !write) {
                             discardReadConnection(connection);
                             throw denied(WorkflowAccessDecision.UNAVAILABLE);
                         }
@@ -559,7 +584,7 @@ public final class PostgresWorkflowPersistence implements WorkflowPersistencePor
     }
 
     @FunctionalInterface
-    private interface SqlWork<T> {
+    interface SqlWork<T> {
         T run(Connection connection) throws SQLException;
     }
 }
