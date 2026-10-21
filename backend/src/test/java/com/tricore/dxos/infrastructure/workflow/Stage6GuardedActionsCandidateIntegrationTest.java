@@ -153,7 +153,10 @@ class Stage6GuardedActionsCandidateIntegrationTest {
         assertThat(activate("alice", true, "instance-a", 0, 11).outcome()).isEqualTo("SNAPSHOT");
         assertThat(transition("alice", true, "instance-a", 0, "assign", 12).outcome()).isEqualTo("SNAPSHOT");
         assertThat(transition("alice", true, "instance-a", 0, "assign", 13).outcome()).isEqualTo("CONFLICT");
-        assertThat(activate("alice", true, "instance-a", 0, 13).outcome()).isEqualTo("REJECTED");
+        // A stale proposal conflicts even when the instance is already ACTIVE.
+        assertThat(activate("alice", true, "instance-a", 0, 13).outcome()).isEqualTo("CONFLICT");
+        // With the correct current version, a second activation is rejected by lifecycle.
+        assertThat(activate("alice", true, "instance-a", 1, 13).outcome()).isEqualTo("REJECTED");
         assertThat(number("SELECT count(*) FROM " + schema + ".workflow_transition_history")).isEqualTo(1);
         assertThat(number("SELECT runtime_version FROM " + schema + ".workflow_instances")).isEqualTo(1);
     }
