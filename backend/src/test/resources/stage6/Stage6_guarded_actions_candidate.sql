@@ -1,7 +1,7 @@
 -- STAGE 6.7 ISOLATED TEST-ONLY SQL CANDIDATE. Not a Flyway migration.
 -- Two PROVISIONAL signatures for the already proposed six-port ACTIVATE/TRANSITION identities;
 -- not additional SQL entrypoints, no finalized D3 parameter/return approval, no HTTP wiring/grants.
--- Verified backend must supply canonical actor and exact operation authority, not the caller.
+-- Verified backend must supply canonical actor, exact authority AND Core-derived proposal, not the HTTP caller.
 -- Each call must own a READ COMMITTED transaction and return only after confirmed COMMIT.
 -- Cross-transaction policy mutators MUST use tenant_guards FOR UPDATE.
 -- Under ADR-0025 Option B, stolen backend DB credentials can still forge actor claims.
@@ -10,7 +10,8 @@
 
 CREATE FUNCTION "${flyway:defaultSchema}".wf_port_commit_activation(
     p_actor_id TEXT, p_authority_present BOOLEAN, p_instance_id TEXT,
-    p_expected_version BIGINT, p_when_seconds BIGINT, p_when_nanos INTEGER
+    p_expected_version BIGINT, p_result_lifecycle TEXT,
+    p_when_seconds BIGINT, p_when_nanos INTEGER
 )
 RETURNS TABLE(outcome TEXT, body JSONB)
 LANGUAGE plpgsql SECURITY DEFINER
@@ -32,6 +33,7 @@ BEGIN
        OR p_authority_present IS NULL
        OR p_instance_id IS NULL OR btrim(p_instance_id) = ''
        OR p_expected_version IS NULL OR p_expected_version < 0
+       OR p_result_lifecycle IS DISTINCT FROM 'ACTIVE'
        OR p_when_seconds IS NULL
        OR p_when_seconds NOT BETWEEN -31557014167219200 AND 31556889864403199
        OR p_when_nanos IS NULL OR p_when_nanos NOT BETWEEN 0 AND 999999999 THEN
@@ -108,18 +110,8 @@ BEGIN
     IF v_instance.lifecycle <> 'NOT_STARTED' OR v_instance.runtime_version <> 0 THEN
         RETURN QUERY SELECT 'REJECTED'::TEXT, NULL::JSONB; RETURN;
     END IF;
-    -- An initial terminal state cannot be activated in Workflow Core.
-    IF NOT EXISTS (
-        SELECT 1 FROM "${flyway:defaultSchema}".workflow_definition_transitions t
-         WHERE t.definition_id = v_instance.definition_id
-           AND t.definition_version = v_instance.definition_version
-           AND t.source_state = v_instance.current_state
-    ) THEN
-        RETURN QUERY SELECT 'REJECTED'::TEXT, NULL::JSONB; RETURN;
-    END IF;
-
     UPDATE "${flyway:defaultSchema}".workflow_instances i
-       SET lifecycle = 'ACTIVE',
+       SET lifecycle = p_result_lifecycle,
            updated_at_seconds = p_when_seconds,
            updated_at_nanos = p_when_nanos
      WHERE i.instance_id = p_instance_id RETURNING i.* INTO v_instance;
@@ -129,7 +121,8 @@ $stage6_activate$;
 
 CREATE FUNCTION "${flyway:defaultSchema}".wf_port_commit_transition(
     p_actor_id TEXT, p_authority_present BOOLEAN, p_instance_id TEXT,
-    p_expected_version BIGINT, p_transition_id TEXT,
+    p_expected_version BIGINT, p_source_state TEXT, p_transition_id TEXT,
+    p_target_state TEXT, p_target_lifecycle TEXT,
     p_when_seconds BIGINT, p_when_nanos INTEGER
 )
 RETURNS TABLE(outcome TEXT, body JSONB)
@@ -146,9 +139,6 @@ DECLARE
     v_has_some_grant BOOLEAN;
     v_has_action_grant BOOLEAN;
     v_instance "${flyway:defaultSchema}".workflow_instances%ROWTYPE;
-    v_source TEXT;
-    v_target TEXT;
-    v_new_lifecycle TEXT;
 BEGIN
 
     IF p_actor_id IS NULL OR btrim(p_actor_id) = ''
@@ -158,6 +148,9 @@ BEGIN
        OR p_when_seconds IS NULL
        OR p_when_seconds NOT BETWEEN -31557014167219200 AND 31556889864403199
        OR p_when_nanos IS NULL OR p_when_nanos NOT BETWEEN 0 AND 999999999
+       OR p_source_state IS NULL OR btrim(p_source_state) = ''
+       OR p_target_state IS NULL OR btrim(p_target_state) = ''
+       OR p_target_lifecycle IS NULL OR p_target_lifecycle NOT IN ('ACTIVE','COMPLETED')
        OR p_transition_id IS NULL OR btrim(p_transition_id) = '' THEN
         RETURN QUERY SELECT 'UNAVAILABLE'::TEXT, NULL::JSONB; RETURN;
     END IF;
@@ -232,28 +225,18 @@ BEGIN
     IF v_instance.lifecycle <> 'ACTIVE' OR v_instance.runtime_version = 9223372036854775807 THEN
         RETURN QUERY SELECT 'REJECTED'::TEXT, NULL::JSONB; RETURN;
     END IF;
-    SELECT t.source_state, t.target_state INTO v_source, v_target
-      FROM "${flyway:defaultSchema}".workflow_definition_transitions t
-     WHERE t.definition_id = v_instance.definition_id
-       AND t.definition_version = v_instance.definition_version
-       AND t.transition_id = p_transition_id;
-    IF NOT FOUND THEN
-        RETURN QUERY SELECT 'INVALID_TRANSITION'::TEXT, NULL::JSONB; RETURN;
+    -- The trusted backend passes Workflow Core's validated source, target and
+    -- lifecycle. SQL checks the locked source snapshot and physical constraints;
+    -- it does NOT decide which transitions are legal or compute terminal states.
+    -- D3 signature/return ratification and the guarded JDBC boundary remain OPEN.
+    IF v_instance.current_state IS DISTINCT FROM p_source_state THEN
+        RETURN QUERY SELECT 'CONFLICT'::TEXT, NULL::JSONB; RETURN;
     END IF;
-    IF v_source <> v_instance.current_state THEN
-        RETURN QUERY SELECT 'REJECTED'::TEXT, NULL::JSONB; RETURN;
-    END IF;
-    v_new_lifecycle := CASE WHEN EXISTS (
-        SELECT 1 FROM "${flyway:defaultSchema}".workflow_definition_transitions t
-         WHERE t.definition_id = v_instance.definition_id
-           AND t.definition_version = v_instance.definition_version
-           AND t.source_state = v_target
-    ) THEN 'ACTIVE' ELSE 'COMPLETED' END;
 
     -- Snapshot update and matching history insertion share the SAME DB transaction.
     UPDATE "${flyway:defaultSchema}".workflow_instances i
-       SET current_state = v_target, runtime_version = v_instance.runtime_version + 1,
-           lifecycle = v_new_lifecycle,
+       SET current_state = p_target_state, runtime_version = v_instance.runtime_version + 1,
+           lifecycle = p_target_lifecycle,
            updated_at_seconds = p_when_seconds, updated_at_nanos = p_when_nanos
      WHERE i.instance_id = p_instance_id RETURNING i.* INTO v_instance;
     INSERT INTO "${flyway:defaultSchema}".workflow_transition_history (
@@ -261,13 +244,13 @@ BEGIN
         source_state, target_state, actor_id, occurred_at_seconds, occurred_at_nanos
     ) VALUES (
         p_instance_id, v_instance.runtime_version, p_transition_id,
-        v_source, v_target, p_actor_id, p_when_seconds, p_when_nanos
+        p_source_state, p_target_state, p_actor_id, p_when_seconds, p_when_nanos
     );
     RETURN QUERY SELECT 'SNAPSHOT'::TEXT, jsonb_build_object(
         'instance', to_jsonb(v_instance),
         'record', jsonb_build_object(
             'instance_id', p_instance_id, 'transition_id', p_transition_id,
-            'source_state', v_source, 'target_state', v_target,
+            'source_state', p_source_state, 'target_state', p_target_state,
             'actor_id', p_actor_id, 'resulting_runtime_version', v_instance.runtime_version,
             'occurred_at_seconds', p_when_seconds, 'occurred_at_nanos', p_when_nanos
         )); RETURN;
@@ -275,6 +258,6 @@ END;
 $stage6_transition$;
 
 REVOKE ALL ON FUNCTION "${flyway:defaultSchema}".wf_port_commit_activation(
-    TEXT,BOOLEAN,TEXT,BIGINT,BIGINT,INTEGER) FROM PUBLIC;
-REVOKE ALL ON FUNCTION "${flyway:defaultSchema}".wf_port_commit_transition(
     TEXT,BOOLEAN,TEXT,BIGINT,TEXT,BIGINT,INTEGER) FROM PUBLIC;
+REVOKE ALL ON FUNCTION "${flyway:defaultSchema}".wf_port_commit_transition(
+    TEXT,BOOLEAN,TEXT,BIGINT,TEXT,TEXT,TEXT,TEXT,BIGINT,INTEGER) FROM PUBLIC;
