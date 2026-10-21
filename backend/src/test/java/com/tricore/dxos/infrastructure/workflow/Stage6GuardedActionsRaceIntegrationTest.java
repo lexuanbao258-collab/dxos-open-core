@@ -214,8 +214,8 @@ class Stage6GuardedActionsRaceIntegrationTest {
 
     private String action(Connection c, String operation) throws Exception {
         String name = operation.equals("activate")
-                ? "wf_port_activate_instance(?,?,?,?,?,?)"
-                : "wf_port_transition_instance(?,?,?,?,?,?,?)";
+                ? "wf_port_commit_activation(?,?,?,?,?,?)"
+                : "wf_port_commit_transition(?,?,?,?,?,?,?)";
         try (PreparedStatement statement = c.prepareStatement(
                 "SELECT outcome FROM " + schema + "." + name)) {
             statement.setString(1, "alice");
