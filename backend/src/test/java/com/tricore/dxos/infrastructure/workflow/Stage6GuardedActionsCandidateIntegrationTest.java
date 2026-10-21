@@ -13,9 +13,12 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
+import java.time.Instant;
+import java.util.Set;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 /**
@@ -162,12 +165,18 @@ class Stage6GuardedActionsCandidateIntegrationTest {
     }
 
     @Test
-    void invalidTransitionAndBackwardsTimestampNeverWrite() throws Exception {
+    void invalidCoreTransitionAndBackwardsTimestampNeverWrite() throws Exception {
         assertThat(activate("alice", true, "instance-a", 0, 11).outcome()).isEqualTo("SNAPSHOT");
-        assertThat(transition("alice", true, "instance-a", 0, "unknown", 12).outcome())
-                .isEqualTo("INVALID_TRANSITION");
-        assertThat(transition("alice", true, "instance-a", 0, "assign", 9).outcome())
-                .isEqualTo("REJECTED");
+        // Domain validation belongs to Workflow Core, never to the guarded SQL function.
+        assertThatThrownBy(() -> coreProposal("alice", "instance-a", 0, "unknown", 12))
+                .isInstanceOf(WorkflowException.class)
+                .satisfies(failure -> assertThat(((WorkflowException) failure).code())
+                        .isEqualTo(WorkflowErrorCode.INVALID_TRANSITION));
+        // SQL still enforces write-time timestamp and locked previous-state invariants.
+        assertThat(transitionProposal("alice", true, "instance-a", 0,
+                "new", "assign", "assigned", "ACTIVE", 9).outcome()).isEqualTo("REJECTED");
+        assertThat(transitionProposal("alice", true, "instance-a", 0,
+                "assigned", "assign", "done", "COMPLETED", 12).outcome()).isEqualTo("CONFLICT");
         assertThat(number("SELECT count(*) FROM " + schema + ".workflow_transition_history")).isZero();
         assertThat(text("SELECT current_state FROM " + schema + ".workflow_instances")).isEqualTo("new");
         assertThat(number("SELECT runtime_version FROM " + schema + ".workflow_instances")).isZero();
@@ -180,31 +189,69 @@ class Stage6GuardedActionsCandidateIntegrationTest {
         assertThat(number("SELECT count(*) FROM " + schema + ".workflow_transition_history")).isZero();
     }
 
+    // Expected outcomes are produced by the existing Core, not by SQL graph lookup.
+    private static WorkflowDefinition definition() {
+        return new WorkflowDefinition("ticket", 1, "new",
+                Set.of("new", "assigned", "done"),
+                Set.of(new WorkflowTransition("assign", "new", "assigned"),
+                        new WorkflowTransition("resolve", "assigned", "done")));
+    }
+
+    private static TransitionResult coreProposal(String actor, String id, long version,
+                                                  String transitionId, long seconds) {
+        WorkflowDefinition def = definition();
+        String source = "resolve".equals(transitionId) ? "assigned" : "new";
+        long previousSeconds = "resolve".equals(transitionId) ? 12 : 11;
+        WorkflowInstance previous = WorkflowInstance.restore(id, def,
+                new ResourceReference("item", "r1"), source, version, WorkflowLifecycle.ACTIVE,
+                Instant.ofEpochSecond(10), Instant.ofEpochSecond(previousSeconds));
+        return previous.transition(def,
+                new TransitionCommand(id, transitionId, new ActorReference(actor), version),
+                Instant.ofEpochSecond(seconds));
+    }
+
     private Reply activate(String actor, boolean authority, String id, long version, long seconds)
             throws Exception {
+        WorkflowDefinition def = definition();
+        WorkflowInstance approved = WorkflowInstance.notStarted(id, def,
+                new ResourceReference("item", "r1"), Instant.ofEpochSecond(10))
+                .activate(def, Instant.ofEpochSecond(seconds));
         try (PreparedStatement statement = db.prepareStatement(
-                "SELECT outcome, body FROM " + schema + ".wf_port_commit_activation(?,?,?,?,?,?)")) {
+                "SELECT outcome, body FROM " + schema + ".wf_port_commit_activation(?,?,?,?,?,?,?)")) {
             statement.setString(1, actor);
             statement.setBoolean(2, authority);
             statement.setString(3, id);
             statement.setLong(4, version);
-            statement.setLong(5, seconds);
-            statement.setInt(6, 0);
+            statement.setString(5, approved.lifecycle().name());
+            statement.setLong(6, seconds);
+            statement.setInt(7, 0);
             return reply(statement);
         }
     }
 
     private Reply transition(String actor, boolean authority, String id, long version,
                              String transitionId, long seconds) throws Exception {
+        TransitionResult approved = coreProposal(actor, id, version, transitionId, seconds);
+        return transitionProposal(actor, authority, id, version,
+                approved.previousInstance().currentState(), approved.record().transitionId(),
+                approved.instance().currentState(), approved.instance().lifecycle().name(), seconds);
+    }
+
+    private Reply transitionProposal(String actor, boolean authority, String id, long version,
+                                     String source, String transitionId, String target,
+                                     String lifecycle, long seconds) throws Exception {
         try (PreparedStatement statement = db.prepareStatement(
-                "SELECT outcome, body FROM " + schema + ".wf_port_commit_transition(?,?,?,?,?,?,?)")) {
+                "SELECT outcome, body FROM " + schema + ".wf_port_commit_transition(?,?,?,?,?,?,?,?,?,?)")) {
             statement.setString(1, actor);
             statement.setBoolean(2, authority);
             statement.setString(3, id);
             statement.setLong(4, version);
-            statement.setString(5, transitionId);
-            statement.setLong(6, seconds);
-            statement.setInt(7, 0);
+            statement.setString(5, source);
+            statement.setString(6, transitionId);
+            statement.setString(7, target);
+            statement.setString(8, lifecycle);
+            statement.setLong(9, seconds);
+            statement.setInt(10, 0);
             return reply(statement);
         }
     }
