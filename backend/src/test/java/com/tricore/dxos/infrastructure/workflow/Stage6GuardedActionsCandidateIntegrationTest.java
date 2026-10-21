@@ -4,6 +4,7 @@ import com.tricore.dxos.core.workflow.ActorReference;
 import com.tricore.dxos.core.workflow.ResourceReference;
 import com.tricore.dxos.core.workflow.TransitionCommand;
 import com.tricore.dxos.core.workflow.TransitionResult;
+import com.tricore.dxos.core.workflow.TransitionRecord;
 import com.tricore.dxos.core.workflow.WorkflowDefinition;
 import com.tricore.dxos.core.workflow.WorkflowErrorCode;
 import com.tricore.dxos.core.workflow.WorkflowException;
@@ -119,14 +120,14 @@ class Stage6GuardedActionsCandidateIntegrationTest {
     @Test
     void authorizedTransitionsAdvanceOneVersionAndAppendMatchingHistory() throws Exception {
         assertThat(activate("alice", true, "instance-a", 0, 11).outcome()).isEqualTo("SNAPSHOT");
-        assertThat(transition("alice", true, "instance-a", 0, "assign", 12).outcome()).isEqualTo("SNAPSHOT");
+        assertThat(transition("alice", true, "instance-a", 0, "assign", 12).outcome()).isEqualTo("TRANSITION_RESULT");
         assertThat(number("SELECT runtime_version FROM " + schema + ".workflow_instances")).isEqualTo(1);
         assertThat(text("SELECT current_state FROM " + schema + ".workflow_instances")).isEqualTo("assigned");
         assertThat(text("SELECT lifecycle FROM " + schema + ".workflow_instances")).isEqualTo("ACTIVE");
         assertThat(number("SELECT count(*) FROM " + schema + ".workflow_transition_history")).isEqualTo(1);
 
         Reply last = transition("alice", true, "instance-a", 1, "resolve", 13);
-        assertThat(last.outcome()).isEqualTo("SNAPSHOT");
+        assertThat(last.outcome()).isEqualTo("TRANSITION_RESULT");
         assertThat(last.body()).contains("done", "alice", "resolve");
         assertThat(text("SELECT lifecycle FROM " + schema + ".workflow_instances")).isEqualTo("COMPLETED");
         assertThat(number("SELECT runtime_version FROM " + schema + ".workflow_instances")).isEqualTo(2);
@@ -164,12 +165,12 @@ class Stage6GuardedActionsCandidateIntegrationTest {
     @Test
     void staleExpectedVersionDoesNotDuplicateHistoryOrRewriteSnapshot() throws Exception {
         assertThat(activate("alice", true, "instance-a", 0, 11).outcome()).isEqualTo("SNAPSHOT");
-        assertThat(transition("alice", true, "instance-a", 0, "assign", 12).outcome()).isEqualTo("SNAPSHOT");
-        assertThat(transition("alice", true, "instance-a", 0, "assign", 13).outcome()).isEqualTo("CONFLICT");
+        assertThat(transition("alice", true, "instance-a", 0, "assign", 12).outcome()).isEqualTo("TRANSITION_RESULT");
+        assertThat(transition("alice", true, "instance-a", 0, "assign", 13).outcome()).isEqualTo("VERSION_CONFLICT");
         // A stale proposal conflicts even when the instance is already ACTIVE.
-        assertThat(activate("alice", true, "instance-a", 0, 13).outcome()).isEqualTo("CONFLICT");
-        // With the correct current version, a second activation is rejected by lifecycle.
-        assertThat(activate("alice", true, "instance-a", 1, 13).outcome()).isEqualTo("REJECTED");
+        assertThat(activate("alice", true, "instance-a", 0, 13).outcome()).isEqualTo("VERSION_CONFLICT");
+        // Even with the current version, the original NOT_STARTED lifecycle is stale.
+        assertThat(activate("alice", true, "instance-a", 1, 13).outcome()).isEqualTo("VERSION_CONFLICT");
         assertThat(number("SELECT count(*) FROM " + schema + ".workflow_transition_history")).isEqualTo(1);
         assertThat(number("SELECT runtime_version FROM " + schema + ".workflow_instances")).isEqualTo(1);
     }
@@ -184,9 +185,9 @@ class Stage6GuardedActionsCandidateIntegrationTest {
                         .isEqualTo(WorkflowErrorCode.INVALID_TRANSITION));
         // SQL still enforces write-time timestamp and locked previous-state invariants.
         assertThat(transitionProposal("alice", true, "instance-a", 0,
-                "new", "assign", "assigned", "ACTIVE", 9).outcome()).isEqualTo("REJECTED");
+                "new", "assign", "assigned", "ACTIVE", 9).outcome()).isEqualTo("TRANSITION_NOT_ALLOWED");
         assertThat(transitionProposal("alice", true, "instance-a", 0,
-                "assigned", "assign", "done", "COMPLETED", 12).outcome()).isEqualTo("CONFLICT");
+                "assigned", "assign", "done", "COMPLETED", 12).outcome()).isEqualTo("TRANSITION_NOT_ALLOWED");
         assertThat(number("SELECT count(*) FROM " + schema + ".workflow_transition_history")).isZero();
         assertThat(text("SELECT current_state FROM " + schema + ".workflow_instances")).isEqualTo("new");
         assertThat(number("SELECT runtime_version FROM " + schema + ".workflow_instances")).isZero();
@@ -220,48 +221,35 @@ class Stage6GuardedActionsCandidateIntegrationTest {
                 Instant.ofEpochSecond(seconds));
     }
 
-    private Reply activate(String actor, boolean authority, String id, long version, long seconds)
-            throws Exception {
-        WorkflowDefinition def = definition();
-        WorkflowInstance approved = WorkflowInstance.notStarted(id, def,
-                new ResourceReference("item", "r1"), Instant.ofEpochSecond(10))
-                .activate(def, Instant.ofEpochSecond(seconds));
-        try (PreparedStatement statement = db.prepareStatement(
-                "SELECT outcome, body FROM " + schema + ".wf_port_commit_activation(?,?,?,?,?,?,?)")) {
-            statement.setString(1, actor);
-            statement.setBoolean(2, authority);
-            statement.setString(3, id);
-            statement.setLong(4, version);
-            statement.setString(5, approved.lifecycle().name());
-            statement.setLong(6, seconds);
-            statement.setInt(7, 0);
+    private Reply activate(String actor, boolean authority, String id, long version, long seconds) throws Exception {
+        WorkflowInstance initial=WorkflowInstance.notStarted(id,definition(),new ResourceReference("item","r1"),Instant.ofEpochSecond(10));
+        var expected=Stage6WorkflowPersistence.snapshot(initial).put("runtime_version",version);
+        try(PreparedStatement statement=db.prepareStatement("SELECT outcome,body FROM "+schema+".wf_port_commit_activation(?,?,?::jsonb,?::jsonb)")) {
+            statement.setString(1,actor); statement.setBoolean(2,authority);
+            statement.setString(3,expected.toString());
+            statement.setString(4,Stage6WorkflowPersistence.snapshot(initial.activate(definition(),Instant.ofEpochSecond(seconds))).toString());
             return reply(statement);
         }
     }
 
-    private Reply transition(String actor, boolean authority, String id, long version,
-                             String transitionId, long seconds) throws Exception {
-        TransitionResult approved = coreProposal(actor, id, version, transitionId, seconds);
-        return transitionProposal(actor, authority, id, version,
-                approved.previousInstance().currentState(), approved.record().transitionId(),
-                approved.instance().currentState(), approved.instance().lifecycle().name(), seconds);
+    private Reply transition(String actor,boolean authority,String id,long version,String transitionId,long seconds) throws Exception {
+        TransitionResult approved=coreProposal(actor,id,version,transitionId,seconds);
+        return transitionProposal(actor,authority,id,version,approved.previousInstance().currentState(),
+                transitionId,approved.instance().currentState(),approved.instance().lifecycle().name(),seconds);
     }
 
-    private Reply transitionProposal(String actor, boolean authority, String id, long version,
-                                     String source, String transitionId, String target,
-                                     String lifecycle, long seconds) throws Exception {
-        try (PreparedStatement statement = db.prepareStatement(
-                "SELECT outcome, body FROM " + schema + ".wf_port_commit_transition(?,?,?,?,?,?,?,?,?,?)")) {
-            statement.setString(1, actor);
-            statement.setBoolean(2, authority);
-            statement.setString(3, id);
-            statement.setLong(4, version);
-            statement.setString(5, source);
-            statement.setString(6, transitionId);
-            statement.setString(7, target);
-            statement.setString(8, lifecycle);
-            statement.setLong(9, seconds);
-            statement.setInt(10, 0);
+    private Reply transitionProposal(String actor,boolean authority,String id,long version,String source,
+            String transitionId,String target,String lifecycle,long seconds) throws Exception {
+        WorkflowInstance previous=WorkflowInstance.restore(id,definition(),new ResourceReference("item","r1"),version==0?"new":source,version,
+                WorkflowLifecycle.ACTIVE,Instant.ofEpochSecond(10),Instant.ofEpochSecond("resolve".equals(transitionId)?12:11));
+        var previousJson=Stage6WorkflowPersistence.snapshot(previous).put("current_state",source);
+        var next=previousJson.deepCopy().put("current_state",target).put("runtime_version",version+1)
+                .put("lifecycle",lifecycle).put("updated_at_seconds",seconds);
+        var record=new TransitionRecord(id,transitionId,source,target,new ActorReference(actor),version+1,Instant.ofEpochSecond(seconds));
+        try(PreparedStatement statement=db.prepareStatement("SELECT outcome,body FROM "+schema+".wf_port_commit_transition(?,?,?::jsonb,?::jsonb,?::jsonb)")) {
+            statement.setString(1,actor); statement.setBoolean(2,authority);
+            statement.setString(3,previousJson.toString());
+            statement.setString(4,next.toString()); statement.setString(5,Stage6WorkflowPersistence.record(record).toString());
             return reply(statement);
         }
     }
@@ -269,7 +257,10 @@ class Stage6GuardedActionsCandidateIntegrationTest {
     private static Reply reply(PreparedStatement statement) throws Exception {
         try (ResultSet rows = statement.executeQuery()) {
             assertThat(rows.next()).isTrue();
-            Reply result = new Reply(rows.getString(1), rows.getString(2));
+            String outcome=rows.getString(1);
+            String body=rows.getString(2);
+            if("DOMAIN_ERROR".equals(outcome)) outcome=new com.fasterxml.jackson.databind.ObjectMapper().readTree(body).get("code").textValue();
+            Reply result=new Reply(outcome,body);
             assertThat(rows.next()).isFalse();
             return result;
         }

@@ -23,6 +23,23 @@ class Stage6GuardedReadTest {
     private final PostgresWorkflowPersistence persistence = new PostgresWorkflowPersistence(source, "s6_read_test");
 
     @Test
+    void d3ScopeRequiresVerificationAndRejectsForeignTargetsWithoutSql() {
+        var failure = new IllegalStateException("unverified");
+        when(principal.requireVerified()).thenThrow(failure);
+        assertThatThrownBy(() -> persistence.forStage6(principal,
+                com.tricore.dxos.application.authorization.WorkflowOperation.READ,"one",null,null,null,null,null)).isSameAs(failure);
+        reset(principal);
+        verified();
+        var scope = persistence.forStage6(principal,
+                com.tricore.dxos.application.authorization.WorkflowOperation.READ,"one",null,null,null,null,null);
+        assertUnavailable(() -> scope.loadInstance("two"));
+        assertThatThrownBy(() -> scope.loadInstance(null)).isInstanceOf(IllegalArgumentException.class);
+        assertUnavailable(() -> scope.loadDefinition("publication",7));
+        assertUnavailable(() -> scope.commitTransition(null));
+        verifyNoInteractions(source);
+    }
+
+    @Test
     void unverifiedOrNullPrincipalNeverOpensConnection() {
         var failure = new IllegalStateException("verification failed");
         when(principal.requireVerified()).thenThrow(failure).thenReturn(null);

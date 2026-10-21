@@ -165,7 +165,7 @@ class Stage6GuardedActionsRaceIntegrationTest {
     void guardedActionLocksFirstAndRevocationWaitsUntilItsCommit(String operation) throws Exception {
         prepareOperation(operation);
         try (Connection writer = open()) {
-            assertThat(action(writer, operation)).isEqualTo("SNAPSHOT");
+            assertThat(action(writer, operation)).isEqualTo(operation.equals("activate") ? "SNAPSHOT" : "TRANSITION_RESULT");
             var executor = Executors.newSingleThreadExecutor();
             try {
                 AtomicInteger revokerPid = new AtomicInteger();
@@ -212,36 +212,23 @@ class Stage6GuardedActionsRaceIntegrationTest {
         }
     }
 
-    private String action(Connection c, String operation) throws Exception {
-        String name = operation.equals("activate")
-                ? "wf_port_commit_activation(?,?,?,?,?,?,?)"
-                : "wf_port_commit_transition(?,?,?,?,?,?,?,?,?,?)";
-        try (PreparedStatement statement = c.prepareStatement(
-                "SELECT outcome FROM " + schema + "." + name)) {
-            statement.setString(1, "alice");
-            statement.setBoolean(2, true);
-            statement.setString(3, "instance-a");
-            statement.setLong(4, 0);
-            int whenParameter;
-            if (operation.equals("transition")) {
-                // Fixture simulates the proposal already validated by Workflow Core:
-                // only "assign" exists, and "assigned" is terminal in this definition.
-                statement.setString(5, "new");
-                statement.setString(6, "assign");
-                statement.setString(7, "assigned");
-                statement.setString(8, "COMPLETED");
-                whenParameter = 9;
-            } else {
-                statement.setString(5, "ACTIVE");
-                whenParameter = 6;
-            }
-            statement.setLong(whenParameter, 11);
-            statement.setInt(whenParameter + 1, 0);
-            try (ResultSet rows = statement.executeQuery()) {
-                assertThat(rows.next()).isTrue();
-                String result = rows.getString(1);
-                assertThat(rows.next()).isFalse();
-                return result;
+    private String action(Connection connection,String operation) throws Exception {
+        var definition=new com.tricore.dxos.core.workflow.WorkflowDefinition("ticket",1,"new",
+                java.util.Set.of("new","assigned"),java.util.Set.of(new com.tricore.dxos.core.workflow.WorkflowTransition("assign","new","assigned")));
+        var initial=com.tricore.dxos.core.workflow.WorkflowInstance.notStarted("instance-a",definition,
+                new com.tricore.dxos.core.workflow.ResourceReference("item","res-a"),java.time.Instant.ofEpochSecond(10));
+        boolean activation=operation.equals("activate");
+        var previous=activation?initial:initial.activate(definition,java.time.Instant.ofEpochSecond(10));
+        var result=activation?null:previous.transition(definition,new com.tricore.dxos.core.workflow.TransitionCommand("instance-a","assign",
+                new com.tricore.dxos.core.workflow.ActorReference("alice"),0),java.time.Instant.ofEpochSecond(11));
+        String function=activation?"wf_port_commit_activation(?,?,?::jsonb,?::jsonb)":"wf_port_commit_transition(?,?,?::jsonb,?::jsonb,?::jsonb)";
+        try(PreparedStatement statement=connection.prepareStatement("SELECT outcome FROM "+schema+"."+function)) {
+            statement.setString(1,"alice"); statement.setBoolean(2,true);
+            statement.setString(3,Stage6WorkflowPersistence.snapshot(previous).toString());
+            statement.setString(4,Stage6WorkflowPersistence.snapshot(activation?initial.activate(definition,java.time.Instant.ofEpochSecond(11)):result.instance()).toString());
+            if(!activation) statement.setString(5,Stage6WorkflowPersistence.record(result.record()).toString());
+            try(ResultSet rows=statement.executeQuery()) {
+                assertThat(rows.next()).isTrue(); String outcome=rows.getString(1); assertThat(rows.next()).isFalse(); return outcome;
             }
         }
     }
