@@ -1,5 +1,15 @@
 package com.tricore.dxos.infrastructure.workflow;
 
+import com.tricore.dxos.core.workflow.ActorReference;
+import com.tricore.dxos.core.workflow.ResourceReference;
+import com.tricore.dxos.core.workflow.TransitionCommand;
+import com.tricore.dxos.core.workflow.TransitionResult;
+import com.tricore.dxos.core.workflow.WorkflowDefinition;
+import com.tricore.dxos.core.workflow.WorkflowErrorCode;
+import com.tricore.dxos.core.workflow.WorkflowException;
+import com.tricore.dxos.core.workflow.WorkflowInstance;
+import com.tricore.dxos.core.workflow.WorkflowLifecycle;
+import com.tricore.dxos.core.workflow.WorkflowTransition;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
