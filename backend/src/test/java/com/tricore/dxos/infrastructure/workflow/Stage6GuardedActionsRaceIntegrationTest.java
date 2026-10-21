@@ -214,8 +214,8 @@ class Stage6GuardedActionsRaceIntegrationTest {
 
     private String action(Connection c, String operation) throws Exception {
         String name = operation.equals("activate")
-                ? "wf_port_commit_activation(?,?,?,?,?,?)"
-                : "wf_port_commit_transition(?,?,?,?,?,?,?)";
+                ? "wf_port_commit_activation(?,?,?,?,?,?,?)"
+                : "wf_port_commit_transition(?,?,?,?,?,?,?,?,?,?)";
         try (PreparedStatement statement = c.prepareStatement(
                 "SELECT outcome FROM " + schema + "." + name)) {
             statement.setString(1, "alice");
@@ -224,10 +224,16 @@ class Stage6GuardedActionsRaceIntegrationTest {
             statement.setLong(4, 0);
             int whenParameter;
             if (operation.equals("transition")) {
-                statement.setString(5, "assign");
-                whenParameter = 6;
+                // Fixture simulates the proposal already validated by Workflow Core:
+                // only "assign" exists, and "assigned" is terminal in this definition.
+                statement.setString(5, "new");
+                statement.setString(6, "assign");
+                statement.setString(7, "assigned");
+                statement.setString(8, "COMPLETED");
+                whenParameter = 9;
             } else {
-                whenParameter = 5;
+                statement.setString(5, "ACTIVE");
+                whenParameter = 6;
             }
             statement.setLong(whenParameter, 11);
             statement.setInt(whenParameter + 1, 0);
