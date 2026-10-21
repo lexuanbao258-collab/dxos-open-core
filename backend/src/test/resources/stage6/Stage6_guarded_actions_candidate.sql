@@ -1,5 +1,6 @@
 -- STAGE 6.7 ISOLATED TEST-ONLY SQL CANDIDATE. Not a Flyway migration.
--- Two intended protected entrypoints for ACTIVATE and TRANSITION; no HTTP wiring/grants.
+-- Two PROVISIONAL signatures for the already proposed six-port ACTIVATE/TRANSITION identities;
+-- not additional SQL entrypoints, no finalized D3 parameter/return approval, no HTTP wiring/grants.
 -- Verified backend must supply canonical actor and exact operation authority, not the caller.
 -- Each call must own a READ COMMITTED transaction and return only after confirmed COMMIT.
 -- Cross-transaction policy mutators MUST use tenant_guards FOR UPDATE.
@@ -7,7 +8,7 @@
 -- These SQL fixtures alone DO NOT certify SECURITY DEFINER privileges, login-role grants,
 -- production atomicity across business data, Yến's R1-R10 or E2E readiness.
 
-CREATE FUNCTION "${flyway:defaultSchema}".wf_port_activate_instance(
+CREATE FUNCTION "${flyway:defaultSchema}".wf_port_commit_activation(
     p_actor_id TEXT, p_authority_present BOOLEAN, p_instance_id TEXT,
     p_expected_version BIGINT, p_when_seconds BIGINT, p_when_nanos INTEGER
 )
@@ -126,7 +127,7 @@ BEGIN
 END;
 $stage6_activate$;
 
-CREATE FUNCTION "${flyway:defaultSchema}".wf_port_transition_instance(
+CREATE FUNCTION "${flyway:defaultSchema}".wf_port_commit_transition(
     p_actor_id TEXT, p_authority_present BOOLEAN, p_instance_id TEXT,
     p_expected_version BIGINT, p_transition_id TEXT,
     p_when_seconds BIGINT, p_when_nanos INTEGER
@@ -273,7 +274,7 @@ BEGIN
 END;
 $stage6_transition$;
 
-REVOKE ALL ON FUNCTION "${flyway:defaultSchema}".wf_port_activate_instance(
+REVOKE ALL ON FUNCTION "${flyway:defaultSchema}".wf_port_commit_activation(
     TEXT,BOOLEAN,TEXT,BIGINT,BIGINT,INTEGER) FROM PUBLIC;
-REVOKE ALL ON FUNCTION "${flyway:defaultSchema}".wf_port_transition_instance(
+REVOKE ALL ON FUNCTION "${flyway:defaultSchema}".wf_port_commit_transition(
     TEXT,BOOLEAN,TEXT,BIGINT,TEXT,BIGINT,INTEGER) FROM PUBLIC;
