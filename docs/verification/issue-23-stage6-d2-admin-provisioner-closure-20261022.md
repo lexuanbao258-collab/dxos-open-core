@@ -1,0 +1,41 @@
+# Issue #23 — D2 admin/provisioner minimum closure plan for OLP MVP
+
+**2026-10-22 · Design/test preparation ONLY · Stage 6.1 remains BLOCKED.**  
+**Scope:** same D2/D3/D4 security gates, [PR #50](https://github.com/lexuanbao258-collab/dxos-open-core/pull/50), [Issue #23](https://github.com/lexuanbao258-collab/dxos-open-core/issues/23). **NOT** permission to run migrations, create production roles, enable HTTP or merge. No new architecture, Core method, `wf_port_*` SQL entrypoint, business table, public admin API, HMAC/PID/XID or enterprise legacy adoption.
+
+## 1. Existing evidence vs the precise missing capability
+
+- Physical six-policy-relations candidate [`V5_acl_physical_candidate.sql`](https://github.com/lexuanbao258-collab/dxos-open-core/blob/663d7e51ce8ac21bb619b0e57609764df54bcfdd/backend/src/test/resources/stage6/V5_acl_physical_candidate.sql) and owner-session [`Stage6_policy_lifecycle_candidate.sql`](https://github.com/lexuanbao258-collab/dxos-open-core/blob/663d7e51ce8ac21bb619b0e57609764df54bcfdd/backend/src/test/resources/stage6/Stage6_policy_lifecycle_candidate.sql) are **test resources only**, not approved Flyway V5 or authenticated admin implementation.
+- The current policy mutation functions insist on the **schema-owner session**, and audit uses `session_user` with literal `disposable-owner-session`. This is transparent test provenance, **not verified OIDC administrator identity**.
+- [`Stage6PolicyLifecycleIntegrationTest`](https://github.com/lexuanbao258-collab/dxos-open-core/blob/663d7e51ce8ac21bb619b0e57609764df54bcfdd/backend/src/test/java/com/tricore/dxos/infrastructure/workflow/Stage6PolicyLifecycleIntegrationTest.java) already covers owner reassignment, ACL revocation, reactivation, audit rollback, stale revision, concurrency, and unknown COMMIT. [`Stage6RuntimeLoginPrivilegeIntegrationTest`](https://github.com/lexuanbao258-collab/dxos-open-core/blob/663d7e51ce8ac21bb619b0e57609764df54bcfdd/backend/src/test/java/com/tricore/dxos/infrastructure/workflow/Stage6RuntimeLoginPrivilegeIntegrationTest.java) already creates an actual restricted runtime LOGIN and checks exactly six guarded runtime SQL functions. Operator-reported **48/48** physical/lifecycle tests on disposable PG17 are candidate evidence, not production D2 approval.
+
+**Gap to close:** a separately authenticated and least-privileged **offline test operator / provisioner** path for the *already-approved fresh synthetic fixtures and narrow policy mutations*, distinct from backend runtime and schema owner. This is a **review candidate**, not a ratified production authentication method. Independent Identity/PG reviewers must accept the operator provenance and release boundary before deployment.
+
+## 2. Smallest proposed separation (review before implementing)
+
+| Principal | Permitted in MVP proposal | Explicit denial required |
+|---|---|---|
+| Dedicated non-login migration/schema owner | Own the reviewed protected tables and vetted functions; executed only by controlled deployment/installation process | No application or browser session can assume it |
+| Backend runtime LOGIN | Schema USAGE + EXECUTE on **exactly six** reviewed `wf_port_*` functions | Direct V3/V5/audit SELECT/DML/TRUNCATE, owner/SET ROLE, CREATE/ALTER, policy-admin EXECUTE, inherited privileges, PUBLIC/default EXECUTE |
+| Separate offline provisioner LOGIN | Separately controlled operator credentials; invoke **only reviewed narrow provisioning/policy operations**, with approved manifest/source and audit provenance | No general SQL execution endpoint, protected table DML, owner/migration role switching, runtime escalation, unrestricted EXECUTE, anonymous/browser invocation |
+| PUBLIC, unrelated login, compromised caller assertion | No protected function/data access | No policy mutation, helper execution or resource enumeration |
+
+**No online admin dashboard/API** is needed for the student MVP. This separation is a *candidate* for independent sign-off. Do **not** grant the provisioner table ownership or blanket protected-table DML as a shortcut. Where a narrow elevated SQL function is unavoidable, independently check exact ownership, `SECURITY DEFINER` search path, all dependencies/overloads, default PUBLIC EXECUTE and effective role membership. Use an explicit reviewed operation allowlist, not user-supplied SQL. Do not assume `session_user` by itself proves an OIDC human; separately establish and record authenticated operator/account-to-approval mapping.
+
+## 3. Implementation/evidence requirements — in the existing D2 gate
+
+1. **Review-first:** inventory current candidate SQL function signatures, effective schema/table/function privileges and the contracts at PR #50. Identify the *minimum* existing fresh-only policy mutations needed for the IT Helpdesk demo. Do not add unrelated function or tenant-disable/legacy-adoption flow.
+2. **Isolated test implementation only after design acceptance:** any candidate SQL/Java change belongs under `backend/src/test/**`, with an exact SHA and clearly named test classes. Do **NOT** create `V5__*.sql`, wire the production Spring bean, change V1–V4, run SQL on shared staging, provision real Keycloak identities or expose HTTP.
+3. **Role negatives:** actual new disposable provisioner LOGIN cannot direct DML/DDL/TRUNCATE or assume schema-owner/runtime; actual runtime LOGIN cannot run provisioner mutators or direct protected SQL; PUBLIC/other LOGIN cannot execute definer helpers. Verify effective inherited membership, `SET ROLE`, ALL function signatures/overloads and default privileges. Only six runtime `wf_port_*` retain runtime EXECUTE.
+4. **Provenance:** proposed operator authentication + per-action approval/manifest/digest must bind the exact environment, tenant, actor, action and correlated audit event. Test missing/wrong provenance, expired/stale manifest or wrong target **fails closed**; never mark fake `session_user` or client actor as verified OIDC. Canonical A/B/C actor IDs and issuer/sub are **not yet supplied**, so D2-A fixture proof stays BLOCKED pending Yến.
+5. **Atomicity:** after tenant-guard `FOR UPDATE`, allowed policy mutation + monotonic `acl_revision` + append-only `workflow_policy_audit` **commit or roll back as one physical transaction**. Test revoke-first/write-first race using **two distinct backend PIDs**, and inspect durable results with a fresh third connection; audit INSERT failure leaves no changed grants/owner/revision. No regrant after membership reactivation and no blind retry after `COMMIT_OUTCOME_UNKNOWN`.
+6. **Fresh-only safety:** do not associate legacy V3 instance IDs or invent owner/tenant mapping. Before proposing any later cutover, independently verify empty instance/history inventory, exact reviewed synthetic definitions/keys, writer fence and failure/rollback plan. Never touch staging `127.0.0.1:55426`.
+7. **Acceptance report:** exact commit, SQL/function inventory, env/PG17 version, three login classes tested, separate test counts (tests/failures/errors/skips), SQLSTATE negatives, DB/PID evidence, safe cleanup, reviewer APPROVE or concrete CHANGES REQUIRED. Tests skipped or not run are **not PASS**.
+
+## 4. Safe execution target and required approvals
+
+- Only approved **disposable** `jdbc:postgresql://127.0.0.1:55427/stage6_disposable_test`, username `stage6_test`, PG17. Real-role tests already require explicit `STAGE6_DISPOSABLE_PG17_APPROVAL=YES`, `STAGE6_LOGIN_ROLE_TEST_APPROVAL=YES` and disposable guard; retain these hard stops. Do **not** print passwords or tokens in logs.
+- Before any mutation, confirm this is a disposable DB; never use port 55426 or remote/shared Supabase. No automatic secrets, identities, schema changes, admin privileges or migrations outside the isolated test.
+- **Review stop:** D2-A identity fixture, actual admin provenance, PG/security role/definer sign-off, compatible V5 and D3 cutover remain open. No Stage 6.2 authorization and **Workflow HTTP stays OFF**.
+
+**Owner direction:** Keep existing MVP Scope-Cut V2 and Option B residual risk; request only explicit blocker evidence. This checklist is one implementation-ready slice of the existing [D2/D3/D4 review](https://github.com/lexuanbao258-collab/dxos-open-core/issues/23#issuecomment-6322510218), **not a new review process or completion claim**.

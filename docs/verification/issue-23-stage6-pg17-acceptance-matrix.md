@@ -1,0 +1,156 @@
+# Issue #23 — Stage 6 PG17 acceptance matrix and evidence template
+
+**Status:** PLANNED TESTS ONLY, NOT EXECUTED. Companion to [Stage 6.1 contract](../contracts/issue-23-stage6-s61-postgres-acl-transaction-contract.md). Do **not** count previous PR #36 prototype PG17 tests as production Stage 6 verification; those HMAC, SQL privilege and V3 parity fixtures were separately scoped.
+
+**MVP acceptance profile (2026-10-20):** D2-A fresh-only synthetic demo scenario and D2-B one audit-only relation are owner-approved **design choices**, not DDL/execution/test PASS. Yến agreed DEC-D2-04 design ordering ([review](https://github.com/lexuanbao258-collab/dxos-open-core/pull/50#issuecomment-6289513010)); D3-A SQL dual-phase remains a candidate. Under owner-selected ADR-0025 Option B, HMAC/PID/XID cryptographic proof-only cases are **DEFERRED / NOT PASS**. Continue to test the actual runtime LOGIN privileges, CREATE read-set secrecy, exact JWT+ACL guards, race/rollback/history and COMMIT uncertainty. **No PG17 execution is claimed; Stage 6.1 NOT PASS, S6.2 BLOCKED.**
+
+**MVP scope for review:** tenant-disable has no approved physical lifecycle; propose **DEFER from MVP v1** unless a demonstrated business requirement justifies separate design approval. No disable column/API/schema extension is assumed or tested here. Arbitrary online resource registration stays closed; both NEW and LEGACY provisioning require manifest/approval and a demonstrated authoritative source, which remains unproven.
+
+## Safe execution envelope (mandatory)
+
+- **Only** isolated, explicitly disposable PostgreSQL **17.x** database/container, with a unique test schema, test-only role credentials and test-owned data. No live Supabase, staging at `127.0.0.1:55426`, production schema, or Keycloak writes. Do not inherit `WORKFLOW_TEST_JDBC_URL` without verifying the target is dedicated disposable. Stop if database identity cannot be proved.
+- Java 21 + existing Gradle toolchain; new tests must assert JUnit `tests > 0`, `failures=errors=skipped=0`; report *every* selected suite and exact commit. Skipped tests never count as passed.
+- Preserve Flyway V1–V4 byte-for-byte and pinned migration checksums, validate candidate forward-only V5 **only in isolated disposable DB after DDL review**. Do not merge production V5 under S6.1.
+- Use two **distinct physical PostgreSQL backend PIDs** for concurrency, deterministic `CountDownLatch`/barriers and finite lock timeouts; never infer correctness from `Thread.sleep`, exceptions alone or a single connection. Verify row, history, revisions and grants **after COMMIT on a fresh third connection**.
+- For authorization negatives, assert **no protected snapshot/history is materialized to untrusted caller, no row mutation, no history append, no token or SQL internals exposed**.
+
+## Stage 6.2–6.5 candidate test cases and acceptance signals
+
+| ID | Category / scenario | Required observation (fail if absent) |
+|---|---|---|
+| V5-01 | Fresh disposable PostgreSQL 17 applies reviewed additive schema after pinned V1–V4 | No changed V1–V4 checksum/DDL; exactly reviewed V5 objects; no public schema/role side effects. |
+| V5-02 | Duplicate global resource key, cross-tenant rebinding, owner mutations, invalid definition binding FK | Denied by **actual DDL/functions**; identity immutable and exact V3 definition/version required. |
+| V5-03 | Resource TOMBSTONED, DELETE/re-INSERT, tenant guard deletion/reuse, historical V3 missing registry | No resurrection/ID reuse, old unregistered instance cannot be exposed or inferred/backfilled automatically. |
+| V5-04 | UPDATE tenant guard ID, resource type/ID/tenant/created_at; cascade, UPSERT remap, delete/reinsert, duplicate bootstrap | Future actual constraints/triggers reject identity rewrites and recycling even when no FK child exists; same-tenant owner metadata changes only via vetted API; concurrent bootstrap never resets revision/audit. |
+| V5-05 | Reverse tombstone or clear/change its timestamp; import/restore over a reserved key | One-way lifecycle and original tombstoned_at retained; no tenant/resource deletion/reuse. Catalog + negative tests distinguish CHECK/FK shape from trigger transition enforcement; no online owner/replication/trigger/TRUNCATE bypass. |
+| LEGACY-01 | Caller attempts arbitrary online registration; controlled NEW provisioning encounters a V3 key without registry, legacy adoption or unapproved tenant mapping | No arbitrary online registration path is enabled. Both NEW/LEGACY require manifest/approval plus demonstrated source provenance/owner/mapping validation; credentials/digest/approval alone cannot prove authority. NEW requires empty legacy inventory and rejects legacy adoption, never silently INSERTs/UPSERTs ownership over old instances. Only separate LEGACY-manifest-authorized reconciliation may associate a whole legacy key; missing/ambiguous keys remain HIDDEN. |
+| LEGACY-02 | Reviewed manifest has wrong/missing tenant evidence, duplicate cross-tenant resource keys, stale revision, wrong digest/environment or incomplete instance set | Approval/provenance, exact whole-key inventory and immutable target checks fail closed; wrong external tenant evidence blocks approval (PK/FK/digest alone cannot prove ownership). No partial association, inferred owner, policy grant or hidden instance disclosure. |
+| LEGACY-03 | Legacy writer inserts/rebinds/updates between inventory and reconciliation; old pool attempts write during/after coordinated deployment | Deterministic distinct-PID barriers prove old writers drained/fenced through deployment and privilege changes, with affected traffic held. Verify effective permissions as actual login roles before/after changes and fresh-connection inventory/guarded behavior before resumption; no claim of one atomic application/DB transaction. Drift aborts for renewed review; tenant guard alone cannot fence an unguarded V3 writer. NEW absence checks cannot race a legacy insert. |
+| LEGACY-04 | Valid whole-key reconciliation, rollback/audit failure and attempted rerun | Only reviewed registry/policy facts and atomic audit/revision commit; no automatic positive grants; V3 IDs, resource/definition pins, snapshots/history/timestamp nanos and V1–V4 bytes unchanged. Fresh verification proves exact inventory coverage/no unintended visibility; confirmed rollback leaves no partial adoption; uncertain commit never blindly replayed. |
+| LEGACY-05 | Deployment/privilege-step failure; application rollback after committed DB changes; incompatible rollback or uncertain COMMIT | Fence/traffic hold persists through rollback/recovery. No regrant of old direct-table access or restart of unguarded pools; reconcile committed state, recover a compatible reviewed guarded configuration, recheck effective privileges and fresh-connection state before resuming. Incompatible rollback requires fenced forward recovery; unknown COMMIT never blindly replayed. |
+| SQL-01 | Login as actual `dxos_wf_runtime` and inspect effective inherited/default/PUBLIC grants | Direct V3/V5 SELECT, INSERT, UPDATE, DELETE, TRUNCATE, ALTER, trigger disable, schema CREATE denied; runtime cannot SET ROLE owner/migrator/admin. |
+| SQL-02 | Try unlisted `SECURITY DEFINER`, internal helpers, signing-key relation, PUBLIC EXECUTE, search-path/temp shadowing | Denied with actual SQL permissions, no side effects; only enumerated six port entrypoints callable under valid proof. |
+| SQL-03 | **MVP applicable:** verify trusted backend actor/authority sourcing, exact operation/target scope, direct protected-table privilege denial and no cross-request scope reuse. **DEFERRED stronger profile:** protection against stolen runtime-DB-credential actor forgery, old/expired cryptographic transaction proofs. | Fail closed on forged client actor or target mismatch at verified-backend boundary; SQL still enforces ACL/target using provided assertions. **Do not claim PostgreSQL independently authenticates actor under Option B**; theft of runtime DB credentials plus connectivity retains the documented risk. |
+| SQL-04 | **DEFERRED / NOT PASS for MVP Option B:** independent Java/SQL HMAC/PID/XID strict UTF-8 vectors, key rotation, nonce/replay and proof expiry. | Not an MVP blocking test nor a PASS claim under ADR-0025; backend canonical OIDC identity/JWT authority tests remain required in their existing gates. |
+| SQL-05 | Runtime/admin/provisioner try direct identity/membership/audit DML, trigger/replication bypass, broad helpers and inherited owner rights | All denied by effective privileges, including DELETE/TRUNCATE/ALTER and audit UPDATE; only narrow authenticated mutation/reconciliation APIs callable. Separately controlled offline-owner tests prove triggers, not a claim that SQL superuser is contained. |
+| ACL-01 | Owner and active tenant membership but no grant; same tenant other-grant; tenant foreign/no membership | Owner-only knows at most existence but cannot perform operation; foreign/nonmember/hidden indistinguishable no data; positive other grant does not enable requested action. |
+| ACL-02 | CREATE exact binding/version active, inactive, missing, alias/mismatched version | Only current exact active binding permits CREATE; blocking CREATE does not implicitly revoke existing-instance operations. |
+| ACL-03 | Source null/unavailable, SQL timeout/deadlock, ACL changed during request, orphaned legacy V3 | Typed HIDDEN/FORBIDDEN/UNAVAILABLE according to ratified policy, never ALLOWED; no protected data or write. |
+| MEMBER-01 | Deactivate actor with multiple positive grants and owned ACTIVE resources; then reactivate | Under one guard transaction all positive grants become false, membership inactive, owners explicitly reassigned and audit/revision committed. Reactivate restores membership only; no old grant or ownership restoration. Owner with no fresh grant cannot operate; every regrant requires a new audited decision. |
+| MEMBER-02 | Missing/inactive/cross-tenant replacement owner, partial resource reassignment; concurrent replacement-owner deactivation | Deactivation rejected atomically unless every ACTIVE resource ends with an active same-tenant owner. Guarded cross-row enforcement prevents race; no owner-derived/copy grants. Tombstoned resource may retain inactive owner provenance without resurrection. |
+| MEMBER-03 | Grant races deactivate/reactivate or Workflow read/write, both lock orders | Two physical PIDs + barriers prove same tenant guard serialization: earlier writer may complete; deactivate-first denies subsequent operation. No positive grant survives deactivation; post-reactivation allow requires a separately committed fresh grant. No nonvisible snapshot/history release. |
+| MEMBER-04 | Audit INSERT failure or mutation failure midway through grants/owner/membership updates; successful regrant and no-op retry | Confirmed rollback restores all ACL/owner/member/revision state and commits no success audit. Success has exact append-only old/new affected identities + approval/provenance/revision, not counts alone; no direct audit rewrite or fake duplicate state change. Fresh third connection verifies results; uncertain commit uses reconciliation/no retry. |
+| TX-01 | Revoke **wins first**: conn A policy `FOR UPDATE` then COMMIT; conn B later writer `FOR SHARE` | B sees **post-revoke** ACL, does not commit mutation/history despite preliminary Stage-5 allow. |
+| TX-02 | Guarded writer **wins first**: conn B tenant `FOR SHARE` then final mutation/COMMIT; conn A attempts policy `FOR UPDATE` | A cannot finish revoke before B ends transaction; subsequent operations see revoked policy. |
+| TX-03 | Revoke between preliminary `loadInstance` read and `commitTransition` or `commitActivation` | Final port transaction re-verifies and denies; previous read is not a write entitlement. |
+| TX-04 | Equivalent interleavings for membership revoke, ACL grant revoke, owner change, CREATE binding revoke, resource tombstone | All authoritative mutators hold the **same permanent tenant guard**, no bypass. |
+| TX-05 | Guarded SNAPSHOT/HISTORY with zero history, existing history and revocation racing | Current post-lock snapshot only, no hidden existence or history materialization; `READ COMMITTED` lock-capable transaction. |
+| TX-06 | Savepoint rollback or PL/pgSQL caught exception **after guard acquired** | Cannot continue with a released guard; reacquire/re-authorize or abort, with deterministic proof. |
+| TX-07 | Java SQL exception before COMMIT with confirmed rollback, fail rollback, ambiguous commit, connection loss after commit attempt | Correct sanitized typed outcome for known rollback; uncertain => `COMMIT_OUTCOME_UNKNOWN`, no blind retry, no extra history row. |
+| CORE-01 | Port CREATE, ACTIVATE, TRANSITION snapshot/history parity vs existing Core JDBC baseline | Full V3 domain state, lifecycle, version and `Instant` seconds+nanos unchanged; exact transition actor and one history event per successful transition. |
+| CORE-02 | Optimistic version conflict, completed instance, wrong definition, stale/forged proposal and state dependent error after revoke | No leak of hidden state; authorized error precedence preserved; fresh read-only authorization before protected domain error escapes. |
+| CREATE-01 | C3 generated ID collision with another tenant and two concurrent same-ID INSERTs | No `WorkflowRuntime.createInstance`/hidden `loadInstance` probe, no existing snapshot/history read, safe unique collision classification and no external 409 identifying collided row. |
+| CREATE-02 | Client attempts to provide `instanceId`; lost response; unknown commit and retry | Unexpected ID rejected; no blind CREATE replay, reconciliation/idempotency explicitly approved before HTTP. |
+| CREATE-03 | Proposed mixed-failure truth table: visibility × explicit CREATE grant × exact JWT authority × exact binding (active/missing/inactive/wrong version) | **Option 2 semantics AGREED by Yến; data-access contract/interaction evidence OPEN:** reliable hidden resource always HIDDEN; visible missing grant **or** JWT authority always FORBIDDEN regardless of binding; both present + missing/inactive/wrong binding HIDDEN; all present reaches authorized domain checks. Assert no binding/definition materialization on operation denial, no alias/owner shortcut; record changed Stage 5 / prior §10 expectations explicitly. |
+| CREATE-04 | Unauthenticated caller; null/throwing/mismatched source; missing definition overlaps grant/authority denial; guarded proof fault; ambiguous write COMMIT | **Option 2 semantics AGREED by Yến; data-access contract/interaction evidence OPEN:** identity first/no ACL lookup; genuine source/proof uncertainty UNAVAILABLE, never synthetic missing. Trusted visible grant/authority denial precedes definition lookup; only authorized scope loads exact definition. Prove proof validation and post-guard ordering coexist without claiming a missing JWT authority or leaking hidden visibility; uncertain COMMIT still overrides all denials, no retry. |
+| HTTP-01 | Genuine Keycloak/JWKS token / invalid forged expired wrong-issuer/audience, roles and actor/header spoof | Actual filter chain denies with safe 401/403 and hidden 404 per ratified policy; no second decoder or trusting request actor. |
+| HTTP-02 | Request endpoint regression and five Workflow HTTP paths with security filters | Existing Request behavior unchanged; WorkflowController not registered until the entire production security gate passes. |
+
+## Port-method evidence (must cite individual suite and exact SQL function)
+
+New D2 rows require actual constraint/trigger definitions and negative executions, effective-role catalog evidence, manifest approval/provenance + before/after inventory, and atomic audit/revision observations from a fresh third connection. Policy mocks or documentation inspection cannot satisfy them. Use synthetic authoritative manifests and test-only admin/provisioner proofs in the disposable database; never connect to database/Keycloak as part of this documentation refinement. HTTP expectations remain later integration gates, not PG17-only proof of JWT validation.
+
+| Public `WorkflowPersistencePort` | Expected secured SQL entrypoint | Test essentials |
+|---|---|---|
+| `loadDefinition` | `wf_port_load_definition` | Exact bound definition/operation scope only; internal CREATE/ACTIVATE/TRANSITION load is **not** an unprotected definition-listing API. |
+| `loadInstance` | `wf_port_load_instance` | Exact target and verified scope; internal ACTIVATE/TRANSITION do not demand extra public READ grant; **not called in secured CREATE**. |
+| `loadHistory` | `wf_port_load_history` | Exact READ target, guarded existence/history in one coherent transaction. |
+| `createInstance` | `wf_port_create_instance` | Server ID + exact definition/resource; final guard and durable COMMIT on same physical connection; collision-safe. |
+| `commitActivation` | `wf_port_commit_activation` | Post-lock ACL, exact previous state, fresh authority proof, version/lifecycle parity, confirmed durable COMMIT. |
+| `commitTransition` | `wf_port_commit_transition` | Post-lock ACL, true verified actor, complete canonical proposal, exact one-history append + state COMMIT; unknown outcome preserved. |
+
+## Evidence handoff template
+
+```text
+Stage: 6.x (exact scope)
+HEAD SHA:
+Base SHA / PR:
+Database: PostgreSQL 17.x, disposable verified (name, PID, isolated identity; never credentials)
+Migration path: reviewed V1–V4 SHA + proposed V5 SHA / or NOT EXECUTED
+JDK/Gradle:
+JUnit XML suite counts: [name] tests=.. failures=0 errors=0 skipped=0
+CI run URL/artifact ID:
+Distinct connection PIDs and deterministic barriers:
+Runtime role catalog negative evidence:
+Constraint/trigger identity/tombstone negatives (including empty-child cases):
+Approved manifest version/digest, provenance and exact inventory coverage (no sensitive payload):
+Authoritative source owner/provenance and mapping-validation approval evidence:
+Legacy writer fence/drain, coordinated deployment and effective-privilege post-check evidence:
+Deployment/privilege failure, rollback/forward recovery and safe-resumption evidence:
+Membership deactivate/reactivate, owner reassignment and fresh regrant evidence:
+Durable audit atomicity/privilege/rollback evidence:
+DEC-D2-04 owner decision, Yến re-review reference + mixed-failure/source/proof ordering evidence:
+Revoke-first / writer-first / savepoint evidence:
+Known rollback and COMMIT_OUTCOME_UNKNOWN fault evidence:
+Core/error/actor consistency:
+Unresolved P0/SEC/DB findings:
+Verdict: PASS for narrowly stated test scope OR BLOCKED / CHANGES REQUIRED
+```
+
+**No item in this table is claimed PASS by creating this document.** Owner-led review is not independent PostgreSQL/cryptography sign-off. **D2/D3/D4 and S6.2 remain BLOCKED; stop for Technical Lead review.** Never change shared DB roles/privileges or launch production Workflow HTTP based on test fixture results.
+
+
+## Stage 6.1 documentation-only change control and reviewable CREATE test truth table
+
+**Decision status (2026-10-20):** Owner selected DEC-D2-04 ordering in [Issue #23](https://github.com/lexuanbao258-collab/dxos-open-core/issues/23#issuecomment-6288471117). **Yến agreed to Option 2 semantics at [PR #50 comment](https://github.com/lexuanbao258-collab/dxos-open-core/pull/50#issuecomment-6289261865); the source/data-access contract is still OPEN, Stage-5 Java changes and PG17 execution remain BLOCKED, and production HTTP stays OFF.** This table expresses *future* acceptance criteria, not observed results.
+
+| Caller/source | Resource visibility | CREATE operation grant | Verified workflow:create | Exact binding | Expected result | Mandatory observable instrumentation |
+|---|---|---|---|---|---|---|
+| Missing/invalid token | Unknown | Any | Any | Any | Authn/401 | No ACL/binding read or protected SQL write |
+| Verified, source or required actor proof unavailable | Unknown | Any | Any | Any | UNAVAILABLE | No fabricated 403/404/allow; no protected data |
+| Verified and reliable | Hidden/nonmember/foreign/tombstone/legacy unmapped | Any | Any | Any | HIDDEN/404 | No definition/binding materialization; hidden vs missing equivalent |
+| Verified and reliable | Visible | No | Yes/No | Present/missing/inactive/wrong version | FORBIDDEN/403 | **Zero definition/binding queries**, same externally safe response for each binding state |
+| Verified and reliable | Visible | Yes | No | Present/missing/inactive/wrong version | FORBIDDEN/403 | **Zero definition/binding queries**, no JWT-authority lookup from untrusted header |
+| Verified and reliable | Visible | Yes | Yes | Missing/inactive/wrong ID/version | HIDDEN/404 | Exact binding lookup only after both permission checks |
+| Verified and reliable | Visible | Yes | Yes | Active/exact | Continue authorized domain checks | Fresh post-guard check in final port write; confirmed commit before success |
+| Already attempted write, COMMIT uncertain | Any | Any | Any | Any | COMMIT_OUTCOME_UNKNOWN | No blind retry or second history row; use approved reconciliation contract |
+
+**Do not conclude leak resistance from status equality alone.** Stage-5 unit/integration regressions MUST instrument the ACL reader, definition repository and authorization service call sequence to prove *no binding/definition read before operation authorization*. Cover 2×2 grant/authority and all four binding classes, plus hidden/visible, source error, cross-tenant IDOR, proof error, runtime races and changed resource lifecycle. At SQL stage, inspect invocation/protected materialization with real PostgreSQL roles and deterministic separate-PID races. Reconcile ADR-0024 C3's early exact-authority validation with DEC-VIS-before-denial; no false signed authority and no principal/proof bypass. The existing Stage 5 Java code is **not modified by this documentation update**.
+
+## D4 MVP test profile — OWNER SELECTED OPTION B; SECURITY SIGN-OFF PENDING
+
+[ADR-0025 Option B](../adr/ADR-0025-proposed-mvp-trusted-backend-threat-model.md) has been **OWNER-SELECTED for the OLP MVP** ([Issue #23 record](https://github.com/lexuanbao258-collab/dxos-open-core/issues/23#issuecomment-6289594814)): trusted verified backend without HMAC/PID/XID SQL actor attestation. **Independent Identity/PostgreSQL/security review remains required** and ADR-0024 stronger assurance has not been formally superseded. The original SQL-03/SQL-04 attestation checks are retained as documented **stronger-profile / post-MVP tests**, but are **OUT OF SCOPE for Option B and MUST NOT be recorded PASS or silently dropped from the accepted-risk report**. No Stage 6.2 implementation or SQL privileges activated on owner scope decision alone.
+
+For the owner-selected Option B profile, **effective only after independent Identity/PostgreSQL/security sign-off**, distinguish:
+- **Still required actual PASS:** restricted runtime SQL grants (SQL-01/02/05); accurate verified backend actor source; explicit resource/tenant ACL and IDOR; membership/binding secrecy; final transaction/commit/historical parity; concurrent revoke; audit; safe lost-response, C3 CREATE; controlled deployment/network and SQL-injection checks.
+- **DEFERRED / UNSUPPORTED, NEVER PASS:** resistance to actor spoofing by someone with stolen runtime DB credentials **and DB access**; HMAC cross-language bytes, PID/XID/expiry/replay/key rotation. Publicly document the reduced security assurance and the owner's accepted risk; do not claim any independently authenticated SQL actor.
+- **Re-review needed within existing D4 gate:** adapt proof-only SQL-A function signatures and failure routing to the owner-selected trusted-backend boundary, without claiming DB-verifiable actor provenance or trusting browser-supplied actor/JWT/GUC. This is not permission to add an extra stage or API.
+
+**D3 simplification tests:** Whether there are 16 helpers or fewer, every actual entrypoint/signature has documented allowed caller, exact target, mutation/ownership rules, effective grants, tenant-guard lock, append-only audit and negative calls as runtime, admin, provisioner and PUBLIC. Collapsing functions must not broaden authority or omit MEMBER/LEGACY/TX tests.
+
+**No tests were executed by this edit.** Stage 6.1 overall NOT PASS, D2/D3/D4 BLOCKED, S6.2 BLOCKED, Workflow HTTP OFF, PR #50 Draft.
+
+
+## CREATE-03/04 interaction evidence — DEC-D2-04 reviewer finding
+
+**Scope:** Existing CREATE-03/CREATE-04 acceptance criteria only; no new workflow or test stage. [Yến's exact-HEAD review](https://github.com/lexuanbao258-collab/dxos-open-core/pull/50#issuecomment-6289261865) agrees to Option 2 semantics but keeps D2-04 OPEN pending a data-access contract and interaction-level tests. The missing contract is now specified in [Stage 6.1 §13](../contracts/issue-23-stage6-s61-postgres-acl-transaction-contract.md#13-dec-d2-04-option-2-bindingdefinition-non-materialization-contract-2026-10-20). **Not implemented; not executed.**
+
+A future reviewer must inspect BOTH the application's actual call sequence and the source-backed DB query/materialization trace. The current Stage-5 `ResourceAclSnapshot` eager `activeDefinitionBindings` payload is a design incompatibility; `reader.read()` called once is NOT evidence that private bindings were not queried. The accepted data-access split is at the **application/infrastructure data boundary**, not a new Workflow Core port or public HTTP function.
+
+| Existing test case | Required interaction proof (MUST test; no result claimed yet) |
+|---|---|
+| CREATE-03 — hidden/nonmember/tombstoned, all grant/authority/binding overlaps | Exact minimal resource/actor/tenant/membership/visibility read, no binding row or definition payload/query/cache populated; HIDDEN indistinguishable from missing |
+| CREATE-03 — visible actor missing CREATE grant, binding active/absent/inactive/wrong version | Positive grant absence classified FORBIDDEN without any binding/definition read, independent of JWT authority; no runtime/SQL write |
+| CREATE-03 — visible CREATE grant + exact JWT authority missing, each binding state | FORBIDDEN without any binding/definition materialization, no false CREATE-scope proof and no definition load; must not return HIDDEN because binding is absent |
+| CREATE-03 — visible + grant + authority + binding missing/inactive/wrong | Exact binding query only AFTER both authorization checks; HIDDEN, no V3 definition payload on binding denial |
+| CREATE-03 — visible + grant + authority + active exact binding | Authorized bound definition lookup only AFTER authorization; no latest/alias fallback; final physical transaction repeats guard/facts and COMMIT checks |
+| CREATE-04 — source/proof unavailability and actor/target mismatch | Only reliable minimum facts used for classification; fail-closed UNAVAILABLE without leaking binding/definition; no misleading 403/404 or signed false authority |
+| CREATE-04 — policy revoke after preliminary allow | Actual final guarded transaction rechecks all facts, denies stale write, no instance/history mutation on revoke-first |
+| CREATE-04 — ambiguous COMMIT | COMMIT_OUTCOME_UNKNOWN dominates, no blind retry, no hidden collision probe |
+
+**Instrumentation contract:** Tests record ordering and query counts for `CurrentPrincipal.requireVerified()`, minimal ACL source, exact JWT authority check, binding query, V3 definition load, `WorkflowPersistencePort.createInstance` and the final JDBC guard+write+COMMIT. Use negative assertions **zero binding/definition SQL SELECT and zero protected row/cache materialization** on denied cases, rather than relying on `verifyNoInteractions(runtime)` or a snapshot that already contains bindings. Future disposable PG17 evidence uses real role permissions and post-lock revocation races with fresh physical connections.
+
+**Reviewer disposition:** `OPTION 2 SEMANTICS AGREED / ORCHESTRATION + DATA-ACCESS CONTRACT RE-REVIEW PENDING / CODE AND EVIDENCE BLOCKED`. Stage 6.1 NOT PASS, S6.2 BLOCKED, Workflow HTTP OFF. No Java, production SQL, Flyway V5, or new test suite executed by this document edit.
+
+
+**D4 decision state (2026-10-20):** `OPTION B OWNER SELECTED / SECURITY SIGN-OFF PENDING / NOT PASS`. Original test case IDs SQL-03/04 are **not deleted, not run and not PASS**; they describe ADR-0024 stronger assurance deferred beyond MVP. Actual PostgreSQL privileges, ACL, CREATE privacy, revoke/COMMIT and OIDC integration remain mandatory test obligations for the chosen MVP. No tests were executed and no production code/SQL was deployed by this documentation update.
