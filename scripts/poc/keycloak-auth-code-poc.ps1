@@ -1,5 +1,6 @@
 param(
     [switch]$RunBackendIntegration,
+    [switch]$RunGatewayIntegrationOnly,
     [switch]$WrongVerifier
 )
 
@@ -264,7 +265,7 @@ try {
     # REAL SPRING OIDC/JWKS INTEGRATION
     # ============================================================
 
-    if ($RunBackendIntegration) {
+    if ($RunBackendIntegration -or $RunGatewayIntegrationOnly) {
         Write-Host ""
         Write-Host "=== SPRING OIDC INTEGRATION TEST ==="
 
@@ -287,24 +288,36 @@ try {
                 $repoRoot `
                 "backend"
 
-            & $gradleWrapper `
-                --no-daemon `
-                -p $backendDir `
-                test `
-                --rerun-tasks `
-                --tests "com.tricore.dxos.infrastructure.identity.security.OidcKeycloakIntegrationTest" `
-                --tests "com.tricore.dxos.infrastructure.identity.security.GatewayKeycloakTokenHttpIntegrationTest"
+            $gatewaySuite = "com.tricore.dxos.infrastructure.identity.security.GatewayKeycloakTokenHttpIntegrationTest"
+            $oidcSuite = "com.tricore.dxos.infrastructure.identity.security.OidcKeycloakIntegrationTest"
+
+            $suites = if ($RunGatewayIntegrationOnly) {
+                @($gatewaySuite)
+            }
+            else {
+                @($oidcSuite, $gatewaySuite)
+            }
+
+            $gradleArgs = @(
+                "--no-daemon",
+                "-p", $backendDir,
+                "test",
+                "--rerun-tasks"
+            )
+
+            foreach ($suite in $suites) {
+                $gradleArgs += @("--tests", $suite)
+            }
+
+            & $gradleWrapper @gradleArgs
 
             if ($LASTEXITCODE -ne 0) {
                 throw "Spring OIDC + Gateway integration test failed with exit code $LASTEXITCODE"
             }
 
-            # The authenticated HTTP gate and decoder tests must really execute.
-            # BUILD SUCCESSFUL is not enough if an environment gate skipped either suite.
-            foreach ($suite in @(
-                "com.tricore.dxos.infrastructure.identity.security.OidcKeycloakIntegrationTest",
-                "com.tricore.dxos.infrastructure.identity.security.GatewayKeycloakTokenHttpIntegrationTest"
-            )) {
+            # The selected authenticated HTTP/OIDC tests must really execute.
+            # BUILD SUCCESSFUL is not enough if an environment gate skipped a selected suite.
+            foreach ($suite in $suites) {
                 $xmlPath = Join-Path $backendDir ("build\test-results\test\TEST-" + $suite + ".xml")
                 if (-not (Test-Path -LiteralPath $xmlPath -PathType Leaf)) {
                     throw "Expected JUnit suite result is missing"

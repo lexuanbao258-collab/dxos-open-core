@@ -15,6 +15,8 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.Locale;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -38,6 +40,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Import({GatewayKeycloakTokenHttpIntegrationTest.ProbeController.class, SecurityConfig.class, SpringSecurityCurrentPrincipal.class, WorkflowGatewayPrincipalGate.class})
 class GatewayKeycloakTokenHttpIntegrationTest {
     private static final String PATH = "/__test_only/gateway/identity-handoff-live";
+    private static final String ISSUER = "http://localhost:8180/realms/tricore";
 
     @Autowired private MockMvc mvc;
     @Autowired private ProbeController probe;
@@ -58,6 +61,13 @@ class GatewayKeycloakTokenHttpIntegrationTest {
         assertThat(probe.caller).isNotNull();
         assertThat(probe.caller.authenticated()).isTrue();
         assertThat(probe.caller.subjectId()).startsWith("oidc:").doesNotContain("=");
+
+        String expectedSubject = expectedSubject();
+        if (expectedSubject != null) {
+            assertThat(probe.caller.subjectId())
+                    .isEqualTo(expectedCanonicalSubjectId(expectedSubject));
+        }
+
         assertThat(probe.caller.authorities())
                 .extracting(a -> a.value())
                 .contains("workflow:read");
@@ -84,6 +94,22 @@ class GatewayKeycloakTokenHttpIntegrationTest {
                         .header("X-Role", "workflow:read"))
                 .andExpect(status().isUnauthorized());
         assertThat(probe.caller).isNull();
+    }
+
+    private static String expectedSubject() {
+        String subject = System.getenv("OIDC_TEST_EXPECTED_SUBJECT");
+        if (subject == null || subject.isBlank()) {
+            return null;
+        }
+        return subject;
+    }
+
+    private static String expectedCanonicalSubjectId(String subject) {
+        Base64.Encoder encoder = Base64.getUrlEncoder().withoutPadding();
+        return "oidc:"
+                + encoder.encodeToString(ISSUER.getBytes(StandardCharsets.UTF_8))
+                + "."
+                + encoder.encodeToString(subject.getBytes(StandardCharsets.UTF_8));
     }
 
     private static String token() {
