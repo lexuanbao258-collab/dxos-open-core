@@ -1,14 +1,13 @@
 import {
-  ArrowDownRight,
   ArrowRight,
   ArrowUpRight,
   Building2,
-  CheckCheck,
+  CheckCircle2,
   Clock3,
   Headphones,
   Layers3,
   Plus,
-  Sparkles,
+  Workflow,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { usePortal } from "../context";
@@ -21,215 +20,155 @@ import {
   Timeline,
 } from "../components/ui";
 
+/** University-focused enterprise dashboard. All figures derive from mock requests. */
 export function Dashboard() {
   const { role } = usePortal();
   const { data, loading, error, reload } = useRequests();
-  const completed = data.filter((r) => r.status === "completed").length;
-  const processing = data.filter((r) => r.status === "processing").length;
-  const pending = data.filter((r) => r.status === "pending").length;
+  const pending = data.filter((item) => item.status === "pending").length;
+  const processing = data.filter((item) => item.status === "processing").length;
+  const completed = data.filter((item) => item.status === "completed").length;
   const recent = data
-    .flatMap((r) =>
-      r.timeline.map((event) => ({
+    .flatMap((item) =>
+      item.timeline.map((event) => ({
         ...event,
-        title: `${event.title} · ${r.id}`,
+        title: `${event.title} · ${item.id}`,
       })),
     )
     .sort((a, b) => b.at.localeCompare(a.at))
-    .slice(0, 3);
+    .slice(0, 4);
+
+  // Each bucket is computed from mock fixtures, never from fabricated KPI numbers.
+  const days = Array.from({ length: 7 }, (_, index) => {
+    const start = new Date();
+    start.setHours(0, 0, 0, 0);
+    start.setDate(start.getDate() - (6 - index));
+    const count = data.filter((item) => {
+      const date = new Date(item.createdAt);
+      return date >= start && date < new Date(start.getTime() + 86400000);
+    }).length;
+    return {
+      label: new Intl.DateTimeFormat("vi-VN", { day: "2-digit", month: "2-digit" }).format(start),
+      count,
+    };
+  });
+  const ceiling = Math.max(1, ...days.map((day) => day.count));
+
   return (
     <>
       <PageHeading
-        eyebrow="Không gian làm việc của bạn"
-        title={`Chào buổi sáng, ${role === "processor" ? "Bảo" : "Ánh"} 👋`}
-        description="Mọi yêu cầu, một nơi quản lý. Cùng bắt đầu một ngày làm việc hiệu quả."
+        eyebrow="DX-OS / UNIVERSITY SERVICE PORTAL"
+        title={`Chào buổi sáng, ${role === "processor" ? "cán bộ xử lý" : "bạn"} 👋`}
+        description="Quản lý dịch vụ hỗ trợ học tập và vận hành trường đại học trên một nền tảng."
       >
         <Link to="/requests/new" className="button primary">
           <Plus size={18} />
           Tạo yêu cầu mới
         </Link>
       </PageHeading>
-      <div className="overview-layout">
-        <section className="welcome-panel">
-          <div className="welcome-copy">
-            <span className="welcome-label">
-              <span /> Dịch vụ nội bộ, liền mạch hơn
-            </span>
-            <h2>
-              Bớt chờ đợi.
-              <br />
-              Thêm thời gian sáng tạo.
-            </h2>
-            <p>
-              Từ hỗ trợ công nghệ đến không gian làm việc,
-              <br className="desktop-break" /> đội ngũ của bạn luôn sẵn sàng hỗ
-              trợ.
-            </p>
-            <Link className="welcome-link" to="/requests/new">
-              Bạn cần hỗ trợ gì hôm nay? <ArrowRight size={17} />
-            </Link>
-          </div>
-          <div className="portal-illustration" aria-hidden="true">
-            <div className="orbit orbit-one" />
-            <div className="orbit orbit-two" />
-            <div className="illustration-core">
-              <Layers3 size={43} strokeWidth={1.3} />
-              <span>DX-Core</span>
-            </div>
-            <span className="floating-node node-it">
-              <Headphones size={23} />
-            </span>
-            <span className="floating-node node-facility">
-              <Building2 size={23} />
-            </span>
-            <span className="floating-node node-check">
-              <CheckCheck size={21} />
-            </span>
-            <span className="illustration-caption">
-              Kết nối nhu cầu. Tạo giá trị.
-            </span>
-          </div>
-        </section>
-        <section className="quick-services">
-          <div className="section-title">
-            <h2>Dịch vụ nhanh</h2>
-            <span>02 dịch vụ</span>
-          </div>
-          <Link className="service-link" to="/requests/new?kind=it">
-            <span className="service-icon indigo">
-              <Headphones size={23} />
-            </span>
-            <span>
-              <strong>Hỗ trợ CNTT</strong>
-              <small>Thiết bị, tài khoản & phần mềm</small>
-            </span>
-            <ArrowUpRight size={18} />
-          </Link>
-          <Link className="service-link" to="/requests/new?kind=facility">
-            <span className="service-icon teal">
-              <Building2 size={23} />
-            </span>
-            <span>
-              <strong>Cơ sở vật chất</strong>
-              <small>Không gian & tiện ích văn phòng</small>
-            </span>
-            <ArrowUpRight size={18} />
-          </Link>
-          <p className="quick-note">
-            <Sparkles size={14} />
-            Cùng một nền tảng DX-Core
-          </p>
-        </section>
+
+      <div className="campus-dashboard-intro">
+        <p>
+          Tổng quan các yêu cầu hỗ trợ CNTT và cơ sở vật chất.
+          Số liệu bên dưới được tính từ dữ liệu mô phỏng trong phiên hiện tại.
+        </p>
+        <span className="intro-chip">MOCK / DEVELOPMENT</span>
       </div>
+
       {loading ? (
         <Loading />
       ) : error ? (
         <ErrorState message={error} onRetry={reload} />
       ) : (
         <>
-          <section className="metrics" aria-label="Thống kê yêu cầu">
+          <section className="campus-metrics" aria-label="Thống kê yêu cầu demo">
             <div className="metric">
-              <div>
-                <span>Tổng yêu cầu</span>
-                <Layers3 size={18} />
-              </div>
+              <div><span>Tổng số yêu cầu</span><Layers3 size={19} /></div>
               <strong>{String(data.length).padStart(2, "0")}</strong>
-              <p>Trong không gian demo của bạn</p>
-              <div className="mini-bars" aria-hidden="true">
-                {[35, 53, 40, 67, 55, 78, 65, 90, 75, 100].map((n, i) => (
-                  <i key={i} style={{ height: `${n}%` }} />
+              <p>Tất cả dịch vụ trong phiên demo</p>
+            </div>
+            <div className="metric">
+              <div><span>Chờ phê duyệt</span><Clock3 size={19} /></div>
+              <strong>{String(pending).padStart(2, "0")}</strong>
+              <p>Các yêu cầu đang đợi quyết định</p>
+            </div>
+            <div className="metric">
+              <div><span>Đang xử lý</span><Workflow size={19} /></div>
+              <strong>{String(processing).padStart(2, "0")}</strong>
+              <p>Đang được nhóm phụ trách hỗ trợ</p>
+            </div>
+            <div className="metric">
+              <div><span>Đã hoàn thành</span><CheckCircle2 size={19} /></div>
+              <strong>{String(completed).padStart(2, "0")}</strong>
+              <p>{data.length ? Math.round((completed / data.length) * 100) : 0}% số yêu cầu hiển thị</p>
+            </div>
+          </section>
+
+          <div className="campus-dashboard-grid">
+            <section className="panel campus-chart-panel" aria-label="Biểu đồ yêu cầu bảy ngày">
+              <div className="panel-heading">
+                <div>
+                  <h2>Xu hướng tiếp nhận yêu cầu</h2>
+                  <p>Yêu cầu mới trong 7 ngày gần nhất · MOCK DATA</p>
+                </div>
+                <Clock3 size={18} aria-hidden="true" />
+              </div>
+              <div className="campus-chart-meta">
+                <span className="campus-overline">Hoạt động gần đây</span>
+                <span className="muted">7 ngày</span>
+              </div>
+              <div className="campus-chart-count">
+                <strong>{days.reduce((sum, day) => sum + day.count, 0)}</strong>
+                <span>yêu cầu được tạo trong giai đoạn</span>
+              </div>
+              <div className="campus-chart" role="img" aria-label={`Số yêu cầu trong 7 ngày gần nhất: ${days.map((day) => `${day.label}: ${day.count}`).join("; ")}`}>
+                {days.map((day) => (
+                  <div className="campus-chart-bar" key={day.label} aria-hidden="true">
+                    <div className="campus-chart-track">
+                      <div className="campus-chart-fill" style={{ height: `${Math.max(3, (day.count / ceiling) * 100)}%` }} />
+                    </div>
+                    <span className="campus-chart-label">{day.label}</span>
+                  </div>
                 ))}
               </div>
-            </div>
-            <div className="metric">
-              <div>
-                <span>Chờ phê duyệt</span>
-                <Clock3 size={18} />
-              </div>
-              <strong>
-                {String(pending).padStart(2, "0")}
-                <small>yêu cầu</small>
-              </strong>
-              <p>
-                <span className="metric-dot amber" />
-                Đang chờ người phụ trách
-              </p>
-            </div>
-            <div className="metric">
-              <div>
-                <span>Đang xử lý</span>
-                <Headphones size={18} />
-              </div>
-              <strong>
-                {String(processing).padStart(2, "0")}
-                <small>yêu cầu</small>
-              </strong>
-              <p>
-                <span className="metric-dot indigo-dot" />
-                Đội ngũ đang hỗ trợ bạn
-              </p>
-            </div>
-            <div className="metric">
-              <div>
-                <span>Đã hoàn thành</span>
-                <CheckCheck size={18} />
-              </div>
-              <strong>
-                {String(completed).padStart(2, "0")}
-                <small>yêu cầu</small>
-              </strong>
-              <p className="metric-success">
-                <ArrowDownRight size={14} />
-                {data.length ? Math.round((completed / data.length) * 100) : 0}%
-                yêu cầu trong demo
-              </p>
-            </div>
-          </section>
-          <section className="panel recent-panel">
-            <div className="panel-heading">
-              <div>
-                <h2>
-                  Yêu cầu gần đây{" "}
-                  <span className="count-badge">{data.length}</span>
-                </h2>
-                <p>Theo dõi tiến độ các yêu cầu của bạn.</p>
-              </div>
-              <Link className="text-link" to="/requests">
-                Xem tất cả <ArrowRight size={15} />
-              </Link>
-            </div>
-            <RequestTable items={data.slice(0, 5)} compact />
-          </section>
-          <div className="dashboard-bottom">
-            <section className="panel activity-panel">
+              <div className="campus-chart-legend">Số yêu cầu mới · dữ liệu mô phỏng</div>
+            </section>
+
+            <section className="panel campus-activity-panel">
               <div className="panel-heading">
-                <h2>Hoạt động mới nhất</h2>
-                <Link className="text-link" to="/history">
-                  Xem lịch sử <ArrowRight size={15} />
-                </Link>
+                <div><h2>Hoạt động mới nhất</h2><p>Nhật ký từ các yêu cầu demo</p></div>
+                <Link className="text-link" to="/history">Xem tất cả <ArrowRight size={15} /></Link>
               </div>
               <Timeline events={recent} />
             </section>
-            <section className="platform-note">
-              <span className="service-icon teal">
-                <Layers3 size={24} />
-              </span>
-              <h2>
-                Xây một lần.
-                <br />
-                Phục vụ nhiều quy trình.
-              </h2>
-              <p>
-                IT Support và Facility dùng chung giao diện, mô hình yêu cầu và
-                lịch sử xử lý.
-              </p>
-              <Link className="text-link" to="/integration">
-                Tìm hiểu trạng thái tích hợp <ArrowUpRight size={15} />
-              </Link>
-              <span className="mock-footnote">
-                MOCK DATA · Chưa tích hợp HTTP thực
-              </span>
-            </section>
           </div>
+
+          <div className="campus-services-header">
+            <div><h2>Dịch vụ đại học</h2><p>Hai nhóm dịch vụ minh họa trên cùng cấu trúc DX-Core</p></div>
+            <Link className="text-link" to="/integration">Kiến trúc tích hợp <ArrowUpRight size={15} /></Link>
+          </div>
+          <div className="campus-service-grid">
+            <Link to="/requests/new?kind=it" className="campus-service-card">
+              <span className="service-icon indigo"><Headphones size={23} /></span>
+              <span><strong>Hỗ trợ CNTT</strong><small>Wi-Fi, phòng máy, thiết bị và tài khoản học tập</small></span>
+              <ArrowUpRight size={18} />
+            </Link>
+            <Link to="/requests/new?kind=facility" className="campus-service-card">
+              <span className="service-icon teal"><Building2 size={23} /></span>
+              <span><strong>Cơ sở vật chất</strong><small>Phòng học, giảng đường, máy chiếu và hạ tầng</small></span>
+              <ArrowUpRight size={18} />
+            </Link>
+          </div>
+
+          <section className="panel recent-panel campus-recent">
+            <div className="panel-heading">
+              <div>
+                <h2>Yêu cầu gần đây <span className="count-badge">{data.length}</span></h2>
+                <p>Theo dõi trạng thái các yêu cầu trong không gian demo.</p>
+              </div>
+              <Link className="text-link" to="/requests">Xem tất cả <ArrowRight size={15} /></Link>
+            </div>
+            <RequestTable items={data.slice(0, 5)} compact />
+          </section>
         </>
       )}
     </>

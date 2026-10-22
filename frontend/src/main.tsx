@@ -10,6 +10,7 @@ import "@fontsource/be-vietnam-pro/latin-600.css";
 import "@fontsource/be-vietnam-pro/latin-700.css";
 import { App } from "./App";
 import "./styles.css";
+import "./university-theme.css";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <BrowserRouter>
