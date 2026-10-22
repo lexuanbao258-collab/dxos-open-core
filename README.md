@@ -190,8 +190,7 @@ DX-OS/
 ├── infra/
 ├── scripts/
 ├── .env.example
-├── README.md
-└── LICENSE                   # Apache License 2.0
+└── README.md
 ```
 
 This is a high-level map, not a claim that every package is fully implemented.
@@ -234,7 +233,7 @@ Responsibilities do not establish copyright ownership of each contributor's work
 
 ## License and Third-Party Notices
 
-Apache License 2.0 (`Apache-2.0`) is the selected license for original DX-OS materials that the relevant rights holders have authorized for distribution under these terms. See the root [LICENSE](LICENSE) file for the full license text.
+Apache License 2.0 (`Apache-2.0`) is the selected license for original DX-OS materials that the relevant rights holders have authorized for distribution under these terms. The licensing work is tracked separately in [Issue #38](https://github.com/lexuanbao258-collab/dxos-open-core/issues/38).
 
 Third-party dependencies, the Gradle Wrapper, adapted materials, and externally sourced assets remain subject to their respective licenses and attribution obligations.
 
