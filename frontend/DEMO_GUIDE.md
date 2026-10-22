@@ -16,9 +16,9 @@
 3. Nhập tiêu đề tối thiểu 8 ký tự, mô tả tối thiểu 20 ký tự, vị trí và ưu tiên. Attachments ghi **BLOCKED FEATURE**, không nhận tệp.
 4. Gửi: nút có loading/chống gửi trùng, sau đó mở chi tiết và thông báo thành công. Ghi lại mã yêu cầu, thường `DX-1049` ở phiên mới.
 5. Dùng **sidebar** mở Trạng thái phiên → chọn **Người xử lý — Lê Xuân Bảo** → Tiếp tục. Không reload trang trong luồng demo.
-6. Mở Bàn xử lý hoặc Yêu cầu của tôi, chọn mã vừa tạo. Phê duyệt → nhập ghi chú → xác nhận. Tiếp tục Bắt đầu xử lý → Hoàn thành, mỗi bước thêm sự kiện timeline. Yêu cầu kết thúc không có thao tác tiếp.
-7. Mở Lịch sử hoạt động để theo dõi các sự kiện mới nhất.
-8. Đổi về Nhân viên và lặp lại với **Cơ sở vật chất**. Giải thích hai dịch vụ dùng chung form/model/service/timeline; phản hồi hiện tại là mock, Core mới sở hữu runtime thật.
+6. Mở Bàn xử lý hoặc Yêu cầu của tôi, chọn mã vừa tạo. Phê duyệt → nhập ghi chú → xác nhận. Tiếp tục Bắt đầu xử lý → Hoàn thành, mỗi bước thêm sự kiện timeline. IT chuyển sang **RESOLVED — Chờ nhân viên xác nhận**, chưa kết thúc; timeline ghi **IT đã xử lý và thông báo kết quả**. Người xử lý không có thao tác xác nhận thay người gửi.
+7. Dùng sidebar đổi về **Nhân viên — Ngọc Ánh**, mở đúng yêu cầu đã gửi qua Yêu cầu của tôi → **Xác nhận hoàn thành** → nhập ghi chú → xác nhận. Trạng thái thành **CONFIRMED — Đã xác nhận hoàn thành**, timeline thêm sự kiện riêng **Người gửi đã xác nhận hoàn thành**. Không tự chuyển sang CLOSED hoặc có thao tác đóng phiếu; bước/actor đóng và tên trạng thái cuối vẫn cần chốt trong Issue #53. Đây chỉ là eligibility theo fixtures mock, không chứng minh ACL backend. Mở Lịch sử hoạt động để theo dõi hai sự kiện.
+8. Lặp lại với **Cơ sở vật chất**: luồng mock vẫn kết thúc ở **Hoàn thành**, không thêm xác nhận của người gửi. Giải thích hai dịch vụ dùng chung form/model/service/timeline; phản hồi hiện tại là mock, Core mới sở hữu runtime thật.
 
 ## Các trạng thái cần trình diễn
 

@@ -69,6 +69,13 @@ export class MockRequestService implements RequestService {
     return structuredClone(this.find(id, role));
   }
   actions(item: ServiceRequest, role: DemoRole): RequestAction[] {
+    if (
+      item.kind === "it" &&
+      item.status === "resolved" &&
+      role === "employee" &&
+      this.visible(item, role)
+    )
+      return [{ id: "confirm", label: "Xác nhận hoàn thành" }];
     if (role !== "processor") return [];
     // Fixed mock response examples for both sample services; Core owns real allowed transitions.
     if (item.status === "pending")
@@ -138,8 +145,15 @@ export class MockRequestService implements RequestService {
       approve: { status: "approved", title: "Đã phê duyệt" },
       reject: { status: "rejected", title: "Từ chối yêu cầu" },
       start: { status: "processing", title: "Bắt đầu xử lý" },
-      complete: { status: "completed", title: "Hoàn thành yêu cầu" },
-    } as const;
+      complete:
+        item.kind === "it"
+          ? { status: "resolved", title: "IT đã xử lý và thông báo kết quả" }
+          : { status: "completed", title: "Hoàn thành yêu cầu" },
+      confirm: {
+        status: "confirmed",
+        title: "Người gửi đã xác nhận hoàn thành",
+      },
+    } satisfies Record<ActionId, { status: ServiceRequest["status"]; title: string }>;
     const result = responses[action];
     item.status = result.status;
     item.version += 1;
@@ -148,7 +162,7 @@ export class MockRequestService implements RequestService {
     item.timeline.push({
       id: crypto.randomUUID(),
       at: item.updatedAt,
-      actor: "Lê Xuân Bảo",
+      actor: role === "employee" ? item.requester : "Lê Xuân Bảo",
       title: result.title,
       note: note.trim(),
     });

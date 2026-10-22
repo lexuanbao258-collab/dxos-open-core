@@ -1,7 +1,11 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { MockRequestService } from "./MockRequestService";
 import { HttpApiClient } from "./HttpApiClient";
-import type { CreateRequestInput } from "../domain/request";
+import type {
+  ActionId,
+  CreateRequestInput,
+  RequestStatus,
+} from "../domain/request";
 
 const input: CreateRequestInput = {
   kind: "it",
@@ -27,6 +31,7 @@ describe("mock application responses", () => {
   it.each(["it", "facility"] as const)(
     "supports the shared create/approve/process/history UI contract for %s",
     async (kind) => {
+      const fetchSpy = vi.spyOn(globalThis, "fetch");
       const service = new MockRequestService(0);
       const created = await service.create({ ...input, kind }, "employee");
       expect(created.status).toBe("pending");
@@ -53,7 +58,7 @@ describe("mock application responses", () => {
         "processor",
       );
       expect(completed.timeline).toHaveLength(4);
-      expect(completed.status).toBe("completed");
+      expect(completed.status).toBe(kind === "it" ? "resolved" : "completed");
       expect(service.actions(completed, "processor")).toEqual([]);
       await expect(
         service.transition(
@@ -64,8 +69,247 @@ describe("mock application responses", () => {
           "processor",
         ),
       ).rejects.toMatchObject({ code: "403" });
+      if (kind === "it") {
+        expect(service.actions(completed, "employee")).toEqual([
+          { id: "confirm", label: "Xác nhận hoàn thành" },
+        ]);
+        const confirmed = await service.transition(
+          completed.id,
+          "confirm",
+          "Đã kiểm tra kết quả",
+          completed.version,
+          "employee",
+        );
+        expect(confirmed.status).toBe("confirmed");
+        expect(confirmed.version).toBe(completed.version + 1);
+        expect(confirmed.timeline).toHaveLength(5);
+        expect(confirmed.timeline.slice(-2)).toMatchObject([
+          {
+            title: "IT đã xử lý và thông báo kết quả",
+            actor: "Lê Xuân Bảo",
+            note: "Đã kiểm tra hoàn tất",
+          },
+          {
+            title: "Người gửi đã xác nhận hoàn thành",
+            actor: created.requester,
+            note: "Đã kiểm tra kết quả",
+          },
+        ]);
+        expect(service.actions(confirmed, "processor")).toEqual([]);
+        expect(service.actions(confirmed, "employee")).toEqual([]);
+        for (const role of ["employee", "processor"] as const) {
+          for (const action of ["confirm", "complete", "close"] as ActionId[]) {
+            await expect(
+              service.transition(
+                confirmed.id,
+                action,
+                "Không được tự đóng phiếu",
+                confirmed.version,
+                role,
+              ),
+            ).rejects.toMatchObject({ code: "403" });
+          }
+        }
+        expect(await service.get(confirmed.id, "employee")).toEqual(confirmed);
+      } else {
+        expect(service.actions(completed, "employee")).toEqual([]);
+        await expect(
+          service.transition(
+            completed.id,
+            "confirm",
+            "Không thêm bước xác nhận",
+            completed.version,
+            "employee",
+          ),
+        ).rejects.toMatchObject({ code: "403" });
+        expect(await service.get(completed.id, "employee")).toEqual(completed);
+      }
+      expect(fetchSpy).not.toHaveBeenCalled();
     },
   );
+  it("rejects processor confirmation even for a request created by that processor", async () => {
+    const service = new MockRequestService(0);
+    const created = await service.create(input, "processor");
+    const approved = await service.transition(
+      created.id,
+      "approve",
+      "Đồng ý triển khai",
+      0,
+      "processor",
+    );
+    const processing = await service.transition(
+      created.id,
+      "start",
+      "Đã tiếp nhận xử lý",
+      approved.version,
+      "processor",
+    );
+    const resolved = await service.transition(
+      created.id,
+      "complete",
+      "Đã thông báo kết quả",
+      processing.version,
+      "processor",
+    );
+    expect(service.actions(resolved, "processor")).toEqual([]);
+    expect(service.actions(resolved, "employee")).toEqual([]);
+    await expect(
+      service.transition(
+        resolved.id,
+        "confirm",
+        "Xác nhận thay người gửi",
+        resolved.version,
+        "processor",
+      ),
+    ).rejects.toMatchObject({ code: "403" });
+    await expect(
+      service.transition(
+        resolved.id,
+        "confirm",
+        "Không sở hữu yêu cầu",
+        resolved.version,
+        "employee",
+      ),
+    ).rejects.toMatchObject({ code: "404" });
+    expect(await service.get(resolved.id, "processor")).toEqual(resolved);
+  });
+  it("allows only the mock employee owner to confirm resolved IT", async () => {
+    const service = new MockRequestService(0);
+    const own = await service.get("DX-1042", "employee");
+    const other = await service.get("DX-1044", "processor");
+    expect(own.status).toBe("resolved");
+    expect(other.status).toBe("resolved");
+    expect(service.actions(other, "employee")).toEqual([]);
+    for (const item of [own, other]) {
+      expect(service.actions(item, "processor")).toEqual([]);
+      await expect(
+        service.transition(
+          item.id,
+          "confirm",
+          "Xác nhận thay người gửi",
+          item.version,
+          "processor",
+        ),
+      ).rejects.toMatchObject({ code: "403" });
+      expect(await service.get(item.id, "processor")).toEqual(item);
+    }
+    const hidden = await service
+      .transition(
+        other.id,
+        "confirm",
+        "Không sở hữu yêu cầu",
+        other.version,
+        "employee",
+      )
+      .catch((e) => e);
+    const missing = await service
+      .transition(
+        "NOT-FOUND",
+        "confirm",
+        "Không tồn tại yêu cầu",
+        other.version,
+        "employee",
+      )
+      .catch((e) => e);
+    expect(hidden.code).toBe("404");
+    expect(hidden.message).toBe(missing.message);
+    expect(await service.get(other.id, "processor")).toEqual(other);
+  });
+  it.each([
+    "pending",
+    "approved",
+    "processing",
+    "confirmed",
+    "completed",
+    "rejected",
+  ] as const)(
+    "offers no employee confirm action for IT in %s",
+    async (status: RequestStatus) => {
+      const service = new MockRequestService(0);
+      const item = await service.get("DX-1042", "employee");
+      expect(service.actions({ ...item, status }, "employee")).toEqual([]);
+    },
+  );
+  it("rejects premature confirmation without changing the request", async () => {
+    const service = new MockRequestService(0);
+    const before = await service.get("DX-1046", "employee");
+    await expect(
+      service.transition(
+        before.id,
+        "confirm",
+        "Chưa thông báo kết quả",
+        before.version,
+        "employee",
+      ),
+    ).rejects.toMatchObject({ code: "403" });
+    expect(await service.get(before.id, "employee")).toEqual(before);
+  });
+  it("preserves version, validation and single-write checks for confirmation", async () => {
+    const service = new MockRequestService(0);
+    const before = await service.get("DX-1042", "employee");
+    await expect(
+      service.transition(
+        before.id,
+        "confirm",
+        "Đã kiểm tra kết quả",
+        before.version - 1,
+        "employee",
+      ),
+    ).rejects.toMatchObject({ code: "CONFLICT" });
+    for (const note of ["", "x".repeat(1001)]) {
+      await expect(
+        service.transition(
+          before.id,
+          "confirm",
+          note,
+          before.version,
+          "employee",
+        ),
+      ).rejects.toMatchObject({ code: "VALIDATION" });
+    }
+    expect(await service.get(before.id, "employee")).toEqual(before);
+    const results = await Promise.allSettled([
+      service.transition(
+        before.id,
+        "confirm",
+        "Đã kiểm tra kết quả",
+        before.version,
+        "employee",
+      ),
+      service.transition(
+        before.id,
+        "confirm",
+        "Đã kiểm tra kết quả",
+        before.version,
+        "employee",
+      ),
+    ]);
+    expect(results.filter((r) => r.status === "fulfilled")).toHaveLength(1);
+    expect(results.find((r) => r.status === "rejected")).toMatchObject({
+      reason: { code: "CONFLICT" },
+    });
+    const after = await service.get(before.id, "employee");
+    expect(after.status).toBe("confirmed");
+    expect(after.version).toBe(before.version + 1);
+    expect(after.timeline).toHaveLength(before.timeline.length + 1);
+  });
+  it("does not retry or mutate an uncertain confirmation", async () => {
+    const service = new MockRequestService(0);
+    const before = await service.get("DX-1042", "employee");
+    const transition = vi.spyOn(service, "transition");
+    service.setFault("unknown");
+    await expect(
+      service.transition(
+        before.id,
+        "confirm",
+        "Đã kiểm tra kết quả",
+        before.version,
+        "employee",
+      ),
+    ).rejects.toMatchObject({ code: "COMMIT_OUTCOME_UNKNOWN" });
+    expect(transition).toHaveBeenCalledTimes(1);
+    expect(await service.get(before.id, "employee")).toEqual(before);
+  });
   it("scopes mock fixtures and gives identical hidden/missing responses", async () => {
     const service = new MockRequestService(0);
     expect(

@@ -34,11 +34,11 @@ export function StatusBadge({ status }: { status: ServiceRequest["status"] }) {
     <span className={`badge status-${status}`}>
       <Icon
         icon={
-          status === "completed"
+          status === "completed" || status === "confirmed"
             ? Check
             : status === "processing"
               ? LoaderCircle
-              : status === "pending"
+              : status === "pending" || status === "resolved"
                 ? Clock3
                 : Circle
         }

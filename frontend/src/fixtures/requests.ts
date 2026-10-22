@@ -53,7 +53,7 @@ const rows: [
     "1044",
     "Không kết nối được mạng Wi-Fi nội bộ",
     "it",
-    "completed",
+    "resolved",
     "urgent",
     "Hoàng Nam",
     "Phòng kinh doanh",
@@ -71,7 +71,7 @@ const rows: [
     "1042",
     "Thiết lập tài khoản công cụ thiết kế",
     "it",
-    "completed",
+    "resolved",
     "normal",
     "Ngọc Ánh",
     "Phòng phát triển",
@@ -131,7 +131,11 @@ export function makeFixtures(): ServiceRequest[] {
               ? "Cần bổ sung kế hoạch ngân sách trước khi gửi lại."
               : "Đã xác nhận thông tin, chuyển đến nhóm phụ trách.",
         });
-      if (status === "processing" || status === "completed")
+      if (
+        status === "processing" ||
+        status === "resolved" ||
+        status === "completed"
+      )
         timeline.push({
           id: `${id}-3`,
           at: new Date(Date.parse(createdAt) + 7200000).toISOString(),
@@ -139,13 +143,19 @@ export function makeFixtures(): ServiceRequest[] {
           title: "Bắt đầu xử lý",
           note: "Nhóm phụ trách đã tiếp nhận công việc.",
         });
-      if (status === "completed")
+      if (status === "resolved" || status === "completed")
         timeline.push({
           id: `${id}-4`,
           at: new Date(Date.parse(createdAt) + 10800000).toISOString(),
           actor: kind === "it" ? "Nhóm IT Support" : "Nhóm Facility",
-          title: "Hoàn thành yêu cầu",
-          note: "Đã xử lý và xác nhận kết quả trong kịch bản mock.",
+          title:
+            status === "resolved"
+              ? "IT đã xử lý và thông báo kết quả"
+              : "Hoàn thành yêu cầu",
+          note:
+            status === "resolved"
+              ? "Đã thông báo kết quả trong kịch bản mock, chờ người gửi xác nhận."
+              : "Đã xử lý và xác nhận kết quả trong kịch bản mock.",
         });
       return {
         id,

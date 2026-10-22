@@ -4,6 +4,29 @@ import { mkdir } from "node:fs/promises";
 import { resolve } from "node:path";
 
 const evidence = resolve("..", "docs", "evidence", "issue39-portal");
+const unexpectedRequests = new WeakMap<Page, string[]>();
+test.beforeEach(async ({ page }) => {
+  const unexpected: string[] = [];
+  unexpectedRequests.set(page, unexpected);
+  await page.route("**/*", async (route) => {
+    const url = new URL(route.request().url());
+    if (
+      url.origin !== "http://127.0.0.1:4173" ||
+      url.pathname.startsWith("/api/")
+    ) {
+      unexpected.push(url.href);
+      await route.abort();
+    } else {
+      await route.continue();
+    }
+  });
+});
+test.afterEach(({ page }) => {
+  expect(
+    unexpectedRequests.get(page),
+    "No real API or external requests in any mock flow",
+  ).toEqual([]);
+});
 async function screenshot(page: Page, name: string) {
   await mkdir(evidence, { recursive: true });
   await page.evaluate(() => document.fonts.ready);
@@ -49,6 +72,17 @@ async function openNav(page: Page, name: string) {
   const menu = page.getByRole("button", { name: "Mở menu" });
   if (await menu.isVisible()) await menu.click();
   await page.getByRole("link", { name, exact: true }).click();
+}
+async function switchRole(page: Page, role: "employee" | "processor") {
+  await openNav(page, "Trạng thái phiên");
+  await page
+    .getByRole("radio", {
+      name: role === "employee" ? /Nhân viên/ : /Người xử lý/,
+    })
+    .check();
+  await page
+    .getByRole("button", { name: "Tiếp tục với vai trò đã chọn" })
+    .click();
 }
 async function fillRequest(page: Page, kind: string) {
   await page
@@ -133,7 +167,7 @@ test("all eight screens render; capture actual localhost evidence; no API or ext
 });
 
 for (const kind of ["it", "facility"]) {
-  test(`${kind}: create, approve, process, complete using shared UI`, async ({
+  test(`${kind}: create, approve, process, complete${kind === "it" ? " and owner confirm" : " without confirmation"} using shared UI`, async ({
     page,
   }) => {
     await login(page);
@@ -176,11 +210,171 @@ for (const kind of ["it", "facility"]) {
       ).toBeVisible();
     }
     await expect(page.locator(".timeline li")).toHaveCount(4);
-    await expect(
-      page.getByText("Yêu cầu đã kết thúc. Không còn thao tác xử lý."),
-    ).toBeVisible();
+    if (kind === "it") {
+      await expect(page.locator(".status-resolved")).toHaveCount(2);
+      await expect(page.locator(".status-resolved").first()).toHaveText(
+        "Chờ nhân viên xác nhận",
+      );
+      await expect(
+        page.getByText("Yêu cầu đã kết thúc. Không còn thao tác xử lý."),
+      ).toHaveCount(0);
+      await expect(
+        page
+          .locator(".timeline li")
+          .filter({ hasText: "IT đã xử lý và thông báo kết quả" }),
+      ).toHaveCount(1);
+      await expect(
+        page.getByRole("button", { name: "Xác nhận hoàn thành", exact: true }),
+      ).toHaveCount(0);
+      await switchRole(page, "employee");
+      await openNav(page, "Yêu cầu của tôi");
+      await page
+        .getByRole("link", { name: /DX-1049.*Cài đặt công cụ/ })
+        .click();
+      await page
+        .getByRole("button", { name: "Xác nhận hoàn thành", exact: true })
+        .click();
+      await page
+        .getByRole("textbox", { name: "Ghi chú xử lý" })
+        .fill("Đã kiểm tra kết quả và sử dụng được công cụ.");
+      const confirm = page
+        .getByRole("dialog")
+        .getByRole("button", { name: "Xác nhận hoàn thành", exact: true });
+      // Two clicks in the same task also exercise the synchronous double-submit lock.
+      await confirm.evaluate((button: HTMLButtonElement) => {
+        button.click();
+        button.click();
+      });
+      await expect(page.getByRole("dialog")).toHaveCount(0);
+      await expect(page.locator(".status-confirmed")).toHaveCount(2);
+      await expect(page.locator(".status-confirmed").first()).toHaveText(
+        "Đã xác nhận hoàn thành",
+      );
+      await expect(page.locator(".timeline li")).toHaveCount(5);
+      const confirmation = page
+        .locator(".timeline li")
+        .filter({ hasText: "Người gửi đã xác nhận hoàn thành" });
+      await expect(confirmation).toHaveCount(1);
+      await expect(confirmation).toContainText("Ngọc Ánh");
+      await expect(
+        page
+          .locator(".timeline li")
+          .filter({ hasText: "IT đã xử lý và thông báo kết quả" }),
+      ).toHaveCount(1);
+      await expect(
+        page.getByRole("button", { name: "Xác nhận hoàn thành", exact: true }),
+      ).toHaveCount(0);
+      await expect(
+        page.getByRole("button", { name: /Đóng phiếu/ }),
+      ).toHaveCount(0);
+      await page.getByRole("button", { name: "Tải lại chi tiết" }).click();
+      await expect(page.locator(".status-confirmed")).toHaveCount(2);
+      await expect(page.locator(".timeline li")).toHaveCount(5);
+      await switchRole(page, "processor");
+      await openNav(page, "Yêu cầu của tôi");
+      await page
+        .getByRole("link", { name: /DX-1049.*Cài đặt công cụ/ })
+        .click();
+      await expect(page.locator(".status-confirmed")).toHaveCount(2);
+      await expect(
+        page.getByRole("button", { name: /Đóng phiếu|Xác nhận hoàn thành/ }),
+      ).toHaveCount(0);
+    } else {
+      await expect(
+        page.getByText("Yêu cầu đã kết thúc. Không còn thao tác xử lý."),
+      ).toBeVisible();
+      await expect(page.locator(".status-completed")).toHaveCount(2);
+      await expect(page.locator(".timeline li").last()).toContainText(
+        "Đã gửi yêu cầu",
+      );
+      await switchRole(page, "employee");
+      await openNav(page, "Yêu cầu của tôi");
+      await page.getByRole("link", { name: /DX-1049.*Chuẩn bị phòng/ }).click();
+      await expect(page.locator(".status-completed")).toHaveCount(2);
+      await expect(page.locator(".timeline li")).toHaveCount(4);
+      await expect(
+        page.getByRole("button", { name: "Xác nhận hoàn thành", exact: true }),
+      ).toHaveCount(0);
+    }
   });
 }
+
+test("resolved IT cannot be confirmed by processor or a non-owner employee", async ({
+  page,
+}) => {
+  await login(page, "processor");
+  await page.goto("/requests/DX-1044");
+  await expect(page.locator(".status-resolved")).toHaveCount(2);
+  await expect(
+    page.getByRole("button", { name: "Xác nhận hoàn thành", exact: true }),
+  ).toHaveCount(0);
+  await expect(
+    page.getByText("Yêu cầu đã kết thúc. Không còn thao tác xử lý."),
+  ).toHaveCount(0);
+  await switchRole(page, "employee");
+  await openNav(page, "Yêu cầu của tôi");
+  await page
+    .getByRole("textbox", { name: "Tìm yêu cầu", exact: true })
+    .fill("DX-1044");
+  await expect(page.locator("tbody tr")).toHaveCount(0);
+  await page.goto("/requests/DX-1044");
+  await expect(page.getByRole("alert")).toContainText(
+    "Không tìm thấy yêu cầu hoặc yêu cầu không khả dụng.",
+  );
+  await expect(
+    page.getByRole("button", { name: "Xác nhận hoàn thành", exact: true }),
+  ).toHaveCount(0);
+});
+
+test("uncertain IT confirmation stays resolved and cannot be resubmitted", async ({
+  page,
+}) => {
+  await login(page);
+  await openNav(page, "Trạng thái tích hợp");
+  await page
+    .getByRole("combobox", { name: "Kịch bản lỗi" })
+    .selectOption("unknown");
+  await page.getByRole("button", { name: "Áp dụng lỗi mô phỏng" }).click();
+  await openNav(page, "Yêu cầu của tôi");
+  await page
+    .getByRole("textbox", { name: "Tìm yêu cầu", exact: true })
+    .fill("DX-1042");
+  await page
+    .getByRole("link", { name: /DX-1042.*Thiết lập tài khoản/ })
+    .click();
+  await page
+    .getByRole("button", { name: "Xác nhận hoàn thành", exact: true })
+    .click();
+  await page
+    .getByRole("textbox", { name: "Ghi chú xử lý" })
+    .fill("Đã kiểm tra kết quả trong demo.");
+  const confirm = page
+    .getByRole("dialog")
+    .getByRole("button", { name: "Xác nhận hoàn thành", exact: true });
+  await confirm.click();
+  await expect(page.getByRole("dialog").getByRole("alert")).toContainText(
+    "Chưa xác định kết quả thao tác",
+  );
+  await expect(confirm).toBeDisabled();
+  await page
+    .getByRole("dialog")
+    .getByRole("button", { name: "Đóng", exact: true })
+    .click();
+  await expect(
+    page.getByRole("button", { name: "Xác nhận hoàn thành", exact: true }),
+  ).toBeDisabled();
+  await page.getByRole("button", { name: "Tải lại chi tiết" }).click();
+  await expect(page.locator(".status-resolved")).toHaveCount(2);
+  await expect(page.locator(".timeline li")).toHaveCount(4);
+  await expect(
+    page
+      .locator(".timeline li")
+      .filter({ hasText: "Người gửi đã xác nhận hoàn thành" }),
+  ).toHaveCount(0);
+  await expect(
+    page.getByRole("button", { name: "Xác nhận hoàn thành", exact: true }),
+  ).toBeDisabled();
+});
 
 test("search, filters, empty state, pagination and no attachment input", async ({
   page,

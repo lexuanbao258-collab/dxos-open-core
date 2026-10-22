@@ -1,8 +1,14 @@
 export type RequestKind = "it" | "facility";
 export type RequestStatus =
-  "pending" | "approved" | "processing" | "completed" | "rejected";
+  | "pending"
+  | "approved"
+  | "processing"
+  | "resolved"
+  | "confirmed"
+  | "completed"
+  | "rejected";
 export type DemoRole = "employee" | "processor";
-export type ActionId = "approve" | "reject" | "start" | "complete";
+export type ActionId = "approve" | "reject" | "start" | "complete" | "confirm";
 export type Fault = "" | "network" | "401" | "403" | "404" | "unknown";
 export interface TimelineEvent {
   id: string;
@@ -47,6 +53,8 @@ export const statusLabels: Record<RequestStatus, string> = {
   pending: "Chờ phê duyệt",
   approved: "Đã phê duyệt",
   processing: "Đang xử lý",
+  resolved: "Chờ nhân viên xác nhận",
+  confirmed: "Đã xác nhận hoàn thành",
   completed: "Hoàn thành",
   rejected: "Từ chối",
 };

@@ -868,7 +868,8 @@ tbody tr:hover {
   border-radius: 5px;
   white-space: nowrap;
 }
-.status-pending {
+.status-pending,
+.status-resolved {
   color: #8b5f13;
   background: #fff8e9;
   border-color: #f4e8c9;
@@ -883,7 +884,8 @@ tbody tr:hover {
   background: #f0f0fd;
   border-color: #e3e3f7;
 }
-.status-completed {
+.status-completed,
+.status-confirmed {
   color: #177463;
   background: #eaf7f2;
   border-color: #d9efe6;
