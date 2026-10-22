@@ -1,132 +1,123 @@
-# TRICORE DX-OS Open-Core
+# DX-OS Open-Core
 
-## Vấn đề sản phẩm
+**Reusable Digital Capabilities for Internal Service Applications**
 
-**DX-OS Internal Service Portal** là định hướng sản phẩm của TRICORE: tập trung
-các yêu cầu dịch vụ nội bộ công ty hiện được xử lý qua giấy, email, Zalo/Messenger/chat,
-điện thoại, bảng tính hoặc trao đổi miệng. Những kênh phân tán khiến việc theo dõi
-người phụ trách, tiến độ và lịch sử xử lý khó thống nhất.
+DX-OS Open-Core is TRICORE's modular monolith for exploring reusable capabilities behind internal service applications. The Internal Service Portal / IT Support scenario is the main demonstration target. DX-OS is a digital transformation platform concept, not a computer operating system or a claim about the competition's required product.
 
-Portal hướng tới tập trung việc gửi yêu cầu, phân loại, giao việc, phê duyệt/xử lý
-workflow, theo dõi trạng thái, lưu hồ sơ và lịch sử xử lý. Đây là định hướng của
-TRICORE, không phải diễn giải yêu cầu chính thức của cuộc thi OLP PMNM 2026.
+**Source baseline:** `origin/main` at `2115de3`. This README describes that source snapshot; work on unmerged branches and pull requests is identified separately.
 
-**DX-OS không phải hệ điều hành như Windows/Linux.** Đây là nền tảng dịch vụ số
-chung, cung cấp các capability tái sử dụng cho ứng dụng chuyển đổi số.
-Application sở hữu nghiệp vụ; Core cung cấp cơ chế chung.
+**Navigate:** [Overview](#overview) · [Architecture](#architecture-overview) · [Status](#implementation-status) · [Getting started](#getting-started) · [Documentation](#documentation-and-verification) · [License](#license-and-third-party-notices)
 
-## Kiến trúc Core — TEAM ARCHITECTURE BASELINE
+## Overview
 
-Repository triển khai **Spring Boot modular monolith** với bốn capability:
-Identity / SSO, API Gateway, Data Management và Workflow. Module logic không
-đồng nghĩa microservice; topology riêng cho Gateway chưa được chốt.
-Diagram dưới đây là hướng phụ thuộc mục tiêu, không khẳng định toàn bộ luồng
-đã tích hợp hoặc các thành phần được triển khai thành service riêng.
+Internal service requests often arrive through email, paper, spreadsheets, phone calls, or messaging apps. Scattered channels make ownership, progress, and decision history difficult to track. The proposed Portal brings request submission, assignment, processing, and status into one application.
 
-```text
-External / H-P-D-I Application
-             |
-             v
-         API Gateway
-          /      \
-         v        v
-   Identity      Workflow
-                   |
-                   v
-        WorkflowPersistencePort
-                   |
-                   v
-          Data / Persistence
-```
+DX-OS aims to supply reusable technical mechanisms for that application and others. An IT Support request may move from submission through review, assignment, resolution, requester confirmation, and closure. The application defines those business steps and permissions; Core supplies mechanisms that can be reused. This is TRICORE's demonstration scenario, not an assertion that OLP PMNM 2026 mandates this product.
 
-| Capability | Trách nhiệm |
-| --- | --- |
-| Identity / SSO | Authentication, identity resolution, authority information và authentication/security context tin cậy |
-| API Gateway | External entry point, routing, xử lý public/protected routes, phối hợp Identity, truyền trusted context và chuẩn hóa lỗi tại boundary |
-| Workflow | Definition/instance tái sử dụng, transition bằng transitionId, exact definition version binding, runtime versioning, optimistic concurrency, history và bảo vệ terminal state |
-| Data Management | Boundary persistence dữ liệu có cấu trúc, boundary object storage tương lai, provider adapters và triển khai persistence cho port do Core capability sở hữu |
+## Why DX-OS?
 
-Gateway không sở hữu persistence hay ngữ nghĩa workflow nghiệp vụ. Workflow
-không gọi Identity trực tiếp tại runtime. `WorkflowPersistencePort` thuộc Workflow;
-Data có thể triển khai adapter sau này nhưng không định nghĩa lại Workflow semantics
-hoặc phụ thuộc ngược lên application/consumer. Xem [baseline kiến trúc](docs/architecture/README.md).
+The intended reuse boundary separates shared mechanisms from application-specific rules:
 
-Request và workflow IT Support trong `com.tricore.dxos.request` hiện là
-application/business prototype, có API và persistence riêng. Generic Workflow
-Core đã triển khai riêng; Request chưa được chuyển sang Core mới.
-
-## Trạng thái — VERIFIED NOW / công việc đang mở
-
-Trạng thái GitHub được kiểm tra ngày **2026-10-07**, tại main `2b51a41`.
-
-**DONE / CURRENT:** repository/package baseline đã merge qua
-[PR #11](https://github.com/lexuanbao258-collab/dxos-open-core/pull/11);
-[Workflow Core contracts #13](https://github.com/lexuanbao258-collab/dxos-open-core/issues/13)
-đã đóng và merge qua [PR #15](https://github.com/lexuanbao258-collab/dxos-open-core/pull/15).
-Workflow được kiểm chứng bằng unit/contract tests độc lập provider, gồm hai
-lifecycle khác nhau. Lần chạy lại Session 1 đạt **29 Workflow tests**, **109 Request
-tests**, **139 tests toàn backend** và build thành công. Lệnh, môi trường và giới
-hạn kiểm chứng nằm trong [Workflow POC](docs/poc/workflow-core-poc.md).
-
-**IN PROGRESS:** [Identity Core contracts #12](https://github.com/lexuanbao258-collab/dxos-open-core/issues/12)
-và [Data Core boundaries #14](https://github.com/lexuanbao258-collab/dxos-open-core/issues/14)
-đã giao, còn OPEN. Trên main, hai package hiện chỉ có skeleton; chưa có PR mở
-tại thời điểm kiểm tra. Trạng thái này không xác nhận tiến độ trên máy cá nhân.
-
-**Giới hạn kiểm chứng:** test fake/mock chưa chứng minh transaction PostgreSQL,
-startup với database thật, tích hợp Gateway/Identity hoặc toàn bộ portal.
-Xem [evidence Session 1](docs/evidence/session-1-homework.md) và
-[contract Workflow](docs/contracts/workflow-core.md).
-
-## Công nghệ triển khai hiện tại
-
-Baseline: **Java 21**, **Spring Boot 3.5.16**, **Gradle Wrapper 8.14.3**,
-**PostgreSQL** và **Flyway**. Các công nghệ triển khai/POC này không tự động
-đóng băng contract Core độc lập provider.
-
-Chưa có quyết định chọn Keycloak, APISIX, MinIO, n8n hoặc Flowable trong
-tài liệu/quyết định hiện tại được kiểm tra. Provider POC/selection là việc sau.
-
-## Cấu trúc
-
-```text
-backend/              Spring Boot; package root com.tricore.dxos
-docs/architecture/    Quyết định kiến trúc và hướng phụ thuộc
-docs/contracts/       Contract Core và API
-docs/poc/             Phạm vi và kết quả POC
-docs/evidence/        Bằng chứng kiểm tra và checkpoint Git
-infra/                Cấu hình hạ tầng khi được phê duyệt
-scripts/              Script hỗ trợ khi cần
-.env.example          Template biến môi trường, không có credentials
-```
-
-Dưới package root, `core.{identity,workflow,data}`, `application`,
-`infrastructure.{identity,persistence,storage}` và `common` tạo ranh giới logic.
-`core.workflow` có contracts/domain mechanisms và tests; `core.identity`,
-`core.data`, `application` và các package infrastructure hiện chủ yếu là skeleton.
-`common` giữ health/error hiện có. Folder baseline không đồng nghĩa capability
-đã được tích hợp đầy đủ.
-
-## Ownership
-
-| Thành viên | Trách nhiệm / Issue | Commit checkpoints |
+| Capability | Core responsibility | Application responsibility |
 | --- | --- | --- |
-| Phan Hải Yến | Identity / SSO — [#12](https://github.com/lexuanbao258-collab/dxos-open-core/issues/12), OPEN | Principal/context → authority/errors → contract tests/trust assumptions |
-| Lê Xuân Bảo | API Gateway + Workflow — [#13](https://github.com/lexuanbao258-collab/dxos-open-core/issues/13), CLOSED | Models `d6d6b8b` → persistence port `56f5837` → tests/docs `971f6dd`; merged PR #15 |
-| Phan Ngọc Ánh | Data / Database / Storage — [#14](https://github.com/lexuanbao258-collab/dxos-open-core/issues/14), OPEN | Storage/metadata → errors/tests → adapter ownership/migration constraints |
+| Identity / SSO | Principal, authentication context, and authority contracts | Business roles and request-specific permissions |
+| API Gateway | API entry point, routing, trusted-context boundary, and error handling | User-facing business operations |
+| Workflow | Definitions, instances, transitions, versions, history, and state safeguards | Business states, transitions, and conditions |
+| Data Management | Persistence and storage contracts with provider adapters | Business data, ownership, and retention rules |
 
-Mỗi task có Issue, nhánh ngắn hạn, các commit có ý nghĩa và PR về main;
-xóa nhánh sau merge. Kế hoạch đầy đủ nằm trong từng Issue. Bài tập Session 1
-được theo dõi tại [Issue #16](https://github.com/lexuanbao258-collab/dxos-open-core/issues/16).
+The Portal is a demonstration interface, while the Request package is an application/business prototype. Neither defines the reusable Workflow Core. IT Support and Facility/Access Request could use the same Workflow mechanisms with different business lifecycles; demonstrating that reuse remains an acceptance goal, not a completed end-to-end integration claim.
 
-## Phát triển local
+## Architecture Overview
 
-Dùng **JDK 21** với `JAVA_HOME` trỏ đúng JDK; không cần cài Gradle riêng.
-Lần đầu cần Internet để Wrapper tải Gradle/dependencies.
-Từ repository root, trên PowerShell:
+The backend uses Java 21 and Spring Boot 3.5.16 as a **modular monolith**. Its logical boundaries do not imply separately deployed microservices. The diagram shows intended responsibilities and dependency direction:
+
+```text
+External client / application
+            |
+            v
+    API Gateway boundary
+       /          \
+      v            v
+ Identity       Application
+ contracts         layer
+                     |
+                     v
+                Workflow Core
+                     |
+                     v
+         WorkflowPersistencePort
+                     |
+                     v
+        Data / persistence adapter
+                     |
+                     v
+                 PostgreSQL
+```
+
+This is an architecture view, not evidence that the full Gateway → Identity → Portal → Workflow → database path is integrated. Workflow owns `WorkflowPersistencePort`; a Data adapter can implement it without redefining Workflow semantics. Workflow does not own IT Support-specific rules, and Gateway does not own business workflows or persistence. Client-supplied identity headers are not trusted merely because they reached an HTTP boundary.
+
+See the [architecture baseline](docs/architecture/README.md) and [Core contracts](docs/contracts/).
+
+## Core Capabilities
+
+- **Identity / SSO:** Core identity and authorization contracts exist. Complete SSO/OIDC enforcement through Gateway is not established in the stated main baseline.
+- **API Gateway:** API boundary code exists, but the generic Workflow HTTP adapter is not registered as a production endpoint in this baseline. Trusted caller propagation and protection require separate evidence.
+- **Workflow:** Generic definitions, instances, transitions by transition ID, exact definition-version binding, optimistic concurrency, history, terminal-state safeguards, and a persistence port have code and tests. Application-specific Request workflow remains separate.
+- **Data Management:** Object-storage contracts and Workflow persistence work exist. A complete object-storage provider and release-level PostgreSQL behavior are not established by those contracts alone.
+
+## Implementation Status
+
+The table describes **`origin/main` at `2115de3`**, inspected on October 22, 2026. It is a source snapshot, not a test run performed on that date.
+
+| Area | Present in the baseline | Still to verify or complete |
+| --- | --- | --- |
+| Workflow Core | Contracts, runtime, version binding, history, persistence port, and related tests | Full Portal integration and release acceptance |
+| Identity Core | Principal, context, authority, and decision contracts | End-to-end SSO/OIDC protection on main |
+| Data Core | Object-storage contracts and Workflow persistence mechanisms | Complete storage provider and reviewed live behavior |
+| Gateway / API | Request HTTP endpoints and API boundary code | Protected generic Workflow HTTP registration and trusted-context path |
+| Request prototype | Separate application code and tests | Integration with generic Workflow Core |
+| Frontend Portal | Demonstration direction and work outside the main baseline | A merged, verified Portal release |
+| PostgreSQL / Flyway | Configuration and migrations V1–V4 | Startup, privileges, rollback, and live-environment acceptance evidence |
+
+Identity–Gateway integration, the Portal, a complete demonstration, proof of Core reuse across two applications, and reproducible release packaging require their own reviewed evidence. An unmerged PR or roadmap item is not a capability already available on main.
+
+### Historical test checkpoint
+
+On **October 7, 2026**, at commit **`2b51a41`**, project documentation recorded **29 Workflow tests, 109 Request tests, and 139 backend tests**, with a successful build. The commands, environment, and limits are in the [Workflow POC](docs/poc/workflow-core-poc.md). These are historical results, **not** test counts or results from October 22.
+
+At that checkpoint, [Workflow Core Issue #13](https://github.com/lexuanbao258-collab/dxos-open-core/issues/13) was closed through [PR #15](https://github.com/lexuanbao258-collab/dxos-open-core/pull/15); [Identity Issue #12](https://github.com/lexuanbao258-collab/dxos-open-core/issues/12) and [Data Issue #14](https://github.com/lexuanbao258-collab/dxos-open-core/issues/14) were open. These are historical issue states, not a claim about their current status.
+
+Mock, fake, and MVC-slice tests do not by themselves establish PostgreSQL transactions, live security enforcement, or a complete Portal demonstration.
+
+## Technology Stack
+
+| Component | Baseline technology or status |
+| --- | --- |
+| Backend | Java 21; Spring Boot 3.5.16 |
+| Build | Gradle Wrapper 8.14.3 |
+| Database | PostgreSQL target; Flyway migrations V1–V4 |
+| ORM configuration | Hibernate `ddl-auto: none` |
+| Tests | JUnit and Spring Boot Test; dedicated integration tasks have separate prerequisites |
+| Frontend | Portal work outside this main snapshot |
+| Deployment | Requires commit-specific operational and acceptance evidence |
+
+Keycloak, a standalone gateway product, an object-storage provider, and a third-party workflow engine should be treated as options or proof-of-concept subjects unless a decision and implementation are evidenced for the relevant commit.
+
+## Getting Started
+
+### Prerequisites
+
+- Git and JDK 21; set `JAVA_HOME` to the JDK.
+- Internet access for the first Gradle Wrapper and dependency download.
+- PostgreSQL when starting the full backend or running database-dependent integration tests.
+
+### Test and build on Windows
+
+From a PowerShell terminal:
 
 ```powershell
-Set-Location backend
+git clone https://github.com/lexuanbao258-collab/dxos-open-core.git
+Set-Location dxos-open-core\backend
 java -version
 .\gradlew.bat --version
 .\gradlew.bat test --tests 'com.tricore.dxos.core.workflow.*'
@@ -135,23 +126,13 @@ java -version
 .\gradlew.bat build
 ```
 
-Tests hiện dùng unit, mock repository/transaction manager và MVC slices;
-không cần PostgreSQL. Chạy toàn bộ ứng dụng cần PostgreSQL và đủ biến `DB_*`
-trong process. Spring Boot hiện **không tự động nạp `.env`**; công cụ local
-hoặc môi trường bên ngoài phải cung cấp các biến này. Không commit `.env`.
-Flyway quản lý migration; Hibernate giữ `ddl-auto: none`.
+Interpret the results from the checked-out commit and actual command output. Some integration tasks have additional prerequisites; see the [backend guide](backend/README.md).
 
-Khi có PostgreSQL khả dụng, cung cấp đủ biến trong process:
+### Run with PostgreSQL
 
-| Biến | Giá trị do môi trường cung cấp |
-| --- | --- |
-| DB_HOST | Host PostgreSQL |
-| DB_PORT | Cổng PostgreSQL |
-| DB_NAME | Database đã tạo |
-| DB_USER | Tài khoản được cấp |
-| DB_PASSWORD | Mật khẩu của tài khoản đó |
+The root [`.env.example`](.env.example) documents `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, and `DB_PASSWORD`. Spring Boot does not automatically load a `.env` file in this baseline. Supply values to the process without committing credentials.
 
-Không có credentials mặc định. Ví dụ Windows PowerShell, từ `backend/`:
+From `backend/` in PowerShell:
 
 ```powershell
 $env:DB_HOST = Read-Host 'DB_HOST'
@@ -163,34 +144,98 @@ $env:DB_PASSWORD = $dbCredential.GetNetworkCredential().Password
 .\gradlew.bat bootRun
 ```
 
-Backend dự kiến kết nối PostgreSQL, chạy Flyway trước JPA rồi phục vụ API.
-Đây là hướng dẫn startup khi database sẵn sàng, **chưa được chạy xác minh trong
-POC Session 1**. Sau startup, từ cửa sổ khác có thể kiểm tra
-`Invoke-RestMethod -Uri 'http://localhost:8080/api/v1/health'`.
-Health API trả `{"status":"UP"}` theo MVC test, không chứng minh database khả dụng.
-Executable JAR nằm tại `backend/build/libs/dxos-backend-0.0.1-SNAPSHOT.jar`.
+Review Flyway and database privilege procedures before connecting to a shared database. If startup succeeds on the default port, check the health endpoint from another PowerShell terminal:
 
-Xem [backend README](backend/README.md) cho JDK setup, cấu hình local, JAR startup,
-Request APIs và giới hạn database validation; [evidence baseline](docs/evidence/README.md)
-giữ nguyên các checkpoint lịch sử.
+```powershell
+Invoke-RestMethod -Uri 'http://localhost:8080/api/v1/health'
+```
 
-## MVP roadmap — PLANNED / DEFERRED
+An `UP` health result does not establish Workflow, security, database transaction, or Portal acceptance. See the [backend guide](backend/README.md) for startup and test limitations.
 
-Vertical slice mục tiêu:
-**Login / Identity → API Gateway → Create Internal Request → Workflow Processing
-→ Persist Data → H-P-D-I Portal hiển thị trạng thái/kết quả.**
+## Demonstration and Reuse
 
-MVP cần thể hiện một luồng tích hợp end-to-end. Hiện các contracts/prototype
-mới là nền để nối luồng; chưa có bằng chứng portal tích hợp chạy hoàn chỉnh.
+The target IT Support lifecycle is:
 
-| NEXT | Dependency / kết quả mong đợi |
+```text
+Create request → Review / classify → Assign → In progress
+               → Resolve → Requester confirms → Close
+```
+
+This is a demonstration plan, not a claim that every step is available through the main branch's APIs or UI. **`CONFIRMED` and `CLOSED` are distinct states**; the application must retain the ratified transition and permission rules.
+
+| Area | Acceptance evidence to obtain |
 | --- | --- |
-| Gateway trusted-context integration | Chờ Identity contracts được review/merge; entry point và context tin cậy |
-| Workflow runtime/application orchestration | Dùng Workflow contracts đã merge; application sở hữu nghiệp vụ |
-| Real Workflow persistence adapter | Data thực hiện WorkflowPersistencePort; cần POC PostgreSQL atomicity/concurrency |
-| Identity provider POC/integration | Dựa trên Identity contracts và quyết định có bằng chứng; chưa chọn provider |
-| Internal Service Portal vertical slice | Nối login, Gateway, Request, Workflow và Data; UI hiển thị status/history/result |
+| Startup | Reproducible commands and configuration without exposed secrets |
+| Security | Verified caller identity, authorization, and negative tests |
+| Workflow | Valid and rejected transitions, version binding, and history |
+| Data | Persistence and retrieval in a reviewed PostgreSQL environment |
+| Core reuse | Two business cases using the same mechanism with different rules |
+| Traceability | Issue, PR, commit, tests, evidence, and documented limits |
 
-Mục tiêu Session 1 là tài liệu kiến trúc và bằng chứng đã nghiên cứu/chạy thử
-một capability. Workflow POC xác minh mô hình/contract generic hiện có, không
-xác minh engine bên thứ ba hay thay đổi topology.
+Mark an item `PASS` only when the evidence is tied to the relevant commit and environment. Mock demonstrations and verified live integration are separate kinds of evidence.
+
+## Repository Structure
+
+```text
+DX-OS/
+├── backend/                  # Java sources, tests, and Gradle Wrapper
+│   └── src/main/java/com/tricore/dxos/
+│       ├── core/             # Identity, Workflow, and Data contracts
+│       ├── application/      # Orchestration and policies
+│       ├── gateway/          # API boundary code
+│       ├── infrastructure/   # Provider and persistence adapters
+│       ├── request/          # Application/business prototype
+│       └── common/
+├── docs/                     # Architecture, contracts, POCs, evidence
+├── infra/
+├── scripts/
+├── .env.example
+├── README.md
+└── LICENSE                   # Apache License 2.0
+```
+
+This is a high-level map, not a claim that every package is fully implemented.
+
+## Documentation and Verification
+
+- [Backend guide](backend/README.md): setup, configuration, APIs, and test limits.
+- [Architecture](docs/architecture/README.md): boundaries and dependency direction.
+- [Workflow contract](docs/contracts/workflow-core.md): mechanisms and invariants.
+- [Workflow POC](docs/poc/workflow-core-poc.md): historical test evidence.
+- [Evidence index](docs/evidence/README.md): checkpoints and limitations.
+- [Glossary](GLOSSARY.md): project terminology.
+- [Issue #38](https://github.com/lexuanbao258-collab/dxos-open-core/issues/38): license, attribution, and SPDX review.
+
+A `PASS` claim should identify its commit, environment, command, result, and limitations. Review the relevant Issues and PRs for work newer than the stated baseline.
+
+## Contributing and Development Workflow
+
+TRICORE uses Issues and pull requests to define scope, review contracts, and attach reproducible evidence:
+
+1. Record acceptance criteria, exclusions, and ownership in an Issue.
+2. Work on a short-lived branch from the appropriate baseline.
+3. Include tests and explain assumptions or unverified behavior.
+4. Attach relevant command output and limitations to the PR.
+5. Obtain review before merging.
+
+Migration, provider, security-policy, and licensing changes require the appropriate specialist review. A merge alone is not end-to-end verification.
+
+## Team
+
+TRICORE is a student team participating in OLP PMNM 2026. These are collaboration areas; Issues and PRs record specific work.
+
+| Member | Primary collaboration area |
+| --- | --- |
+| Lê Xuân Bảo | Architecture, Workflow / Gateway, integration, coordination |
+| Phan Hải Yến | Identity / Security, contracts, license and SPDX review |
+| Phan Ngọc Ánh | Data / Storage, Portal, integration review |
+
+Responsibilities do not establish copyright ownership of each contributor's work.
+
+## License and Third-Party Notices
+
+Apache License 2.0 (`Apache-2.0`) is the selected license for original DX-OS materials that the relevant rights holders have authorized for distribution under these terms. See the root [LICENSE](LICENSE) file for the full license text.
+
+Third-party dependencies, the Gradle Wrapper, adapted materials, and externally sourced assets remain subject to their respective licenses and attribution obligations.
+
+Copyright ownership, source-origin verification, NOTICE requirements, and file-level SPDX review are tracked in [Issue #38](https://github.com/lexuanbao258-collab/dxos-open-core/issues/38). Release-level licensing compliance is not claimed until the outstanding requirements have been reviewed and resolved.
