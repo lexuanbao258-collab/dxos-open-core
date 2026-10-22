@@ -6,6 +6,10 @@ param(
 
 $ErrorActionPreference = "Stop"
 
+if ($RunGatewayIntegrationOnly -and [string]::IsNullOrWhiteSpace($env:OIDC_TEST_EXPECTED_SUBJECT)) {
+    throw "OIDC_TEST_EXPECTED_SUBJECT is required for -RunGatewayIntegrationOnly"
+}
+
 $issuer = "http://localhost:8180/realms/tricore"
 $clientId = "tricore-api"
 $redirectUri = "http://localhost:8080/login/oauth2/code/tricore"
@@ -270,11 +274,18 @@ try {
         Write-Host "=== SPRING OIDC INTEGRATION TEST ==="
 
         $previousTestToken = $env:OIDC_TEST_ACCESS_TOKEN
+        $previousD2AEvidence = $env:OIDC_TEST_D2A_EVIDENCE
 
         try {
             # Token is passed only through the child process environment.
             # Never write or print the raw token.
             $env:OIDC_TEST_ACCESS_TOKEN = $tokenResponse.access_token
+            $env:OIDC_TEST_D2A_EVIDENCE = if ($RunGatewayIntegrationOnly) { "true" } else { "false" }
+
+            if ($RunGatewayIntegrationOnly) {
+                Write-Host "Expected subject provided: True"
+                Write-Host "Canonical assertion required: True"
+            }
 
             $repoRoot = Resolve-Path (
                 Join-Path $PSScriptRoot "..\.."
@@ -345,6 +356,13 @@ try {
             }
             else {
                 $env:OIDC_TEST_ACCESS_TOKEN = $previousTestToken
+            }
+
+            if ($null -eq $previousD2AEvidence) {
+                Remove-Item Env:OIDC_TEST_D2A_EVIDENCE -ErrorAction SilentlyContinue
+            }
+            else {
+                $env:OIDC_TEST_D2A_EVIDENCE = $previousD2AEvidence
             }
         }
     }
