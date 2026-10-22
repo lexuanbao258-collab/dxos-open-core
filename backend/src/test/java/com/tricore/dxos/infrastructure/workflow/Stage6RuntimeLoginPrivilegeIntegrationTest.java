@@ -706,6 +706,48 @@ class Stage6RuntimeLoginPrivilegeIntegrationTest {
         assertThat(read(INSTANCE_ID).loadHistory(INSTANCE_ID)).isEmpty();
     }
 
+    @Test void directRuntimeSqlEnforcesPinnedTransitionAndLifecycle() throws Exception {
+        create(INSTANCE_ID);
+        WorkflowInstance active=activate(INSTANCE_ID);
+        for (String[] invalid : new String[][]{
+                {"finish","draft","ACTIVE"},
+                {"unknown","done","COMPLETED"},
+                {"finish","done","ACTIVE"}
+        }) {
+            assertThat(rawRuntimeTransition(active,invalid[0],invalid[1],invalid[2]))
+                    .as("transition %s to %s with lifecycle %s",invalid[0],invalid[1],invalid[2])
+                    .isEqualTo("TRANSITION_NOT_ALLOWED");
+            PostgresWorkflowPersistence.requireSnapshot(active,read(INSTANCE_ID).loadInstance(INSTANCE_ID));
+            assertThat(read(INSTANCE_ID).loadHistory(INSTANCE_ID)).isEmpty();
+        }
+
+        assertThat(rawRuntimeTransition(active,"finish","done","COMPLETED")).isEqualTo("TRANSITION_RESULT");
+        TransitionResult valid=active.transition(definition(),
+                new TransitionCommand(INSTANCE_ID,"finish",new ActorReference("member-a"),0),FINISHED);
+        PostgresWorkflowPersistence.requireSnapshot(valid.instance(),read(INSTANCE_ID).loadInstance(INSTANCE_ID));
+        assertThat(read(INSTANCE_ID).loadHistory(INSTANCE_ID)).containsExactly(valid.record());
+    }
+
+    private String rawRuntimeTransition(WorkflowInstance previous,String transitionId,String target,String lifecycle) throws Exception {
+        ObjectNode prior=Stage6WorkflowPersistence.snapshot(previous);
+        ObjectNode next=prior.deepCopy().put("current_state",target).put("runtime_version",previous.runtimeVersion()+1)
+                .put("lifecycle",lifecycle).put("updated_at_seconds",FINISHED.getEpochSecond())
+                .put("updated_at_nanos",FINISHED.getNano());
+        ObjectNode record=Stage6WorkflowPersistence.record(new TransitionRecord(previous.instanceId(),transitionId,
+                previous.currentState(),target,new ActorReference("member-a"),previous.runtimeVersion()+1,FINISHED));
+        try (Connection runtime=database.getConnection(); PreparedStatement statement=runtime.prepareStatement(
+                "SELECT outcome,body FROM "+schema+".wf_port_commit_transition(?,?,?::jsonb,?::jsonb,?::jsonb)")) {
+            statement.setString(1,"member-a"); statement.setBoolean(2,true);
+            statement.setString(3,prior.toString()); statement.setString(4,next.toString());
+            statement.setString(5,record.toString());
+            try (ResultSet rows=statement.executeQuery()) {
+                assertThat(rows.next()).isTrue();
+                String outcome=rows.getString(1);
+                return "DOMAIN_ERROR".equals(outcome) ? JSON.readTree(rows.getString(2)).path("code").asText() : outcome;
+            }
+        }
+    }
+
     static java.util.stream.Stream<Arguments> snapshotFields() {
         return java.util.stream.Stream.of("activate","transition").flatMap(operation -> java.util.stream.Stream.of("definition_id",
                 "definition_version","resource_type","resource_id","current_state","created_at_seconds","created_at_nanos",

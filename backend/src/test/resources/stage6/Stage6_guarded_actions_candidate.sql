@@ -218,6 +218,14 @@ BEGIN
           'source_state',v_instance.current_state,'target_state',p_next->>'current_state','actor_id',p_actor_id,
           'resulting_runtime_version',v_instance.runtime_version+1,'occurred_at_seconds',p_next->'updated_at_seconds',
           'occurred_at_nanos',p_next->'updated_at_nanos')
+       OR NOT EXISTS (SELECT 1 FROM "${flyway:defaultSchema}".workflow_definition_transitions t
+           WHERE t.definition_id=v_instance.definition_id AND t.definition_version=v_instance.definition_version
+             AND t.transition_id=p_record->>'transition_id' AND t.source_state=v_instance.current_state
+             AND t.target_state=p_next->>'current_state')
+       OR ((p_next->>'lifecycle'='COMPLETED') IS DISTINCT FROM
+           (NOT EXISTS (SELECT 1 FROM "${flyway:defaultSchema}".workflow_definition_transitions t
+               WHERE t.definition_id=v_instance.definition_id AND t.definition_version=v_instance.definition_version
+                 AND t.source_state=p_next->>'current_state')))
        THEN RETURN QUERY SELECT 'DOMAIN_ERROR'::TEXT, jsonb_build_object('code','TRANSITION_NOT_ALLOWED'); RETURN; END IF;
     UPDATE "${flyway:defaultSchema}".workflow_instances i SET current_state=p_next->>'current_state',
       runtime_version=(p_next->>'runtime_version')::BIGINT,lifecycle=p_next->>'lifecycle',
