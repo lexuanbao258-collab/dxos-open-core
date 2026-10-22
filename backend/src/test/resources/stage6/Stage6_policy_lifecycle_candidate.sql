@@ -1,7 +1,11 @@
 -- TEST ONLY: apply after V3 and V5_acl_physical_candidate in an approved disposable PG17 schema.
 -- No production migration, roles, GRANT, SECURITY DEFINER or runtime wf_port_* entrypoint.
--- Only the disposable schema owner may invoke these prototypes; session_user is audit provenance,
--- not verified OIDC/admin proof. Production admin authorization and privileges still require D2/D3 review.
+-- INVOKER by default. A disposable installer may separately enable the two exact signatures as
+-- DEFINER with fixed approval metadata/digest in stage6.offline_approval and restricted LOGIN grants.
+-- pg_proc is public: never store approved targets, members, events or reasons in proconfig.
+-- Caller GUCs are not approval: the installer MUST pin this setting on each DEFINER function.
+-- session_user is SQL LOGIN provenance, never verified OIDC/admin proof.
+-- shortcut: one synthetic approval per function installation; real fixture provenance needs D2 review.
 -- shortcut: 64 KiB audit budget for this candidate; review tenant-scale limits before adoption.
 ALTER TABLE "${flyway:defaultSchema}".workflow_policy_audit
     ADD CONSTRAINT s6_lifecycle_audit_shape CHECK (
@@ -21,16 +25,48 @@ DECLARE
     owned record;
     grant_row record;
     changes jsonb := '[]'::jsonb;
+    approval jsonb;
 BEGIN
-    IF current_user <> session_user OR current_user <> (
+    IF current_user <> (
         SELECT pg_get_userbyid(nspowner) FROM pg_namespace
         WHERE oid = '"${flyway:defaultSchema}"'::regnamespace) THEN
         RAISE EXCEPTION 'policy candidate denied' USING ERRCODE = '42501';
+    END IF;
+    IF current_user <> session_user THEN
+        IF current_setting('transaction_isolation') <> 'read committed' THEN
+            RAISE EXCEPTION 'offline policy requires READ COMMITTED' USING ERRCODE = '25001';
+        END IF;
+        SELECT substr(config, length('stage6.offline_approval=') + 1)::jsonb INTO approval
+        FROM pg_proc p CROSS JOIN LATERAL unnest(p.proconfig) config
+        WHERE p.oid = '"${flyway:defaultSchema}".stage6_policy_membership_candidate(text,text,boolean,text,bigint,uuid,text,text)'::regprocedure
+          AND config LIKE 'stage6.offline_approval=%';
+        IF (approval->>'operator_ref' LIKE 'test-only/%'
+            AND approval->>'fixture_digest' ~ '^[0-9a-f]{64}$'
+            AND (approval->>'not_before')::timestamptz <= statement_timestamp()
+            AND (approval->>'expires_at')::timestamptz > statement_timestamp()
+            AND approval->>'manifest_digest' = encode(sha256(convert_to(
+                ((approval - 'manifest_digest') || jsonb_build_object(
+                    'login', session_user, 'database', current_database(), 'schema', '${flyway:defaultSchema}',
+                    'action', 'membership', 'tenant', p_tenant, 'member', p_member, 'active', p_active,
+                    'replacement', p_replacement, 'revision', p_expected_revision,
+                    'event', p_event, 'reason', p_reason, 'correlation', p_correlation))::text, 'UTF8')), 'hex')) IS NOT TRUE THEN
+            RAISE EXCEPTION 'offline approval denied' USING ERRCODE = '42501';
+        END IF;
     END IF;
     SELECT acl_revision INTO revision FROM "${flyway:defaultSchema}".tenant_guards
         WHERE tenant_id = p_tenant FOR UPDATE;
     IF NOT FOUND OR p_expected_revision IS NULL OR revision <> p_expected_revision THEN
         RAISE EXCEPTION 'policy revision conflict' USING ERRCODE = '40001';
+    END IF;
+    IF approval IS NOT NULL AND (approval->>'expires_at')::timestamptz <= clock_timestamp() THEN
+        RAISE EXCEPTION 'offline approval expired while waiting' USING ERRCODE = '42501';
+    END IF;
+    IF approval IS NOT NULL AND NOT EXISTS (
+        SELECT 1 FROM pg_proc p CROSS JOIN LATERAL unnest(p.proconfig) config
+        WHERE p.oid = '"${flyway:defaultSchema}".stage6_policy_membership_candidate(text,text,boolean,text,bigint,uuid,text,text)'::regprocedure
+          AND config LIKE 'stage6.offline_approval=%'
+          AND substr(config, length('stage6.offline_approval=') + 1)::jsonb = approval) THEN
+        RAISE EXCEPTION 'offline approval changed while waiting' USING ERRCODE = '42501';
     END IF;
     IF p_active IS NULL THEN
         RAISE EXCEPTION 'invalid membership action' USING ERRCODE = '22023';
@@ -85,10 +121,11 @@ BEGIN
     UPDATE "${flyway:defaultSchema}".tenant_guards SET acl_revision = revision + 1 WHERE tenant_id = p_tenant;
     INSERT INTO "${flyway:defaultSchema}".workflow_policy_audit
         (audit_event_id, tenant_id, previous_acl_revision, resulting_acl_revision,
-         actor_id, actor_source_ref, action, change_set, reason_or_approval_ref, correlation_ref)
-    VALUES (p_event, p_tenant, revision, revision + 1, session_user, 'disposable-owner-session',
+         actor_id, actor_source_ref, action, change_set, reason_or_approval_ref, correlation_ref, manifest_digest)
+    VALUES (p_event, p_tenant, revision, revision + 1, session_user,
+        coalesce(approval->>'operator_ref', 'disposable-owner-session'),
         CASE WHEN p_active THEN 'membership-reactivate' ELSE 'membership-deactivate' END,
-        changes, p_reason, p_correlation);
+        changes, p_reason, p_correlation, approval->>'manifest_digest');
     RETURN 'CHANGED';
 END;
 $policy$;
@@ -101,16 +138,48 @@ AS $policy$
 DECLARE
     revision bigint;
     old_grant boolean;
+    approval jsonb;
 BEGIN
-    IF current_user <> session_user OR current_user <> (
+    IF current_user <> (
         SELECT pg_get_userbyid(nspowner) FROM pg_namespace
         WHERE oid = '"${flyway:defaultSchema}"'::regnamespace) THEN
         RAISE EXCEPTION 'policy candidate denied' USING ERRCODE = '42501';
+    END IF;
+    IF current_user <> session_user THEN
+        IF current_setting('transaction_isolation') <> 'read committed' THEN
+            RAISE EXCEPTION 'offline policy requires READ COMMITTED' USING ERRCODE = '25001';
+        END IF;
+        SELECT substr(config, length('stage6.offline_approval=') + 1)::jsonb INTO approval
+        FROM pg_proc p CROSS JOIN LATERAL unnest(p.proconfig) config
+        WHERE p.oid = '"${flyway:defaultSchema}".stage6_policy_acl_candidate(text,text,text,text,text,boolean,bigint,uuid,text,text)'::regprocedure
+          AND config LIKE 'stage6.offline_approval=%';
+        IF (approval->>'operator_ref' LIKE 'test-only/%'
+            AND approval->>'fixture_digest' ~ '^[0-9a-f]{64}$'
+            AND (approval->>'not_before')::timestamptz <= statement_timestamp()
+            AND (approval->>'expires_at')::timestamptz > statement_timestamp()
+            AND approval->>'manifest_digest' = encode(sha256(convert_to(
+                ((approval - 'manifest_digest') || jsonb_build_object(
+                    'login', session_user, 'database', current_database(), 'schema', '${flyway:defaultSchema}',
+                    'action', 'acl', 'tenant', p_tenant, 'type', p_type, 'resource', p_resource,
+                    'member', p_member, 'operation', p_operation, 'granted', p_granted,
+                    'revision', p_expected_revision, 'event', p_event, 'reason', p_reason, 'correlation', p_correlation))::text, 'UTF8')), 'hex')) IS NOT TRUE THEN
+            RAISE EXCEPTION 'offline approval denied' USING ERRCODE = '42501';
+        END IF;
     END IF;
     SELECT acl_revision INTO revision FROM "${flyway:defaultSchema}".tenant_guards
         WHERE tenant_id = p_tenant FOR UPDATE;
     IF NOT FOUND OR p_expected_revision IS NULL OR revision <> p_expected_revision THEN
         RAISE EXCEPTION 'policy revision conflict' USING ERRCODE = '40001';
+    END IF;
+    IF approval IS NOT NULL AND (approval->>'expires_at')::timestamptz <= clock_timestamp() THEN
+        RAISE EXCEPTION 'offline approval expired while waiting' USING ERRCODE = '42501';
+    END IF;
+    IF approval IS NOT NULL AND NOT EXISTS (
+        SELECT 1 FROM pg_proc p CROSS JOIN LATERAL unnest(p.proconfig) config
+        WHERE p.oid = '"${flyway:defaultSchema}".stage6_policy_acl_candidate(text,text,text,text,text,boolean,bigint,uuid,text,text)'::regprocedure
+          AND config LIKE 'stage6.offline_approval=%'
+          AND substr(config, length('stage6.offline_approval=') + 1)::jsonb = approval) THEN
+        RAISE EXCEPTION 'offline approval changed while waiting' USING ERRCODE = '42501';
     END IF;
     IF p_granted IS NULL OR p_operation IS NULL OR p_operation NOT IN
         ('workflow:create', 'workflow:read', 'workflow:activate', 'workflow:transition') THEN
@@ -135,13 +204,14 @@ BEGIN
     UPDATE "${flyway:defaultSchema}".tenant_guards SET acl_revision = revision + 1 WHERE tenant_id = p_tenant;
     INSERT INTO "${flyway:defaultSchema}".workflow_policy_audit
         (audit_event_id, tenant_id, previous_acl_revision, resulting_acl_revision,
-         actor_id, actor_source_ref, action, change_set, reason_or_approval_ref, correlation_ref)
-    VALUES (p_event, p_tenant, revision, revision + 1, session_user, 'disposable-owner-session',
+         actor_id, actor_source_ref, action, change_set, reason_or_approval_ref, correlation_ref, manifest_digest)
+    VALUES (p_event, p_tenant, revision, revision + 1, session_user,
+        coalesce(approval->>'operator_ref', 'disposable-owner-session'),
         CASE WHEN p_granted THEN 'acl-grant' ELSE 'acl-revoke' END,
         jsonb_build_array(jsonb_build_object('relation', 'resource_acl', 'tenant_id', p_tenant,
             'resource_type', p_type, 'resource_id', p_resource, 'actor_id', p_member, 'operation', p_operation,
             'before', jsonb_build_object('granted', old_grant), 'after', jsonb_build_object('granted', p_granted))),
-        p_reason, p_correlation);
+        p_reason, p_correlation, approval->>'manifest_digest');
     RETURN 'CHANGED';
 END;
 $policy$;
