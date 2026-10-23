@@ -117,6 +117,44 @@ components và không expose endpoint qua JMX. Health tổng hợp của Actuato
 có thể kiểm tra database và trả trạng thái khác health API tùy tình trạng
 PostgreSQL. Không expose `env`, `beans`, `metrics` hoặc endpoint quản trị khác.
 
+## OpenAPI và Swagger UI (Issue #37)
+
+Backend dùng `springdoc-openapi-starter-webmvc-ui` 2.8.17 với Spring Boot 3.5 và JDK 21.
+`/v3/api-docs` và `/swagger-ui/index.html` **tắt mặc định**, kể cả profile `prod`.
+Profile `local` và `demo` mặc định bind `127.0.0.1`. Chỉ dùng trên máy demo được
+kiểm soát, không publish các URL này qua ingress công khai. Truy cập từ máy khác
+cần access control hoặc reverse proxy được review riêng trước khi đổi bind address.
+Cần PostgreSQL local đã chuẩn bị như phần trên; không dùng database
+staging/shared Supabase cho Swagger **Try it out**.
+
+```powershell
+$env:SPRING_PROFILES_ACTIVE = 'local' # hoặc 'demo' trên môi trường demo riêng
+# Cung cấp DB_* của PostgreSQL disposable local theo hướng dẫn ở trên.
+.\gradlew.bat bootRun
+Start-Process 'http://127.0.0.1:8080/swagger-ui/index.html'
+Invoke-RestMethod 'http://127.0.0.1:8080/v3/api-docs'
+Invoke-RestMethod 'http://127.0.0.1:8080/api/v1/health'
+Invoke-RestMethod 'http://127.0.0.1:8080/api/v1/requests'
+```
+
+Ví dụ ghi **chỉ trên database disposable local**:
+
+```powershell
+Invoke-RestMethod -Method Post -Uri 'http://127.0.0.1:8080/api/v1/requests' `
+  -ContentType 'application/json' `
+  -Body '{"title":"Repair printer","description":"Printer is offline","requestType":"IT_SUPPORT"}'
+```
+
+Spec runtime mô tả Health và Request REST đang đăng ký, gồm DTO, validation,
+HTTP status và `ApiError` (`status`, `code`, `message`, `errors`). `bearerAuth` là
+scheme HTTP Bearer/JWT dự kiến cho Keycloak OIDC khi Identity #24 hoàn tất; Request
+prototype trên baseline main của Issue #37 **chưa enforce JWT hoặc object-level ACL**.
+Các nhánh Identity/Gateway tích hợp Keycloak riêng không chứng minh Request trên
+main đã có các kiểm soát đó; `bearerAuth` không phải security requirement đã được
+backend main thực thi. Không nhập token thật vào Swagger UI, và không dựa vào
+`X-User`/`X-Role` để xác thực. Workflow Core HTTP
+vẫn BLOCKED, không đăng ký route; xem [capability chưa hoạt động](../docs/api/blocked.md).
+
 ## Request API
 
 Module `request` dùng luồng controller → service → repository → PostgreSQL.
