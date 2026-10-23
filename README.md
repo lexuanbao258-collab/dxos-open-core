@@ -227,7 +227,7 @@ TRICORE is a student team participating in OLP PMNM 2026. These are collaboratio
 | --- | --- |
 | Lê Xuân Bảo | Architecture, Workflow / Gateway, integration, coordination |
 | Phan Hải Yến | Identity / Security, contracts, license and SPDX review |
-| Phan Ngọc Ánh | Data / Storage, Portal, integration review |
+| Nguyễn Ngọc Ánh | Data / Storage, Portal, integration review |
 
 Responsibilities do not establish copyright ownership of each contributor's work.
 
