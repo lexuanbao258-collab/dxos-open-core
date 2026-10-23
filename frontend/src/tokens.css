@@ -1,0 +1,12 @@
+:root {
+  --font: "Be Vietnam Pro", sans-serif;
+  --canvas: #f7f9fc;
+  --text: #273650;
+  --muted: #5e6b80;
+  --navy: #192e50;
+  --indigo: #505db0;
+  --teal: #268a7b;
+  --border: #e6ebf2;
+  --radius: 10px;
+  color-scheme: light;
+}
