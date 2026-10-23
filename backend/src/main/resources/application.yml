@@ -25,3 +25,10 @@ management:
     health:
       show-details: never
       show-components: never
+
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
+  paths-to-match: /api/v1/**
