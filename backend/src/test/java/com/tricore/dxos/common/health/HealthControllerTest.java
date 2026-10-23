@@ -11,11 +11,27 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(HealthController.class)
+import com.tricore.dxos.infrastructure.identity.security.SecurityConfig;
+import org.springframework.context.annotation.Import;
+
+import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+
+@WebMvcTest(
+        controllers = HealthController.class,
+        properties = {
+                "OIDC_ISSUER_URI=https://issuer.example.test",
+                "OIDC_AUDIENCE=tricore-api"
+        }
+)
+@Import(SecurityConfig.class)
 class HealthControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
+
+    @MockitoBean
+    private JwtDecoder jwtDecoder;
 
     @Test
     void returnsUpAsJsonWithoutDatabase() throws Exception {
