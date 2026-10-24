@@ -112,8 +112,10 @@ class HelpdeskHttpPostgresTest {
             for (var actor : actors.entrySet()) {
                 String tenant = actor.getKey().equals("foreign") ? "tenant-b" : "tenant-a";
                 sql(c,"INSERT INTO " + schema + ".tenant_memberships VALUES('" + tenant + "','" + actor.getValue() + "',true)");
-                sql(c,"INSERT INTO " + schema + ".helpdesk_actors VALUES('" + tenant + "','" + actor.getValue() + "',"
-                        + actor.getKey().startsWith("employee") + "," + actor.getKey().equals("coordinator") + "," + actor.getKey().startsWith("worker") + ")");
+                sql(c,"INSERT INTO " + schema + ".helpdesk_actors "
+                        + "(tenant_id,actor_id,submitter,coordinator,worker,display_name) VALUES('" + tenant + "','" + actor.getValue() + "',"
+                        + actor.getKey().startsWith("employee") + "," + actor.getKey().equals("coordinator") + ","
+                        + actor.getKey().startsWith("worker") + ",'Demo " + actor.getKey() + "')");
             }
             sql(c,"INSERT INTO " + schema + ".workflow_definition_bindings VALUES('tenant-a','mvp_request','it-helpdesk',1,true)");
             sql(c,"REVOKE ALL ON SCHEMA " + schema + " FROM PUBLIC");
@@ -173,6 +175,48 @@ class HelpdeskHttpPostgresTest {
                 .andExpect(jsonPath("$[1].transitionId").value("start_work")).andExpect(jsonPath("$[3].version").value(4))
                 .andExpect(jsonPath("$[0].actorId").doesNotExist());
         expect(get(API),"employee",200).andExpect(jsonPath("$.items[?(@.id=='"+id+"')]").isNotEmpty());
+    }
+
+    @Test void detailProjectsTrustedDisplayNamesAndLimitsCandidateDirectoryToAuthorizedAssign() throws Exception {
+        String id=triaged();
+        var coordinator=read(expect(get(API+"/"+id),"coordinator",200));
+        assertThat(coordinator.path("requesterDisplayName").asText()).isEqualTo("Demo employee");
+        assertThat(coordinator.path("assigneeDisplayName").isNull()).isTrue();
+        assertThat(coordinator.path("eligibleAssignees").isArray()).isTrue();
+        assertThat(coordinator.path("eligibleAssignees").findValuesAsText("id"))
+                .containsExactlyInAnyOrder(actors.get("worker"),actors.get("worker2"));
+        assertThat(coordinator.path("eligibleAssignees").findValuesAsText("displayName"))
+                .containsExactlyInAnyOrder("Demo worker","Demo worker2");
+
+        // Read permission alone does not disclose a worker directory.
+        expect(get(API+"/"+id),"employee",200)
+                .andExpect(jsonPath("$.eligibleAssignees").doesNotExist());
+        expect(get(API),"coordinator",200)
+                .andExpect(jsonPath("$.items[0].eligibleAssignees").doesNotExist());
+
+        assign(id,"worker",0,200);
+        expect(get(API+"/"+id),"coordinator",200)
+                .andExpect(jsonPath("$.assigneeDisplayName").value("Demo worker"));
+        expect(get(API+"/"+id),"worker",200)
+                .andExpect(jsonPath("$.eligibleAssignees").doesNotExist());
+        expect(post(API+"/"+id+"/start").content("{\\"expectedVersion\\":1}"),"worker",200);
+        expect(get(API+"/"+id),"coordinator",200)
+                .andExpect(jsonPath("$.eligibleAssignees").doesNotExist());
+    }
+
+    @Test void noDirectoryNameMeansNullRatherThanInventedLabel() throws Exception {
+        String id=create("employee").path("id").asText();
+        try (var c=admin()) {
+            sql(c,"UPDATE "+schema+".helpdesk_actors SET display_name=NULL WHERE actor_id='"+actors.get("employee")+"'");
+        }
+        try {
+            expect(get(API+"/"+id),"employee",200)
+                    .andExpect(jsonPath("$.requesterDisplayName").isEmpty());
+        } finally {
+            try (var c=admin()) {
+                sql(c,"UPDATE "+schema+".helpdesk_actors SET display_name='Demo employee' WHERE actor_id='"+actors.get("employee")+"'");
+            }
+        }
     }
 
     @Test void unauthenticatedAndForgedSignatureNeverWrite() throws Exception {

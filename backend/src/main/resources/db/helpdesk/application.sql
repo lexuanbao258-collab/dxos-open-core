@@ -6,6 +6,9 @@ CREATE TABLE "${flyway:defaultSchema}".helpdesk_actors (
     submitter BOOLEAN NOT NULL DEFAULT false,
     coordinator BOOLEAN NOT NULL DEFAULT false,
     worker BOOLEAN NOT NULL DEFAULT false,
+    -- Offline-provisioned label from a trusted personnel/identity directory; never accept via Portal.
+    -- NULL means the provisioner has not supplied a verified display name.
+    display_name TEXT CHECK (display_name IS NULL OR length(btrim(display_name)) BETWEEN 1 AND 200),
     PRIMARY KEY (tenant_id, actor_id),
     FOREIGN KEY (tenant_id, actor_id) REFERENCES "${flyway:defaultSchema}".tenant_memberships
 );
@@ -92,6 +95,8 @@ DECLARE
     v_tenant TEXT; v_instance TEXT; v_outcome TEXT; v_workflow JSONB;
     v_request "${flyway:defaultSchema}".helpdesk_requests%ROWTYPE;
     v_coordinator BOOLEAN; v_worker BOOLEAN; v_transition BOOLEAN; v_assignee_eligible BOOLEAN;
+    v_requester_display_name TEXT; v_assignee_display_name TEXT;
+    v_eligible_assignees JSONB;
 BEGIN
     IF p_command IS NULL OR p_command NOT IN ('read','triage','assign','start_work','resolve','confirm') THEN
         RETURN QUERY SELECT 'UNAVAILABLE'::TEXT,NULL::JSONB; RETURN;
@@ -123,6 +128,12 @@ BEGIN
         RETURN QUERY SELECT 'UNAVAILABLE'::TEXT,NULL::JSONB; RETURN;
     END IF;
     SELECT * INTO v_request FROM "${flyway:defaultSchema}".helpdesk_requests WHERE request_id=p_id;
+    -- Resolve labels from authoritative, tenant-scoped offline-provisioned identities.
+    -- Never treat caller JWT display_name, submitted IDs or ad-hoc strings as a directory.
+    SELECT display_name INTO v_requester_display_name FROM "${flyway:defaultSchema}".helpdesk_actors
+        WHERE tenant_id=v_tenant AND actor_id=v_request.requester_id;
+    SELECT display_name INTO v_assignee_display_name FROM "${flyway:defaultSchema}".helpdesk_actors
+        WHERE tenant_id=v_tenant AND actor_id=v_request.assignee_id;
     SELECT COALESCE(bool_or(coordinator),false),COALESCE(bool_or(worker),false)
         INTO v_coordinator,v_worker FROM "${flyway:defaultSchema}".helpdesk_actors
         WHERE tenant_id=v_tenant AND actor_id=p_actor;
@@ -133,6 +144,18 @@ BEGIN
         JOIN "${flyway:defaultSchema}".tenant_memberships m USING(tenant_id,actor_id)
         WHERE a.tenant_id=v_tenant AND a.actor_id=v_request.assignee_id AND a.worker AND m.active)
         INTO v_assignee_eligible;
+    -- Only an authorized coordinator who can currently assign at TRIAGED receives candidates.
+    -- This is a snapshot for UI only: helpdesk_request('assign') repeats every membership,
+    -- eligibility and concurrency check under the tenant write lock before committing.
+    IF p_command='read' AND v_coordinator AND v_transition
+            AND v_workflow->'instance'->>'current_state' = 'TRIAGED' THEN
+        SELECT COALESCE(jsonb_agg(jsonb_build_object('id',a.actor_id,'displayName',a.display_name)
+                ORDER BY a.actor_id), '[]'::JSONB)
+          INTO v_eligible_assignees
+          FROM "${flyway:defaultSchema}".helpdesk_actors a
+          JOIN "${flyway:defaultSchema}".tenant_memberships m USING(tenant_id,actor_id)
+         WHERE a.tenant_id=v_tenant AND a.worker AND m.active;
+    END IF;
     IF p_command<>'read' THEN
         IF (p_command IN ('triage','assign') AND NOT v_coordinator)
             OR (p_command IN ('start_work','resolve') AND (p_actor IS DISTINCT FROM v_request.assignee_id OR NOT v_worker))
@@ -170,7 +193,9 @@ BEGIN
         END IF;
     END IF;
     RETURN QUERY SELECT 'OK'::TEXT,jsonb_build_object('request',to_jsonb(v_request),'workflow',v_workflow,
-        'coordinator',v_coordinator,'worker',v_worker,'transition',v_transition,'assigneeEligible',v_assignee_eligible);
+        'coordinator',v_coordinator,'worker',v_worker,'transition',v_transition,'assigneeEligible',v_assignee_eligible,
+        'requesterDisplayName',v_requester_display_name,'assigneeDisplayName',v_assignee_display_name,
+        'eligibleAssignees',v_eligible_assignees);
 END;
 $app$;
 

@@ -1,5 +1,6 @@
 package com.tricore.dxos.infrastructure.workflow;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tricore.dxos.application.authorization.*;
@@ -34,9 +35,12 @@ public final class HelpdeskService {
         this.clock = Objects.requireNonNull(clock);
     }
 
+    public record AssigneeOption(String id, String displayName) {}
     public record RequestView(UUID id, String title, String description, String requestType,
             String requesterId, String assigneeId, String resolution, long assignmentVersion,
-            String workflowInstanceId, String state, long version, List<String> allowedActions) {}
+            String workflowInstanceId, String state, long version, List<String> allowedActions,
+            String requesterDisplayName, String assigneeDisplayName,
+            @JsonInclude(JsonInclude.Include.NON_NULL) List<AssigneeOption> eligibleAssignees) {}
     public record Page(List<RequestView> items, UUID nextCursor) {}
     public record HistoryView(String transitionId, String sourceState, String targetState,
             long version, Instant occurredAt) {}
@@ -61,13 +65,13 @@ public final class HelpdeskService {
                     Stage6WorkflowPersistence.snapshot(initial));
             call(connection, "wf_port_commit_activation", "SNAPSHOT", actor.subjectId(), has(actor, WorkflowOperation.ACTIVATE),
                     Stage6WorkflowPersistence.snapshot(initial), Stage6WorkflowPersistence.snapshot(active));
-            return view(request(connection, actor, id, "read", null, null, null), actor);
+            return view(request(connection, actor, id, "read", null, null, null), actor, false);
         });
     }
 
     public RequestView get(UUID id) {
         var actor = principal.requireVerified();
-        return persistence.guardedTransaction(false, c -> view(request(c, actor, id, "read", null, null, null), actor));
+        return persistence.guardedTransaction(false, c -> view(request(c, actor, id, "read", null, null, null), actor, true));
     }
 
     public Page list(UUID after, int limit) {
@@ -79,7 +83,7 @@ public final class HelpdeskService {
             List<RequestView> items = new ArrayList<>();
             for (JsonNode id : ids) {
                 if (items.size() == limit) break;
-                items.add(view(request(c, actor, UUID.fromString(id.asText()), "read", null, null, null), actor));
+                items.add(view(request(c, actor, UUID.fromString(id.asText()), "read", null, null, null), actor, false));
             }
             return new Page(List.copyOf(items), ids.size() > limit ? items.getLast().id() : null);
         });
@@ -105,7 +109,7 @@ public final class HelpdeskService {
         var actor = principal.requireVerified();
         return persistence.guardedTransaction(true, c -> {
             request(c, actor, id, "assign", assignee, expectedAssignmentVersion, null);
-            return view(request(c, actor, id, "read", null, null, null), actor);
+            return view(request(c, actor, id, "read", null, null, null), actor, false);
         });
     }
 
@@ -121,7 +125,7 @@ public final class HelpdeskService {
             call(c, "wf_port_commit_transition", "TRANSITION_RESULT", actor.subjectId(), has(actor, WorkflowOperation.TRANSITION),
                     Stage6WorkflowPersistence.snapshot(result.previousInstance()), Stage6WorkflowPersistence.snapshot(result.instance()),
                     Stage6WorkflowPersistence.record(result.record()));
-            return view(request(c, actor, id, "read", null, null, null), actor);
+            return view(request(c, actor, id, "read", null, null, null), actor, false);
         });
     }
 
@@ -131,7 +135,7 @@ public final class HelpdeskService {
                 has(actor, WorkflowOperation.TRANSITION), id, command, assignee, assignmentVersion, resolution);
     }
 
-    private RequestView view(JsonNode facts, AuthenticatedPrincipal actor) {
+    private RequestView view(JsonNode facts, AuthenticatedPrincipal actor, boolean includeEligibleAssignees) {
         JsonNode request = facts.path("request");
         JsonNode snapshot = facts.path("workflow").path("instance");
         String state = snapshot.path("current_state").asText();
@@ -149,10 +153,25 @@ public final class HelpdeskService {
             if (state.equals("RESOLVED") && actor.subjectId().equals(request.path("requester_id").asText())
                     && nullable(request, "resolution") != null) actions.add("confirm");
         }
+        List<AssigneeOption> eligible = null;
+        if (includeEligibleAssignees && actions.contains("assign")) {
+            JsonNode candidates = facts.path("eligibleAssignees");
+            if (!candidates.isArray()) throw unavailable();
+            List<AssigneeOption> options = new ArrayList<>();
+            for (JsonNode candidate : candidates) {
+                JsonNode id = candidate.path("id");
+                JsonNode name = candidate.path("displayName");
+                if (!id.isTextual() || id.asText().isBlank()
+                        || (!name.isNull() && !name.isTextual())) throw unavailable();
+                options.add(new AssigneeOption(id.asText(), name.isNull() ? null : name.asText()));
+            }
+            eligible = List.copyOf(options);
+        }
         return new RequestView(UUID.fromString(request.path("request_id").asText()), request.path("title").asText(),
                 request.path("description").asText(), "IT_HELPDESK", request.path("requester_id").asText(),
                 nullable(request, "assignee_id"), nullable(request, "resolution"), request.path("assignment_version").longValue(),
-                snapshot.path("instance_id").asText(), state, snapshot.path("runtime_version").longValue(), List.copyOf(actions));
+                snapshot.path("instance_id").asText(), state, snapshot.path("runtime_version").longValue(), List.copyOf(actions),
+                nullable(facts, "requesterDisplayName"), nullable(facts, "assigneeDisplayName"), eligible);
     }
 
     private static String nullable(JsonNode node, String field) {
