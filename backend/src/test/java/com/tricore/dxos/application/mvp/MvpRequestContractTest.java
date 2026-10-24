@@ -70,12 +70,22 @@ class MvpRequestContractTest {
     }
 
     private static void assertPost(String method, String path, Class<?>... args) throws Exception {
-        assertThat(MvpRequestController.class.getDeclaredMethod(method, args)
-                .getAnnotation(PostMapping.class).value()).containsExactly(path);
+        String[] mappings = MvpRequestController.class.getDeclaredMethod(method, args)
+                .getAnnotation(PostMapping.class).value();
+        if (path.isEmpty()) {
+            assertThat(mappings).isEmpty();
+        } else {
+            assertThat(mappings).containsExactly(path);
+        }
     }
 
     private static void assertGet(String method, String path, Class<?>... args) throws Exception {
-        assertThat(MvpRequestController.class.getDeclaredMethod(method, args)
-                .getAnnotation(GetMapping.class).value()).containsExactly(path);
+        String[] mappings = MvpRequestController.class.getDeclaredMethod(method, args)
+                .getAnnotation(GetMapping.class).value();
+        if (path.isEmpty()) {
+            assertThat(mappings).isEmpty();
+        } else {
+            assertThat(mappings).containsExactly(path);
+        }
     }
 }
