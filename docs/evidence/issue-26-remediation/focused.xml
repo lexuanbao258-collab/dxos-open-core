@@ -1,0 +1,71 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<testsuites skipped="0" errors="0" tests="56" failures="0">
+  <testsuite name="com.tricore.dxos.core.data.ObjectStoragePortTest" tests="14" failures="0" errors="0" skipped="0" time="0.095" timestamp="2026-10-16T11:34:42.430Z">
+    <testcase name="rejectsLengthMismatchWithoutClosingCallerInput()" classname="com.tricore.dxos.core.data.ObjectStoragePortTest" time="0.034" />
+    <testcase name="inputReadFailureIsSanitizedWithoutTakingOwnership()" classname="com.tricore.dxos.core.data.ObjectStoragePortTest" time="0.001" />
+    <testcase name="zeroLengthContentAndOpaqueKeysAndDefensiveMetadataAreSupported()" classname="com.tricore.dxos.core.data.ObjectStoragePortTest" time="0.019" />
+    <testcase name="concurrentCreateOnlyWritersHaveExactlyOneWinner()" classname="com.tricore.dxos.core.data.ObjectStoragePortTest" time="0.008" />
+    <testcase name="deletesContentAndMetadataAndReportsMissingObjects()" classname="com.tricore.dxos.core.data.ObjectStoragePortTest" time="0.002" />
+    <testcase name="overwriteCreatesOrReplacesContentAndAllMetadata()" classname="com.tricore.dxos.core.data.ObjectStoragePortTest" time="0.004" />
+    <testcase name="storesReadsAndLooksUpMatchingMetadata()" classname="com.tricore.dxos.core.data.ObjectStoragePortTest" time="0.0" />
+    <testcase name="callerClosesInputAndReadResourceReleasesStreamIdempotently()" classname="com.tricore.dxos.core.data.ObjectStoragePortTest" time="0.002" />
+    <testcase name="readSnapshotKeepsContentAndMetadataTogetherAcrossOverwriteAndDelete()" classname="com.tricore.dxos.core.data.ObjectStoragePortTest" time="0.001" />
+    <testcase name="createOnlyConflictPreservesContentMetadataAndCallerStream()" classname="com.tricore.dxos.core.data.ObjectStoragePortTest" time="0.001" />
+    <testcase name="rejectsInvalidKeysMetadataCommandsAndPortInputs()" classname="com.tricore.dxos.core.data.ObjectStoragePortTest" time="0.002" />
+    <testcase name="normalizedErrorsExposeOnlyStableCodes()" classname="com.tricore.dxos.core.data.ObjectStoragePortTest" time="0.004" />
+    <testcase name="runtimeInputReadFailureIsSanitizedWithoutClosingInputOrOverwritingObject()" classname="com.tricore.dxos.core.data.ObjectStoragePortTest" time="0.001" />
+    <testcase name="consumesFromCurrentPositionAndClosesReadResourceAfterConsumerFailure()" classname="com.tricore.dxos.core.data.ObjectStoragePortTest" time="0.001" />
+  </testsuite>
+  <testsuite name="com.tricore.dxos.infrastructure.storage.supabase.SupabaseHttpTest" tests="5" failures="0" errors="0" skipped="0" time="0.297" timestamp="2026-10-16T11:34:42.639Z">
+    <testcase name="serverFaultIsSanitizedAndStagingCleaned()" classname="com.tricore.dxos.infrastructure.storage.supabase.SupabaseHttpTest" time="0.216" />
+    <testcase name="pinnedReadAfterMutationKeepsOldMetadataAndBody()" classname="com.tricore.dxos.infrastructure.storage.supabase.SupabaseHttpTest" time="0.024" />
+    <testcase name="fullHttpCrudReplacesMapAndDeletesStrictly()" classname="com.tricore.dxos.infrastructure.storage.supabase.SupabaseHttpTest" time="0.028" />
+    <testcase name="invalidLengthPreservesExistingObjectWithoutNetworkMutation()" classname="com.tricore.dxos.infrastructure.storage.supabase.SupabaseHttpTest" time="0.012" />
+    <testcase name="zeroLengthAndCallerOwnershipOnSuccessAndConflict()" classname="com.tricore.dxos.infrastructure.storage.supabase.SupabaseHttpTest" time="0.015" />
+  </testsuite>
+  <testsuite name="com.tricore.dxos.infrastructure.storage.supabase.SupabaseProcessLauncherTest" tests="1" failures="0" errors="0" skipped="0" time="0.078" timestamp="2026-10-16T11:34:42.937Z">
+    <testcase name="launchesWorkerWithCurrentJdkAndClasspathWithoutProviderConfiguration()" classname="com.tricore.dxos.infrastructure.storage.supabase.SupabaseProcessLauncherTest" time="0.078" />
+  </testsuite>
+  <testsuite name="com.tricore.dxos.infrastructure.storage.supabase.SupabaseResponseBodyTest" tests="3" failures="0" errors="0" skipped="0" time="0.005" timestamp="2026-10-16T11:34:43.016Z">
+    <testcase name="oversizedTransportChunkFailsWithoutCopyingOrRetainingIt()" classname="com.tricore.dxos.infrastructure.storage.supabase.SupabaseResponseBodyTest" time="0.002" />
+    <testcase name="closeCancelsExactlyOnceAndRemovesScheduledTask()" classname="com.tricore.dxos.infrastructure.storage.supabase.SupabaseResponseBodyTest" time="0.001" />
+    <testcase name="backpressureKeepsOnlyOneChunkAndEofIsRepeatable()" classname="com.tricore.dxos.infrastructure.storage.supabase.SupabaseResponseBodyTest" time="0.001" />
+  </testsuite>
+  <testsuite name="com.tricore.dxos.infrastructure.storage.supabase.SupabaseStorageTest" tests="23" failures="0" errors="0" skipped="0" time="0.428" timestamp="2026-10-16T11:34:43.023Z">
+    <testcase name="secretKeyModeUsesApiKeyWithoutUserAuthAndNoWriteRetry()" classname="com.tricore.dxos.infrastructure.storage.supabase.SupabaseStorageTest" time="0.003" />
+    <testcase name="readsKeepMetadataAndCloseIdempotently()" classname="com.tricore.dxos.infrastructure.storage.supabase.SupabaseStorageTest" time="0.002" />
+    <testcase name="runtimeProviderFailuresAndBulkReadArgumentsAreNormalized()" classname="com.tricore.dxos.infrastructure.storage.supabase.SupabaseStorageTest" time="0.002" />
+    <testcase name="stagingShortLongAndZeroBytes()" classname="com.tricore.dxos.infrastructure.storage.supabase.SupabaseStorageTest" time="0.004" />
+    <testcase name="vanishedPinnedVersionDoesNotRetryCurrentKey()" classname="com.tricore.dxos.infrastructure.storage.supabase.SupabaseStorageTest" time="0.007" />
+    <testcase name="invalidUploadNeverMutatesNetwork()" classname="com.tricore.dxos.infrastructure.storage.supabase.SupabaseStorageTest" time="0.003" />
+    <testcase name="configurationValidRegistersOneRealPort()" classname="com.tricore.dxos.infrastructure.storage.supabase.SupabaseStorageTest" time="0.315" />
+    <testcase name="overwriteSendsCompleteEnvelopeAndExactLength()" classname="com.tricore.dxos.infrastructure.storage.supabase.SupabaseStorageTest" time="0.004" />
+    <testcase name="lazyReadAndCloseFaultsAreSanitizedAndReleased()" classname="com.tricore.dxos.infrastructure.storage.supabase.SupabaseStorageTest" time="0.002" />
+    <testcase name="truncatedAndExcessProviderBytesAreUnavailable()" classname="com.tricore.dxos.infrastructure.storage.supabase.SupabaseStorageTest" time="0.002" />
+    <testcase name="missingDeleteAndTransportFailuresAreNormalized()" classname="com.tricore.dxos.infrastructure.storage.supabase.SupabaseStorageTest" time="0.004" />
+    <testcase name="errorCodesAreDeterministicAndNeverExposeBodies()" classname="com.tricore.dxos.infrastructure.storage.supabase.SupabaseStorageTest" time="0.003" />
+    <testcase name="oversizedMetadataIsRejectedBeforeTransport()" classname="com.tricore.dxos.infrastructure.storage.supabase.SupabaseStorageTest" time="0.004" />
+    <testcase name="configurationDisabledDoesNotRegisterFakeAndEnabledMissingConfigFailsClosed()" classname="com.tricore.dxos.infrastructure.storage.supabase.SupabaseStorageTest" time="0.024" />
+    <testcase name="readPinsInfoAndDownloadToResolvedVersionNeverCurrentFallback()" classname="com.tricore.dxos.infrastructure.storage.supabase.SupabaseStorageTest" time="0.004" />
+    <testcase name="stagingReadsCurrentPositionNeverClosesAndCleansUp()" classname="com.tricore.dxos.infrastructure.storage.supabase.SupabaseStorageTest" time="0.002" />
+    <testcase name="providerConflictCleansStagingAndNeverHead()" classname="com.tricore.dxos.infrastructure.storage.supabase.SupabaseStorageTest" time="0.003" />
+    <testcase name="keysRoundTripAllCodeUnitsAndTraversalWithoutCollisions()" classname="com.tricore.dxos.infrastructure.storage.supabase.SupabaseStorageTest" time="0.02" />
+    <testcase name="versionMismatchFailsClosedBeforeDownload()" classname="com.tricore.dxos.infrastructure.storage.supabase.SupabaseStorageTest" time="0.003" />
+    <testcase name="stagingInputFailuresRemainInvalidAndCallerOwned()" classname="com.tricore.dxos.infrastructure.storage.supabase.SupabaseStorageTest" time="0.002" />
+    <testcase name="metadataRoundTripsCaseUnicodeEmptyAndIsolatedSurrogates()" classname="com.tricore.dxos.infrastructure.storage.supabase.SupabaseStorageTest" time="0.002" />
+    <testcase name="configurationRejectsInsecureEndpointAndTraversalPrefix()" classname="com.tricore.dxos.infrastructure.storage.supabase.SupabaseStorageTest" time="0.001" />
+    <testcase name="malformedAndOversizedResponsesAreSanitized()" classname="com.tricore.dxos.infrastructure.storage.supabase.SupabaseStorageTest" time="0.002" />
+  </testsuite>
+  <testsuite name="com.tricore.dxos.infrastructure.storage.supabase.SupabaseTimeoutTest" tests="10" failures="0" errors="0" skipped="0" time="5.191" timestamp="2026-10-16T11:34:43.453Z">
+    <testcase name="lazyPartialDownloadExpiresAndCancels()" classname="com.tricore.dxos.infrastructure.storage.supabase.SupabaseTimeoutTest" time="0.528" />
+    <testcase name="[1] operation=create" classname="com.tricore.dxos.infrastructure.storage.supabase.SupabaseTimeoutTest" time="0.514" />
+    <testcase name="[2] operation=overwrite" classname="com.tricore.dxos.infrastructure.storage.supabase.SupabaseTimeoutTest" time="0.517" />
+    <testcase name="[3] operation=delete" classname="com.tricore.dxos.infrastructure.storage.supabase.SupabaseTimeoutTest" time="0.513" />
+    <testcase name="idleLazyHandleExpiresBeforeFirstRead()" classname="com.tricore.dxos.infrastructure.storage.supabase.SupabaseTimeoutTest" time="0.53" />
+    <testcase name="[1] status=200" classname="com.tricore.dxos.infrastructure.storage.supabase.SupabaseTimeoutTest" time="0.516" />
+    <testcase name="[2] status=503" classname="com.tricore.dxos.infrastructure.storage.supabase.SupabaseTimeoutTest" time="0.513" />
+    <testcase name="[3] status=409" classname="com.tricore.dxos.infrastructure.storage.supabase.SupabaseTimeoutTest" time="0.514" />
+    <testcase name="[4] status=404" classname="com.tricore.dxos.infrastructure.storage.supabase.SupabaseTimeoutTest" time="0.512" />
+    <testcase name="[5] status=403" classname="com.tricore.dxos.infrastructure.storage.supabase.SupabaseTimeoutTest" time="0.513" />
+  </testsuite>
+</testsuites>

@@ -30,7 +30,7 @@ dependencies {
 }
 
 tasks.named('test') {
-    useJUnitPlatform()
+    useJUnitPlatform { excludeTags 'supabase-real' }
     systemProperty 'workflow.test.runtimeClasspath', sourceSets.test.runtimeClasspath.asPath
     outputs.upToDateWhen { !System.getenv('WORKFLOW_TEST_JDBC_URL') }
     outputs.cacheIf { !System.getenv('WORKFLOW_TEST_JDBC_URL') }
@@ -145,4 +145,15 @@ tasks.register('workflowSecurityDefinerReview', JavaExec) {
     classpath = sourceSets.main.runtimeClasspath
     mainClass = 'com.tricore.dxos.infrastructure.workflow.WorkflowSecurityDefinerReview'
     args rootProject.file('../docs/evidence/issue-25-security-definer-review.sql').absolutePath
+}
+
+// Explicit invocation fails if real-provider config is absent.
+tasks.register('supabaseIntegrationTest', Test) {
+    description = 'Runs ObjectStoragePort contracts against real Supabase Storage.'
+    group = 'verification'
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    useJUnitPlatform { includeTags 'supabase-real' }
+    systemProperty 'supabase.test.classpath', sourceSets.test.runtimeClasspath.asPath
+    shouldRunAfter tasks.named('test')
 }
