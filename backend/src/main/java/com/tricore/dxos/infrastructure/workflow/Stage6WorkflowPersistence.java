@@ -276,7 +276,7 @@ final class Stage6WorkflowPersistence implements WorkflowPersistencePort {
         if (nanos < 0 || nanos > 999_999_999) throw unavailable();
         return Instant.ofEpochSecond(number(node, prefix + "_seconds"), nanos);
     }
-    private static WorkflowDefinition definition(JsonNode node) {
+    static WorkflowDefinition definition(JsonNode node) {
         keys(node, "definition_id definition_version initial_state states transitions");
         if (!node.get("states").isArray() || !node.get("transitions").isArray()) throw unavailable();
         Set<String> states = new HashSet<>();
@@ -301,7 +301,7 @@ final class Stage6WorkflowPersistence implements WorkflowPersistencePort {
                 .put("created_at_seconds", instance.createdAt().getEpochSecond()).put("created_at_nanos", (long) instance.createdAt().getNano())
                 .put("updated_at_seconds", instance.updatedAt().getEpochSecond()).put("updated_at_nanos", (long) instance.updatedAt().getNano());
     }
-    private static WorkflowInstance restore(JsonNode node, WorkflowDefinition definition) {
+    static WorkflowInstance restore(JsonNode node, WorkflowDefinition definition) {
         keys(node, SNAPSHOT_KEYS);
         if (!definition.definitionId().equals(string(node, "definition_id")) || definition.definitionVersion() != number(node, "definition_version"))
             throw unavailable();
