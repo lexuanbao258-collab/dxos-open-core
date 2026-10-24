@@ -181,7 +181,7 @@ class HelpdeskHttpPostgresTest {
         String id=triaged();
         var coordinator=read(expect(get(API+"/"+id),"coordinator",200));
         assertThat(coordinator.path("requesterDisplayName").asText()).isEqualTo("Demo employee");
-        assertThat(coordinator.path("assigneeDisplayName").isNull()).isTrue();
+        assertThat(coordinator.path("assigneeDisplayName").isMissingNode()).isTrue();
         assertThat(coordinator.path("eligibleAssignees").isArray()).isTrue();
         assertThat(coordinator.path("eligibleAssignees").findValuesAsText("id"))
                 .containsExactlyInAnyOrder(actors.get("worker"),actors.get("worker2"));
@@ -192,7 +192,9 @@ class HelpdeskHttpPostgresTest {
         expect(get(API+"/"+id),"employee",200)
                 .andExpect(jsonPath("$.eligibleAssignees").doesNotExist());
         expect(get(API),"coordinator",200)
-                .andExpect(jsonPath("$.items[0].eligibleAssignees").doesNotExist());
+                .andExpect(jsonPath("$.items[0].eligibleAssignees").doesNotExist())
+                .andExpect(jsonPath("$.items[0].requesterDisplayName").doesNotExist())
+                .andExpect(jsonPath("$.items[0].assigneeDisplayName").doesNotExist());
 
         assign(id,"worker",0,200);
         expect(get(API+"/"+id),"coordinator",200)
@@ -211,7 +213,7 @@ class HelpdeskHttpPostgresTest {
         }
         try {
             expect(get(API+"/"+id),"employee",200)
-                    .andExpect(jsonPath("$.requesterDisplayName").isEmpty());
+                    .andExpect(jsonPath("$.requesterDisplayName").doesNotExist());
         } finally {
             try (var c=admin()) {
                 sql(c,"UPDATE "+schema+".helpdesk_actors SET display_name='Demo employee' WHERE actor_id='"+actors.get("employee")+"'");

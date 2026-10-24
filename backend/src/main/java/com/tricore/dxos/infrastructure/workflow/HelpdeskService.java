@@ -39,7 +39,8 @@ public final class HelpdeskService {
     public record RequestView(UUID id, String title, String description, String requestType,
             String requesterId, String assigneeId, String resolution, long assignmentVersion,
             String workflowInstanceId, String state, long version, List<String> allowedActions,
-            String requesterDisplayName, String assigneeDisplayName,
+            @JsonInclude(JsonInclude.Include.NON_NULL) String requesterDisplayName,
+            @JsonInclude(JsonInclude.Include.NON_NULL) String assigneeDisplayName,
             @JsonInclude(JsonInclude.Include.NON_NULL) List<AssigneeOption> eligibleAssignees) {}
     public record Page(List<RequestView> items, UUID nextCursor) {}
     public record HistoryView(String transitionId, String sourceState, String targetState,
@@ -135,7 +136,7 @@ public final class HelpdeskService {
                 has(actor, WorkflowOperation.TRANSITION), id, command, assignee, assignmentVersion, resolution);
     }
 
-    private RequestView view(JsonNode facts, AuthenticatedPrincipal actor, boolean includeEligibleAssignees) {
+    private RequestView view(JsonNode facts, AuthenticatedPrincipal actor, boolean includeDetailFields) {
         JsonNode request = facts.path("request");
         JsonNode snapshot = facts.path("workflow").path("instance");
         String state = snapshot.path("current_state").asText();
@@ -154,7 +155,7 @@ public final class HelpdeskService {
                     && nullable(request, "resolution") != null) actions.add("confirm");
         }
         List<AssigneeOption> eligible = null;
-        if (includeEligibleAssignees && actions.contains("assign")) {
+        if (includeDetailFields && actions.contains("assign")) {
             JsonNode candidates = facts.path("eligibleAssignees");
             if (!candidates.isArray()) throw unavailable();
             List<AssigneeOption> options = new ArrayList<>();
@@ -171,7 +172,8 @@ public final class HelpdeskService {
                 request.path("description").asText(), "IT_HELPDESK", request.path("requester_id").asText(),
                 nullable(request, "assignee_id"), nullable(request, "resolution"), request.path("assignment_version").longValue(),
                 snapshot.path("instance_id").asText(), state, snapshot.path("runtime_version").longValue(), List.copyOf(actions),
-                nullable(facts, "requesterDisplayName"), nullable(facts, "assigneeDisplayName"), eligible);
+                includeDetailFields ? nullable(facts, "requesterDisplayName") : null,
+                includeDetailFields ? nullable(facts, "assigneeDisplayName") : null, eligible);
     }
 
     private static String nullable(JsonNode node, String field) {
