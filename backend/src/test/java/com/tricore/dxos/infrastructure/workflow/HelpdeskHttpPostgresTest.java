@@ -20,6 +20,8 @@ import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.builder.SpringApplicationBuilder;
+import org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext;
 import org.springframework.context.annotation.*;
 import org.springframework.core.env.MapPropertySource;
 import org.springframework.jdbc.datasource.*;
@@ -34,6 +36,8 @@ import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import javax.sql.DataSource;
 import java.lang.reflect.*;
 import java.net.InetSocketAddress;
+import java.net.URI;
+import java.net.http.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.sql.*;
@@ -58,7 +62,7 @@ class HelpdeskHttpPostgresTest {
             "workflow_definition_transitions", "workflow_instances", "workflow_transition_history", "helpdesk_actors", "helpdesk_requests");
     private final ObjectMapper json = new ObjectMapper().findAndRegisterModules();
     private final Map<String,String> actors = new HashMap<>();
-    private String url, schema, ownerRole, runtimeRole, issuer;
+    private String url, schema, ownerRole, runtimeRole, issuer, runtimePassword;
     private DriverManagerDataSource runtime;
     private AnnotationConfigWebApplicationContext context;
     private MockMvc mvc;
@@ -92,6 +96,7 @@ class HelpdeskHttpPostgresTest {
         ownerRole = "helpdesk_owner_" + suffix;
         runtimeRole = "helpdesk_runtime_" + suffix;
         String password = UUID.randomUUID().toString();
+        runtimePassword = password;
         try (var c = admin()) {
             assertThat(number(c,"SHOW server_version_num")).isBetween(180000L,189999L);
             c.setAutoCommit(false);
@@ -248,6 +253,52 @@ class HelpdeskHttpPostgresTest {
         expect(get(API+"/"+id),"worker",200).andExpect(jsonPath("$.resolution").isEmpty()).andExpect(jsonPath("$.state").value("IN_PROGRESS"));
     }
 
+    @Test void databaseHistoryFailureRollsBackResolutionAndWorkflowState() throws Exception {
+        String id=inProgress();
+        String instance=read(expect(get(API+"/"+id),"employee",200)).path("workflowInstanceId").asText();
+        try(var c=admin()) {
+            sql(c,"CREATE FUNCTION "+schema+".fail_history() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'injected history failure'; END $$");
+            sql(c,"CREATE TRIGGER injected_history_failure BEFORE INSERT ON "+schema+".workflow_transition_history FOR EACH ROW "
+                    +"WHEN (NEW.instance_id='"+instance+"' AND NEW.transition_id='resolve') EXECUTE FUNCTION "+schema+".fail_history()");
+        }
+        try {
+            var before=snapshot();
+            expect(post(API+"/"+id+"/resolve").content("{\"expectedVersion\":2,\"resolution\":\"must roll back\"}"),"worker",503)
+                    .andExpect(content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("injected history"))));
+            assertThat(snapshot()).isEqualTo(before);
+        } finally { try(var c=admin()) {
+            sql(c,"DROP TRIGGER injected_history_failure ON "+schema+".workflow_transition_history");
+            sql(c,"DROP FUNCTION "+schema+".fail_history()");
+        } }
+    }
+
+    @Test void failedActivationLeavesNoBusinessBindingResourceOrWorkflowOrphan() throws Exception {
+        try(var c=admin()) {
+            sql(c,"CREATE FUNCTION "+schema+".fail_activation() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'injected activation failure'; END $$");
+            sql(c,"CREATE TRIGGER injected_activation_failure BEFORE UPDATE ON "+schema+".workflow_instances FOR EACH ROW "
+                    +"WHEN (OLD.lifecycle='NOT_STARTED' AND NEW.lifecycle='ACTIVE') EXECUTE FUNCTION "+schema+".fail_activation()");
+        }
+        try {
+            var before=snapshot();
+            expect(post(API).content(createBody()),"employee",503);
+            assertThat(snapshot()).isEqualTo(before);
+        } finally { try(var c=admin()) {
+            sql(c,"DROP TRIGGER injected_activation_failure ON "+schema+".workflow_instances");
+            sql(c,"DROP FUNCTION "+schema+".fail_activation()");
+        } }
+    }
+
+    @Test void ownerStillNeedsReadAndTransitionGrants() throws Exception {
+        String id=create("employee").path("id").asText();
+        try(var c=admin()) { sql(c,"UPDATE "+schema+".resource_acl SET granted=false WHERE resource_id='"+id+"' AND actor_id='"
+                +actors.get("employee")+"' AND operation='workflow:read'"); }
+        var before=snapshot();
+        expect(get(API+"/"+id),"employee",403);
+        expect(get(API+"/"+id+"/history"),"employee",403);
+        expect(get(API),"employee",200).andExpect(jsonPath("$.items[?(@.id=='"+id+"')]").isEmpty());
+        assertThat(snapshot()).isEqualTo(before);
+    }
+
     @Test void businessEligibilitySurvivesBroadResourceGrant() throws Exception {
         String id=inProgress(); grant(id,"worker2"); var before=snapshot();
         expect(post(API+"/"+id+"/resolve").content("{\"expectedVersion\":2,\"resolution\":\"forged result\"}"),"worker2",403);
@@ -264,6 +315,58 @@ class HelpdeskHttpPostgresTest {
             expect(post(API+"/"+id+"/resolve").content("{\"expectedVersion\":2,\"resolution\":\"denied\"}"),"worker",403);
             assertThat(snapshot()).isEqualTo(before);
         } finally { try(var c=admin()) { sql(c,"UPDATE "+schema+".helpdesk_actors SET worker=true WHERE actor_id='"+actors.get("worker")+"'"); } }
+    }
+
+    @Test void earlierRevokeWinsAgainstWaitingResolution() throws Exception {
+        String id=inProgress();
+        try(var administrator=admin();var executor=Executors.newSingleThreadExecutor()) {
+            administrator.setAutoCommit(false);
+            sql(administrator,"UPDATE "+schema+".helpdesk_actors SET worker=false WHERE actor_id='"+actors.get("worker")+"'");
+            var started=new CountDownLatch(1);
+            var attempt=executor.submit(() -> {
+                started.countDown();
+                return catchThrowable(() -> serviceAs("worker",runtime).transition(UUID.fromString(id),"resolve",2,"must not persist"));
+            });
+            assertThat(started.await(5,TimeUnit.SECONDS)).isTrue();
+            assertThatThrownBy(() -> attempt.get(200,TimeUnit.MILLISECONDS)).isInstanceOf(TimeoutException.class);
+            administrator.commit();
+            assertThat(attempt.get(20,TimeUnit.SECONDS)).isInstanceOfSatisfying(
+                    com.tricore.dxos.application.authorization.WorkflowAccessException.class,
+                    e -> assertThat(e.decision()).isEqualTo(com.tricore.dxos.application.authorization.WorkflowAccessDecision.FORBIDDEN));
+            expect(get(API+"/"+id),"employee",200).andExpect(jsonPath("$.state").value("IN_PROGRESS"))
+                    .andExpect(jsonPath("$.resolution").isEmpty()).andExpect(jsonPath("$.version").value(2));
+            expect(get(API+"/"+id+"/history"),"employee",200).andExpect(jsonPath("$.length()").value(2));
+        } finally { try(var c=admin()) { sql(c,"UPDATE "+schema+".helpdesk_actors SET worker=true WHERE actor_id='"+actors.get("worker")+"'"); } }
+    }
+
+    @Test void fullBootApplicationStartsAndServesGuardedRoutesOverHttp() throws Exception {
+        try(var app=new SpringApplicationBuilder(com.tricore.dxos.DxosApplication.class).run(
+                "--server.address=127.0.0.1","--server.port=0","--spring.main.banner-mode=off",
+                "--spring.flyway.enabled=false","--spring.jpa.hibernate.ddl-auto=none",
+                "--spring.datasource.url="+url+"?currentSchema="+schema+",pg_catalog,pg_temp",
+                "--spring.datasource.username="+runtimeRole,"--spring.datasource.password="+runtimePassword,
+                "--spring.security.oauth2.resourceserver.jwt.issuer-uri="+issuer,
+                "--tricore.security.oidc.audience=tricore-api","--tricore.security.oidc.resource-client-id=tricore-api",
+                "--dxos.workflow.schema="+schema,"--dxos.helpdesk.enabled=true",
+                "--dxos.helpdesk.jdbc-url="+url,"--dxos.helpdesk.username="+runtimeRole,
+                "--dxos.helpdesk.password="+runtimePassword,"--dxos.helpdesk.schema="+schema,"--dxos.helpdesk.tenant=tenant-a")) {
+            int port=((ServletWebServerApplicationContext)app).getWebServer().getPort();
+            try(var client=HttpClient.newHttpClient()) {
+                String endpoint="http://127.0.0.1:"+port;
+                var unauthorized=client.send(HttpRequest.newBuilder(URI.create(endpoint+API)).GET().build(),HttpResponse.BodyHandlers.ofString());
+                assertThat(unauthorized.statusCode()).isEqualTo(401);
+                String bearer="Bearer "+token("employee",AUTHORITIES,key);
+                var create=client.send(HttpRequest.newBuilder(URI.create(endpoint+API)).header("Authorization",bearer)
+                        .header("Content-Type","application/json").POST(HttpRequest.BodyPublishers.ofString(createBody())).build(),HttpResponse.BodyHandlers.ofString());
+                assertThat(create.statusCode()).as(create.body()).isEqualTo(201);
+                String id=json.readTree(create.body()).path("id").asText();
+                var detail=client.send(HttpRequest.newBuilder(URI.create(endpoint+API+"/"+id)).header("Authorization",bearer).GET().build(),HttpResponse.BodyHandlers.ofString());
+                assertThat(detail.statusCode()).as(detail.body()).isEqualTo(200);
+                assertThat(json.readTree(detail.body()).path("state").asText()).isEqualTo("SUBMITTED");
+                var prototype=client.send(HttpRequest.newBuilder(URI.create(endpoint+"/api/v1/requests")).header("Authorization",bearer).GET().build(),HttpResponse.BodyHandlers.ofString());
+                assertThat(prototype.statusCode()).isEqualTo(404);
+            }
+        }
     }
 
     @Test void unknownCommitIsNotRetriedAndCanBeReconciled() throws Exception {
