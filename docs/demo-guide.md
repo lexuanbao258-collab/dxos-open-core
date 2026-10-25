@@ -30,7 +30,7 @@ Follow [Installation Guide, section 3](installation.md) to check out Draft PR #5
 
 Screenshots from the Portal branch should reference `docs/evidence/issue39-portal/` and the exact PR #51 HEAD. Demo fixture names are not verified real identities.
 
-## 3. Demo B: IT Helpdesk Backend candidate — only after B06 verification
+## 3. Demo B: IT Helpdesk Backend candidate — focused B06 verified, full integration gated
 
 [Draft PR #63](https://github.com/lexuanbao258-collab/dxos-open-core/pull/63) proposes **nine HTTP route families** under `/api/v1/mvp/requests`:
 
@@ -50,30 +50,30 @@ Do **not** invent an implemented `CLOSED` step: the current IT Helpdesk candidat
 
 Essential negative-security evidence includes: anonymous or signature-tampered tokens returning `401`; prohibited operations `403`; hidden/cross-tenant resource responses `404`; stale assignment or Workflow versions `409`; eligibility revocation; and no automatic retry after an unknown commit outcome. Report a case as **PASS** only when its test has actually run on the relevant HEAD.
 
-The [B06 candidate guide](https://github.com/lexuanbao258-collab/dxos-open-core/blob/e12d105c89400a5fd69dd6cc1fca670ff1f04f51/docs/evidence/issue53-b06-real-keycloak-helpdesk-e2e.md) documents real Keycloak access tokens, canonical JWT issuer+subject identity, nine HTTP routes, and disposable PostgreSQL. **No independent B06 PASS evidence had been obtained as of this documentation checkpoint.**
+The [B06 candidate guide](https://github.com/lexuanbao258-collab/dxos-open-core/blob/e12d105c89400a5fd69dd6cc1fca670ff1f04f51/docs/evidence/issue53-b06-real-keycloak-helpdesk-e2e.md) documents real Keycloak access tokens, canonical JWT issuer+subject identity, nine HTTP routes, and disposable PostgreSQL. **Independent focused B06 PASS is now reported** at exact PR #63 HEAD `e12d105c89400a5fd69dd6cc1fca670ff1f04f51`: [Yến's October 25, 2026 report](https://github.com/lexuanbao258-collab/dxos-open-core/pull/63#issuecomment-6393813935) records 2 Configuration + 31 Helpdesk HTTP/PostgreSQL tests (**33 PASS / 0 FAIL / 0 SKIP**) with real Keycloak 26.8.0 + PKCE, Java 21.0.12.1, Gradle 8.14.3, and disposable PostgreSQL 18.6. `BUILD SUCCESSFUL` and cleanup were reported. **This is not Portal integration, full SQL privilege acceptance or production release verification.**
 
 ## 4. Requirements before presenting real Portal-to-Backend integration
 
 All evidence must refer to the **same accepted integration HEAD**:
 
-- **Yến — Identity/Security:** independently verify focused B05/B06 tests, [PR #58](https://github.com/lexuanbao258-collab/dxos-open-core/pull/58) guarded SQL, provisioning and runtime privileges, plus negative authorization cases.
+- **Yến — Identity/Security:** focused B06 at PR #63 HEAD `e12d105c` has an independent PASS report; **still independently review** [PR #58](https://github.com/lexuanbao258-collab/dxos-open-core/pull/58) guarded SQL, production-aligned provisioning/runtime privileges, and other security gates.
 - **Ánh — Portal/Data:** review APP-11 and HTTP Adapter against the actual DTO, keep `version` distinct from `assignmentVersion`, show `eligibleAssignees` only where authorized, and do not use client-generated actor identity as an authority.
 - **Bảo — Backend/integration:** reconcile test evidence across branches and exact SHAs, verify Workflow/history consistency, ensure repeatable safe setup, and do not enable staging/LIVE without accepted gates.
 - **License/compliance:** evaluate [Issue #38](https://github.com/lexuanbao258-collab/dxos-open-core/issues/38) separately; do not claim license or copyright acceptance before the relevant review is complete.
 
 **Current checkpoint: `DRAFT / LIVE_BLOCKED`.** Do not label README screenshots, videos, or release notes as “E2E complete”, “production-ready”, or “released” before actual independently checked evidence and sign-off.
 
-## 5. Evidence template for the eventual B06/Portal acceptance review
+## 5. B06 verified evidence and remaining Portal acceptance checklist
 
 | Field | Evidence to record |
 | --- | --- |
-| PR and exact integration HEAD SHA | Pending verification |
-| Run date, operator, OS, JDK, PostgreSQL, Keycloak | Not recorded |
-| Test commands, isolated disposable environment | Not recorded |
-| Focused B05/B06 JUnit PASS / FAIL / SKIP | B06 not yet independently confirmed |
-| Golden Path and key negative authorization cases | E2E acceptance pending |
+| Focused Backend B06 PR / exact reviewed SHA | PR #63 / `e12d105c89400a5fd69dd6cc1fca670ff1f04f51` |
+| B06 environment reported by Yến | October 25, 2026; Java 21.0.12.1; Gradle 8.14.3; PostgreSQL 18.6 disposable; Keycloak 26.8.0 with PKCE |
+| B06 execution evidence | [Independent reviewer comment](https://github.com/lexuanbao258-collab/dxos-open-core/pull/63#issuecomment-6393813935); `BUILD SUCCESSFUL`, cleanup reported. See linked report for execution details |
+| Focused B06 JUnit PASS / FAIL / SKIP | **33 / 0 / 0** (2 Configuration + 31 Helpdesk HTTP/PostgreSQL), exact HEAD only |
+| Golden Path and key negative authorization cases | Covered in the focused B06 test report; **full Portal-to-Backend acceptance pending** |
 | Real Portal HTTP integration and captured screenshots | Pending |
 | Runtime privilege, provisioning, and migration gates | Pending |
 | Independent reviewer decision | LIVE_BLOCKED |
 
-Complete this table only after the relevant tests have run, with redacted CI logs/PR comments, the reviewer, and the exact SHA. **Never enter estimated PASS counts.**
+Update the remaining rows only after their tests have run, linking redacted logs/PR comments, the reviewer, and the exact SHA. The B06 figures above are taken from Yến's linked independent report, **not** newly executed in this documentation PR. **Never enter estimated PASS counts.**
