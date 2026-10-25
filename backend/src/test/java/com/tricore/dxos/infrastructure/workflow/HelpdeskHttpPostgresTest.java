@@ -250,11 +250,68 @@ class HelpdeskHttpPostgresTest {
         assertThat(snapshot()).isEqualTo(before);
     }
 
+    @Test void hiddenAndNonexistentIdsHaveIndistinguishable404Responses() throws Exception {
+        var created=create("employee");
+        String hidden=created.path("id").asText();
+        UUID nonexistent=UUID.randomUUID();
+        assertThat(nonexistent).isNotEqualTo(UUID.fromString(hidden));
+        try(var c=admin();var s=c.prepareStatement("SELECT 1 FROM "+schema+".helpdesk_requests WHERE request_id=?")) {
+            s.setObject(1,nonexistent);
+            try(var rows=s.executeQuery()) { assertThat(rows.next()).isFalse(); }
+        }
+        var before=snapshot();
+        JsonNode expected=json.readTree("""
+                {"status":404,"code":"NOT_FOUND","message":"Workflow resource not found","errors":{}}
+                """);
+        for(String suffix:List.of("","/history")) {
+            var hiddenResponse=expect(get(API+"/"+hidden+suffix),"employee2",404).andReturn().getResponse();
+            var missingResponse=expect(get(API+"/"+nonexistent+suffix),"employee2",404).andReturn().getResponse();
+            JsonNode hiddenBody=json.readTree(hiddenResponse.getContentAsString());
+            JsonNode missingBody=json.readTree(missingResponse.getContentAsString());
+            assertThat(hiddenBody).isEqualTo(missingBody).isEqualTo(expected);
+            assertThat(hiddenResponse.getContentType()).isEqualTo(missingResponse.getContentType());
+            assertThat(hiddenResponse.getContentAsString()).doesNotContain(hidden,actors.get("employee"),
+                    created.path("workflowInstanceId").asText(),"Software issue","Please repair");
+        }
+        assertThat(snapshot()).isEqualTo(before);
+    }
+
     @Test void visibleWithoutExactTechnicalAuthorityIsForbidden() throws Exception {
         String id=create("employee").path("id").asText(); var before=snapshot();
         mvc.perform(get(API+"/"+id).header("Authorization","Bearer "+token("employee",List.of("workflow:read-all"),key)))
                 .andExpect(status().isForbidden());
         assertThat(snapshot()).isEqualTo(before);
+    }
+
+    @Test void coordinatorWithoutExactTransitionAuthorityCannotTriage() throws Exception {
+        String id=create("employee").path("id").asText();
+        String coordinator=actors.get("coordinator");
+        try(var c=admin()) {
+            assertThat(number(c,"SELECT COUNT(*) FROM "+schema+".tenant_memberships m JOIN "+schema
+                    +".helpdesk_actors a USING(tenant_id,actor_id) WHERE m.tenant_id='tenant-a'"
+                    +" AND m.actor_id='"+coordinator+"' AND m.active AND a.coordinator")).isEqualTo(1);
+            assertThat(number(c,"SELECT COUNT(*) FROM "+schema+".resource_acl WHERE tenant_id='tenant-a'"
+                    +" AND resource_type='mvp_request' AND resource_id='"+id+"' AND actor_id='"+coordinator+"'"
+                    +" AND operation IN ('workflow:read','workflow:transition') AND granted")).isEqualTo(2);
+        }
+        String readOnly=token("coordinator",List.of("workflow:read"),key);
+        String canTransition=token("coordinator",List.of("workflow:read","workflow:transition"),key);
+        mvc.perform(get(API+"/"+id).header("Authorization","Bearer "+readOnly))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.state").value("SUBMITTED"))
+                .andExpect(jsonPath("$.version").value(0));
+        var before=snapshot();
+        mvc.perform(post(API+"/"+id+"/triage").header("Authorization","Bearer "+readOnly)
+                .contentType("application/json").content("{\"expectedVersion\":0}"))
+                .andExpect(status().isForbidden()).andExpect(jsonPath("$.code").value("FORBIDDEN"));
+        assertThat(snapshot()).isEqualTo(before);
+        expect(get(API+"/"+id),"employee",200).andExpect(jsonPath("$.state").value("SUBMITTED"))
+                .andExpect(jsonPath("$.version").value(0));
+        expect(get(API+"/"+id+"/history"),"employee",200).andExpect(jsonPath("$.length()").value(0));
+        assertThat(snapshot()).isEqualTo(before);
+        mvc.perform(post(API+"/"+id+"/triage").header("Authorization","Bearer "+canTransition)
+                .contentType("application/json").content("{\"expectedVersion\":0}"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.state").value("TRIAGED"))
+                .andExpect(jsonPath("$.version").value(1));
     }
 
     @Test void unauthorizedTriageAssignmentAndConfirmationDoNotWrite() throws Exception {
