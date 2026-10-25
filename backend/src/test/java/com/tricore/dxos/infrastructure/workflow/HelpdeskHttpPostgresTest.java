@@ -393,7 +393,7 @@ class HelpdeskHttpPostgresTest {
     @EnabledIfEnvironmentVariable(named="B06_EMPLOYEE_ACCESS_TOKEN",matches=".+")
     void b06RealKeycloakTokensAndPostgres() throws Exception {
         String keycloakIssuer="http://localhost:8180/realms/tricore";
-        var decoder=new SecurityConfig().jwtDecoder(keycloakIssuer,"tricore-api");
+        var decoder=org.springframework.security.oauth2.jwt.JwtDecoders.fromIssuerLocation(keycloakIssuer);
         Map<String,String> tokens=new LinkedHashMap<>();
         Map<String,String> ids=new LinkedHashMap<>();
         for(String role:List.of("employee","coordinator","worker","foreign")) {
@@ -401,6 +401,7 @@ class HelpdeskHttpPostgresTest {
             assertThat(secret).as("Missing fresh real Keycloak token for "+role).isNotNull().isNotBlank();
             var verified=decoder.decode(secret); // signature, issuer, aud, typ and lifetime validated via real JWKS
             assertThat(verified.getIssuer().toString()).isEqualTo(keycloakIssuer);
+            assertThat(verified.getAudience()).contains("tricore-api");
             assertThat(verified.getExpiresAt()).isAfter(Instant.now().plusSeconds(90));
             tokens.put(role,secret);
             ids.put(role,"oidc:"+encode(keycloakIssuer)+"."+encode(verified.getSubject()));
