@@ -201,7 +201,7 @@ class HelpdeskHttpPostgresTest {
                 .andExpect(jsonPath("$.assigneeDisplayName").value("Demo worker"));
         expect(get(API+"/"+id),"worker",200)
                 .andExpect(jsonPath("$.eligibleAssignees").doesNotExist());
-        expect(post(API+"/"+id+"/start").content("{\\"expectedVersion\\":1}"),"worker",200);
+        expect(post(API+"/"+id+"/start").content("{\"expectedVersion\":1}"),"worker",200);
         expect(get(API+"/"+id),"coordinator",200)
                 .andExpect(jsonPath("$.eligibleAssignees").doesNotExist());
     }
