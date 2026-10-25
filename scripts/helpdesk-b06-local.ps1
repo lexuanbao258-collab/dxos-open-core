@@ -21,6 +21,12 @@ try {
     if (-not (Get-Command docker -ErrorAction SilentlyContinue)) { throw 'Docker CLI missing' }
     $env:JAVA_HOME = $JavaHome
     $env:Path = "$JavaHome\bin;$env:Path"
+    $originalPreference = $ErrorActionPreference
+    try {
+        $ErrorActionPreference = 'Continue'
+        $versionOutput = & (Join-Path $JavaHome 'bin\java.exe') -version 2>&1 | Out-String
+    } finally { $ErrorActionPreference = $originalPreference }
+    if ($versionOutput -notmatch 'version "21\.') { throw 'Only JDK 21 is supported' }
     $head = (& git -C $root rev-parse HEAD).Trim()
     if ($LASTEXITCODE -ne 0 -or $head -notmatch '^[0-9a-f]{40}$') { throw 'Unverifiable HEAD' }
     Write-Output ('B06_HEAD=' + $head)
@@ -29,6 +35,9 @@ try {
     $dockerArgs = @('run','--rm','-d','--name',$container,'-p','127.0.0.1:55439:5432',
         '-e','POSTGRES_USER=helpdesk_test','-e','POSTGRES_DB=helpdesk_disposable_test',
         '-e',('POSTGRES_PASSWORD=' + $pw),'postgres:18.6-alpine')
+    # Separate image pull so progress output cannot contaminate the container-id check.
+    $null = & docker pull 'postgres:18.6-alpine' 2>&1
+    if ($LASTEXITCODE -ne 0) { throw 'PostgreSQL 18 image not available' }
     $id = (& docker @dockerArgs 2>&1 | Out-String).Trim()
     if ($LASTEXITCODE -ne 0 -or $id -notmatch '^[0-9a-f]{64}$') { throw 'Disposable PG18 launch failed' }
     $started = $true
@@ -69,7 +78,13 @@ try {
     if ($locationPushed) { Pop-Location }
     foreach ($name in $keys) { [Environment]::SetEnvironmentVariable($name,$saved[$name],'Process') }
     # Random container name owned only by this launcher; never touch shared containers.
-    $null = & docker rm -f $container 2>&1
+    if (Get-Command docker -ErrorAction SilentlyContinue) {
+        $originalPreference = $ErrorActionPreference
+        try {
+            $ErrorActionPreference = 'Continue'
+            $null = & docker rm -f $container 2>&1
+        } finally { $ErrorActionPreference = $originalPreference }
+    }
     if ($started) { Write-Output 'B06_EPHEMERAL_CONTAINER=CLEANED' }
 }
 if ($success) { exit 0 } else { exit 1 }
