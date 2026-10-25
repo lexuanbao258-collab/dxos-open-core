@@ -4,9 +4,9 @@
 
 DX-OS Open-Core is TRICORE's modular monolith for exploring reusable capabilities behind internal service applications. The Internal Service Portal / IT Support scenario is the main demonstration target. DX-OS is a digital transformation platform concept, not a computer operating system or a claim about the competition's required product.
 
-**Source baseline:** `origin/main` at `2115de3`. This README describes that source snapshot; work on unmerged branches and pull requests is identified separately.
+**Documentation PR base:** `main` at `6f96719f249fe982826a84315443bc576697e378` (checked 2026-10-25). The implementation-status table below retains its *historical* `2115de3` checkpoint; it is **not** a claim of current integration or current test PASS. Newer unmerged work is listed separately.
 
-**Navigate:** [Overview](#overview) · [Architecture](#architecture-overview) · [Status](#implementation-status) · [Getting started](#getting-started) · [Documentation](#documentation-and-verification) · [License](#license-and-third-party-notices)
+**Navigate:** [Overview](#overview) · [Architecture](#architecture-overview) · [Status](#implementation-status) · [Getting started](#getting-started) · [Installation guide](docs/installation.md) · [Demo guide](docs/demo-guide.md) · [Contributing](CONTRIBUTING.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [License](#license-and-third-party-notices)
 
 ## Overview
 
@@ -81,6 +81,16 @@ The table describes **`origin/main` at `2115de3`**, inspected on October 22, 202
 
 Identity–Gateway integration, the Portal, a complete demonstration, proof of Core reuse across two applications, and reproducible release packaging require their own reviewed evidence. An unmerged PR or roadmap item is not a capability already available on main.
 
+### Current integration candidates — **unmerged as of 2026-10-25**
+
+| Workstream | PR | Interpretation |
+| --- | --- | --- |
+| React/TypeScript/Vite Service Portal | [Draft #51](https://github.com/lexuanbao258-collab/dxos-open-core/pull/51) | Mock/development UI including IT Support and Facility; `frontend/` is on the PR branch, **not main** |
+| Guarded PostgreSQL dependency | [Draft #58](https://github.com/lexuanbao258-collab/dxos-open-core/pull/58) | SQL privilege/provisioning/security review pending |
+| IT Helpdesk HTTP integration, APP-11 and B06 test harness | [Draft #63](https://github.com/lexuanbao258-collab/dxos-open-core/pull/63) | Code candidate for 9 routes; LIVE_BLOCKED until exact-HEAD tests, real Keycloak/DB, and Portal integration accepted |
+
+**Evidence distinction:** Yến independently reported 2 Configuration and 28 Helpdesk HTTP/PostgreSQL test passes at **older** PR #63 HEAD `a3bf42ef4a01db5d01c193e7378cdb6e6c2785df`. The newer candidate HEAD `e12d105c89400a5fd69dd6cc1fca670ff1f04f51` includes APP-11 and B06 code but **had not been independently executed** when this documentation was drafted. Do not translate any earlier B05/Keycloak-only PASS into full B06 E2E acceptance. See the [demo guide](docs/demo-guide.md).
+
 ### Historical test checkpoint
 
 On **October 7, 2026**, at commit **`2b51a41`**, project documentation recorded **29 Workflow tests, 109 Request tests, and 139 backend tests**, with a successful build. The commands, environment, and limits are in the [Workflow POC](docs/poc/workflow-core-poc.md). These are historical results, **not** test counts or results from October 22.
@@ -104,6 +114,8 @@ Mock, fake, and MVC-slice tests do not by themselves establish PostgreSQL transa
 Keycloak, a standalone gateway product, an object-storage provider, and a third-party workflow engine should be treated as options or proof-of-concept subjects unless a decision and implementation are evidenced for the relevant commit.
 
 ## Getting Started
+
+For a first-time user, follow the **[combined installation guide](docs/installation.md)**. It separates (1) build/test of Backend on `main`, (2) the Portal **mock UI** on PR #51, and (3) real-Keycloak Helpdesk B06 **test candidate** on PR #63. There is **no accepted single-command full-stack Docker deployment** in the stated baseline. Do not use production/staging databases for local experiments.
 
 ### Prerequisites
 
@@ -187,29 +199,41 @@ DX-OS/
 │       ├── request/          # Application/business prototype
 │       └── common/
 ├── docs/                     # Architecture, contracts, POCs, evidence
+│   ├── installation.md       # Safe backend/frontend candidate setup paths
+│   └── demo-guide.md         # Mock vs real integration demo checklist
 ├── infra/
 ├── scripts/
+├── .github/                  # PR template for new contributions
 ├── .env.example
+├── CONTRIBUTING.md
+├── CHANGELOG.md
+├── SECURITY.md
 └── README.md
 ```
 
-This is a high-level map, not a claim that every package is fully implemented.
+This high-level map includes documentation **proposed in this PR**. The `frontend/` React Portal is still **only in Draft PR #51**, so it is intentionally not shown as a root directory of this `main`-based documentation tree. The map does not claim every backend package is fully implemented.
 
 ## Documentation and Verification
 
+- [Installation guide](docs/installation.md): safe Windows setup, Backend main build, Portal mock branch, Docker/PostgreSQL test modes.
+- [Demo guide](docs/demo-guide.md): IT Helpdesk vs Facility mock, candidate E2E steps and acceptance evidence.
 - [Backend guide](backend/README.md): setup, configuration, APIs, and test limits.
 - [Architecture](docs/architecture/README.md): boundaries and dependency direction.
 - [Workflow contract](docs/contracts/workflow-core.md): mechanisms and invariants.
 - [Workflow POC](docs/poc/workflow-core-poc.md): historical test evidence.
 - [Evidence index](docs/evidence/README.md): checkpoints and limitations.
 - [Glossary](GLOSSARY.md): project terminology.
+- [Contributing](CONTRIBUTING.md): branch, PR, tests, access and migration rules.
+- [Changelog](CHANGELOG.md): unreleased vs verified changes.
+- [Security reporting](SECURITY.md): privately report sensitive findings.
+- [PR template](.github/pull_request_template.md): scoped evidence and review checklist.
 - [Issue #38](https://github.com/lexuanbao258-collab/dxos-open-core/issues/38): license, attribution, and SPDX review.
 
 A `PASS` claim should identify its commit, environment, command, result, and limitations. Review the relevant Issues and PRs for work newer than the stated baseline.
 
 ## Contributing and Development Workflow
 
-TRICORE uses Issues and pull requests to define scope, review contracts, and attach reproducible evidence:
+TRICORE uses Issues and pull requests to define scope, review contracts, and attach reproducible evidence. See [CONTRIBUTING.md](CONTRIBUTING.md) for the detailed process and non-destructive database/security rules:
 
 1. Record acceptance criteria, exclusions, and ownership in an Issue.
 2. Work on a short-lived branch from the appropriate baseline.
