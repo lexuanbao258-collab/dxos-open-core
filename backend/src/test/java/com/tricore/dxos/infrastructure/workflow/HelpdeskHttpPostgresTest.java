@@ -385,6 +385,135 @@ class HelpdeskHttpPostgresTest {
         } finally { try(var c=admin()) { sql(c,"UPDATE "+schema+".helpdesk_actors SET worker=true WHERE actor_id='"+actors.get("worker")+"'"); } }
     }
 
+
+    /** B06: real Keycloak bearer tokens through actual loopback Spring Boot HTTP and disposable PG.
+     *  All identities are provisioned only in this test's random PostgreSQL schema.
+     *  No mocked principal or local fake issuer is used for these requests. */
+    @Test
+    @EnabledIfEnvironmentVariable(named="B06_EMPLOYEE_ACCESS_TOKEN",matches=".+")
+    void b06RealKeycloakTokensAndPostgres() throws Exception {
+        String keycloakIssuer="http://localhost:8180/realms/tricore";
+        var decoder=new SecurityConfig().jwtDecoder(keycloakIssuer,"tricore-api");
+        Map<String,String> tokens=new LinkedHashMap<>();
+        Map<String,String> ids=new LinkedHashMap<>();
+        for(String role:List.of("employee","coordinator","worker","foreign")) {
+            String secret=System.getenv("B06_"+role.toUpperCase(Locale.ROOT)+"_ACCESS_TOKEN");
+            assertThat(secret).as("Missing fresh real Keycloak token for "+role).isNotNull().isNotBlank();
+            var verified=decoder.decode(secret); // signature, issuer, aud, typ and lifetime validated via real JWKS
+            assertThat(verified.getIssuer().toString()).isEqualTo(keycloakIssuer);
+            assertThat(verified.getExpiresAt()).isAfter(Instant.now().plusSeconds(90));
+            tokens.put(role,secret);
+            ids.put(role,"oidc:"+encode(keycloakIssuer)+"."+encode(verified.getSubject()));
+        }
+        assertThat(new HashSet<>(ids.values())).as("Distinct authenticated subjects").hasSize(4);
+        try(var c=admin()) {
+            for(String role:ids.keySet()) {
+                String tenant=role.equals("foreign")?"tenant-b":"tenant-a";
+                try(var membership=c.prepareStatement("INSERT INTO "+schema+".tenant_memberships (tenant_id,actor_id,active) VALUES (?,?,true)");
+                    var actor=c.prepareStatement("INSERT INTO "+schema+".helpdesk_actors "
+                        +"(tenant_id,actor_id,submitter,coordinator,worker,display_name) VALUES (?,?,?,?,?,?)")) {
+                    membership.setString(1,tenant);membership.setString(2,ids.get(role));membership.executeUpdate();
+                    actor.setString(1,tenant);actor.setString(2,ids.get(role));
+                    actor.setBoolean(3,role.equals("employee"));
+                    actor.setBoolean(4,role.equals("coordinator"));
+                    actor.setBoolean(5,role.equals("worker"));
+                    actor.setString(6,"B06 "+role);actor.executeUpdate();
+                }
+            }
+        }
+        try(var app=new SpringApplicationBuilder(com.tricore.dxos.DxosApplication.class).run(
+                "--server.address=127.0.0.1","--server.port=0","--spring.main.banner-mode=off",
+                "--spring.flyway.enabled=false","--spring.jpa.hibernate.ddl-auto=none",
+                "--spring.datasource.url="+url+"?currentSchema="+schema+",pg_catalog,pg_temp",
+                "--spring.datasource.username="+runtimeRole,"--spring.datasource.password="+runtimePassword,
+                "--spring.security.oauth2.resourceserver.jwt.issuer-uri="+keycloakIssuer,
+                "--tricore.security.oidc.audience=tricore-api","--tricore.security.oidc.resource-client-id=tricore-api",
+                "--dxos.workflow.schema="+schema,"--dxos.helpdesk.enabled=true",
+                "--dxos.helpdesk.jdbc-url="+url,"--dxos.helpdesk.username="+runtimeRole,
+                "--dxos.helpdesk.password="+runtimePassword,"--dxos.helpdesk.schema="+schema,
+                "--dxos.helpdesk.tenant=tenant-a");
+            var http=HttpClient.newHttpClient()) {
+            String base="http://127.0.0.1:"+((ServletWebServerApplicationContext)app).getWebServer().getPort();
+            b06Call(http,base,null,"POST","",createBody(),401);
+            String[] jwt=tokens.get("employee").split("\\.",-1);
+            assertThat(jwt).hasSize(3);assertThat(jwt[2]).isNotEmpty();
+            String modified=jwt[0]+"."+jwt[1]+"."+(jwt[2].charAt(0)=='A'?'B':'A')+jwt[2].substring(1);
+            b06Call(http,base,modified,"POST","",createBody(),401);
+            JsonNode created=b06Call(http,base,tokens.get("employee"),"POST","",createBody(),201);
+            String id=created.path("id").asText();
+            assertThat(UUID.fromString(id)).isNotNull();
+            assertThat(created.path("requesterId").asText()).isEqualTo(ids.get("employee"));
+            assertThat(created.path("state").asText()).isEqualTo("SUBMITTED");
+            assertThat(b06Call(http,base,tokens.get("employee"),"GET","?limit=50",null,200)
+                    .path("items").findValuesAsText("id")).contains(id);
+            b06Call(http,base,tokens.get("foreign"),"GET","/"+id,null,404);
+            b06Call(http,base,tokens.get("worker"),"GET","/"+id,null,404);
+            assertThat(b06Call(http,base,tokens.get("coordinator"),"GET","/"+id,null,200)
+                    .path("allowedActions").toString()).contains("triage");
+            b06Call(http,base,tokens.get("employee"),"POST","/"+id+"/triage",
+                    json.writeValueAsString(Map.of("expectedVersion",0)),403);
+            assertThat(b06Call(http,base,tokens.get("coordinator"),"POST","/"+id+"/triage",
+                    json.writeValueAsString(Map.of("expectedVersion",0)),200).path("state").asText()).isEqualTo("TRIAGED");
+            assertThat(b06Call(http,base,tokens.get("coordinator"),"GET","/"+id,null,200)
+                    .path("eligibleAssignees").findValuesAsText("id")).contains(ids.get("worker"));
+            String badAssign=json.writeValueAsString(Map.of("assigneeId",ids.get("worker"),"expectedAssignmentVersion",1));
+            String goodAssign=json.writeValueAsString(Map.of("assigneeId",ids.get("worker"),"expectedAssignmentVersion",0));
+            b06Call(http,base,tokens.get("employee"),"POST","/"+id+"/assign",goodAssign,403);
+            b06Call(http,base,tokens.get("coordinator"),"POST","/"+id+"/assign",badAssign,409);
+            JsonNode assigned=b06Call(http,base,tokens.get("coordinator"),"POST","/"+id+"/assign",goodAssign,200);
+            assertThat(assigned.path("assigneeId").asText()).isEqualTo(ids.get("worker"));
+            assertThat(assigned.path("assignmentVersion").asLong()).isEqualTo(1);
+            b06Call(http,base,tokens.get("coordinator"),"POST","/"+id+"/start",
+                    json.writeValueAsString(Map.of("expectedVersion",1)),403);
+            assertThat(b06Call(http,base,tokens.get("worker"),"POST","/"+id+"/start",
+                    json.writeValueAsString(Map.of("expectedVersion",1)),200).path("state").asText()).isEqualTo("IN_PROGRESS");
+            b06Call(http,base,tokens.get("worker"),"POST","/"+id+"/resolve",
+                    json.writeValueAsString(Map.of("expectedVersion",1,"resolution","stale")),409);
+            assertThat(b06Call(http,base,tokens.get("worker"),"POST","/"+id+"/resolve",
+                    json.writeValueAsString(Map.of("expectedVersion",2,"resolution","B06 fixed")),200)
+                    .path("state").asText()).isEqualTo("RESOLVED");
+            b06Call(http,base,tokens.get("worker"),"POST","/"+id+"/confirm",
+                    json.writeValueAsString(Map.of("expectedVersion",3)),403);
+            JsonNode confirmed=b06Call(http,base,tokens.get("employee"),"POST","/"+id+"/confirm",
+                    json.writeValueAsString(Map.of("expectedVersion",3)),200);
+            assertThat(confirmed.path("state").asText()).isEqualTo("CONFIRMED");
+            assertThat(confirmed.path("version").asLong()).isEqualTo(4);
+            JsonNode history=b06Call(http,base,tokens.get("employee"),"GET","/"+id+"/history",null,200);
+            assertThat(history.size()).isEqualTo(4);
+            assertThat(history.get(3).path("version").asLong()).isEqualTo(4);
+            b06Call(http,base,tokens.get("foreign"),"GET","/"+id+"/history",null,404);
+            try(var c=admin();var s=c.prepareStatement(
+                    "SELECT requester_id,assignee_id FROM "+schema+".helpdesk_requests WHERE request_id=?")) {
+                s.setObject(1,UUID.fromString(id));
+                try(var row=s.executeQuery()) {
+                    assertThat(row.next()).isTrue();
+                    assertThat(row.getString(1)).isEqualTo(ids.get("employee"));
+                    assertThat(row.getString(2)).isEqualTo(ids.get("worker"));
+                }
+            }
+            // A formerly assigned worker loses access immediately after active membership is revoked.
+            try(var c=admin();var s=c.prepareStatement(
+                    "UPDATE "+schema+".tenant_memberships SET active=false WHERE tenant_id='tenant-a' AND actor_id=?")) {
+                s.setString(1,ids.get("worker"));assertThat(s.executeUpdate()).isEqualTo(1);
+            }
+            b06Call(http,base,tokens.get("worker"),"GET","/"+id,null,404);
+            assertThat(b06Call(http,base,tokens.get("employee"),"GET","/"+id,null,200)
+                    .path("state").asText()).isEqualTo("CONFIRMED");
+        }
+    }
+
+    private JsonNode b06Call(HttpClient http,String base,String bearer,String method,
+            String suffix,String body,int expectedStatus) throws Exception {
+        var request=HttpRequest.newBuilder(URI.create(base+API+suffix));
+        if(bearer!=null) request.header("Authorization","Bearer "+bearer);
+        if(body!=null) request.header("Content-Type","application/json");
+        request.method(method,body==null?HttpRequest.BodyPublishers.noBody():HttpRequest.BodyPublishers.ofString(body));
+        var response=http.send(request.build(),HttpResponse.BodyHandlers.ofString());
+        // Fail without logging raw access tokens or possibly private response payloads.
+        assertThat(response.statusCode()).as("B06 %s %s",method,suffix).isEqualTo(expectedStatus);
+        return json.readTree(response.body().isBlank()?"null":response.body());
+    }
+
     @Test void fullBootApplicationStartsAndServesGuardedRoutesOverHttp() throws Exception {
         try(var app=new SpringApplicationBuilder(com.tricore.dxos.DxosApplication.class).run(
                 "--server.address=127.0.0.1","--server.port=0","--spring.main.banner-mode=off",
@@ -510,7 +639,7 @@ class HelpdeskHttpPostgresTest {
             r.next();result.put(table,r.getString(1));
         } } return result;
     }
-    private Connection admin() throws SQLException { return DriverManager.getConnection(url,"helpdesk_test",""); }
+    private Connection admin() throws SQLException { String secret=System.getenv("HELPDESK_DISPOSABLE_PASSWORD"); return DriverManager.getConnection(url,"helpdesk_test",secret==null?"":secret); }
     private static String encode(String value) { return Base64.getUrlEncoder().withoutPadding().encodeToString(value.getBytes(StandardCharsets.UTF_8)); }
     private static void sql(Connection c,String sql) throws SQLException { try(var s=c.createStatement()) { s.execute(sql); } }
     private static long number(Connection c,String sql) throws SQLException { try(var s=c.createStatement();var r=s.executeQuery(sql)) { r.next();return r.getLong(1); } }
