@@ -1,26 +1,26 @@
-# Cài đặt và kiểm tra DX-OS (Windows / phát triển cục bộ)
+# DX-OS Installation and Verification Guide (Windows / Local Development)
 
-> **Phạm vi tài liệu — 2026-10-25:** Trên `main` có Backend modular monolith và các tài liệu Core. **Frontend React/Vite đang nằm trong Draft [PR #51](https://github.com/lexuanbao258-collab/dxos-open-core/pull/51), chưa được merge**; Helpdesk API tích hợp và B06 E2E đang ở Draft [PR #63](https://github.com/lexuanbao258-collab/dxos-open-core/pull/63), còn phụ thuộc Draft [PR #58](https://github.com/lexuanbao258-collab/dxos-open-core/pull/58). Các bước dưới đây **không** khẳng định tích hợp LIVE hay demo end-to-end đã PASS.
+> **Documentation checkpoint — October 25, 2026:** The `main` branch contains the modular-monolith Backend and Core documentation. The React/Vite Frontend is in unmerged [Draft PR #51](https://github.com/lexuanbao258-collab/dxos-open-core/pull/51). The integrated Helpdesk API and B06 E2E test candidate are in unmerged [Draft PR #63](https://github.com/lexuanbao258-collab/dxos-open-core/pull/63), which also depends on [Draft PR #58](https://github.com/lexuanbao258-collab/dxos-open-core/pull/58). **None of the steps below establishes that LIVE integration or full end-to-end acceptance has passed.**
 
-## Yêu cầu công cụ
+## Prerequisites
 
-- **Git**, **PowerShell** trên Windows.
-- **Java JDK 21** cho Backend; có `JAVA_HOME` hợp lệ. Dùng Gradle Wrapper trong `backend/`, không cần Gradle toàn cục.
-- **Node.js >=22.12.0** và npm **chỉ khi thử Portal ở PR #51** (xem `frontend/package.json` trên branch PR).
-- **Docker** chỉ khi cần kiểm thử PostgreSQL local; Docker Compose được sử dụng cho cấu hình hạ tầng local đã có.
-- Với test **B06**: Keycloak local thực ở `http://localhost:8180/realms/tricore`, access token hợp lệ từ các tài khoản thử nghiệm được cấp phát riêng, PostgreSQL 18 disposable, và xác nhận của người vận hành. Không dùng token giả để thay thế E2E này.
+- **Git** and **PowerShell** on Windows.
+- **Java JDK 21** with a valid `JAVA_HOME` for the Backend. Use the Gradle Wrapper under `backend/`; no global Gradle installation is required.
+- **Node.js >= 22.12.0** and npm **only if previewing the Portal in PR #51** (see that branch's `frontend/package.json`).
+- **Docker** when running local PostgreSQL verification; the existing Docker Compose configuration is only for its documented local infrastructure.
+- **For B06 only:** actual local Keycloak at `http://localhost:8180/realms/tricore`, valid short-lived access tokens from separately provisioned test accounts, an isolated disposable PostgreSQL 18 database, and an authorized operator. Do not substitute mock or locally forged JWTs for real-provider E2E verification.
 
-Không cần cung cấp mật khẩu để đọc mã nguồn hay chạy phần lớn unit tests. Không gửi secret, `.env` thật, JWT hoặc CA/private key lên Git.
+You do not need to supply passwords to read the source or run most unit tests. Never commit real `.env` files, JWTs, credentials, private keys, or certificates.
 
-## 1. Lấy mã nguồn và kiểm tra Backend trên `main`
+## 1. Clone the repository and verify the Backend on main
 
-Trong PowerShell, có thể clone dưới ổ D: như ví dụ sau, hoặc chọn thư mục riêng:
+In PowerShell, use `D:\olp` or a different directory you control:
 
 ```powershell
 Set-Location D:\olp
 git clone https://github.com/lexuanbao258-collab/dxos-open-core.git
 Set-Location .\dxos-open-core\backend
-$env:JAVA_HOME = 'C:\Program Files\Java\jdk-21.0.11' # đổi nếu JDK 21 đặt ở nơi khác
+$env:JAVA_HOME = 'C:\Program Files\Java\jdk-21.0.11' # Adjust for your own JDK 21 installation
 $env:Path = "$env:JAVA_HOME\bin;$env:Path"
 java -version
 .\gradlew.bat --version
@@ -28,28 +28,28 @@ java -version
 .\gradlew.bat build
 ```
 
-Các lệnh trên dùng **commit bạn thực sự checkout**; chưa chạy ở thời điểm viết tài liệu này, vì vậy không có PASS mới được công bố. Một số integration tests chỉ chạy khi cung cấp đúng môi trường hoặc có thể skip theo gate. Xem [backend/README.md](../backend/README.md) để biết lệnh kiểm chứng cụ thể và giới hạn mỗi suite.
+These commands test **the commit you actually checked out**. They were not executed as part of this documentation change, so this guide does not report any new PASS results. Some integration suites need their own environment gates and may be skipped without the required infrastructure. Consult the [Backend README](../backend/README.md) for supported commands and each test suite's limitations.
 
-**Không** tự bật `dxos.helpdesk.enabled` trên `main` để thử các endpoint PR #63. `GET /api/v1/health` chỉ kiểm tra sức khỏe cơ bản, không chứng minh phân quyền, Workflow hoặc persistence đã nghiệm thu.
+Do **not** enable `dxos.helpdesk.enabled` on `main` expecting endpoints from unmerged PR #63. A successful `GET /api/v1/health` response proves only basic health; it does not prove Workflow persistence or live authorization.
 
-## 2. Cơ sở dữ liệu local: hai mục đích khác nhau
+## 2. Local PostgreSQL: two different purposes
 
-### A. Kiểm thử Workflow có thể tái lập (nên ưu tiên)
+### A. Reproducible, disposable Workflow verification (preferred)
 
-Từ `backend/`, sau khi đã cài **Docker, JDK 21 và OpenSSL đi cùng Git for Windows**:
+From `backend/`, after installing **Docker, JDK 21, and OpenSSL from Git for Windows**:
 
 ```powershell
 powershell.exe -NoProfile -File ..\scripts\workflow-verify-local.ps1
 if ($LASTEXITCODE -ne 0) { throw 'Local verification failed' }
 ```
 
-Script hiện có được tài liệu Backend mô tả là tạo **PostgreSQL 17.11 disposable trên loopback**, thực thi bộ kiểm thử được phê duyệt và dọn các tài nguyên riêng sau đó. **Đọc mã script trước khi chạy** và chỉ chạy khi Docker local thuộc quyền quản lý của bạn. Đây **không phải** B06 real Keycloak.
+The existing Backend documentation describes this launcher as creating **disposable PostgreSQL 17.11 on loopback**, running its defined verification suite, and cleaning up only resources it owns. **Inspect the script before running it**, and use only a local Docker daemon you control. This is **not** the real-Keycloak B06 suite.
 
-### B. Muốn giữ database để phát triển và restart
+### B. Persistent local database for development and restart checks
 
-`infra/compose.workflow-postgres.yml` định nghĩa **PostgreSQL 17.11**, container bind `127.0.0.1:55425`, tên database và login `workflow_test`, cùng **named volume lưu dữ liệu**.
+`infra/compose.workflow-postgres.yml` defines **PostgreSQL 17.11**, published on `127.0.0.1:55425`, with database/user `workflow_test` and a **named data volume**.
 
-Từ thư mục `backend/`, **chỉ trên Docker local do bạn sở hữu**:
+From `backend/`, **only on your own local Docker daemon**:
 
 ```powershell
 $localDb = Get-Credential -UserName workflow_test -Message 'Local PostgreSQL credentials'
@@ -57,13 +57,15 @@ $env:WORKFLOW_LOCAL_DB_PASSWORD = $localDb.GetNetworkCredential().Password
 docker compose -f ..\infra\compose.workflow-postgres.yml up -d --wait
 ```
 
-**Chỉ chạy Compose chưa đủ** để cài đầy đủ schema, role runtime, migration, seed, Request business tables và Portal. Làm theo phần [“Chạy backend local từ clone mới”](../backend/README.md#chạy-backend-local-từ-clone-mới) cho volume **mới**, quyền tối thiểu và đúng thứ tự. Dừng Compose thông thường giữ dữ liệu; không sử dụng `down -v` khi còn cần volume, không tự chạy lại migrations/smoke với run ID đã dùng.
+**Starting Compose is not enough** to provision the application schema, a separate runtime role, migrations/seed data, Request business tables, or a Portal integration. Follow the [Backend README](../backend/README.md) instructions for starting the Backend from a fresh clone with a **new** local volume, least-privilege setup, and the approved order of operations. Do not assume these commands can safely be repeated against a populated volume.
 
-Tất cả lệnh provisioning, Flyway, role/ACL, sửa schema có dữ liệu, hoặc smoke ghi vào shared/staging/production đều **nằm ngoài hướng dẫn nhanh này** và cần phê duyệt riêng. Không dùng mặc định Supabase cloud.
+Stopping Compose normally preserves the volume. Avoid `down -v` while that data is needed, and never blindly replay a migration or smoke test using an existing run ID.
 
-## 3. Chạy thử Portal của Ánh — **chỉ mock/development**
+Provisioning commands, Flyway changes, role/ACL operations, data-bearing schema changes, and write-capable smoke tests against **shared, staging, or production** infrastructure are **out of scope** and require separate explicit authorization. Do not default to cloud Supabase credentials.
 
-Frontend nằm trong **nhánh `feature/issue39-portal-ui` / Draft PR #51**, không tồn tại trên `main` tại checkpoint này. **Clone ra thư mục riêng** để tránh thay đổi Backend đang làm:
+## 3. Preview the Frontend Portal from Draft PR #51 — mock/development only
+
+The Frontend currently resides in `feature/issue39-portal-ui` / Draft PR #51 and is **not on main** at this checkpoint. Clone into a **separate directory** to avoid changing any ongoing Backend work:
 
 ```powershell
 Set-Location D:\olp
@@ -74,9 +76,9 @@ npm.cmd ci
 npm.cmd run dev
 ```
 
-Truy cập `http://127.0.0.1:5173/session` nếu Vite hiển thị cổng mặc định đó; nếu không, dùng địa chỉ mà terminal in ra.
+Open `http://127.0.0.1:5173/session` if Vite reports its default port; otherwise use the URL displayed in your terminal.
 
-Build và test tùy chọn:
+Optional build and test commands:
 
 ```powershell
 npm.cmd run build
@@ -86,22 +88,22 @@ npm.cmd run test:smoke
 npm.cmd run check:security
 ```
 
-Xem [Frontend README trên nhánh của Ánh](https://github.com/lexuanbao258-collab/dxos-open-core/blob/feature/issue39-portal-ui/frontend/README.md) và [mock demo guide](https://github.com/lexuanbao258-collab/dxos-open-core/blob/feature/issue39-portal-ui/frontend/DEMO_GUIDE.md). Demo dùng fixtures / `MockRequestService`; không đòi Backend. `HttpApiClient` hiện chặn LIVE, và UI giả lập 401/403 không chứng minh API thật đã được kiểm quyền.
+See the [Frontend README on the Portal branch](https://github.com/lexuanbao258-collab/dxos-open-core/blob/feature/issue39-portal-ui/frontend/README.md) and its [mock demo guide](https://github.com/lexuanbao258-collab/dxos-open-core/blob/feature/issue39-portal-ui/frontend/DEMO_GUIDE.md). This demo uses synthetic fixtures and `MockRequestService`; the Backend is not required. `HttpApiClient` currently blocks LIVE calls. Simulated UI responses for 401/403 do not demonstrate actual Backend authorization.
 
-## 4. Backend Helpdesk và B06 — **candidate, chưa phải hướng dẫn production**
+## 4. Integrated Helpdesk Backend and B06 — test candidate, not a production runbook
 
-[PR #63](https://github.com/lexuanbao258-collab/dxos-open-core/pull/63) chứa 9 route Helpdesk riêng theo prefix `/api/v1/mvp/requests`, với DTO `requestType=IT_HELPDESK`, `state`, `requesterId`, `assigneeId`, `version`, `assignmentVersion`, `allowedActions`, `{items,nextCursor}` và một số trường detail tùy quyền. Chúng **chưa có trên main** ở checkpoint này.
+[PR #63](https://github.com/lexuanbao258-collab/dxos-open-core/pull/63) proposes nine Helpdesk routes under `/api/v1/mvp/requests`. Its HTTP contract includes `requestType=IT_HELPDESK`, `state`, `requesterId`, `assigneeId`, `version`, `assignmentVersion`, `allowedActions`, the list envelope `{items,nextCursor}`, and some access-controlled optional detail fields. **These endpoints are not available on main** at this checkpoint.
 
-Để Yến hoặc người vận hành được cấp quyền chạy focused **real Keycloak → HTTP → PostgreSQL 18** test candidate, đọc [B06 run guide tại HEAD ghi nhận](https://github.com/lexuanbao258-collab/dxos-open-core/blob/e12d105c89400a5fd69dd6cc1fca670ff1f04f51/docs/evidence/issue53-b06-real-keycloak-helpdesk-e2e.md). Chỉ thực thi trên checkout **đúng HEAD của PR #63 lúc chạy**, với bốn access token từ Keycloak thực được giữ kín trong **process environment**, và database disposable do launcher tạo. Không tái sử dụng cơ sở dữ liệu hay token từ test khác.
+An authorized operator running the focused **real Keycloak → HTTP → disposable PostgreSQL 18** candidate must first read the [B06 run guide at the recorded candidate HEAD](https://github.com/lexuanbao258-collab/dxos-open-core/blob/e12d105c89400a5fd69dd6cc1fca670ff1f04f51/docs/evidence/issue53-b06-real-keycloak-helpdesk-e2e.md). Execute only at the **exact current PR #63 HEAD** being verified. The four real Keycloak tokens must stay in the operator's **process environment**, and the database must be created by the isolated launcher. Never reuse an unrelated database or a token from another test.
 
-**Không ghi B06 PASS** cho đến khi có báo cáo test ở cùng HEAD với phiên bản/command, PASS/FAIL/SKIP và trạng thái cleanup. Trước đó, chỉ có evidence độc lập 2 + 28 test HTTP/PostgreSQL tại HEAD **cũ** `a3bf42e`.
+**Do not report B06 PASS** until there is an independently executed report for the same HEAD, documenting environment, command, PASS/FAIL/SKIP, and disposable cleanup. The previously independent 2 Configuration + 28 Helpdesk HTTP/PostgreSQL tests applied only to the **older** HEAD `a3bf42e`.
 
-## 5. Sau khi cài đặt, kiểm tra gì?
+## 5. Verification checklist
 
-- Lưu **SHA** của checkout: `git rev-parse HEAD`.
-- Phân biệt `main`, branch Frontend mock, branch Backend candidate.
-- Ghi lại môi trường, lệnh chạy, lỗi/skip và URL local; không in secrets.
-- Không suy từ việc mở được trang React hoặc health JSON rằng hệ thống **SSO → Gateway → Helpdesk → PostgreSQL** đã thông suốt.
-- Nếu có lỗi security thật, đọc [SECURITY.md](../SECURITY.md). Nếu muốn đóng góp sửa lỗi, đọc [CONTRIBUTING.md](../CONTRIBUTING.md).
+- Record the exact checked-out SHA: `git rev-parse HEAD`.
+- Keep `main`, Frontend mock, and Backend candidate branches distinct.
+- Record operating environment, executed commands, failure/skip counts, and local URLs, with all secrets redacted.
+- Never infer that **SSO → Gateway → Helpdesk → PostgreSQL** works merely because React opens or a health endpoint returns JSON.
+- For sensitive findings, follow [SECURITY.md](../SECURITY.md). For contributions and review expectations, follow [CONTRIBUTING.md](../CONTRIBUTING.md).
 
-**Lưu ý phiên bản:** Không dùng `docker compose up` tại root với kỳ vọng tự khởi chạy toàn bộ Frontend + Backend + Keycloak; repo ở checkpoint này chưa có một Compose stack thống nhất được nghiệm thu cho luồng đó.
+**Deployment limitation:** Running `docker compose up` at repository root is **not** an accepted one-command full-stack deployment for Frontend + Backend + Keycloak. This repository does not yet contain an independently accepted complete stack for that path.

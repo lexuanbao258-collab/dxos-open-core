@@ -1,74 +1,79 @@
-# Hướng dẫn demo DX-OS — OLP 2026
+# DX-OS Demonstration Guide — OLP 2026
 
-> **Hai chế độ, hai loại bằng chứng:** (A) Portal React **MOCK/DEVELOPMENT** trong [Draft PR #51](https://github.com/lexuanbao258-collab/dxos-open-core/pull/51); (B) Backend IT Helpdesk + real Keycloak/PostgreSQL **E2E CANDIDATE** trong [Draft PR #63](https://github.com/lexuanbao258-collab/dxos-open-core/pull/63). Không trình bày (A) như đã xác nhận (B). Các PR này chưa được merge vào `main` tại checkpoint 2026-10-25.
+> **Two demonstrations, two evidence levels:** (A) a **MOCK/DEVELOPMENT** React Portal in unmerged [Draft PR #51](https://github.com/lexuanbao258-collab/dxos-open-core/pull/51); (B) a **REAL-PROVIDER E2E TEST CANDIDATE** for the Helpdesk Backend with Keycloak and PostgreSQL in unmerged [Draft PR #63](https://github.com/lexuanbao258-collab/dxos-open-core/pull/63). Do **not** represent (A) as proof of (B). Neither PR had merged into `main` at the October 25, 2026 documentation checkpoint.
 
-## 1. Mục tiêu buổi demo
+## 1. Demonstration objectives
 
-Giải thích DX-OS dùng các capability tái sử dụng (Identity, Gateway, Workflow, Data) cho quản lý yêu cầu nội bộ. Scenario thực tế gần nhất để nghiệm thu là **IT Helpdesk**: nhân viên gửi phiếu, người điều phối phân công, nhân viên xử lý, người gửi xác nhận; toàn bộ lịch sử/phiên bản phải nhất quán. Scenario **Facility** là kịch bản UI mock để chứng minh khả năng dùng chung thành phần Portal, **chưa có evidence Backend E2E tương đương**.
+Explain how DX-OS provides reusable **Identity, Gateway, Workflow, and Data** capabilities for internal service applications.
 
-Phân biệt:
-- **Core:** cơ chế chung, không định nghĩa quy tắc IT/Facility.
-- **Application:** quyết định role/eligibility, trạng thái nghiệp vụ, điều kiện chuyển.
-- **Portal:** hiển thị và gửi yêu cầu theo hợp đồng HTTP được Backend xác nhận; UI không tự cấp quyền.
-- **Bằng chứng:** chỉ tính PASS nếu có exact SHA, test environment và kết quả test không bị skip.
+The primary Backend acceptance scenario is **IT Helpdesk**: a requester submits a ticket, a coordinator triages and assigns it, an assigned worker processes it, and the requester confirms resolution. State versions and history must stay consistent.
 
-## 2. Demo A: Portal mock có thể chạy độc lập
+**Facility Request** currently illustrates **UI component reuse through mock fixtures** in the Portal branch. It does **not** yet have equivalent real Backend E2E evidence.
 
-Lấy branch PR #51 và khởi động như [installation guide](installation.md#3-chạy-thử-portal-của-ánh--chỉ-mockdevelopment). Theo [frontend/DEMO_GUIDE.md tại PR #51](https://github.com/lexuanbao258-collab/dxos-open-core/blob/feature/issue39-portal-ui/frontend/DEMO_GUIDE.md):
+Keep these responsibilities distinct:
 
-1. Mở `/session`, đăng nhập **phiên demo** bằng fixture nhân viên (không phải SSO).
-2. Mở Dashboard, Requests và New Request; thử form trống để thể hiện validation; tạo một phiếu **Hỗ trợ CNTT**.
-3. Đổi qua vai trò **người xử lý giả lập**, mở phiếu, duyệt/bắt đầu/hoàn thành; trở về vai trò người gửi để xác nhận.
-4. Hiển thị Timeline, tìm kiếm/filter, pagination, empty/loading, network failure, 401/403/404 giả lập và lỗi `COMMIT_OUTCOME_UNKNOWN` theo hướng dẫn của Ánh.
-5. Tạo và quan sát scenario **Cơ sở vật chất** bằng cùng thành phần giao diện; không suy ra Backend Workflow đã dùng chung thật.
-6. Vào `/integration`, trình bày trạng thái chặn LIVE. **Không** khoe hành vi mock như bằng chứng thực thi ACL, JWT, transaction hoặc provider.
+- **Core:** generic capabilities, not IT/Facility-specific business rules.
+- **Application:** domain roles, actor eligibility, business states, and transition conditions.
+- **Portal:** displays information and invokes reviewed HTTP contracts; it does not decide real authorization.
+- **Evidence:** a PASS claim requires an exact commit SHA, recorded environment, executed tests, and no relevant skipped assertions.
 
-Mọi hình ảnh từ nhánh Portal phải ghi nguồn `docs/evidence/issue39-portal/` và HEAD của PR #51. Không sử dụng fixtures nhân sự làm thông tin người thật.
+## 2. Demo A: Standalone Portal — mock/development
 
-## 3. Demo B: IT Helpdesk Backend candidate — chỉ sau khi B06 được kiểm chứng
+Follow [Installation Guide, section 3](installation.md) to check out Draft PR #51 and start the Portal. Use the branch's [Frontend Demo Guide](https://github.com/lexuanbao258-collab/dxos-open-core/blob/feature/issue39-portal-ui/frontend/DEMO_GUIDE.md) as the source for exact UI flows:
 
-Luồng **candidate** trong [PR #63](https://github.com/lexuanbao258-collab/dxos-open-core/pull/63) gồm **9 nhóm API**, dùng `/api/v1/mvp/requests`:
+1. Open `/session` and enter a **simulated employee session**, which is **not real SSO**.
+2. Open Dashboard, Requests, and New Request. Submit an empty form to demonstrate validation, then create an **IT Support** mock request.
+3. Switch to the **simulated handler** role. Open the same request and demonstrate review/start/resolve; switch back to the requester role for confirmation.
+4. Display the timeline, search/filter, pagination, empty/loading states, mock network errors, mock 401/403/404 states, and the simulated `COMMIT_OUTCOME_UNKNOWN` behavior according to the Frontend guide.
+5. Create a **Facility Request** using the shared UI components and view model. Do not claim this proves shared Backend Workflow execution.
+6. Open `/integration` and show the **LIVE_BLOCKED** state. Mock behavior is **not** proof of real ACL, JWT authentication, database transactions, or provider integration.
 
-| Giai đoạn | HTTP | Actor hợp lệ | Kết quả mong đợi |
+Screenshots from the Portal branch should reference `docs/evidence/issue39-portal/` and the exact PR #51 HEAD. Demo fixture names are not verified real identities.
+
+## 3. Demo B: IT Helpdesk Backend candidate — only after B06 verification
+
+[Draft PR #63](https://github.com/lexuanbao258-collab/dxos-open-core/pull/63) proposes **nine HTTP route families** under `/api/v1/mvp/requests`:
+
+| Step | HTTP | Authorized actor | Expected result |
 | --- | --- | --- | --- |
-| 1. Create | `POST /` | Requester | `SUBMITTED`, `requesterId` canonical |
-| 2. List | `GET /` | Người có quyền xem | `{items,nextCursor}` theo ACL |
-| 3. Detail | `GET /{id}` | Người có quyền xem | `state`, phiên bản, `allowedActions` |
+| 1. Create | `POST /` | Requester | `SUBMITTED`, canonical `requesterId` |
+| 2. List | `GET /` | Caller authorized to read | `{items,nextCursor}` filtered by ACL |
+| 3. Detail | `GET /{id}` | Caller authorized to read | `state`, versions, `allowedActions` |
 | 4. Triage | `POST /{id}/triage` | Coordinator | `TRIAGED` |
-| 5. Assign | `POST /{id}/assign` | Coordinator | `assigneeId`, `assignmentVersion` tăng |
-| 6. Start | `POST /{id}/start` | Assignee | `IN_PROGRESS` |
-| 7. Resolve | `POST /{id}/resolve` | Assignee | `RESOLVED` |
+| 5. Assign | `POST /{id}/assign` | Coordinator | Updated `assigneeId` and `assignmentVersion` |
+| 6. Start | `POST /{id}/start` | Assigned worker | `IN_PROGRESS` |
+| 7. Resolve | `POST /{id}/resolve` | Assigned worker | `RESOLVED` |
 | 8. Confirm | `POST /{id}/confirm` | Requester | `CONFIRMED` |
-| 9. History | `GET /{id}/history` | Người có quyền xem | Bốn Workflow transitions, version nhất quán |
+| 9. History | `GET /{id}/history` | Caller authorized to read | Four Workflow transition records, consistent versions |
 
-**Không** thêm bước `CLOSED` như đã chạy Backend: đây là trạng thái cuối **CONFIRMED** của candidate IT Helpdesk hiện có. Không đưa phiên bản endpoint `/api/v1/requests` cũ của Request prototype thành hợp đồng Helpdesk mới. Không tự tạo `displayName`/actor/timeline notes/attachments từ Frontend.
+Do **not** invent an implemented `CLOSED` step: the current IT Helpdesk candidate ends at **CONFIRMED**. Do not confuse the older Request prototype under `/api/v1/requests` with the Helpdesk candidate contract. Do not fabricate `displayName`, actor labels, timeline notes, or attachment support in the Portal.
 
-Phân quyền cần có negative evidence: anonymous/tampered token `401`; denied action `403`; hidden/cross-tenant request `404`; stale assignment/Workflow version `409`; worker bị revoke không còn được thực hiện việc của phiếu; unknown commit **không auto-retry**. Chỉ nói **PASS** nếu test có báo cáo thực tế tại HEAD tương ứng.
+Essential negative-security evidence includes: anonymous or signature-tampered tokens returning `401`; prohibited operations `403`; hidden/cross-tenant resource responses `404`; stale assignment or Workflow versions `409`; eligibility revocation; and no automatic retry after an unknown commit outcome. Report a case as **PASS** only when its test has actually run on the relevant HEAD.
 
-**B06** kiểm tra token Keycloak thực, JWT issuer+subject canonical, 9 route HTTP và PostgreSQL disposable. Script candidate và hướng dẫn nằm tại [B06 run guide](https://github.com/lexuanbao258-collab/dxos-open-core/blob/e12d105c89400a5fd69dd6cc1fca670ff1f04f51/docs/evidence/issue53-b06-real-keycloak-helpdesk-e2e.md). Chưa có bằng chứng độc lập B06 PASS tại thời điểm viết.
+The [B06 candidate guide](https://github.com/lexuanbao258-collab/dxos-open-core/blob/e12d105c89400a5fd69dd6cc1fca670ff1f04f51/docs/evidence/issue53-b06-real-keycloak-helpdesk-e2e.md) documents real Keycloak access tokens, canonical JWT issuer+subject identity, nine HTTP routes, and disposable PostgreSQL. **No independent B06 PASS evidence had been obtained as of this documentation checkpoint.**
 
-## 4. Khi nào trình diễn Portal kết nối thật?
+## 4. Requirements before presenting real Portal-to-Backend integration
 
-Chỉ sau khi nhóm xác nhận bằng chứng trên cùng **integration HEAD**:
+All evidence must refer to the **same accepted integration HEAD**:
 
-- Yến: B05/B06 focused tests và xác minh [PR #58](https://github.com/lexuanbao258-collab/dxos-open-core/pull/58) SQL/rules/provisioning/runtime privilege; review các negative authorization cases.
-- Ánh: Portal HTTP Adapter/APP-11 sử dụng DTO thật, phân biệt `version` và `assignmentVersion`, giữ `eligibleAssignees` chỉ cho coordinator có quyền, không giả danh actor.
-- Bảo: đối chiếu kết quả giữa nhánh và bằng chứng, bảo toàn dữ liệu/Workflow history; kiểm tra script cài đặt, không dùng staging hoặc LIVE khi chưa được duyệt.
-- Compliance/giấy phép: đánh giá riêng [Issue #38](https://github.com/lexuanbao258-collab/dxos-open-core/issues/38); không tuyên bố đã vượt cổng bản quyền khi chưa có review.
+- **Yến — Identity/Security:** independently verify focused B05/B06 tests, [PR #58](https://github.com/lexuanbao258-collab/dxos-open-core/pull/58) guarded SQL, provisioning and runtime privileges, plus negative authorization cases.
+- **Ánh — Portal/Data:** review APP-11 and HTTP Adapter against the actual DTO, keep `version` distinct from `assignmentVersion`, show `eligibleAssignees` only where authorized, and do not use client-generated actor identity as an authority.
+- **Bảo — Backend/integration:** reconcile test evidence across branches and exact SHAs, verify Workflow/history consistency, ensure repeatable safe setup, and do not enable staging/LIVE without accepted gates.
+- **License/compliance:** evaluate [Issue #38](https://github.com/lexuanbao258-collab/dxos-open-core/issues/38) separately; do not claim license or copyright acceptance before the relevant review is complete.
 
-**Trạng thái hiện tại: `DRAFT / LIVE_BLOCKED`.** Không gắn chữ “hoàn thành E2E”, “production-ready” hoặc “released” lên README/video trước khi có evidence và sign-off.
+**Current checkpoint: `DRAFT / LIVE_BLOCKED`.** Do not label README screenshots, videos, or release notes as “E2E complete”, “production-ready”, or “released” before actual independently checked evidence and sign-off.
 
-## 5. Mẫu biên bản nghiệm thu / cập nhật sau B06
+## 5. Evidence template for the eventual B06/Portal acceptance review
 
-| Trường | Ghi kết quả có chứng cứ |
+| Field | Evidence to record |
 | --- | --- |
-| PR / integration HEAD SHA | Chưa nghiệm thu |
-| Ngày giờ, người vận hành, OS, JDK, PG, Keycloak | Chưa ghi |
-| Test command và môi trường disposable | Chưa ghi |
-| JUnit B05/B06 PASS / FAIL / SKIP | B06 chưa được xác nhận |
-| Golden Path và các negative tests | Chưa nghiệm thu E2E |
-| Portal HTTP integration / screenshot thật | Chưa nghiệm thu |
-| Privilege audit / provisioning / migration gate | Chưa nghiệm thu |
-| Quyết định của reviewer | LIVE_BLOCKED |
+| PR and exact integration HEAD SHA | Pending verification |
+| Run date, operator, OS, JDK, PostgreSQL, Keycloak | Not recorded |
+| Test commands, isolated disposable environment | Not recorded |
+| Focused B05/B06 JUnit PASS / FAIL / SKIP | B06 not yet independently confirmed |
+| Golden Path and key negative authorization cases | E2E acceptance pending |
+| Real Portal HTTP integration and captured screenshots | Pending |
+| Runtime privilege, provisioning, and migration gates | Pending |
+| Independent reviewer decision | LIVE_BLOCKED |
 
-Điền bằng chứng thật, link PR comment/CI log đã che secrets, người review và exact SHA vào bảng này sau nghiệm thu; không điền số dự đoán.
+Complete this table only after the relevant tests have run, with redacted CI logs/PR comments, the reviewer, and the exact SHA. **Never enter estimated PASS counts.**
