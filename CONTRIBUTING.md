@@ -31,6 +31,12 @@ Some PostgreSQL/Keycloak integration tests require separately provisioned **disp
 
 **Frontend (unmerged candidate):** the React/TypeScript/Vite Portal currently lives in [Draft PR #51](https://github.com/lexuanbao258-collab/dxos-open-core/pull/51), **not on `main`**. Consult its [frontend README](https://github.com/lexuanbao258-collab/dxos-open-core/blob/feature/issue39-portal-ui/frontend/README.md) and [mock demo guide](https://github.com/lexuanbao258-collab/dxos-open-core/blob/feature/issue39-portal-ui/frontend/DEMO_GUIDE.md) for branch-specific commands. Mock UI evidence is not real Backend/SSO evidence.
 
+## Repository language convention
+
+Use **English** for repository-facing documentation, changelogs, contribution and security policies, pull request and issue templates, and new review summaries so the project is consistent for international open-source readers. Preserve exact API identifiers, commands, URLs, technical terms, citation titles, legal text, and contributor names. The Portal may continue using **Vietnamese UI text** as a product localization choice; user-facing application language is separate from repository documentation language.
+
+Legacy documents that have not been translated yet must not be represented as English. Translate them in separately reviewed, documentation-only changes without silently modifying source behavior, test evidence, or security requirements.
+
 ## Pull request checklist
 
 - Link the Issue and identify the exact base branch, target HEAD, purpose, change scope, and exclusions.
