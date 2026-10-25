@@ -1,6 +1,7 @@
 package com.tricore.dxos.gateway.workflow.controller;
 
 import com.tricore.dxos.common.error.ApiError;
+import com.tricore.dxos.gateway.helpdesk.HelpdeskController;
 import com.tricore.dxos.application.authorization.WorkflowAccessException;
 import com.tricore.dxos.core.workflow.WorkflowErrorCode;
 import com.tricore.dxos.core.workflow.WorkflowException;
@@ -16,7 +17,7 @@ import org.springframework.web.method.annotation.HandlerMethodValidationExceptio
 import java.util.Map;
 import java.util.TreeMap;
 
-@RestControllerAdvice(assignableTypes = WorkflowController.class)
+@RestControllerAdvice(assignableTypes = {WorkflowController.class, HelpdeskController.class})
 public class WorkflowExceptionHandler {
     @ExceptionHandler(WorkflowException.class)
     public ResponseEntity<ApiError> workflow(WorkflowException exception) {
@@ -69,6 +70,11 @@ public class WorkflowExceptionHandler {
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ApiError> invalidBody() {
         return error(400, "INVALID_BODY", "JSON fields are not accepted by this endpoint", Map.of());
+    }
+
+    @ExceptionHandler(org.springframework.web.method.annotation.MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ApiError> invalidParameter() {
+        return error(400, "VALIDATION_FAILED", "Invalid request parameter", Map.of());
     }
 
     @ExceptionHandler(HttpMediaTypeNotSupportedException.class)

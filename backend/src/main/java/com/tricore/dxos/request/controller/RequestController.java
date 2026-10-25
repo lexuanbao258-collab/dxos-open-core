@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
+@org.springframework.boot.autoconfigure.condition.ConditionalOnProperty(name = "dxos.helpdesk.enabled", havingValue = "false", matchIfMissing = true)
 @RequestMapping("/api/v1/requests")
 public class RequestController {
     private final RequestService service;
