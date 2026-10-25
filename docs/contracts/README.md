@@ -1,6 +1,6 @@
 # Contracts
 
-Nơi lưu contract Core độc lập provider và contract API đã thống nhất.
-Các contract Core đã thống nhất và bản nháp Application được liệt kê bên dưới.
+Provider-neutral Core contracts and Application API contracts.
+The Application contract below remains a draft for review.
 
-- [Issue #53 — Hợp đồng nghiệp vụ/API MVP Internal Service Portal](issue-53-internal-service-portal-mvp.md) (DRAFT; tích hợp LIVE bị chặn).
+- [Issue #53 — Internal Service Portal MVP business/API contract](issue-53-internal-service-portal-mvp.md) (DRAFT / LIVE_BLOCKED; IT Helpdesk first).
