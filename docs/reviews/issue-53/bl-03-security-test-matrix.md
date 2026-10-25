@@ -55,7 +55,7 @@ Fixture invariants:
 | SEC-F02 | `RequestService.get()` loads by ID without observed resource authorization; IDOR/BOLA | BL03-T02, BL03-T03 | T03 directly tests hidden ID lookup; T02 tests the related operation-authority gate |
 | SEC-F03 | `RequestWorkflowService.history()` has no observed history-specific ACL guard; unauthorized history access | BL03-T04, BL03-T11 | Direct history access and protected timeline coverage |
 | SEC-F04 | Request assign/start/resolve/confirm/close paths lack observed actor-specific authorization; unauthorized business actions | BL03-T02, BL03-T07, BL03-T08, BL03-T09, BL03-T10 | T07–T08 directly test actor authorization; T02, T09–T10 are related gate/failure controls |
-| SEC-F05 | `RequestResponse.from()` lacks proposed D1/D2/D3 filtering; potential field disclosure, **not demonstrated D2/D3 leakage** | BL03-T06, BL03-T11 | Response filtering and related timeline projection |
+| SEC-F05 | `RequestResponse.from()` lacks proposed D1/D2/D3 filtering; potential field disclosure, **not demonstrated D2/D3 leakage** | BL03-T06, BL03-T11 | Inventory and classify actual payload fields before testing response and timeline projections |
 | SEC-F06 | History endpoint has no confirmed event visibility policy; unauthorized history visibility | BL03-T04, BL03-T11 | Direct history-policy coverage |
 | Cross-cutting | Verified authentication and uncertain commit outcome requirements; not additional Request source findings | BL03-T01, BL03-T12 | Integration and recovery requirements |
 
@@ -63,22 +63,22 @@ Source references: `backend/src/main/java/com/tricore/dxos/request/service/Reque
 
 ## 4. Security Test Matrix
 
-Initial status describes specification readiness or dependency, **not a test result**. Every row remains **NOT EXECUTED** until an evidence record proves execution. HTTP contracts labeled proposed below require review before acceptance.
+Security priority describes the importance of a control; execution readiness describes whether its prerequisites are approved and available. Neither is a test result. Every row remains **NOT EXECUTED** until evidence for that exact case and variant proves execution. HTTP contracts labeled proposed below require review before acceptance.
 
-| Test ID | Scenario | Expected Result | Test Level | Priority | Owner | Initial Status | Related Finding |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| BL03-T01 | Missing, invalid, expired or otherwise untrusted JWT | 401; no protected lookup result or side effect | Security filter integration | P0 | Yến | COVERAGE REVIEW | Cross-cutting |
-| BL03-T02 | Missing exact operation authority | Exact authority required; read authority and altered strings cannot grant transition | Authorization unit + HTTP integration | P0 | Yến | COVERAGE REVIEW | SEC-F02, SEC-F04 |
-| BL03-T03 | Hidden resource IDOR/BOLA | Hidden and nonexistent IDs yield indistinguishable 404 status/body | HTTP + persistence integration | P0 | Yến | BLOCKED | SEC-F02 |
-| BL03-T04 | Unauthorized history access | Visible forbidden HISTORY → 403; hidden HISTORY → 404 | HTTP + persistence integration | P0 | Yến | POLICY OPEN | SEC-F03, SEC-F06 |
-| BL03-T05 | Cross-tenant Request listing | ACL filters rows before pagination and counts | Repository/service + HTTP integration | P0 | Yến | BLOCKED | SEC-F01 |
-| BL03-T06 | D1/D2/D3 response filtering | D1-authorized consumer receives no unauthorized D2/D3 fields or values | DTO contract + HTTP integration | P0 | Yến | POLICY OPEN | SEC-F05 |
-| BL03-T07 | Unauthorized Request confirmation | Wrong actor denied; state, version, history and business facts unchanged | Service + persistence integration | P0 | Yến | POLICY OPEN | SEC-F04 |
-| BL03-T08 | Assignment revoked before write | Final authoritative write-boundary check prevents unauthorized commit | Transaction/race integration | P0 | Yến | BLOCKED | SEC-F04 |
-| BL03-T09 | Concurrent writes with stale expectedVersion | At most one successful state/history write; loser gets approved version conflict | PostgreSQL concurrency integration | P0 | Yến | BLOCKED | SEC-F04 |
-| BL03-T10 | Authorization backend unavailable | Fail closed; candidate Gateway bridge maps UNAVAILABLE to sanitized 503 | Policy fault + HTTP integration | P0 | Yến | COVERAGE REVIEW | SEC-F04 |
-| BL03-T11 | Protected history and timeline data leakage | No unauthorized internal/sensitive Workflow or business metadata | Projection contract + end-to-end | P0 | Yến/Ánh | POLICY OPEN | SEC-F03, SEC-F05, SEC-F06 |
-| BL03-T12 | COMMIT_OUTCOME_UNKNOWN reconciliation | No blind retry or false success; authorized reconciliation retains UNKNOWN if ambiguous | Fault injection + persistence integration | P0 | Yến/Bảo | BLOCKED | Cross-cutting |
+| Test ID | Scenario | Expected Result | Test Level | Security Priority | Owner | Execution Readiness | Execution Result | Related Finding |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| BL03-T01 | Missing, invalid, expired or otherwise untrusted JWT | 401; no protected lookup result or side effect | Security filter integration | P0 | Yến | COVERAGE REVIEW | NOT EXECUTED | Cross-cutting |
+| BL03-T02 | Missing exact operation authority | Exact authority required; read authority and altered strings cannot grant transition | Authorization unit + HTTP integration | P0 | Yến | COVERAGE REVIEW | NOT EXECUTED | SEC-F02, SEC-F04 |
+| BL03-T03 | Hidden resource IDOR/BOLA | Hidden and nonexistent IDs yield indistinguishable 404 status/body | HTTP + persistence integration | P0 | Yến | BLOCKED | NOT EXECUTED | SEC-F02 |
+| BL03-T04 | Unauthorized history access | Verified `workflow:read` plus approved resource/history ACL; visible forbidden HISTORY → 403, hidden HISTORY → 404 | HTTP + persistence integration | P0 | Yến | POLICY OPEN | NOT EXECUTED | SEC-F03, SEC-F06 |
+| BL03-T05 | Cross-tenant Request listing | Authoritative tenant/resource ACL filters every row; pagination and counts checked if approved | Repository/service + HTTP integration | P0 | Yến | BLOCKED | NOT EXECUTED | SEC-F01 |
+| BL03-T06 | Classified list/detail response projection | Inventory actual payloads and approve D1/D2/D3 field classes; then verify no unauthorized fields or values | DTO contract + HTTP integration | P0 | Yến | POLICY OPEN | NOT EXECUTED | SEC-F05 |
+| BL03-T07 | Unauthorized Request confirmation | Wrong actor denied under approved requester/owner/assignee policy; state, version, history and business facts unchanged | Service + persistence integration | P0 | Yến | POLICY OPEN | NOT EXECUTED | SEC-F04 |
+| BL03-T08 | Eligibility or ACL grant revoked before write; two independent variants | Each variant's final authoritative write-boundary check prevents unauthorized commit | Transaction/race integration | P0 | Yến | BLOCKED | NOT EXECUTED | SEC-F04 |
+| BL03-T09 | Concurrent writes with stale expectedVersion | At most one successful state/history write; loser gets approved version conflict | PostgreSQL concurrency integration | P0 | Yến | BLOCKED | NOT EXECUTED | SEC-F04 |
+| BL03-T10 | Authorization backend unavailable | Fail closed; candidate Gateway bridge maps UNAVAILABLE to sanitized 503 | Policy fault + HTTP integration | P0 | Yến | COVERAGE REVIEW | NOT EXECUTED | SEC-F04 |
+| BL03-T11 | Protected history and timeline projection | Inventory actual payloads and approve D1/D2/D3 event/field classes; then verify authorized projection | Projection contract + end-to-end | P0 | Yến/Ánh | POLICY OPEN | NOT EXECUTED | SEC-F03, SEC-F05, SEC-F06 |
+| BL03-T12 | COMMIT_OUTCOME_UNKNOWN reconciliation | Operation reference is no receipt or idempotency key; authorized reads retain UNKNOWN if unresolved | Fault injection + persistence integration | P0 | Yến/Bảo | BLOCKED | NOT EXECUTED | Cross-cutting |
 
 ## 5. Detailed Test Specifications
 
@@ -111,48 +111,48 @@ Initial status describes specification readiness or dependency, **not a test res
 
 ### BL03-T04 — Unauthorized history access
 
-- **Requirement / related finding:** SEC-F03 and SEC-F06; HISTORY needs resource and event visibility authorization.
-- **Preconditions / actor and fixture:** An authenticated actor has REQ_VISIBLE_DENIED visible but lacks HISTORY permission; REQ_HIDDEN is hidden. The precise history operation permission and event policy are **OPEN**.
-- **Steps:** Request history for both fixtures through the application endpoint; compare with an allowed history control after policy ratification.
+- **Requirement / related finding:** SEC-F03 and SEC-F06; HISTORY requires verified `workflow:read` and separately approved resource/history ACL and event visibility. No additional JWT history authority is assumed.
+- **Preconditions / actor and fixture:** Record the original requester, ACL resource owner, and assignee independently for REQ_VISIBLE_DENIED and REQ_HIDDEN. Give the test actor a verified principal and exact `workflow:read`; make REQ_VISIBLE_DENIED visible but history-forbidden by the approved ACL, and keep REQ_HIDDEN hidden. Resource/history and event policy remain **OPEN**.
+- **Steps:** Request history for both fixtures through the application endpoint; compare with an allowed control that has verified `workflow:read` and approved resource/history access after policy ratification.
 - **Expected HTTP / decision:** Visible-but-forbidden HISTORY → 403/FORBIDDEN; hidden HISTORY → 404/HIDDEN. The response contract is **PROPOSED** pending API approval.
 - **Disclosure / side effects:** Neither denial returns events, counts, actor IDs, transition labels, or metadata; reads produce no state/history writes.
-- **Level / required evidence:** HTTP and persistence integration; policy fixture, redacted response, authorized control, and no-write evidence. **Dependency:** approved history ACL and event visibility classification, integrated endpoint. **Status:** NOT EXECUTED.
+- **Level / required evidence:** HTTP and persistence integration; verified authority, distinct requester/owner/assignee fixture facts, resource/history policy decisions, redacted response, authorized control, and no-write evidence. **Dependency:** approved history ACL and event visibility classification, integrated endpoint. **Status:** NOT EXECUTED.
 
 ### BL03-T05 — Cross-tenant Request listing
 
-- **Requirement / related finding:** SEC-F01; list visibility comes from authoritative tenant/resource ACL before pagination and response counts.
-- **Preconditions / actor and fixture:** USER_A may read REQ_A1 but cannot read REQ_B1; include enough interleaved Tenant A/B records to expose post-pagination filtering. Current Request list API is unpaginated; paging/count behavior is a **PROPOSED** future API requirement.
-- **Steps:** List as USER_A across page boundaries or the approved equivalent; compare returned IDs, page size, total/count metadata, and ordering against an authoritative permitted-ID set. Repeat as USER_B.
-- **Expected HTTP / decision:** Authenticated successful list under approved contract; every included row is ACL-allowed, with filtering before limit/offset and counts. A denied row cannot consume a visible page slot or inflate a count.
-- **Disclosure / side effects:** No cross-tenant IDs, fields, metadata, or inferred counts; no writes.
-- **Level / required evidence:** Repository/service query test plus HTTP integration; fixture ACL, SQL/query or service trace, full paged responses and expected permitted set. **Dependency:** scoped list design, pagination/count contract, and production ACL provider. **Status:** NOT EXECUTED.
+- **Requirement / related finding:** SEC-F01; every returned Request must pass authoritative tenant and resource ACL filtering. If pagination/counts are approved, filter the permitted set before page selection and derived counts.
+- **Preconditions / actor and fixture:** USER_A may read REQ_A1 but cannot read REQ_B1; include both tenants and same-tenant resources with different ACL decisions. Current Request list API is unpaginated; pagination and counts remain **PROPOSED**, not a prerequisite for the mandatory list ACL test.
+- **Steps:** List as USER_A and USER_B; compare every returned ID and field with each actor's authoritative permitted set. Only for an approved paginated API, add interleaved permitted/denied records and compare pages, ordering, and count metadata against the filtered set.
+- **Expected HTTP / decision:** Every included row is tenant- and resource-ACL allowed under the approved list contract. If paging/counts exist, denied rows consume no visible page slot and inflate no count.
+- **Disclosure / side effects:** No unauthorized cross-tenant or same-tenant IDs, fields, metadata, or, if supplied, inferred counts; no writes.
+- **Level / required evidence:** Repository/service query test plus HTTP integration; fixture ACL, SQL/query or service trace, responses, and expected permitted set. Add page/count evidence only for an approved paginated API. **Dependency:** scoped list design and production ACL provider; page/count assertions additionally depend on an approved pagination contract. **Status:** NOT EXECUTED.
 
 ### BL03-T06 — D1/D2/D3 response filtering
 
-- **Requirement / related finding:** SEC-F05; output is an authorized projection of classified data, not a direct entity dump.
-- **Preconditions / actor and fixture:** Populate proposed D1_SAMPLE, D2_SAMPLE, and D3_SAMPLE in a future classified response fixture; USER_A has resource access and only D1 visibility. Field taxonomy, permissions, and DTO mapping are **OPEN**; the current Request DTO does not prove D2/D3 leakage.
-- **Steps:** Fetch detail and any approved list projection as USER_A; inspect serialized JSON, nested objects, metadata, error bodies, and logs. Compare with a separately authorized D2/D3 control only after policy approval.
+- **Requirement / related finding:** SEC-F05; list and detail output must follow an approved classification and authorized projection. The source finding identifies potential disclosure, not confirmed D2/D3 leakage.
+- **Preconditions / actor and fixture:** Inventory the actual serialized list and detail payloads, including nested fields and metadata, and obtain an approved D1/D2/D3 classification and visibility rule for every inventoried field. Only then populate classified sample markers and give USER_A resource access with D1 visibility. Inventory, taxonomy, permissions, and DTO mapping remain **OPEN**; the current Request DTO does not prove D2/D3 leakage.
+- **Steps:** Capture the actual list and detail payload shapes and approved field map first. Then fetch detail and list as USER_A; inspect serialized JSON, nested objects, metadata, and error bodies against the map. Compare with a separately authorized D2/D3 control only after policy approval.
 - **Expected HTTP / decision:** 200 for allowed D1 resource read under the **PROPOSED** contract; classification policy permits D1 and denies unauthorized D2/D3 exposure.
 - **Disclosure / side effects:** No unauthorized D2/D3 values **or fields**, including placeholders that reveal sensitive field presence; no writes.
-- **Level / required evidence:** DTO contract and HTTP serialization integration; classification map, fixture markers, exact redacted payloads, and reviewer comparison. **Dependency:** TRICORE D1/D2/D3 policy and authorized DTO contract. **Status:** NOT EXECUTED.
+- **Level / required evidence:** DTO contract and HTTP serialization integration; actual list/detail payload inventory, approved field classification and access map, fixture markers, exact redacted payloads, and reviewer comparison. **Dependency:** TRICORE D1/D2/D3 policy and authorized DTO contract. **Status:** NOT EXECUTED.
 
 ### BL03-T07 — Unauthorized Request confirmation
 
-- **Requirement / related finding:** SEC-F04; CONFIRM requires the approved actor-specific permission, not merely a valid transition state.
-- **Preconditions / actor and fixture:** REQ_A1 is RESOLVED with recorded state, version, history, requester, owner, assignee, and resolution. Use USER_B or UNRELATED_A as a wrong actor. The authoritative requester and facility-acceptance versus close policy are **OPEN**.
-- **Steps:** Submit CONFIRM as the wrong actor, then independently read Request and history using an authorized observer.
+- **Requirement / related finding:** SEC-F04; CONFIRM requires exact `workflow:transition` plus the approved resource and actor-specific permission, not merely a valid transition state or a requester/owner/assignee label.
+- **Preconditions / actor and fixture:** REQ_A1 is RESOLVED with recorded state, version, history, original requester, ACL resource owner, assignee, and resolution; derive and record those three actors independently. Give USER_B or UNRELATED_A verified `workflow:transition` but deny CONFIRM under the approved resource/actor policy. The authoritative actor sources and facility-acceptance versus close policy are **OPEN**.
+- **Steps:** Submit CONFIRM as the wrong actor, then independently read Request and history using an observer with verified `workflow:read` and approved resource/history ACL.
 - **Expected HTTP / decision:** FORBIDDEN with **proposed** 403 when visible, or HIDDEN/404 if the actor cannot see the resource; exact result follows the approved policy. No successful CONFIRM response.
 - **Disclosure / side effects:** Denial reveals no protected Request facts. State, version, history count/content, and business facts remain unchanged.
-- **Level / required evidence:** Service and persistence integration; actor/policy decision, response, and transactionally consistent before/after Request and history. **Dependency:** ratified CONFIRM actor policy and integrated authorization. **Status:** NOT EXECUTED.
+- **Level / required evidence:** Service and persistence integration; distinct requester/owner/assignee sources, verified authority, actor/resource policy decision, response, and transactionally consistent before/after Request and history from authorized reads. **Dependency:** ratified CONFIRM actor policy and integrated authorization. **Status:** NOT EXECUTED.
 
-### BL03-T08 — Assignment revoked before write
+### BL03-T08 — Eligibility or ACL grant revoked before write
 
-- **Requirement / related finding:** SEC-F04; authorization must survive the gap between an initial check and the final authoritative write boundary.
-- **Preconditions / actor and fixture:** TECH_A initially has an applicable assignment on REQ_A1. A controlled barrier pauses the transition after its preliminary allow decision; revoke the authoritative assignment before release. The final guard mechanism and revocation semantics are **OPEN**.
-- **Steps:** Start the transition, pause, revoke assignment in the authoritative ACL source, release the operation, then inspect Request, Workflow state/history, and authorization revision evidence.
-- **Expected HTTP / decision:** Final check denies the now-unauthorized operation; exact 403/409 response is **OPEN** pending the consistency contract, with no success acknowledgement.
-- **Disclosure / side effects:** No protected result or unauthorized commit; no Request/Workflow state, version, history, or business-fact change attributable to the denied write.
-- **Level / required evidence:** Transaction/race integration against authoritative ACL and persistence; deterministic barrier trace, revocation proof, final decision, response, and before/after state/history. **Dependency:** Bảo's final transaction guard and cross-boundary consistency design. **Status:** NOT EXECUTED.
+- **Requirement / related finding:** SEC-F04; a preliminary allow decision cannot authorize a write after its governing eligibility or ACL grant has been revoked. T08 remains one test ID with two independently specified variants; execute and record each separately.
+- **Variant A — Application assignment or business eligibility lost:** TECH_A starts with an approved Application assignment and is eligible for the transition. Pause after preliminary allow, remove the assignment or eligibility in its authoritative Application source, then release. The final write-boundary guard must re-evaluate that business fact and deny the write. Record the Application source, before/after assignment or eligibility, final decision, response, and Request/Workflow state, version, history, and business facts.
+- **Variant B — Authoritative ACL grant revoked:** Keep TECH_A's Application assignment and business eligibility intact, but initially grant the applicable resource/action permission in the authoritative ACL source. Pause after preliminary allow, revoke that ACL grant, then release. The final write-boundary guard must use the revoked ACL state and deny the write. Record the ACL source and revision, unchanged Application eligibility, final decision, response, and Request/Workflow state, version, history, and business facts.
+- **Expected HTTP / decision:** Each variant independently denies the now-unauthorized operation without a success acknowledgement. The exact 403/409 response and final guard/revocation semantics are **OPEN** pending the approved consistency contract.
+- **Disclosure / side effects:** Neither variant returns a protected result or permits an unauthorized commit; no Request/Workflow state, version, history, or business-fact change is attributable to the denied write.
+- **Level / required evidence:** Deterministic transaction/race integration for both variants, with separate barrier traces, authoritative revocation proof, final decisions, responses, and before/after state/history. **Dependency:** Bảo's Application and ACL source definitions, final transaction guard, and cross-boundary consistency design. **Status:** Variant A NOT EXECUTED; Variant B NOT EXECUTED.
 
 ### BL03-T09 — Concurrent stale expectedVersion writes
 
@@ -172,22 +172,22 @@ Initial status describes specification readiness or dependency, **not a test res
 - **Disclosure / side effects:** No protected payload, provider details, stack trace, or write side effect while authorization is unavailable.
 - **Level / required evidence:** Policy fault injection plus HTTP integration; injected fault, sanitized response, decision trace, no-write state/history, and recovery control. **Dependency:** production ACL provider and approved error bridge; separate PR evidence is not merged proof. **Status:** NOT EXECUTED.
 
-### BL03-T11 — Protected history and timeline data leakage
+### BL03-T11 — Protected history and timeline projection
 
-- **Requirement / related finding:** SEC-F03, SEC-F05, SEC-F06; application history/timeline projections must enforce both resource ACL and per-event/field visibility.
-- **Preconditions / actor and fixture:** REQ_A1 has D1_SAMPLE and proposed D2_SAMPLE/D3_SAMPLE in business/Workflow metadata; USER_A has only the approved D1/history scope. Event classification and Portal timeline mapping are **OPEN**.
-- **Steps:** Read backend history and Portal timeline as USER_A; inspect event titles, status changes, actor IDs, comments, raw metadata, nested data, counts, timestamps, and error paths. Compare against an authorized control after policy approval.
+- **Requirement / related finding:** SEC-F03, SEC-F05, SEC-F06; history/timeline projections must enforce approved resource/history ACL and per-event/field visibility. Sensitive-data exposure is a risk to test, not a confirmed leak.
+- **Preconditions / actor and fixture:** Inventory actual backend history and Portal timeline payloads, including event and nested field shapes, and obtain approved D1/D2/D3 classifications and visibility rules for the inventoried events and fields. Then use classified sample markers on REQ_A1; USER_A has verified `workflow:read` and only the approved resource/history and D1 scope. Inventory, event classification, and Portal timeline mapping are **OPEN**.
+- **Steps:** Capture actual history/timeline payload shapes and the approved classification map first. Then read backend history and Portal timeline as USER_A; inspect event titles, status changes, actor IDs, comments, raw metadata, nested data, counts, timestamps, and error paths against that map. Compare against an authorized control after policy approval.
 - **Expected HTTP / decision:** Allowed history may return a filtered timeline under a **PROPOSED** API; disallowed history follows T04's 403/404 split. Each included event/field requires an affirmative visibility decision.
 - **Disclosure / side effects:** No unauthorized internal/sensitive Workflow or business metadata, even through timeline summaries or indirect response fields; no writes.
-- **Level / required evidence:** Projection contract, HTTP, and Portal-to-backend end-to-end review; classification map, redacted payload and rendered timeline captures, and policy decisions. **Dependency:** TRICORE event/field policy and Ánh's DTO/timeline contract. **Status:** NOT EXECUTED.
+- **Level / required evidence:** Projection contract, HTTP, and Portal-to-backend end-to-end review; actual history/timeline payload inventory, approved event/field classification and access map, redacted payload and rendered timeline captures, and policy decisions. **Dependency:** TRICORE event/field policy and Ánh's DTO/timeline contract. **Status:** NOT EXECUTED.
 
 ### BL03-T12 — COMMIT_OUTCOME_UNKNOWN reconciliation
 
-- **Requirement / related finding:** Cross-cutting Workflow persistence/recovery contract; an uncertain commit cannot be treated as confirmed failure or success.
-- **Preconditions / actor and fixture:** An authorized write on REQ_A1 has a stable operation reference and expectedVersion. Inject a failure at the commit acknowledgement boundary so persistence may have committed or rolled back. Reconciliation identity, API response, and Request/Workflow consistency contract are **OPEN**.
-- **Steps:** Execute once; record COMMIT_OUTCOME_UNKNOWN; perform **authorized** independent reads of authoritative state and history. Exercise committed, uncommitted, and still-ambiguous outcomes without blindly replaying the original write.
+- **Requirement / related finding:** Cross-cutting Workflow persistence/recovery contract; an uncertain commit cannot be treated as confirmed failure or success. An operation reference is a correlation aid, neither an idempotency key nor a commit receipt.
+- **Preconditions / actor and fixture:** An authorized write on REQ_A1 has a stable operation reference and expectedVersion. Inject a failure at the commit acknowledgement boundary so persistence may have committed or rolled back. Reconciliation identity, API response, and Request/Workflow consistency contract are **OPEN**; the reference alone proves no outcome or replay safety.
+- **Steps:** Execute once; record COMMIT_OUTCOME_UNKNOWN; perform independent authoritative state and history reads through a verified `workflow:read` principal with approved resource/history ACL. Exercise committed, uncommitted, and still-ambiguous observations without blindly replaying the original write or inferring an outcome from the reference.
 - **Expected HTTP / decision:** No false success or automatic retry. Current Workflow handler represents COMMIT_OUTCOME_UNKNOWN as 500; the integrated response contract remains **OPEN**. Reconciliation reads must pass verified identity and resource/history ACL.
-- **Disclosure / side effects:** Reconciliation exposes only authorized data; final classification follows authoritative evidence, retaining UNKNOWN when ambiguous. Exactly the original committed write's effects, if any, may appear; no retry-generated duplicate state/history.
+- **Disclosure / side effects:** Reconciliation exposes only authorized data; classify an outcome only when authoritative read evidence resolves it and retain UNKNOWN otherwise. Exactly the original committed write's effects, if any, may appear; no retry-generated duplicate state/history.
 - **Level / required evidence:** Commit-boundary fault injection with PostgreSQL and independent authoritative reads; failure location, response, operation reference, authorized reconciliation trace, and final state/history. **Dependency:** Bảo's consistency/recovery design and an integrated persistence fault harness. **Status:** NOT EXECUTED.
 
 ## 6. Evidence Record Template
@@ -197,6 +197,7 @@ Create one copy per executed test and variant. Empty cells mean evidence has not
 | Field | Record |
 | --- | --- |
 | Test ID | `BL03-T__` |
+| Variant / exact case (if applicable) |  |
 | Requirement / finding |  |
 | Exact source commit SHA |  |
 | Branch / environment |  |
@@ -215,9 +216,9 @@ Create one copy per executed test and variant. Empty cells mean evidence has not
 | Gate | Acceptance evidence required | Current approval / evidence |
 | --- | --- | --- |
 | G1 — Verified Identity and exact authority | Real filter-chain authentication failures and canonical-principal/exact-authority cases, including T01–T02 | **OPEN** — separate PR evidence needs integrated coverage review |
-| G2 — Resource and operation authorization | Authoritative hidden/forbidden, list ACL, actor checks, and fail-closed outcomes from T03–T05, T07, T10 | **BLOCKED** — production ACL/orchestration and policy approval pending |
-| G3 — D1/D2/D3 visibility and protected history | Approved classification plus serialized detail/history/timeline results from T04, T06, T11 | **OPEN** — field/event policy and DTO contract pending |
-| G4 — Authorized writes, revocation and concurrency | Final-boundary revocation, one-winner version race, and uncertain-commit reconciliation from T07–T09, T12 | **BLOCKED** — transaction guard and consistency/recovery contract pending |
+| G2 — Resource and operation authorization | Authoritative hidden/forbidden, mandatory list tenant/resource ACL, actor checks, and fail-closed outcomes from T03–T05, T07, T10 | **BLOCKED** — production ACL/orchestration and policy approval pending |
+| G3 — D1/D2/D3 visibility and protected history | Actual list/detail/history/timeline payload inventory, approved field/event classification, and serialized results from T04, T06, T11 | **OPEN** — payload inventory, field/event policy, and DTO contract pending |
+| G4 — Authorized writes, revocation and concurrency | Both T08 final-boundary variants, one-winner version race, and authorized uncertain-commit reconciliation from T07–T09, T12 | **BLOCKED** — transaction guard and consistency/recovery contract pending |
 | G5 — Portal-to-backend-to-Generic-Workflow integration | Traceable end-to-end authorized flows and negative cases across the proposed path, with evidence on one exact merged commit | **BLOCKED** — no merged, verified LIVE slice established here |
 
 No gate is approved or evidenced by this document. A separate PR's positive source evidence is a coverage input, not integrated acceptance.
@@ -231,7 +232,7 @@ No gate is approved or evidenced by this document. A separate PR's positive sour
 | Yến | Security test specifications, evidence matrix, and negative security review |
 | TRICORE | Business/security policy ratification and LIVE acceptance |
 
-Decisions still **OPEN**: facility acceptance versus a separate close action; IT close actor; authoritative requester and assignee sources; D1/D2/D3 classification for history events and fields; authorized list/detail/history/transition API contracts and error bodies; and application/Workflow consistency, revocation, and recovery after uncertain commits. Bảo and Ánh should review the applicable contracts before implementation claims or test acceptance. These items are not approved by assigning owners.
+Decisions still **OPEN**: facility acceptance versus a separate close action; IT close actor; authoritative original requester, ACL resource owner, and assignee sources and CONFIRM policy; approved resource/history ACL and event visibility without a new JWT history authority; actual list/detail/history/timeline payload inventory and D1/D2/D3 field/event classification; authorized list/detail/history/transition API contracts and error bodies, including whether pagination/counts exist; separate Application eligibility and authoritative ACL revocation semantics; and application/Workflow consistency, final guards, and recovery after uncertain commits. The operation reference does not settle the recovery contract. Bảo and Ánh should review the applicable contracts before implementation claims or test acceptance. These items are not approved by assigning owners.
 
 ## 9. Review Verdict
 
