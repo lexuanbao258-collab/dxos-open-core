@@ -45,6 +45,7 @@ import java.time.*;
 import java.util.*;
 import java.util.Date;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.assertj.core.api.Assertions.*;
@@ -62,6 +63,8 @@ class HelpdeskHttpPostgresTest {
             "workflow_definition_transitions", "workflow_instances", "workflow_transition_history", "helpdesk_actors", "helpdesk_requests");
     private final ObjectMapper json = new ObjectMapper().findAndRegisterModules();
     private final Map<String,String> actors = new HashMap<>();
+    private final ThreadLocal<PidCapture> httpPidCapture = new ThreadLocal<>();
+    private final AtomicBoolean unfinishedRaceWorker = new AtomicBoolean();
     private String url, schema, ownerRole, runtimeRole, issuer, runtimePassword;
     private DriverManagerDataSource runtime;
     private AnnotationConfigWebApplicationContext context;
@@ -145,7 +148,7 @@ class HelpdeskHttpPostgresTest {
         context.getEnvironment().getPropertySources().addFirst(new MapPropertySource("helpdesk-test",Map.of(
                 "spring.security.oauth2.resourceserver.jwt.issuer-uri",issuer,"tricore.security.oidc.audience","tricore-api",
                 "tricore.security.oidc.resource-client-id","tricore-api","dxos.helpdesk.enabled","true","test.schema",schema)));
-        context.addBeanFactoryPostProcessor(f -> f.registerSingleton("helpdeskPersistence",new PostgresWorkflowPersistence(runtime,schema)));
+        context.addBeanFactoryPostProcessor(f -> f.registerSingleton("helpdeskPersistence",new PostgresWorkflowPersistence(captureHttpBackend(runtime),schema)));
         context.register(SecurityConfig.class,Class.forName("com.tricore.dxos.infrastructure.identity.security.SpringSecurityCurrentPrincipal"),
                 Web.class,HelpdeskController.class,WorkflowExceptionHandler.class,WorkflowJsonConfiguration.class,
                 com.tricore.dxos.request.controller.RequestController.class,com.tricore.dxos.request.controller.RequestWorkflowController.class);
@@ -250,11 +253,68 @@ class HelpdeskHttpPostgresTest {
         assertThat(snapshot()).isEqualTo(before);
     }
 
+    @Test void hiddenAndNonexistentIdsHaveIndistinguishable404Responses() throws Exception {
+        var created=create("employee");
+        String hidden=created.path("id").asText();
+        UUID nonexistent=UUID.randomUUID();
+        assertThat(nonexistent).isNotEqualTo(UUID.fromString(hidden));
+        try(var c=admin();var s=c.prepareStatement("SELECT 1 FROM "+schema+".helpdesk_requests WHERE request_id=?")) {
+            s.setObject(1,nonexistent);
+            try(var rows=s.executeQuery()) { assertThat(rows.next()).isFalse(); }
+        }
+        var before=snapshot();
+        JsonNode expected=json.readTree("""
+                {"status":404,"code":"NOT_FOUND","message":"Workflow resource not found","errors":{}}
+                """);
+        for(String suffix:List.of("","/history")) {
+            var hiddenResponse=expect(get(API+"/"+hidden+suffix),"employee2",404).andReturn().getResponse();
+            var missingResponse=expect(get(API+"/"+nonexistent+suffix),"employee2",404).andReturn().getResponse();
+            JsonNode hiddenBody=json.readTree(hiddenResponse.getContentAsString());
+            JsonNode missingBody=json.readTree(missingResponse.getContentAsString());
+            assertThat(hiddenBody).isEqualTo(missingBody).isEqualTo(expected);
+            assertThat(hiddenResponse.getContentType()).isEqualTo(missingResponse.getContentType());
+            assertThat(hiddenResponse.getContentAsString()).doesNotContain(hidden,actors.get("employee"),
+                    created.path("workflowInstanceId").asText(),"Software issue","Please repair");
+        }
+        assertThat(snapshot()).isEqualTo(before);
+    }
+
     @Test void visibleWithoutExactTechnicalAuthorityIsForbidden() throws Exception {
         String id=create("employee").path("id").asText(); var before=snapshot();
         mvc.perform(get(API+"/"+id).header("Authorization","Bearer "+token("employee",List.of("workflow:read-all"),key)))
                 .andExpect(status().isForbidden());
         assertThat(snapshot()).isEqualTo(before);
+    }
+
+    @Test void coordinatorWithoutExactTransitionAuthorityCannotTriage() throws Exception {
+        String id=create("employee").path("id").asText();
+        String coordinator=actors.get("coordinator");
+        try(var c=admin()) {
+            assertThat(number(c,"SELECT COUNT(*) FROM "+schema+".tenant_memberships m JOIN "+schema
+                    +".helpdesk_actors a USING(tenant_id,actor_id) WHERE m.tenant_id='tenant-a'"
+                    +" AND m.actor_id='"+coordinator+"' AND m.active AND a.coordinator")).isEqualTo(1);
+            assertThat(number(c,"SELECT COUNT(*) FROM "+schema+".resource_acl WHERE tenant_id='tenant-a'"
+                    +" AND resource_type='mvp_request' AND resource_id='"+id+"' AND actor_id='"+coordinator+"'"
+                    +" AND operation IN ('workflow:read','workflow:transition') AND granted")).isEqualTo(2);
+        }
+        String readOnly=token("coordinator",List.of("workflow:read"),key);
+        String canTransition=token("coordinator",List.of("workflow:read","workflow:transition"),key);
+        mvc.perform(get(API+"/"+id).header("Authorization","Bearer "+readOnly))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.state").value("SUBMITTED"))
+                .andExpect(jsonPath("$.version").value(0));
+        var before=snapshot();
+        mvc.perform(post(API+"/"+id+"/triage").header("Authorization","Bearer "+readOnly)
+                .contentType("application/json").content("{\"expectedVersion\":0}"))
+                .andExpect(status().isForbidden()).andExpect(jsonPath("$.code").value("FORBIDDEN"));
+        assertThat(snapshot()).isEqualTo(before);
+        expect(get(API+"/"+id),"employee",200).andExpect(jsonPath("$.state").value("SUBMITTED"))
+                .andExpect(jsonPath("$.version").value(0));
+        expect(get(API+"/"+id+"/history"),"employee",200).andExpect(jsonPath("$.length()").value(0));
+        assertThat(snapshot()).isEqualTo(before);
+        mvc.perform(post(API+"/"+id+"/triage").header("Authorization","Bearer "+canTransition)
+                .contentType("application/json").content("{\"expectedVersion\":0}"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.state").value("TRIAGED"))
+                .andExpect(jsonPath("$.version").value(1));
     }
 
     @Test void unauthorizedTriageAssignmentAndConfirmationDoNotWrite() throws Exception {
@@ -290,6 +350,76 @@ class HelpdeskHttpPostgresTest {
         }
         expect(get(API+"/"+id),"coordinator",200).andExpect(jsonPath("$.assignmentVersion").value(1))
                 .andExpect(jsonPath("$.version").value(1));
+    }
+
+    @Test void reassignmentCommitPrecedesWaitingPreviousAssigneeStart() throws Exception {
+        String id=triaged(); assign(id,"worker",0,200);
+        List<HistoryRecord> before=historyRecords(id);
+        assertThat(before).containsExactly(new HistoryRecord(1,"triage","SUBMITTED","TRIAGED",actors.get("coordinator")));
+        var gate=new CommitGate();
+        var capture=new PidCapture();
+        try(var inspector=inspector()) {
+            ExecutorService executor=Executors.newFixedThreadPool(2);
+            Future<?> reassignment=null,waiting=null;
+            try {
+                reassignment=executor.submit(() -> serviceAs("coordinator",gateCommit(runtime,gate))
+                        .assign(UUID.fromString(id),actors.get("worker2"),1));
+                assertThat(gate.entered.await(5,TimeUnit.SECONDS)).isTrue();
+                waiting=executor.submit(() -> {
+                    httpPidCapture.set(capture);
+                    try {
+                        expect(post(API+"/"+id+"/start").content("{\"expectedVersion\":1}"),"worker",404)
+                                .andExpect(jsonPath("$.code").value("NOT_FOUND"));
+                        return null;
+                    } finally { httpPidCapture.remove(); }
+                });
+                assertThat(capture.ready.await(5,TimeUnit.SECONDS)).isTrue();
+                assertThat(waitForBlockedBy(inspector,capture.pid.get(),gate.pid.get())).isTrue();
+                gate.release.countDown();
+                reassignment.get(10,TimeUnit.SECONDS);
+                waiting.get(10,TimeUnit.SECONDS);
+            } finally {
+                gate.release.countDown();
+                finishRace(executor,reassignment,waiting);
+            }
+        }
+        assertThat(requestState(id)).isEqualTo(new RequestState(actors.get("worker2"),2,null,"TRIAGED",1,1,0,0));
+        assertThat(historyRecords(id)).containsExactlyElementsOf(before);
+    }
+
+    @Test void previousAssigneeStartCommitPrecedesWaitingReassignment() throws Exception {
+        String id=triaged(); assign(id,"worker",0,200);
+        var gate=new CommitGate();
+        var capture=new PidCapture();
+        try(var inspector=inspector()) {
+            ExecutorService executor=Executors.newFixedThreadPool(2);
+            Future<?> start=null,waiting=null;
+            try {
+                start=executor.submit(() -> serviceAs("worker",gateCommit(runtime,gate))
+                        .transition(UUID.fromString(id),"start_work",1,null));
+                assertThat(gate.entered.await(5,TimeUnit.SECONDS)).isTrue();
+                waiting=executor.submit(() -> {
+                    httpPidCapture.set(capture);
+                    try {
+                        expect(post(API+"/"+id+"/assign").content(assignBody("worker2",1)),"coordinator",409)
+                                .andExpect(jsonPath("$.code").value("TRANSITION_NOT_ALLOWED"));
+                        return null;
+                    } finally { httpPidCapture.remove(); }
+                });
+                assertThat(capture.ready.await(5,TimeUnit.SECONDS)).isTrue();
+                assertThat(waitForBlockedBy(inspector,capture.pid.get(),gate.pid.get())).isTrue();
+                gate.release.countDown();
+                start.get(10,TimeUnit.SECONDS);
+                waiting.get(10,TimeUnit.SECONDS);
+            } finally {
+                gate.release.countDown();
+                finishRace(executor,start,waiting);
+            }
+        }
+        assertThat(requestState(id)).isEqualTo(new RequestState(actors.get("worker"),1,null,"IN_PROGRESS",2,2,1,0));
+        assertThat(historyRecords(id)).containsExactly(
+                new HistoryRecord(1,"triage","SUBMITTED","TRIAGED",actors.get("coordinator")),
+                new HistoryRecord(2,"start_work","TRIAGED","IN_PROGRESS",actors.get("worker")));
     }
 
     @Test void staleResolutionRollsBackBusinessFactAndHistory() throws Exception {
@@ -383,6 +513,58 @@ class HelpdeskHttpPostgresTest {
                     .andExpect(jsonPath("$.resolution").isEmpty()).andExpect(jsonPath("$.version").value(2));
             expect(get(API+"/"+id+"/history"),"employee",200).andExpect(jsonPath("$.length()").value(2));
         } finally { try(var c=admin()) { sql(c,"UPDATE "+schema+".helpdesk_actors SET worker=true WHERE actor_id='"+actors.get("worker")+"'"); } }
+    }
+
+    @Test void committedTransitionGrantRevocationDeniesWaitingResolve() throws Exception {
+        String id=inProgress();
+        List<HistoryRecord> before=historyRecords(id);
+        assertThat(before).containsExactly(
+                new HistoryRecord(1,"triage","SUBMITTED","TRIAGED",actors.get("coordinator")),
+                new HistoryRecord(2,"start_work","TRIAGED","IN_PROGRESS",actors.get("worker")));
+        var capture=new PidCapture();
+        try(var inspector=inspector();var administrator=revocationHolder()) {
+            administrator.setAutoCommit(false);
+            ExecutorService executor=Executors.newSingleThreadExecutor();
+            Future<?> waiting=null;
+            Throwable primaryFailure=null;
+            boolean committed=false;
+            try {
+                int administratorPid=(int)boundedNumber(administrator,"SELECT pg_backend_pid()");
+                boundedSql(administrator,"SELECT tenant_id FROM "+schema+".tenant_guards WHERE tenant_id='tenant-a' FOR UPDATE");
+                boundedSql(administrator,"UPDATE "+schema+".resource_acl SET granted=false WHERE tenant_id='tenant-a'"
+                        +" AND resource_type='mvp_request' AND resource_id='"+id+"' AND actor_id='"+actors.get("worker")+"'"
+                        +" AND operation='workflow:transition'");
+                waiting=executor.submit(() -> {
+                    httpPidCapture.set(capture);
+                    try {
+                        expect(post(API+"/"+id+"/resolve").content("{\"expectedVersion\":2,\"resolution\":\"must not persist\"}"),"worker",403)
+                                .andExpect(jsonPath("$.code").value("FORBIDDEN"));
+                        return null;
+                    } finally { httpPidCapture.remove(); }
+                });
+                assertThat(capture.ready.await(5,TimeUnit.SECONDS)).isTrue();
+                assertThat(waitForBlockedBy(inspector,capture.pid.get(),administratorPid)).isTrue();
+                administrator.commit();
+                committed=true;
+                waiting.get(10,TimeUnit.SECONDS);
+            } catch(Exception | Error failure) {
+                primaryFailure=failure;
+                throw failure;
+            } finally {
+                finishRevocationRace(administrator,!committed,executor,waiting,primaryFailure);
+            }
+        }
+        assertThat(requestState(id)).isEqualTo(new RequestState(actors.get("worker"),1,null,"IN_PROGRESS",2,2,1,0));
+        assertThat(historyRecords(id)).containsExactlyElementsOf(before);
+        try(var observer=admin()) {
+            assertThat(number(observer,"SELECT count(*) FROM "+schema+".resource_acl WHERE resource_id='"+id+"'"
+                    +" AND actor_id='"+actors.get("worker")+"' AND operation='workflow:transition' AND NOT granted")).isEqualTo(1);
+            assertThat(number(observer,"SELECT count(*) FROM "+schema+".resource_acl WHERE resource_id='"+id+"'"
+                    +" AND actor_id='"+actors.get("worker")+"' AND operation='workflow:read' AND granted")).isEqualTo(1);
+            assertThat(number(observer,"SELECT count(*) FROM "+schema+".helpdesk_actors a JOIN "+schema
+                    +".tenant_memberships m USING(tenant_id,actor_id) WHERE a.actor_id='"+actors.get("worker")
+                    +"' AND a.worker AND m.active")).isEqualTo(1);
+        }
     }
 
 
@@ -629,6 +811,197 @@ class HelpdeskHttpPostgresTest {
                 Set.of(new Authority("workflow:read"),new Authority("workflow:transition")),true);
         return new HelpdeskService(new PostgresWorkflowPersistence(database,schema),principal,schema,"tenant-a",Clock.systemUTC());
     }
+    private static final class CommitGate {
+        final CountDownLatch entered=new CountDownLatch(1);
+        final CountDownLatch release=new CountDownLatch(1);
+        final AtomicInteger pid=new AtomicInteger();
+    }
+    private static final class PidCapture {
+        final CountDownLatch ready=new CountDownLatch(1);
+        final AtomicInteger pid=new AtomicInteger();
+    }
+    private DataSource captureHttpBackend(DataSource source) {
+        return new DelegatingDataSource(source) {
+            @Override public Connection getConnection() throws SQLException {
+                Connection actual=super.getConnection();
+                PidCapture capture=httpPidCapture.get();
+                if(capture==null) return actual;
+                try {
+                    return (Connection)Proxy.newProxyInstance(getClass().getClassLoader(),new Class<?>[]{Connection.class},(proxy,method,args) -> {
+                        if(method.getName().equals("prepareStatement") && args!=null && args.length>0
+                                && args[0] instanceof String sql && sql.contains(".helpdesk_request(")
+                                && capture.pid.get()==0) {
+                            int pid=(int)number(actual,"SELECT pg_backend_pid()");
+                            if(capture.pid.compareAndSet(0,pid)) capture.ready.countDown();
+                        }
+                        try { return method.invoke(actual,args); }
+                        catch(InvocationTargetException exception) { throw exception.getCause(); }
+                    });
+                } catch(RuntimeException | Error failure) {
+                    try { actual.close(); } catch(Throwable closeFailure) { failure.addSuppressed(closeFailure); }
+                    throw failure;
+                }
+            }
+        };
+    }
+    private DataSource gateCommit(DataSource source,CommitGate gate) {
+        return new DelegatingDataSource(source) {
+            @Override public Connection getConnection() throws SQLException {
+                Connection actual=super.getConnection();
+                try {
+                    gate.pid.set((int)number(actual,"SELECT pg_backend_pid()"));
+                    return (Connection)Proxy.newProxyInstance(getClass().getClassLoader(),new Class<?>[]{Connection.class},(proxy,method,args) -> {
+                        if(method.getName().equals("commit")) {
+                            gate.entered.countDown();
+                            try {
+                                if(!gate.release.await(20,TimeUnit.SECONDS)) throw new SQLException("commit gate timed out");
+                            } catch(InterruptedException interrupted) {
+                                Thread.currentThread().interrupt();
+                                throw new SQLException("commit gate interrupted",interrupted);
+                            }
+                        }
+                        try { return method.invoke(actual,args); }
+                        catch(InvocationTargetException exception) { throw exception.getCause(); }
+                    });
+                } catch(SQLException | RuntimeException | Error failure) {
+                    try { actual.close(); } catch(Throwable closeFailure) { failure.addSuppressed(closeFailure); }
+                    throw failure;
+                }
+            }
+        };
+    }
+    // Client timeouts bound JDBC waits; they do not prove PostgreSQL ended a failed transaction.
+    // Failure cleanup still rolls back and closes A before fixture teardown.
+    private Connection revocationHolder() throws SQLException {
+        Properties properties=new Properties();
+        properties.setProperty("user","helpdesk_test");
+        String password=System.getenv("HELPDESK_DISPOSABLE_PASSWORD");
+        properties.setProperty("password",password==null?"":password);
+        properties.setProperty("loginTimeout","2");
+        properties.setProperty("connectTimeout","2");
+        properties.setProperty("socketTimeout","5");
+        properties.setProperty("cancelSignalTimeout","1");
+        Connection connection=DriverManager.getConnection(url,properties);
+        try {
+            connection.setNetworkTimeout(Runnable::run,5_000);
+            if(connection.getNetworkTimeout()!=5_000) throw new SQLException("revocation holder network timeout unavailable");
+            return connection;
+        } catch(SQLException | RuntimeException | Error failure) {
+            try { connection.close(); } catch(Throwable closeFailure) { failure.addSuppressed(closeFailure); }
+            throw failure;
+        }
+    }
+    private static long boundedNumber(Connection connection,String query) throws SQLException {
+        try(var statement=connection.createStatement()) {
+            statement.setQueryTimeout(3);
+            try(var rows=statement.executeQuery(query)) { rows.next();return rows.getLong(1); }
+        }
+    }
+    private static void boundedSql(Connection connection,String query) throws SQLException {
+        try(var statement=connection.createStatement()) {
+            statement.setQueryTimeout(3);
+            statement.execute(query);
+        }
+    }
+    // pgJDBC socket/network and statement timeouts bound normal I/O. JDBC close has no separately
+    // proven wall-clock bound; an abort worker could outlive this disposable fixture's cleanup.
+    private Connection inspector() throws SQLException {
+        Properties properties=new Properties();
+        properties.setProperty("user","helpdesk_test");
+        String password=System.getenv("HELPDESK_DISPOSABLE_PASSWORD");
+        properties.setProperty("password",password==null?"":password);
+        properties.setProperty("loginTimeout","2");
+        properties.setProperty("connectTimeout","2");
+        properties.setProperty("socketTimeout","2");
+        properties.setProperty("cancelSignalTimeout","1");
+        Connection connection=DriverManager.getConnection(url,properties);
+        try {
+            connection.setNetworkTimeout(Runnable::run,2_000);
+            if(connection.getNetworkTimeout()!=2_000) throw new SQLException("inspector network timeout unavailable");
+            return connection;
+        } catch(SQLException | RuntimeException failure) {
+            try { connection.close(); } catch(Throwable closeFailure) { failure.addSuppressed(closeFailure); }
+            throw failure;
+        }
+    }
+    private boolean waitForBlockedBy(Connection observer,int blockedPid,int blockerPid) throws Exception {
+        long deadline=System.nanoTime()+TimeUnit.SECONDS.toNanos(2);
+        while(System.nanoTime()<deadline) {
+            try(var statement=observer.prepareStatement("SELECT ?=ANY(pg_catalog.pg_blocking_pids(?))")) {
+                statement.setQueryTimeout(1);
+                statement.setInt(1,blockerPid);
+                statement.setInt(2,blockedPid);
+                try(var rows=statement.executeQuery()) { rows.next(); if(rows.getBoolean(1)) return true; }
+            }
+            Thread.sleep(40);
+        }
+        return false;
+    }
+    private void finishRace(ExecutorService executor,Future<?>... futures) {
+        for(Future<?> future:futures) if(future!=null && !future.isDone()) future.cancel(true);
+        executor.shutdownNow();
+        try {
+            if(!executor.awaitTermination(25,TimeUnit.SECONDS)) {
+                unfinishedRaceWorker.set(true);
+                throw new AssertionError("race worker did not terminate within 25 seconds; fixture cleanup is unsafe");
+            }
+        } catch(InterruptedException interrupted) {
+            unfinishedRaceWorker.set(true);
+            Thread.currentThread().interrupt();
+            throw new AssertionError("race worker termination interrupted; fixture cleanup is unsafe",interrupted);
+        }
+    }
+    private void finishRevocationRace(Connection administrator,boolean rollback,ExecutorService executor,
+                                      Future<?> waiting,Throwable primaryFailure) throws SQLException {
+        Throwable cleanupFailure=null;
+        if(rollback) try { administrator.rollback(); }
+        catch(SQLException | RuntimeException | Error failure) { cleanupFailure=failure; }
+        try { finishRace(executor,waiting); }
+        catch(RuntimeException | Error failure) {
+            if(cleanupFailure==null) cleanupFailure=failure;
+            else cleanupFailure.addSuppressed(failure);
+        }
+        if(cleanupFailure==null) return;
+        if(primaryFailure!=null) { primaryFailure.addSuppressed(cleanupFailure);return; }
+        if(cleanupFailure instanceof SQLException sqlFailure) throw sqlFailure;
+        if(cleanupFailure instanceof RuntimeException runtimeFailure) throw runtimeFailure;
+        throw (Error)cleanupFailure;
+    }
+    private record HistoryRecord(long version,String transition,String source,String target,String actor) {}
+    private List<HistoryRecord> historyRecords(String id) throws Exception {
+        try(var c=admin();var statement=c.prepareStatement("SELECT x.resulting_runtime_version,x.transition_id,"
+                +"x.source_state,x.target_state,x.actor_id FROM "+schema+".workflow_transition_history x"
+                +" JOIN "+schema+".helpdesk_requests h ON h.instance_id=x.instance_id"
+                +" WHERE h.request_id=? ORDER BY x.resulting_runtime_version")) {
+            statement.setObject(1,UUID.fromString(id));
+            try(var rows=statement.executeQuery()) {
+                List<HistoryRecord> records=new ArrayList<>();
+                while(rows.next()) records.add(new HistoryRecord(rows.getLong(1),rows.getString(2),
+                        rows.getString(3),rows.getString(4),rows.getString(5)));
+                return List.copyOf(records);
+            }
+        }
+    }
+    private record RequestState(String assignee,long assignmentVersion,String resolution,String state,
+                                long workflowVersion,long historyCount,long startCount,long resolveCount) {}
+    private RequestState requestState(String id) throws Exception {
+        try(var c=admin();var statement=c.prepareStatement("SELECT h.assignee_id,h.assignment_version,h.resolution,"
+                +"i.current_state,i.runtime_version,"
+                +"(SELECT count(*) FROM "+schema+".workflow_transition_history x WHERE x.instance_id=h.instance_id),"
+                +"(SELECT count(*) FROM "+schema+".workflow_transition_history x WHERE x.instance_id=h.instance_id AND x.transition_id='start_work'),"
+                +"(SELECT count(*) FROM "+schema+".workflow_transition_history x WHERE x.instance_id=h.instance_id AND x.transition_id='resolve')"
+                +" FROM "+schema+".helpdesk_requests h JOIN "+schema+".workflow_instances i ON i.instance_id=h.instance_id"
+                +" WHERE h.request_id=?")) {
+            statement.setObject(1,UUID.fromString(id));
+            try(var rows=statement.executeQuery()) {
+                assertThat(rows.next()).isTrue();
+                var state=new RequestState(rows.getString(1),rows.getLong(2),rows.getString(3),rows.getString(4),
+                        rows.getLong(5),rows.getLong(6),rows.getLong(7),rows.getLong(8));
+                assertThat(rows.next()).isFalse();
+                return state;
+            }
+        }
+    }
     private void grant(String id,String actor) throws Exception {
         try(var c=admin()) { for(String operation:List.of("read","transition"))
             sql(c,"INSERT INTO "+schema+".resource_acl VALUES('tenant-a','mvp_request','"+id+"','"+actors.get(actor)+"','workflow:"+operation+"',true)"); }
@@ -646,6 +1019,7 @@ class HelpdeskHttpPostgresTest {
     private static long number(Connection c,String sql) throws SQLException { try(var s=c.createStatement();var r=s.executeQuery(sql)) { r.next();return r.getLong(1); } }
 
     @AfterAll void cleanup() throws Exception {
+        if(unfinishedRaceWorker.get()) throw new AssertionError("race worker remains active; refusing fixture schema cleanup");
         if(context!=null) context.close();if(oidc!=null) oidc.stop(0);
         if(schema!=null) { assertThat(schema).matches("helpdesk_[a-f0-9]{32}");
             try(var c=admin()) { sql(c,"DROP SCHEMA IF EXISTS "+schema+" CASCADE");sql(c,"DROP ROLE IF EXISTS "+runtimeRole);sql(c,"DROP ROLE IF EXISTS "+ownerRole); }
