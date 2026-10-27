@@ -88,8 +88,16 @@ def validate_docker_inspect(document: Any) -> None:
     port = ports[0]
     if port.get("HostIp") != EXPECTED_ADDRESS or str(port.get("HostPort")) != EXPECTED_PORT:
         raise PreflightBlocked("Docker port must be 127.0.0.1:55427, not a shared/exposed endpoint")
-    if data.get("Mounts"):
-        raise PreflightBlocked("Disposable container has mounted volumes; provenance requires review")
+    # Official PostgreSQL images may create an anonymous PGDATA Docker volume.
+    # Reject host bind mounts and explicitly named/reused persistent volumes.
+    mounts = data.get("Mounts", [])
+    if not isinstance(mounts, list):
+        raise PreflightBlocked("Invalid Docker mount inventory")
+    for mount in mounts:
+        if (not isinstance(mount, dict) or mount.get("Type") != "volume"
+                or mount.get("Destination") != "/var/lib/postgresql/data"
+                or not re.fullmatch(r"[a-f0-9]{64}", str(mount.get("Name", "")))):
+            raise PreflightBlocked("Unexpected bind/named volume; fixture provenance requires review")
 
 
 def check_postgres17() -> None:
