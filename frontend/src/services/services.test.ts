@@ -15,7 +15,7 @@ describe("closed HTTP boundary", () => {
   it("never calls fetch, including unregistered Workflow routes and mutations", async () => {
     const fetchSpy = vi.spyOn(globalThis, "fetch");
     const client = new HttpApiClient();
-    for (const method of ["GET", "POST", "PATCH", "DELETE"] as const) {
+    for (const method of ["GET", "POST", "PUT", "PATCH", "DELETE"] as const) {
       await expect(
         client.request(method, "/api/v1/workflow-instances", {}),
       ).rejects.toMatchObject({ code: "LIVE_BLOCKED" });
