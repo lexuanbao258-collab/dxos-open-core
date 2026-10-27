@@ -18,14 +18,15 @@ import {
   type RequestKind,
 } from "../domain/request";
 import { usePortal } from "../context";
-import { requestService } from "../services/portalService";
+import { useSessionOperation } from "../hooks/useSessionOperation";
 import { PortalError, safeError } from "../services/RequestService";
 import { ErrorState, PageHeading } from "../components/ui";
 
 export function NewRequest() {
   const [params] = useSearchParams();
   const navigate = useNavigate();
-  const { role, refresh, notify, expireSession } = usePortal();
+  const { role, refresh, notify, expireSession, requestService } = usePortal();
+  const captureOperation = useSessionOperation();
   const [input, setInput] = useState<CreateRequestInput>({
     kind: params.get("kind") === "facility" ? "facility" : "it",
     title: "",
@@ -61,21 +62,26 @@ export function NewRequest() {
     lock.current = true;
     setBusy(true);
     setError("");
+    const operation = captureOperation();
     try {
       const created = await requestService.create(input, role);
+      if (!operation.canUpdate()) return;
       refresh();
       notify("Đã tạo yêu cầu demo. Dữ liệu được lưu trong bộ nhớ.");
       navigate(`/requests/${created.id}`);
     } catch (err) {
+      if (!operation.isCurrent()) return;
+      if (err instanceof PortalError && err.code === "401") {
+        expireSession();
+        return;
+      }
+      if (!operation.canUpdate()) return;
       setError(safeError(err));
       if (err instanceof PortalError && err.code === "COMMIT_OUTCOME_UNKNOWN")
         setUncertain(true);
-      if (err instanceof PortalError && err.code === "401") {
-        expireSession();
-      }
     } finally {
       lock.current = false;
-      setBusy(false);
+      if (operation.canUpdate()) setBusy(false);
     }
   }
   return (

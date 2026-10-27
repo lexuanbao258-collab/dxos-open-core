@@ -10,9 +10,9 @@ import {
 } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
 import { useRequests } from "../hooks/useRequests";
+import { useSessionOperation } from "../hooks/useSessionOperation";
 import { usePortal } from "../context";
 import { formatDate, kindLabels, type RequestAction } from "../domain/request";
-import { requestService } from "../services/portalService";
 import { PortalError, safeError } from "../services/RequestService";
 import {
   ErrorState,
@@ -27,7 +27,8 @@ import {
 export function RequestDetail() {
   const { id } = useParams();
   const { data, loading, error, reload } = useRequests(id);
-  const { role, refresh, notify, expireSession } = usePortal();
+  const { role, refresh, notify, expireSession, requestService } = usePortal();
+  const captureOperation = useSessionOperation();
   const [action, setAction] = useState<RequestAction | null>(null);
   const [note, setNote] = useState("");
   const [actionError, setActionError] = useState("");
@@ -53,6 +54,7 @@ export function RequestDetail() {
     lock.current = true;
     setBusy(true);
     setActionError("");
+    const operation = captureOperation();
     try {
       await requestService.transition(
         item.id,
@@ -61,19 +63,23 @@ export function RequestDetail() {
         item.version,
         role,
       );
+      if (!operation.canUpdate()) return;
       setAction(null);
       refresh();
       notify("Đã cập nhật yêu cầu demo và lịch sử xử lý.");
     } catch (err) {
+      if (!operation.isCurrent()) return;
+      if (err instanceof PortalError && err.code === "401") {
+        expireSession();
+        return;
+      }
+      if (!operation.canUpdate()) return;
       setActionError(safeError(err));
       if (err instanceof PortalError && err.code === "COMMIT_OUTCOME_UNKNOWN")
         setUncertain(true);
-      if (err instanceof PortalError && err.code === "401") {
-        expireSession();
-      }
     } finally {
       lock.current = false;
-      setBusy(false);
+      if (operation.canUpdate()) setBusy(false);
     }
   }
   return (
@@ -181,9 +187,13 @@ export function RequestDetail() {
               </>
             ) : (
               <p>
-                {role !== "processor"
-                  ? "Chuyển sang vai trò Người xử lý trong Trạng thái phiên để trải nghiệm thao tác demo."
-                  : "Yêu cầu đã kết thúc. Không còn thao tác xử lý."}
+                {item.kind === "it" && item.status === "resolved"
+                  ? "IT đã xử lý và thông báo kết quả. Yêu cầu đang chờ người gửi xác nhận hoàn thành."
+                  : item.kind === "it" && item.status === "confirmed"
+                    ? "Người gửi đã xác nhận hoàn thành. Không có thao tác tiếp theo trong kịch bản mock."
+                    : role !== "processor"
+                      ? "Chuyển sang vai trò Người xử lý trong Trạng thái phiên để trải nghiệm thao tác demo."
+                      : "Yêu cầu đã kết thúc. Không còn thao tác xử lý."}
               </p>
             )}
             {uncertain && (
@@ -238,7 +248,9 @@ export function RequestDetail() {
             >
               {busy
                 ? "Đang cập nhật…"
-                : `Xác nhận ${action.label.toLowerCase()}`}
+                : action.id === "confirm"
+                  ? action.label
+                  : `Xác nhận ${action.label.toLowerCase()}`}
             </button>
           </div>
         </Modal>

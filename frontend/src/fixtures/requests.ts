@@ -19,7 +19,7 @@ const rows: [
     "it",
     "pending",
     "high",
-    "Ngọc Ánh",
+    "Mai An",
     "Phòng phát triển",
   ],
   [
@@ -37,7 +37,7 @@ const rows: [
     "it",
     "processing",
     "normal",
-    "Ngọc Ánh",
+    "Mai An",
     "Phòng phát triển",
   ],
   [
@@ -46,16 +46,16 @@ const rows: [
     "facility",
     "approved",
     "normal",
-    "Ngọc Ánh",
+    "Mai An",
     "Phòng phát triển",
   ],
   [
     "1044",
     "Không kết nối được mạng Wi-Fi nội bộ",
     "it",
-    "completed",
+    "resolved",
     "urgent",
-    "Hoàng Nam",
+    "Đức Minh",
     "Phòng kinh doanh",
   ],
   [
@@ -64,16 +64,16 @@ const rows: [
     "facility",
     "pending",
     "normal",
-    "Ngọc Ánh",
+    "Mai An",
     "Phòng phát triển",
   ],
   [
     "1042",
     "Thiết lập tài khoản công cụ thiết kế",
     "it",
-    "completed",
+    "resolved",
     "normal",
-    "Ngọc Ánh",
+    "Mai An",
     "Phòng phát triển",
   ],
   [
@@ -82,7 +82,7 @@ const rows: [
     "facility",
     "rejected",
     "high",
-    "Ngọc Ánh",
+    "Mai An",
     "Phòng phát triển",
   ],
   [
@@ -100,7 +100,7 @@ const rows: [
     "facility",
     "completed",
     "normal",
-    "Ngọc Ánh",
+    "Mai An",
     "Phòng phát triển",
   ],
 ];
@@ -124,14 +124,18 @@ export function makeFixtures(): ServiceRequest[] {
         timeline.push({
           id: `${id}-2`,
           at: new Date(Date.parse(createdAt) + 3600000).toISOString(),
-          actor: "Lê Xuân Bảo",
+          actor: "Trần Bình",
           title: status === "rejected" ? "Từ chối yêu cầu" : "Đã phê duyệt",
           note:
             status === "rejected"
               ? "Cần bổ sung kế hoạch ngân sách trước khi gửi lại."
               : "Đã xác nhận thông tin, chuyển đến nhóm phụ trách.",
         });
-      if (status === "processing" || status === "completed")
+      if (
+        status === "processing" ||
+        status === "resolved" ||
+        status === "completed"
+      )
         timeline.push({
           id: `${id}-3`,
           at: new Date(Date.parse(createdAt) + 7200000).toISOString(),
@@ -139,13 +143,19 @@ export function makeFixtures(): ServiceRequest[] {
           title: "Bắt đầu xử lý",
           note: "Nhóm phụ trách đã tiếp nhận công việc.",
         });
-      if (status === "completed")
+      if (status === "resolved" || status === "completed")
         timeline.push({
           id: `${id}-4`,
           at: new Date(Date.parse(createdAt) + 10800000).toISOString(),
           actor: kind === "it" ? "Nhóm IT Support" : "Nhóm Facility",
-          title: "Hoàn thành yêu cầu",
-          note: "Đã xử lý và xác nhận kết quả trong kịch bản mock.",
+          title:
+            status === "resolved"
+              ? "IT đã xử lý và thông báo kết quả"
+              : "Hoàn thành yêu cầu",
+          note:
+            status === "resolved"
+              ? "MOCK · Đã thông báo kết quả, chờ người gửi xác nhận trong kịch bản minh họa."
+              : "MOCK · Đã xử lý trong kịch bản minh họa, không phải nghiệm thu nghiệp vụ thật.",
         });
       return {
         id,
