@@ -1,11 +1,10 @@
 import { useEffect, useState } from "react";
 import type { ServiceRequest } from "../domain/request";
 import { usePortal } from "../context";
-import { requestService } from "../services/portalService";
 import { safeError } from "../services/RequestService";
 
 export function useRequests(id?: string) {
-  const { role, revision, expireSession } = usePortal();
+  const { role, revision, expireSession, requestService } = usePortal();
   const [data, setData] = useState<ServiceRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -40,6 +39,6 @@ export function useRequests(id?: string) {
     return () => {
       ignore = true;
     };
-  }, [id, role, revision, attempt, expireSession]);
+  }, [id, role, revision, attempt, expireSession, requestService]);
   return { data, loading, error, reload: () => retry((v) => v + 1) };
 }

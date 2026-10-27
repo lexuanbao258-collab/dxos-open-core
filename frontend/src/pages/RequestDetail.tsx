@@ -12,7 +12,6 @@ import { Link, useParams } from "react-router-dom";
 import { useRequests } from "../hooks/useRequests";
 import { usePortal } from "../context";
 import { formatDate, kindLabels, type RequestAction } from "../domain/request";
-import { requestService } from "../services/portalService";
 import { PortalError, safeError } from "../services/RequestService";
 import {
   ErrorState,
@@ -27,7 +26,7 @@ import {
 export function RequestDetail() {
   const { id } = useParams();
   const { data, loading, error, reload } = useRequests(id);
-  const { role, refresh, notify, expireSession } = usePortal();
+  const { role, refresh, notify, expireSession, requestService } = usePortal();
   const [action, setAction] = useState<RequestAction | null>(null);
   const [note, setNote] = useState("");
   const [actionError, setActionError] = useState("");

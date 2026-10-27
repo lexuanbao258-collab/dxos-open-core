@@ -18,14 +18,13 @@ import {
   type RequestKind,
 } from "../domain/request";
 import { usePortal } from "../context";
-import { requestService } from "../services/portalService";
 import { PortalError, safeError } from "../services/RequestService";
 import { ErrorState, PageHeading } from "../components/ui";
 
 export function NewRequest() {
   const [params] = useSearchParams();
   const navigate = useNavigate();
-  const { role, refresh, notify, expireSession } = usePortal();
+  const { role, refresh, notify, expireSession, requestService } = usePortal();
   const [input, setInput] = useState<CreateRequestInput>({
     kind: params.get("kind") === "facility" ? "facility" : "it",
     title: "",

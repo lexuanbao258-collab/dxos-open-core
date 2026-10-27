@@ -33,6 +33,8 @@ import { RequestDetail } from "./pages/RequestDetail";
 import { Session, Integration } from "./pages/System";
 import { Empty } from "./components/ui";
 import { AuthPage } from "./pages/Auth";
+import { HelpdeskPortal } from "./features/helpdesk/HelpdeskPortal";
+import type { MvpHelpdeskRequestPort } from "./services/mvp/helpdeskPortalPort";
 
 const navItems = [
   { to: "/", label: "Tổng quan", icon: LayoutDashboard, end: true },
@@ -41,7 +43,7 @@ const navItems = [
   { to: "/history", label: "Lịch sử hoạt động", icon: Activity },
 ];
 function Layout() {
-  const { role } = usePortal();
+  const { role, helpdeskService } = usePortal();
   const [menu, setMenu] = useState(false);
   const [query, setQuery] = useState("");
   const [mobile, setMobile] = useState(
@@ -113,6 +115,12 @@ function Layout() {
         </div>
         <p className="nav-label">Dịch vụ đại học</p>
         <nav>
+          {helpdeskService && (
+            <NavLink to="/mvp/helpdesk" className="nav-item">
+              <Workflow size={19} />
+              <span>IT Helpdesk MVP · kiểm thử</span>
+            </NavLink>
+          )}
           {navItems.map(({ to, label, icon: ItemIcon, end }) => (
             <NavLink
               key={to}
@@ -250,9 +258,11 @@ function Protected() {
   const { role } = usePortal();
   return role ? <Outlet /> : <Navigate to="/session" replace />;
 }
-export function App() {
+export function App({
+  helpdeskService,
+}: { helpdeskService?: MvpHelpdeskRequestPort } = {}) {
   return (
-    <PortalProvider>
+    <PortalProvider helpdeskService={helpdeskService}>
       <Routes>
         <Route path="/login" element={<AuthPage key="login" mode="login" />} />
         <Route
@@ -263,6 +273,7 @@ export function App() {
           <Route path="/session" element={<Session />} />
           <Route path="/integration" element={<Integration />} />
           <Route element={<Protected />}>
+            <Route path="/mvp/helpdesk/*" element={<HelpdeskPortal />} />
             <Route index element={<Dashboard />} />
             <Route path="/requests" element={<Requests />} />
             <Route path="/requests/new" element={<NewRequest />} />
