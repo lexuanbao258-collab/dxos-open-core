@@ -181,9 +181,13 @@ export function RequestDetail() {
               </>
             ) : (
               <p>
-                {role !== "processor"
-                  ? "Chuyển sang vai trò Người xử lý trong Trạng thái phiên để trải nghiệm thao tác demo."
-                  : "Yêu cầu đã kết thúc. Không còn thao tác xử lý."}
+                {item.kind === "it" && item.status === "resolved"
+                  ? "IT đã xử lý và thông báo kết quả. Yêu cầu đang chờ người gửi xác nhận hoàn thành."
+                  : item.kind === "it" && item.status === "confirmed"
+                    ? "Người gửi đã xác nhận hoàn thành. Không có thao tác tiếp theo trong kịch bản mock."
+                    : role !== "processor"
+                      ? "Chuyển sang vai trò Người xử lý trong Trạng thái phiên để trải nghiệm thao tác demo."
+                      : "Yêu cầu đã kết thúc. Không còn thao tác xử lý."}
               </p>
             )}
             {uncertain && (
@@ -238,7 +242,9 @@ export function RequestDetail() {
             >
               {busy
                 ? "Đang cập nhật…"
-                : `Xác nhận ${action.label.toLowerCase()}`}
+                : action.id === "confirm"
+                  ? action.label
+                  : `Xác nhận ${action.label.toLowerCase()}`}
             </button>
           </div>
         </Modal>

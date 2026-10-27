@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   filterRequests,
+  statusLabels,
   validateRequest,
   type CreateRequestInput,
 } from "./request";
@@ -49,5 +50,30 @@ describe("shared request model", () => {
     expect(
       filterRequests(makeFixtures(), "", "it").every((r) => r.kind === "it"),
     ).toBe(true);
+  });
+  it("keeps resolved IT, confirmed IT and completed Facility distinct", () => {
+    expect(statusLabels.resolved).toBe("Chờ nhân viên xác nhận");
+    expect(statusLabels.confirmed).toBe("Đã xác nhận hoàn thành");
+    expect(statusLabels.completed).toBe("Hoàn thành");
+    expect(statusLabels).not.toHaveProperty("closed");
+    const fixtures = makeFixtures();
+    const resolved = filterRequests(fixtures, "", "it", "resolved");
+    expect(resolved.map((item) => item.id)).toEqual(["DX-1044", "DX-1042"]);
+    for (const item of resolved) {
+      expect(item.timeline.at(-1)?.title).toBe(
+        "IT đã xử lý và thông báo kết quả",
+      );
+      expect(item.updatedAt).toBe(item.timeline.at(-1)?.at);
+      expect(item.version).toBe(item.timeline.length - 1);
+    }
+    const confirmed = { ...resolved[1], status: "confirmed" as const };
+    expect(
+      filterRequests([...fixtures, confirmed], "", "it", "confirmed"),
+    ).toEqual([confirmed]);
+    expect(
+      filterRequests(fixtures, "", "facility", "completed").map(
+        (item) => item.id,
+      ),
+    ).toEqual(["DX-1039"]);
   });
 });
