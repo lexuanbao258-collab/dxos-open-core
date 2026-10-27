@@ -61,6 +61,16 @@ class Stage6PreflightTest(unittest.TestCase):
     def test_mounted_data_rejected(self):
         self.assert_rejected(fixture(Mounts=[{'Type': 'bind', 'Source': 'C:\\data'}]))
 
+    def test_anonymous_postgres_pgdata_volume_accepted(self):
+        preflight.validate_docker_inspect(fixture(Mounts=[{
+            'Type': 'volume', 'Name': 'a' * 64,
+            'Destination': '/var/lib/postgresql/data'}]))
+
+    def test_named_postgres_volume_rejected(self):
+        self.assert_rejected(fixture(Mounts=[{
+            'Type': 'volume', 'Name': 'precious-production-data',
+            'Destination': '/var/lib/postgresql/data'}]))
+
     @patch.object(preflight, 'command')
     def test_dirty_git_checkout_rejected(self, command):
         sha = 'a' * 40
