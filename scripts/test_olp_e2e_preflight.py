@@ -59,7 +59,7 @@ class Stage6PreflightTest(unittest.TestCase):
             'HostIp': '127.0.0.1', 'HostPort': '5432'}]}}))
 
     def test_mounted_data_rejected(self):
-        self.assert_rejected(fixture(Mounts=[{'Type': 'bind', 'Source': 'C:\data'}]))
+        self.assert_rejected(fixture(Mounts=[{'Type': 'bind', 'Source': 'C:\\data'}]))
 
     @patch.object(preflight, 'command')
     def test_dirty_git_checkout_rejected(self, command):
