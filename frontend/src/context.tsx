@@ -90,8 +90,12 @@ export function PortalProvider({
     });
   }, []);
   const [role, updateRole] = useState<DemoRole | null>(() => {
-    const value = sessionStorage.getItem("dxos-demo-role");
-    return value === "employee" || value === "processor" ? value : null;
+    try {
+      const value = sessionStorage.getItem("dxos-demo-role");
+      return value === "employee" || value === "processor" ? value : null;
+    } catch {
+      return null;
+    }
   });
   const [revision, setRevision] = useState(0);
   const [notice, setNotice] = useState("");
@@ -100,18 +104,27 @@ export function PortalProvider({
     const nextScope = {};
     currentSessionScope.current = nextScope;
     setSessionScope(nextScope);
-    value
-      ? sessionStorage.setItem("dxos-demo-role", value)
-      : sessionStorage.removeItem("dxos-demo-role");
+    try {
+      value
+        ? sessionStorage.setItem("dxos-demo-role", value)
+        : sessionStorage.removeItem("dxos-demo-role");
+    } catch {
+      // Storage is optional; the current demo session lives in React state.
+    }
     updateRole(value);
     setSessionExpired(false);
+    setNotice("");
     setRevision((v) => v + 1);
   }, []);
   const expireSession = useCallback(() => {
     const nextScope = {};
     currentSessionScope.current = nextScope;
     setSessionScope(nextScope);
-    sessionStorage.removeItem("dxos-demo-role");
+    try {
+      sessionStorage.removeItem("dxos-demo-role");
+    } catch {
+      // Always expire the in-memory session, even when storage is blocked.
+    }
     updateRole(null);
     setSessionExpired(true);
     setNotice("");

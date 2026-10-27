@@ -70,7 +70,134 @@ function deferred<T>() {
   return { promise, resolve };
 }
 
+async function openSession(user: ReturnType<typeof userEvent.setup>) {
+  // Session navigation must not depend on sidebar copy from the held redesign.
+  const links = document.querySelectorAll<HTMLAnchorElement>(
+    'nav a[href="/session"]',
+  );
+  expect(links).toHaveLength(1);
+  await user.click(links[0]);
+  expect(screen.getByRole("button", { name: "Kết thúc phiên" })).toBeEnabled();
+}
+
 describe("APP-14 Portal MVP presentation integration", () => {
+  it.each(["read", "triage"] as const)(
+    "expires the same session for a delayed %s 401 after leaving the feature",
+    async (operation) => {
+      const pending = deferred<Awaited<ReturnType<HelpdeskHttpTransport>>>();
+      const wire = helpdeskWire({
+        state: "SUBMITTED",
+        allowedActions: ["triage"],
+      });
+      const transport = vi
+        .fn<HelpdeskHttpTransport>()
+        .mockImplementation(async (request) => {
+          if (operation === "read" || request.method === "POST")
+            return pending.promise;
+          return {
+            status: 200,
+            body: request.path.endsWith("/history") ? [] : wire,
+          };
+        });
+      const user = userEvent.setup();
+      mount(clientFixture(transport).service, `${ROOT}/${helpdeskId}`);
+      if (operation === "triage")
+        await user.click(
+          await screen.findByRole("button", { name: "Tiếp nhận" }),
+        );
+      else await waitFor(() => expect(transport).toHaveBeenCalled());
+      await openSession(user);
+      await act(async () => pending.resolve({ status: 401 }));
+      expect(
+        screen.getByRole("heading", { name: "Bắt đầu trải nghiệm" }),
+      ).toBeVisible();
+      expect(sessionStorage.getItem("dxos-demo-role")).toBeNull();
+    },
+  );
+
+  it("does not reload assignment Detail after logout while its write is pending", async () => {
+    const pending = deferred<Awaited<ReturnType<HelpdeskHttpTransport>>>();
+    const wire = helpdeskWire({
+      state: "TRIAGED",
+      allowedActions: ["assign"],
+      eligibleAssignees: [{ id: "worker", displayName: "Worker" }],
+    });
+    const transport = vi
+      .fn<HelpdeskHttpTransport>()
+      .mockImplementation(async (request) =>
+        request.method === "POST"
+          ? pending.promise
+          : {
+              status: 200,
+              body: request.path.endsWith("/history") ? [] : wire,
+            },
+      );
+    const user = userEvent.setup();
+    mount(clientFixture(transport).service, `${ROOT}/${helpdeskId}`);
+    await user.selectOptions(await screen.findByRole("combobox"), "choice-0");
+    await user.click(screen.getByRole("button", { name: "Phân công" }));
+    await openSession(user);
+    await user.click(screen.getByRole("button", { name: "Kết thúc phiên" }));
+    const attempts = transport.mock.calls.length;
+    await act(async () => pending.resolve({ status: 200, body: wire }));
+    expect(transport).toHaveBeenCalledTimes(attempts);
+    expect(
+      screen.getByRole("heading", { name: "Bắt đầu trải nghiệm" }),
+    ).toBeVisible();
+  });
+
+  it.each([401, 503])(
+    "keeps the new session on an old mutation HTTP %s, retaining only the unknown write stop",
+    async (status) => {
+      const pending = deferred<Awaited<ReturnType<HelpdeskHttpTransport>>>();
+      const wire = helpdeskWire({
+        state: "SUBMITTED",
+        allowedActions: ["triage"],
+      });
+      const transport = vi
+        .fn<HelpdeskHttpTransport>()
+        .mockImplementation(async (request) =>
+          request.method === "POST"
+            ? pending.promise
+            : {
+                status: 200,
+                body: request.path.endsWith("/history") ? [] : wire,
+              },
+        );
+      const previous = clientFixture(transport).service;
+      const next = clientFixture(fakeHelpdeskTransport(wire).transport).service;
+      const user = userEvent.setup();
+      const view = mount(previous, `${ROOT}/${helpdeskId}`);
+      await user.click(
+        await screen.findByRole("button", { name: "Tiếp nhận" }),
+      );
+      await openSession(user);
+      await user.click(screen.getByRole("button", { name: "Kết thúc phiên" }));
+      view.rerender(
+        <MemoryRouter>
+          <App helpdeskService={next} />
+        </MemoryRouter>,
+      );
+      await user.click(screen.getByRole("button", { name: "Vào phiên demo" }));
+      await act(async () =>
+        pending.resolve({
+          status,
+          body: status === 503 ? { code: "COMMIT_OUTCOME_UNKNOWN" } : undefined,
+        }),
+      );
+      expect(sessionStorage.getItem("dxos-demo-role")).toBe("employee");
+      await user.click(
+        screen.getByRole("link", { name: "IT Helpdesk MVP · kiểm thử" }),
+      );
+      await user.click(
+        await screen.findByRole("link", { name: /Không thể lưu báo cáo/ }),
+      );
+      const action = await screen.findByRole("button", { name: "Tiếp nhận" });
+      if (status === 401) expect(action).toBeEnabled();
+      else expect(action).toBeDisabled();
+    },
+  );
+
   it("runs Create → List → Detail → Triage → Assign → Start → Resolve → Confirm → History through fake transport", async () => {
     const fake = fakeHelpdeskTransport();
     const { service } = clientFixture(fake.transport);

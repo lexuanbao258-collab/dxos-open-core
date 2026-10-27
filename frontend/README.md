@@ -44,7 +44,9 @@ tests/portal.spec.ts          Browser smoke, WCAG checks and real screenshots
 scripts/check-security.mjs    Source/bundle credential-pattern check
 ```
 
-UI chỉ phụ thuộc `RequestService` qua composition root. `HttpApiClient` tách biệt và luôn trả `LIVE_BLOCKED`; chưa triển khai route, DTO, transport, token hay cờ mở LIVE. Khi API được duyệt, cần adapter riêng map OpenAPI/DTO sang view model, verified session và chiến lược timeout/error theo contract. Không coi view model mock là DTO backend.
+MOCK mặc định dùng `RequestService` qua composition root. `HttpApiClient` tách biệt và luôn trả `LIVE_BLOCKED`. APP-10/11/13/14 đã có mapper, Assignment Form, typed HTTP adapter cho chín route candidate PR #63 và Portal feature riêng qua optional `helpdeskService` injection; chỉ kiểm thử bằng fake transport, chưa có concrete LIVE transport, token hay cờ mở LIVE. Không coi view model mock là DTO backend. Xem [kiểm kê MVP và checklist kết nối thật](../docs/application/issue39-mvp-readiness-20261027.md).
+
+Logout, đổi vai trò và 401 vô hiệu hóa kết quả async của phiên cũ. Response muộn không chuyển trang, phát thông báo hay làm hết hạn phiên mới; 401 của phiên hiện tại vẫn kết thúc phiên sau khi rời màn hình. Assignment không bắt đầu GET Detail sau logout. Lệnh ghi đã gửi không bị hủy/replay; unknown outcome của MVP vẫn khóa để chờ đối soát. Đây là vòng đời phiên demo/fake, chưa phải logout hoặc thu hồi phiên OIDC/BFF.
 
 Hai workflow UX dùng chung form, bảng, metadata, action dialog và timeline. Những phản hồi cố định trong mock chỉ phục vụ demo; **không phải frontend Workflow engine**, không thực thi definition, không có BPMN editor, persistence hay orchestration Core. Các thao tác được cho phép thật phải do backend quyết định sau security gate.
 

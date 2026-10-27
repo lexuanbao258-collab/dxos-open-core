@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
 import { useRequests } from "../hooks/useRequests";
+import { useSessionOperation } from "../hooks/useSessionOperation";
 import { usePortal } from "../context";
 import { formatDate, kindLabels, type RequestAction } from "../domain/request";
 import { PortalError, safeError } from "../services/RequestService";
@@ -27,6 +28,7 @@ export function RequestDetail() {
   const { id } = useParams();
   const { data, loading, error, reload } = useRequests(id);
   const { role, refresh, notify, expireSession, requestService } = usePortal();
+  const captureOperation = useSessionOperation();
   const [action, setAction] = useState<RequestAction | null>(null);
   const [note, setNote] = useState("");
   const [actionError, setActionError] = useState("");
@@ -52,6 +54,7 @@ export function RequestDetail() {
     lock.current = true;
     setBusy(true);
     setActionError("");
+    const operation = captureOperation();
     try {
       await requestService.transition(
         item.id,
@@ -60,19 +63,23 @@ export function RequestDetail() {
         item.version,
         role,
       );
+      if (!operation.canUpdate()) return;
       setAction(null);
       refresh();
       notify("Đã cập nhật yêu cầu demo và lịch sử xử lý.");
     } catch (err) {
+      if (!operation.isCurrent()) return;
+      if (err instanceof PortalError && err.code === "401") {
+        expireSession();
+        return;
+      }
+      if (!operation.canUpdate()) return;
       setActionError(safeError(err));
       if (err instanceof PortalError && err.code === "COMMIT_OUTCOME_UNKNOWN")
         setUncertain(true);
-      if (err instanceof PortalError && err.code === "401") {
-        expireSession();
-      }
     } finally {
       lock.current = false;
-      setBusy(false);
+      if (operation.canUpdate()) setBusy(false);
     }
   }
   return (

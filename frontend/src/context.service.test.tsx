@@ -199,6 +199,129 @@ async function openConfirmation(user: ReturnType<typeof userEvent.setup>) {
   };
 }
 
+describe("session boundaries for pending Application writes", () => {
+  it.each(["create", "transition"] as const)(
+    "expires the same session on a delayed %s 401 even after leaving the form",
+    async (operation) => {
+      const pending = deferred<ServiceRequest>();
+      const service = fakeService();
+      service[operation].mockReturnValue(pending.promise);
+      service.actions.mockReturnValue([
+        { id: "confirm", label: "Xác nhận từ fake service" },
+      ]);
+      const user = userEvent.setup();
+      mountSessionPortal(
+        service,
+        operation === "create" ? "/requests/new" : `/requests/${provided.id}`,
+      );
+      if (operation === "create") {
+        await fillCreateForm(user);
+        await user.click(screen.getByRole("button", { name: "Gửi yêu cầu" }));
+      } else {
+        const { submit } = await openConfirmation(user);
+        await user.click(submit);
+      }
+      await user.click(screen.getByRole("button", { name: "Test leave form" }));
+      await act(async () =>
+        pending.reject(new PortalError("401", "same session")),
+      );
+      expect(screen.getByTestId("session-location")).toHaveTextContent(
+        "/requests:none:expired",
+      );
+      expect(sessionStorage.getItem("dxos-demo-role")).toBeNull();
+    },
+  );
+
+  it.each(["create", "transition"] as const)(
+    "ignores late %s success after logout and a new session",
+    async (operation) => {
+      const pending = deferred<ServiceRequest>();
+      const service = fakeService();
+      service[operation].mockReturnValue(pending.promise);
+      service.actions.mockReturnValue([
+        { id: "confirm", label: "Xác nhận từ fake service" },
+      ]);
+      const user = userEvent.setup();
+      mountSessionPortal(
+        service,
+        operation === "create" ? "/requests/new" : `/requests/${provided.id}`,
+      );
+      if (operation === "create") {
+        await fillCreateForm(user);
+        await user.click(screen.getByRole("button", { name: "Gửi yêu cầu" }));
+      } else {
+        const { submit } = await openConfirmation(user);
+        await user.click(submit);
+      }
+      await user.click(screen.getByRole("button", { name: "Test logout" }));
+      await user.click(
+        screen.getByRole("button", { name: "Test new session" }),
+      );
+      await act(async () => pending.resolve(provided));
+      expect(screen.getByTestId("session-location")).toHaveTextContent(
+        "/requests:employee:active",
+      );
+      expect(
+        screen.queryByRole("button", { name: "Đóng thông báo" }),
+      ).not.toBeInTheDocument();
+      expect(service[operation]).toHaveBeenCalledTimes(1);
+    },
+  );
+
+  it.each(["create", "transition"] as const)(
+    "ignores late %s 401 from an old session",
+    async (operation) => {
+      const pending = deferred<ServiceRequest>();
+      const service = fakeService();
+      service[operation].mockReturnValue(pending.promise);
+      service.actions.mockReturnValue([
+        { id: "confirm", label: "Xác nhận từ fake service" },
+      ]);
+      const user = userEvent.setup();
+      mountSessionPortal(
+        service,
+        operation === "create" ? "/requests/new" : `/requests/${provided.id}`,
+      );
+      if (operation === "create") {
+        await fillCreateForm(user);
+        await user.click(screen.getByRole("button", { name: "Gửi yêu cầu" }));
+      } else {
+        const { submit } = await openConfirmation(user);
+        await user.click(submit);
+      }
+      await user.click(screen.getByRole("button", { name: "Test logout" }));
+      await user.click(
+        screen.getByRole("button", { name: "Test new session" }),
+      );
+      await act(async () =>
+        pending.reject(new PortalError("401", "old session")),
+      );
+      expect(screen.getByTestId("session-location")).toHaveTextContent(
+        "/requests:employee:active",
+      );
+      expect(sessionStorage.getItem("dxos-demo-role")).toBe("employee");
+    },
+  );
+
+  it("does not redirect or notify for a create success after leaving the form", async () => {
+    const pending = deferred<ServiceRequest>();
+    const service = fakeService();
+    service.create.mockReturnValue(pending.promise);
+    const user = userEvent.setup();
+    mountSessionPortal(service, "/requests/new");
+    await fillCreateForm(user);
+    await user.click(screen.getByRole("button", { name: "Gửi yêu cầu" }));
+    await user.click(screen.getByRole("button", { name: "Test leave form" }));
+    await act(async () => pending.resolve(provided));
+    expect(screen.getByTestId("session-location")).toHaveTextContent(
+      "/requests:employee:active",
+    );
+    expect(
+      screen.queryByRole("button", { name: "Đóng thông báo" }),
+    ).not.toBeInTheDocument();
+  });
+});
+
 let assertNoNetworkOrFallback: () => void;
 beforeEach(() => {
   sessionStorage.setItem("dxos-demo-role", "employee");
