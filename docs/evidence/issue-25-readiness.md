@@ -6,7 +6,7 @@
 - The production `WorkflowPersistencePort` JDBC implementation in `main` supports PostgreSQL through standard JDBC and immutable V3/V4 definitions.
 - Prior development reports describe local JDK 21/PostgreSQL integration regression, transactional instance/history persistence, concurrency and rollback. Those results apply **only** to the exact historical SHAs in their original logs; they are **not** fresh test results from this cleanup.
 - Current MVP must be validated on **isolated PostgreSQL 17** using [the local verification runbook](../../backend/README.md) and `scripts/workflow-verify-local.ps1`.
-- Full Helpdesk/Keycloak/Portal E2E and Local FileSystem persistence acceptance are **PENDING**. Do not promote historical evidence to current LIVE or CI acceptance.
+- Full Helpdesk/Keycloak/Portal E2E and local MinIO integration/persistence acceptance are **PENDING**. Do not promote historical evidence to current LIVE or CI acceptance.
 
 ## Safety invariants
 - Do not modify applied Flyway V1–V4, re-run already-applied migrations, or use `flyway repair` to reconcile an unintended mismatch.
