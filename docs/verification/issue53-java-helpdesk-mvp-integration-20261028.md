@@ -15,6 +15,14 @@ Follow the **2026-10-27 isolated-local-MVP scope decision** in Issues #23 and #4
 - On 2026-10-28 GitHub comparison, `feature/issue53-helpdesk-backend` was 88 commits ahead of and 10 commits behind `main`. Do not assume direct merge safety.
 - The newer Java-authorization/PG17 refactor was **reported as local worktree-only**. Its exact local HEAD, diff, test XML and uncommitted changes **have not been inspected by this GitHub-only handoff**. Never label them pushed or merged without verification.
 
+## Data selection update (2026-10-28)
+
+The team now selects **local PostgreSQL 17 + local MinIO (Docker)** for the Data stack. PostgreSQL owns business facts and Workflow state/history; MinIO stores object bytes/attachments through `ObjectStoragePort`. The MinIO adapter is **Draft PR #34**, with real MinIO integration still **NOT VERIFIED**. The earlier filesystem-only PR #43 has been closed without merge. Supabase is excluded. This change is an integration requirement, **not proof that any MinIO code, API, container or test has been imported into PR #74**.
+
+- Keep Storage behind an authorized Backend Application API and provider-neutral Core port; no direct Portal access to privileged MinIO credentials, no public buckets.
+- Add private local MinIO Docker/persistent-volume and restart/negative tests to the combined full-stack gate **after** PR #34 is independently accepted. Do not claim PostgreSQL+MinIO atomic commits; use explicit recovery for attachment consistency.
+- Avoid introducing hosted AWS S3 services. An S3-compatible client SDK for self-hosted MinIO is permitted.
+
 ## Required source transfer — maintain existing worktree intact
 
 1. On the Windows developer machine, run `git status --short`, `git rev-parse HEAD`, `git branch --show-current`, and `git diff --check` **inside the actual Backend worktree**. Record SHA, branch, modified/untracked files, and any hidden ignored files that are relevant to the build. **Do not reset, clean, force-push, or delete the local worktree.**
