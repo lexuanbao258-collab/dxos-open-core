@@ -381,11 +381,11 @@ Không chạy `smoke` lại với run-id cũ: runner từ chối replay trước
 
 The OLP MVP uses **PostgreSQL 17 on an isolated local or private network** through the standard JDBC driver. Use the instructions above (including `scripts/workflow-verify-local.ps1` for disposable integration checks) and keep the migration/runtime roles separate. The database is **not** an external hosted-service dependency.
 
-The target object provider is **Local FileSystem Storage** behind `ObjectStoragePort`, using a private persistent volume with OS permissions, quotas, backup/recovery and application-level authorization. [Draft PR #43](https://github.com/lexuanbao258-collab/dxos-open-core/pull/43) contains the implementation candidate; this file does not claim it is already on `main`.
+The selected object provider is **MinIO running locally (Docker)** behind `ObjectStoragePort`. Deploy a private MinIO endpoint, server-only access/secret keys, non-public buckets and a persistent volume; configure the Java Backend adapter rather than exposing credentials to Portal. [Draft PR #34](https://github.com/lexuanbao258-collab/dxos-open-core/pull/34) is the implementation candidate. Its real local MinIO integration tests remain **NOT VERIFIED**, and this README does not claim it is already on `main`. The filesystem-only candidate PR #43 is superseded.
 
 Do not run historical remote migration/approval launchers against any database. Existing Flyway V1–V4 bytes/checksums and `COMMIT_OUTCOME_UNKNOWN` handling must remain unchanged. Application authorization belongs to verified Keycloak identity + trusted Backend/Gateway checks, with local PostgreSQL runtime privileges limited to persistence.
 
-**Integration status:** nine-route Helpdesk, Local FileSystem and Portal/BFF real-identity E2E require exact-SHA tests/review before LIVE; no production deployment or remote database mutation is authorized.
+**Integration status:** nine-route Helpdesk, local MinIO and Portal/BFF real-identity E2E require exact-SHA tests/review before LIVE; no production deployment or remote database mutation is authorized.
 
 ---
 
