@@ -10,9 +10,9 @@ DX-OS Open-Core is TRICORE's modular monolith for exploring reusable capabilitie
 
 ## OLP 2026 MVP provider decision (2026-10-28)
 
-**Supported target stack:** Java 21 / Spring Boot Backend, Keycloak for OIDC, private PostgreSQL 17 (standard JDBC), and server-side Local FileSystem Storage via the provider-neutral `ObjectStoragePort`.
+**Supported target stack:** Java 21 / Spring Boot Backend, Keycloak for OIDC, private PostgreSQL 17 (standard JDBC), and **local MinIO Object Storage (Docker)** behind the provider-neutral `ObjectStoragePort`.
 
-This is the **only intended MVP deployment stack**. No hosted database or cloud object-storage service is required. No third-party hosted storage adapter is part of the deliverable or approved integration path. The selected filesystem implementation is currently under independent review in [Draft PR #43](https://github.com/lexuanbao258-collab/dxos-open-core/pull/43); this decision does **not** mean it is merged or fully verified.
+This is the **only intended MVP deployment stack**. No Supabase or externally hosted database / AWS S3 cloud service is required. MinIO uses the S3-compatible API locally; this does not mean the MVP deploys to AWS. The selected MinIO adapter remains under review in [Draft PR #34](https://github.com/lexuanbao258-collab/dxos-open-core/pull/34), with **real MinIO integration NOT VERIFIED**. The earlier filesystem-only candidate [PR #43](https://github.com/lexuanbao258-collab/dxos-open-core/pull/43) was superseded and closed without merge. Neither the adapter nor full integration is yet accepted.
 
 **Status:** local Backend refactor and Portal/BFF E2E remain under integration review. Do not claim that this stack is fully operational until actual clean-install and security evidence is recorded. Previously explored hosted adapters and operator checks belong to the repository's immutable Git history, not the active delivery runbook.
 
