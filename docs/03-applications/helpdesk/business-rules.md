@@ -1,8 +1,8 @@
 # IT Helpdesk — Business Rules
 
-**Status:** DRAFT — PROPOSED / NOT APPROVED  
-**Owner:** Application Team — Ánh  
-**Project:** DX-OS Open-Core  
+**Status:** DRAFT — PROPOSED / NOT APPROVED<br>
+**Owner:** Application Team — Ánh<br>
+**Project:** DX-OS Open-Core<br>
 **Related:** Issue #23, Issue #39, Issue #53, PR #60, PR #63, PR #71
 
 ## 1. Purpose

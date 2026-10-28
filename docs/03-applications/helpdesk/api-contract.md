@@ -1,8 +1,8 @@
 # IT Helpdesk — Application API Contract
 
-**Status:** DRAFT — PROPOSED / LIVE_BLOCKED  
-**Owner:** Application Team — Ánh  
-**Project:** DX-OS Open-Core  
+**Status:** DRAFT — PROPOSED / LIVE_BLOCKED<br>
+**Owner:** Application Team — Ánh<br>
+**Project:** DX-OS Open-Core<br>
 **Related:** Issue #22, #23, #24, #39, #53; PR #60, #63, #70, #71
 
 ## 1. Purpose

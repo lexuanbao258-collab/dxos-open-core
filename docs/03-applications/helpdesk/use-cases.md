@@ -1,7 +1,7 @@
 # IT Helpdesk — Application Use Cases
 
-**Status:** DRAFT — PROPOSED / NOT APPROVED  
-**Owner:** Application Team — Ánh  
+**Status:** DRAFT — PROPOSED / NOT APPROVED<br>
+**Owner:** Application Team — Ánh<br>
 **Related:** Issue #39, Issue #53, PR #60, PR #63, PR #71
 
 ## 1. Purpose

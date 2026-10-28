@@ -9,7 +9,7 @@ Status: DOCUMENTATION RESTRUCTURE IN PROGRESS
 | 00-project | Project context, scope and product vision |
 | 01-architecture | System architecture and dependency rules |
 | 02-core | Identity, Workflow, Data and API Gateway capabilities |
-| 03-applications | IT Helpdesk and Facility applications |
+| [03-applications](03-applications/README.md) | IT Helpdesk and Facility applications |
 | 04-integration | Cross-module and full-stack integration |
 | 05-testing | Test strategy, specifications and acceptance |
 | 06-deployment | Installation, configuration and operations |

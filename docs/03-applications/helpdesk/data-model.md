@@ -1,7 +1,7 @@
 # IT Helpdesk — Application Data Model
 
-**Status:** DRAFT — IMPLEMENTED CANDIDATE / LIVE_BLOCKED  
-**Owner:** Application Team — Ánh  
+**Status:** DRAFT — IMPLEMENTED CANDIDATE / LIVE_BLOCKED<br>
+**Owner:** Application Team — Ánh<br>
 **Source baseline:** PR #63 Backend candidate, commit `e12d105c89400a5fd69dd6cc1fca670ff1f04f51`
 
 ## 1. Purpose
