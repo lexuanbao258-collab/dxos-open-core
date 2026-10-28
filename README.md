@@ -4,9 +4,17 @@
 
 DX-OS Open-Core is TRICORE's modular monolith for exploring reusable capabilities behind internal service applications. The Internal Service Portal / IT Support scenario is the main demonstration target. DX-OS is a digital transformation platform concept, not a computer operating system or a claim about the competition's required product.
 
-**Source baseline:** `origin/main` at `2115de3`. This README describes that source snapshot; work on unmerged branches and pull requests is identified separately.
+**Source status:** `main` contains baseline Core contracts and PostgreSQL integration. Unmerged Backend, Portal, BFF and Storage work remains tracked separately by Draft PRs; this README does not assert full-stack acceptance.
 
 **Navigate:** [Overview](#overview) · [Architecture](#architecture-overview) · [Status](#implementation-status) · [Getting started](#getting-started) · [Documentation](#documentation-and-verification) · [License](#license-and-third-party-notices)
+
+## OLP 2026 MVP provider decision (2026-10-28)
+
+**Supported target stack:** Java 21 / Spring Boot Backend, Keycloak for OIDC, private PostgreSQL 17 (standard JDBC), and server-side Local FileSystem Storage via the provider-neutral `ObjectStoragePort`.
+
+This is the **only intended MVP deployment stack**. No hosted database or cloud object-storage service is required. No third-party hosted storage adapter is part of the deliverable or approved integration path. The selected filesystem implementation is currently under independent review in [Draft PR #43](https://github.com/lexuanbao258-collab/dxos-open-core/pull/43); this decision does **not** mean it is merged or fully verified.
+
+**Status:** local Backend refactor and Portal/BFF E2E remain under integration review. Do not claim that this stack is fully operational until actual clean-install and security evidence is recorded. Previously explored hosted adapters and operator checks belong to the repository's immutable Git history, not the active delivery runbook.
 
 ## Overview
 
