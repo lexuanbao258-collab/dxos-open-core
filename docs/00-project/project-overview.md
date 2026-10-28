@@ -40,7 +40,7 @@ flowchart TD
     App --> Data[Data Core: ObjectStoragePort]
     Workflow --> WPort[WorkflowPersistencePort]
     WPort --> Pg[PostgreSQL adapter]
-    Data --> Storage[Filesystem / S3-compatible adapter]
+    Data --> Storage[Selected local Docker MinIO adapter - target]
     Gateway --> Security[Spring Security / OIDC adapter]
     Security --> IdP[Keycloak or compatible IdP]
 ```
@@ -54,7 +54,7 @@ flowchart TD
 | **Data Core** | Provider-neutral Object Storage API (`ObjectStoragePort`) | Does **not** own every PostgreSQL table, business repository or Workflow persistence contract |
 | **API Gateway capability** | HTTP entry/exposure, common authentication boundary, routing/error conventions | Does not execute business transitions or replace Application resource authorization |
 | **Helpdesk / Facility Applications** | Use cases, business rules, tenant/resource permissions, business facts, attachment ownership | Must not hardcode vendor SDK semantics into reusable Core |
-| **Infrastructure** | OIDC, PostgreSQL, filesystem/S3 provider implementations, configurations and migrations | Adapter implementations must preserve the owning capability's contract |
+| **Infrastructure** | OIDC, private PostgreSQL 17 and selected local Docker MinIO adapters/configuration | Candidate adapter implementation and integration remain unverified |
 
 **Ownership rule:** `WorkflowPersistencePort` belongs to Workflow, even if a PostgreSQL implementation is developed by a Data/infrastructure contributor. Business tables belong to the corresponding Application.
 
@@ -80,10 +80,10 @@ Facility should implement one real, narrowly scoped request flow with **Facility
 | **Hexagonal / DIP** | Consumers depend on stable capability-owned ports rather than PostgreSQL or storage SDKs | An adapter swap still needs semantic contract/conformance tests |
 | **Verified OIDC identity** | Decouples Core identity concepts from Keycloak credentials | `issuer + sub` continuity across providers needs deliberate linking/migration |
 | **Generic Workflow State Machine** | Reuses controlled transitions/history for different request applications | Business authorization remains Application-owned; BPMN breadth is out of scope |
-| **ObjectStoragePort** | Allows filesystem or S3-compatible provider implementations | Switching providers does not automatically migrate stored objects or create an atomic DB–object-store transaction |
+| **ObjectStoragePort** | Keeps Data Core independent of the selected MinIO adapter | Portability is a contract goal; real provider substitution and data migration are not verified |
 | **Application-owned data** | Avoids turning Data Core into a central repository for all business modules | Shared physical PostgreSQL does not imply shared schema ownership |
 
-The working technology direction is **Java 21, Spring Boot 3.5.16, Gradle, PostgreSQL/Flyway, OIDC/Keycloak integration and provider-adapted Object Storage**. These are implementation choices, not the definition of the reusable Core contract. Detailed dependency and security rules belong in [System Architecture](../01-architecture/system-architecture.md), [Core–Application Boundary](../01-architecture/core-application-boundary.md) and [Dependency Rules](../01-architecture/dependency-rules.md).
+The selected MVP runtime direction is **Java 21, Spring Boot, Gradle, private PostgreSQL 17, local Docker MinIO and Keycloak**. MinIO uses an S3-compatible protocol; this is not an AWS S3 deployment claim. The Data Core port exists at the pinned source baseline, while the MinIO implementation and real integration remain candidate work. See [ADR-007](../08-decisions/ADR-007-data-storage.md), the [deployment topology](../01-architecture/deployment-topology.md), [System Architecture](../01-architecture/system-architecture.md), [Core-Application Boundary](../01-architecture/core-application-boundary.md), and [Dependency Rules](../01-architecture/dependency-rules.md).
 
 ## 6. Boundaries of the MVP and non-goals
 
@@ -113,10 +113,7 @@ A source file, open/draft PR, passing fake test or design sign-off **is not** by
 This document explains **what DX-OS is intended to be**, not the current completion percentage. Review current state using commit-pinned evidence, not product-level descriptions.
 
 - [Existing Core contracts](../contracts/README.md) — existing contract baseline during docs migration.
-- [Integration baseline](../04-integration/integration-baseline.md) — **PENDING DOCUMENTATION** in the new structure; must state integrated commit, PR boundaries, actual tests and limits.
 - [Evidence index](../evidence/README.md) — current legacy evidence index; legacy paths remain canonical until approved migration.
-- [New evidence index](../09-evidence/README.md) — **PENDING DOCUMENTATION**; not a claim of migrated evidence.
-- [Architecture review](../10-reviews/architecture-review.md) — **PENDING DOCUMENTATION**; future independent review/sign-off.
 
 **Reference snapshot:** `origin/main` `e06fa429cfd92b032c166eb3ebf32803d13191c2`. Check subsequent merges and independent evidence before reporting implementation or release status.
 

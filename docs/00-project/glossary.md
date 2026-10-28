@@ -67,7 +67,7 @@
 | Term | Meaning |
 |---|---|
 | Data Core | Provider-neutral shared object-storage capability in current contracts; not universal owner of all DB tables |
-| Object Storage | Key-addressed storage of bytes and metadata, e.g., filesystem or S3-compatible service |
+| Object Storage | Key-addressed storage of bytes and metadata; selected MVP target is local Docker MinIO using an S3-compatible protocol, not AWS S3 deployment |
 | `ObjectStoragePort` | Shared `store`, `read`, `metadata`, `delete` contract |
 | `ObjectKey` | Opaque, case-sensitive logical object identifier |
 | `ObjectMetadata` | Content type, exact byte length and custom metadata |
