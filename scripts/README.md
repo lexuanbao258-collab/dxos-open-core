@@ -13,8 +13,8 @@ For a persistent local PostgreSQL setup and safe Backend startup, follow [backen
 
 **MVP boundaries:**
 - Never run operator bootstrap/migration/smoke scripts intended for obsolete remote environments. This README does not authorize such tools.
-- Local FileSystem Storage is the selected **target** provider; [Draft PR #43](https://github.com/lexuanbao258-collab/dxos-open-core/pull/43) has not yet been merged or accepted.
+- **Local MinIO (Docker)** is the selected object-storage target; [Draft PR #34](https://github.com/lexuanbao258-collab/dxos-open-core/pull/34) is not merged and real MinIO integration is NOT VERIFIED. Do not substitute the superseded filesystem-only PR #43 as an MVP acceptance gate.
 - Do not alter applied Flyway V1–V4 bytes/checksums, shared databases or production resources.
-- A local JUnit PASS does not prove real Keycloak → Portal → BFF → Backend → PostgreSQL E2E.
+- A local JUnit PASS does not prove real Keycloak → Portal → BFF → Backend → PostgreSQL + MinIO E2E.
 
 Historical operator tooling is retained only in Git history until the source/test cleanup is verified; it is **not** part of the active OLP instructions.
