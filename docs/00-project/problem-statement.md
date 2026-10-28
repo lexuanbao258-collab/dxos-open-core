@@ -108,6 +108,5 @@ Security boundaries, data integrity, error semantics, auditability, testability,
 - [Root README](../../README.md)
 - [Project Overview](project-overview.md)
 - [Scope and MVP](scope-and-mvp.md)
-- [Application documents](../03-applications/README.md)
 
 **Review outcome:** PENDING business validation and sign-off.

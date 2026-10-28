@@ -186,7 +186,7 @@ flowchart TD
   PgWF[PostgreSQL Workflow Adapter] -. implements .-> WPort
   PgWF --> Postgres[(PostgreSQL)]
   BizRepo --> Postgres
-  FS[Filesystem / S3-compatible Adapter] -. implements .-> Storage
+  MinIO[Local Docker MinIO Adapter - target] -. implements .-> Storage
 ```
 
 *`candidate` and generic adapter boxes are architecture positions, not declarations that each is integrated on `main`. Logical dependency arrows and request-flow arrows are different abstractions; adapter `implements` edges deliberately point toward owned ports.*
@@ -216,7 +216,7 @@ A *modular monolith* describes the backend's code/runtime architecture. Browser,
 |---|---|---|---|
 | `CurrentPrincipal` | Application identity boundary | Spring Security JWT context adapter | Verified issuer/subject, fail-closed, canonical subject |
 | `WorkflowPersistencePort` | Workflow Core | `PostgresWorkflowPersistence` | Durable commit, authoritative definition, history atomicity, conflicts, unknown commit |
-| `ObjectStoragePort` | Data Core | Filesystem, S3-compatible/MinIO candidate | Key identity, stream lifecycle, exact length, `CREATE_ONLY` concurrency, sanitized failures |
+| `ObjectStoragePort` | Data Core | Local Docker MinIO candidate in Infrastructure | Key identity, stream lifecycle, exact length, `CREATE_ONLY` concurrency, sanitized failures |
 | Business repository API | Owning Application | SQL/JPA business adapter | Business fact ownership; resource/tenant policy and transaction coupling |
 | Gateway HTTP contract | Gateway / HTTP boundary | MVC controller, BFF client, Caddy ingress | No forged caller; controlled route exposure; 401/403/404 contracts |
 
@@ -301,7 +301,7 @@ An ACL check outside the decisive transaction is not sufficient by itself. Defin
 
 ### 9.4 Cross-store caveat
 
-PostgreSQL and S3/MinIO do **not** share an ACID transaction. Attachment operations require ordering, reconciliation, idempotent cleanup and orphan/missing-object handling. Treat compensations as explicit Application policies.
+PostgreSQL and MinIO do **not** share an ACID transaction. Attachment operations require ordering, reconciliation, idempotent cleanup and orphan/missing-object handling. Treat compensations as explicit Application policies.
 
 ## 10. Provider Independence
 
@@ -309,7 +309,7 @@ PostgreSQL and S3/MinIO do **not** share an ACID transaction. Attachment operati
 |---|---|---|---|
 | Keycloak → another OIDC IdP | `CurrentPrincipal` and Identity contract | `issuer + sub` changes; claim mapping, authority semantics, identity linking/migration | Real token tests, no email auto-match, canonical-ID migration trial |
 | PostgreSQL → alternative database | `WorkflowPersistencePort` | SQL functions, locking, timestamps, transaction semantics, business SQL coupling | Contract suite + concurrent provider integration + migration rehearsals |
-| Filesystem → S3-compatible/MinIO | `ObjectStoragePort` | Streaming and `CREATE_ONLY` atomicity, consistency, metadata/ACL mapping | Dual-adapter contract runs + fault injection |
+| Local Docker MinIO adapter | `ObjectStoragePort` | Streaming, concurrent `CREATE_ONLY`, metadata and failure semantics | Real MinIO conformance, restart and fault tests on a pinned commit |
 | MVC/BFF/ingress implementation change | OpenAPI/HTTP behavior | Cookie/session/CSRF routing, response precedence, header spoofing | Consumer contracts + full HTTP E2E |
 
 **Policy:** “provider-neutral Core” is a falsifiable statement: the provider SDK must not appear in Core public API and at least one alternative adapter should pass the same conformance suite before calling it demonstrated substitution.
@@ -396,12 +396,12 @@ Use these as **future gates**; no PASS is implied without pinned runnable eviden
 
 | Design element | Source / canonical docs | Status represented |
 |---|---|---|
-| System boundary | [`docs/architecture/README.md`](../../architecture/README.md) | Baseline architecture statement |
-| Persistence boundary | [`docs/architecture/data-persistence-boundaries.md`](../../architecture/data-persistence-boundaries.md) | Baseline ownership and limits |
-| Identity contract | [`docs/contracts/identity-core.md`](../../contracts/identity-core.md) | Baseline contract |
-| Workflow contract | [`docs/contracts/workflow-core.md`](../../contracts/workflow-core.md) | Baseline contract |
-| Workflow authorization | [`docs/contracts/workflow-authorization.md`](../../contracts/workflow-authorization.md) | Baseline semantics, not full E2E |
-| Data storage contract | [`docs/contracts/data-core.md`](../../contracts/data-core.md) | Baseline contract |
+| System boundary | [`docs/architecture/README.md`](../architecture/README.md) | Baseline architecture statement |
+| Persistence boundary | [`docs/architecture/data-persistence-boundaries.md`](../architecture/data-persistence-boundaries.md) | Baseline ownership and limits |
+| Identity contract | [`docs/contracts/identity-core.md`](../contracts/identity-core.md) | Baseline contract |
+| Workflow contract | [`docs/contracts/workflow-core.md`](../contracts/workflow-core.md) | Baseline contract |
+| Workflow authorization | [`docs/contracts/workflow-authorization.md`](../contracts/workflow-authorization.md) | Baseline semantics, not full E2E |
+| Data storage contract | [`docs/contracts/data-core.md`](../contracts/data-core.md) | Baseline contract |
 | Workflow runtime | `backend/src/main/java/com/tricore/dxos/core/workflow/WorkflowRuntime.java` | Domain orchestration |
 | Workflow persistence port | `backend/src/main/java/com/tricore/dxos/core/workflow/WorkflowPersistencePort.java` | Durable-commit and error semantics |
 | PostgreSQL adapter | `backend/src/main/java/com/tricore/dxos/infrastructure/workflow/PostgresWorkflowPersistence.java` | Provider-specific implementation; needs integration evidence |

@@ -70,7 +70,7 @@ flowchart TD
     WCore --> WPort[Workflow-owned WorkflowPersistencePort]
     PAdapter[PostgreSQL Workflow adapter] -.implements.-> WPort
     Security[Spring Security / OIDC adapter] -.implements.-> IPort
-    Storage[Filesystem / S3 adapter] -.implements.-> DCore
+    Storage[Local Docker MinIO adapter - target] -.implements.-> DCore
     UseCases --> RepoPort[Application-owned repository port / authorized transaction boundary]
     RepoAdapter[Business DB adapter] -.implements.-> RepoPort
 ```

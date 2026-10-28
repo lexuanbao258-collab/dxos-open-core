@@ -35,12 +35,12 @@ Deliver a useful, secure **IT Helpdesk golden path** and a smaller **Facility re
 | SHOULD | Attachments via `ObjectStoragePort` | Authorized upload/download + storage tests |
 | SHOULD | List/search/filter and basic manager views | Verified functionality and access restrictions |
 | SHOULD | Automated architecture dependency checks | ArchUnit blocking new forbidden imports |
-| COULD | Provider switch demo | Filesystem ↔ S3-compatible adapter conformance |
+| COULD | MinIO failure and recovery demo | Real local-provider conformance and reconciliation evidence |
 | COULD | SLA dashboard and notifications | Separate proposal with acceptance |
 | OUT | BPMN engine migration and independent microservices | No effort in MVP |
 | OUT | Distributed ACID object-storage transaction | Explicit recovery design instead |
 
-**Review flag:** Whether attachments and provider-switch demonstration are mandatory competition acceptance items must be agreed; SHOULD/COULD classifications here are proposals.
+**Review flag:** Whether attachments and the MinIO failure/recovery demonstration are mandatory competition acceptance items must be agreed; SHOULD/COULD classifications here are proposals.
 
 ## 4. GP-IT-01 — Helpdesk golden path (proposed product flow)
 

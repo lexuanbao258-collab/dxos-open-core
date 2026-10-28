@@ -41,7 +41,7 @@ flowchart TD
     UC --> BR[Business repository port]
     WF --> WPORT[WorkflowPersistencePort — Workflow-owned]
     WDB[PostgreSQL Workflow adapter] -. implements .-> WPORT
-    S3[Filesystem / S3-compatible adapter] -. implements .-> STORAGE
+    MinIO[Local Docker MinIO adapter - target] -. implements .-> STORAGE
     BDB[Helpdesk / Facility persistence adapter] -. implements .-> BR
     AUTH --> OIDC[OIDC provider / Keycloak]
 ```
@@ -72,7 +72,7 @@ This depicts **conceptual calls and implementations**. Java source dependency po
 | **Data Management** | `ObjectStoragePort`, key/metadata/stream/write-mode/error semantics; reusable data facilities explicitly contracted | Ownership of *all* tables, ticket retention rules, Workflow transition semantics | App determines object visibility and links to business resources |
 | **API Gateway** | HTTP entry/exposure, coarse authenticated boundary, common transport/security/error conventions | Resource ACL, assignment, transition legality, database transaction policy | Routes to authorized application use cases |
 
-**Data naming warning:** a physical PostgreSQL database is infrastructure shared by several owners. **Workflow owns its persistence semantics** even if the concrete adapter is implemented under `infrastructure.persistence`. Object storage is not the same as Workflow relational persistence. Avoid claiming Data Core provides a magical ACID transaction across PostgreSQL and S3/MinIO.
+**Data naming warning:** a physical PostgreSQL database is infrastructure shared by several owners. **Workflow owns its persistence semantics** even if the concrete adapter is implemented under `infrastructure.persistence`. Object storage is not the same as Workflow relational persistence. Avoid claiming Data Core provides a magical ACID transaction across PostgreSQL and MinIO.
 
 ## 4. Application boundary and business ownership
 
@@ -158,7 +158,7 @@ The HTTP mappings are **proposed**, not automatically normative from Core error 
 | Workflow definitions, instance, history | Workflow | PostgreSQL schema | Workflow-owned port / guarded adapter |
 | Ticket/requester/assignee/resolution | Helpdesk | PostgreSQL tables | Helpdesk application repository/transaction boundary |
 | Facility work order/asset/location | Facility | Own business tables | Facility repository |
-| Object keys, bytes, metadata | Data storage contract + adapter | Filesystem/MinIO/S3-compatible | `ObjectStoragePort`; app separately owns resource-object relation |
+| Object keys, bytes, metadata | Data storage contract + adapter | Selected local Docker MinIO target | `ObjectStoragePort`; app separately owns resource-object relation |
 | Identity business mapping/membership | Owning application/security policy | Business data store | Authorized policy services; no implicit trust of IdP role alone |
 
 **Invariant:** if an operation changes business facts and Workflow state/history as one business command, partial commit is unacceptable. The existing `WorkflowPersistencePort` contract expects *confirmed durable commit* on successful return; `PostgresWorkflowPersistence` has its own JDBC transaction control. A composite Helpdesk transaction therefore **cannot just wrap it with a Spring `@Transactional` and assume atomicity**. Choose and test a transaction owner/interface extension, guarded SQL command, or another reviewed strategy; do not weaken existing port guarantees silently.
@@ -263,7 +263,7 @@ Reference repository: https://github.com/lexuanbao258-collab/dxos-open-core . Pi
 | SYS-ADR-08 — Generic State Machine | Team selected B | App-specific definitions + Facility reuse proof |
 | SYS-ADR-04 — Authorization enforcement | Previous team direction Application-enforced | Transaction/race evidence open |
 | SYS-ADR-05 — Transaction model | OPEN | Must choose composite atomic boundary vs alternatives |
-| SYS-ADR-07 — Object storage provider | OPEN for release implementation | Contract conformance and recovery |
+| SYS-ADR-07 - Object storage provider | MinIO selected for architecture; implementation acceptance OPEN | Contract conformance and recovery |
 | SYS-ADR-10 — Generic API exposure | Previous Gateway direction restricted/default OFF | Backend tests and approval open |
 | SYS-ADR-11 — Reuse proof | Helpdesk + Facility vertical slice proposed | Actual integration proof open |
 

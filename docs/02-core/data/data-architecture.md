@@ -5,14 +5,14 @@
 > **Date:** 2026-10-28
 > **Source baseline:** `origin/main` at `e06fa429cfd92b032c166eb3ebf32803d13191c2`
 > **Architecture:** Modular Monolith + Hexagonal Architecture + Dependency Inversion Principle (DIP)
-> **Related decisions:** SYS-ADR-01=B, 02=B, 06=B, 08=B (selected by TRICORE); DATA-ADR-01–08 are **recommendations pending sign-off**.
+> **Related decisions:** SYS-ADR-01=B, 02=B, 06=B, 08=B (selected by TRICORE); DATA-ADR-02 is selected by ADR-007; remaining DATA-ADR options are recommendations pending sign-off.
 > **Scope note:** Open PRs and candidate branches are not treated as merged, production-ready functionality.
 
 ## 1. Purpose, scope, and non-goals
 
 This document answers four questions: (1) what data belongs to Data Core; (2) who owns business data; (3) how stable contracts support replaceable storage providers; and (4) which tests constitute evidence of real reuse and portability.
 
-**Data Core v2 scope for the MVP:** the provider-neutral **Object Storage capability** represented by `com.tricore.dxos.core.data`. Data Core owns object keys, immutable metadata values, stream lifetime semantics, write policies, storage error semantics, and its port. Infrastructure adapters realize those contracts through filesystem, MinIO/S3-compatible or hosted providers.
+Infrastructure adapters realize the selected target through local Docker MinIO. Its protocol is S3-compatible; AWS S3 deployment is not selected.
 
 **Out of scope:** an all-purpose CRUD service; ownership of Workflow tables, Helpdesk tickets or Facility records; an identity database; a general-purpose ORM abstraction; distributed XA transaction guarantees; automatic object migration merely by changing configuration; a new storage REST endpoint without application authorization. Future shared data capabilities require independent contracts and ADRs, not a silent expansion of this Core.
 
@@ -26,7 +26,7 @@ An employee reports a broken printer and attaches a photo. The Helpdesk Applicat
 | Workflow | Definition/version, instance, state, history | Workflow Core | Workflow-owned persistence port implemented by PostgreSQL adapter |
 | Helpdesk | Request title, assignee, resolution, attachment binding, ACL | Helpdesk Application | Business repository/adapters |
 | Facility | Facility request, location, work order, attachment binding, ACL | Facility Application | Business repository/adapters |
-| Binary objects | Images, PDFs, evidence files and provider-neutral object metadata | Data Core defines storage semantics; Application owns use-case meaning/access | Filesystem, MinIO/S3, hosted storage adapter |
+| Binary objects | Images, PDFs, evidence files and provider-neutral object metadata | Data Core defines storage semantics; Application owns use-case meaning/access | Selected local Docker MinIO target; adapter integration pending |
 
 **Owner ≠ physical database host.** Different owners may store data in one PostgreSQL instance; ownership is governed by contracts, code dependencies, permissions, schema and migrations, not by requiring separate database servers.
 
@@ -47,7 +47,7 @@ These foundations are selected architecture directions, not proof that every exi
 
 **Application MUST:** enforce verified identity, resource/tenant authorization, attachment linkage and retention; choose safe object key allocation; orchestrate business metadata writes and recovery.
 
-**Infrastructure MUST:** implement port semantics, sandbox filesystem paths, protect credentials and provider namespaces, normalize lazy stream errors, and provide conformance evidence.
+**Infrastructure MUST:** implement port semantics, protect credentials and private MinIO namespaces, normalize lazy stream errors, and provide real-provider conformance evidence.
 
 ## 5. Contracts and invariants (Contract)
 
@@ -88,7 +88,7 @@ A restricted generic file API is a separate security decision and must default u
 
 **Illustrative upload sequence:** (1) verify principal and ticket permissions; (2) allocate a collision-resistant immutable object key; (3) validate file type/byte-size/resource limits; (4) stream object using `CREATE_ONLY`; (5) persist application-owned attachment binding and state; (6) return success only at the point the use case guarantees; (7) compensate/reconcile failures. A DB transaction by itself cannot roll back an object already written.
 
-**Illustrative download sequence:** (1) verify principal; (2) check ticket/attachment ACL and status; (3) resolve application-owned object key; (4) read through Data port; (5) stream response and close resources; (6) avoid disclosing filesystem paths/provider URLs/credentials.
+**Illustrative download sequence:** (1) verify principal; (2) check ticket/attachment ACL and status; (3) resolve application-owned object key; (4) read through Data port; (5) stream response and close resources; (6) avoid disclosing provider URLs/credentials.
 
 **Lifecycle states** such as `PENDING`, `AVAILABLE`, `DELETE_PENDING` and `FAILED` are **proposed Application metadata states**, not additions to the current Core contract. Retention and deletion must be controlled by each Application's policy. Reconciliation identifies orphan objects and missing references, records actions and avoids destructive cleanup while outcomes are uncertain.
 
@@ -103,9 +103,7 @@ flowchart TB
   F --> P
   H --> HR[Helpdesk-owned metadata port]
   F --> FR[Facility-owned metadata port]
-  P -. implemented by .-> FS[Filesystem adapter]
-  P -. implemented by .-> S3[MinIO / S3 adapter]
-  P -. implemented by .-> SB[Supabase adapter]
+  P -. implemented by .-> MinIO[Local Docker MinIO adapter - target]
   HR -. implemented by .-> DB[(Business PostgreSQL)]
   FR -. implemented by .-> DB
   W[Workflow Core] --> WP[WorkflowPersistencePort]
@@ -118,29 +116,16 @@ Diagram arrows represent **logical invocation/implementation**, not Java import 
 
 ## 9. Provider adapter analysis and technology choice (Provider Adapter)
 
-| Alternative | Advantages | Limitations | Recommended role |
-|---|---|---|---|
-| **A. Filesystem** | Easy clean-install/local demo; no extra service | Path confinement, atomic publish, crash handling and backup burden | **Suggested local default**, conditional on real tests |
-| **B. MinIO/S3-compatible** | Object semantics, container deployment, portability toward S3 | Credentials, service startup, conditional write consistency/provider differences | **Suggested replacement adapter** |
-| **C. Supabase Storage** | Hosted storage option | External connectivity, provider-specific API/limits, access policy | Optional hosted adapter, not required for offline demo |
+**Selected architecture target:** private PostgreSQL 17 for relational state, local Docker MinIO for object storage, and Keycloak for identity. MinIO uses an S3-compatible protocol; this is not AWS S3 deployment. Supabase Storage and filesystem-only object storage are excluded from the new implementation scope. Core remains provider-neutral, but no provider substitution has been demonstrated.
 
-The existing source baseline includes Core contracts and an in-memory fake, not sufficient proof of production provider readiness. Related unmerged candidates: [PR #34 MinIO](https://github.com/lexuanbao258-collab/dxos-open-core/pull/34), [PR #35 Supabase](https://github.com/lexuanbao258-collab/dxos-open-core/pull/35), [PR #43 Filesystem](https://github.com/lexuanbao258-collab/dxos-open-core/pull/43). Their respective head commits, CI, configuration, provider-side failure modes and ownership must be checked before selecting a merged implementation.
+**Source baseline:** at e06fa429cfd92b032c166eb3ebf32803d13191c2, the Core contract and in-memory fake exist; no production object-storage adapter exists in infrastructure.storage. [PR #34](https://github.com/lexuanbao258-collab/dxos-open-core/pull/34) is an unmerged Draft MinIO candidate; its description reports real MinIO integration tests NOT VERIFIED. [PR #35](https://github.com/lexuanbao258-collab/dxos-open-core/pull/35) and [PR #43](https://github.com/lexuanbao258-collab/dxos-open-core/pull/43) are closed without merge and remain historical context, not alternate MVP targets.
 
-**Suggested technical stack:** Java 21/Spring Boot integration and dependency injection for the runtime; Java filesystem APIs for local adapter; an S3-compatible SDK/adapter for MinIO; PostgreSQL + Flyway for business/Workflow transactional metadata and schemas; JUnit + provider integration suites; ArchUnit for structural boundaries. These technologies do **not** become Core domain dependencies.
-
-### What a provider switch really changes
-
-```yaml
-# Illustrative target configuration, not guaranteed current keys
-# dxos.storage.provider: filesystem | minio | supabase
-```
-
-Changing a config selects an **already implemented and tested** adapter. It does not implement missing semantics, provision buckets, migrate historic files, copy permissions/metadata, or reconcile ongoing writes. A provider transition requires inventory → bulk copy → integrity verification → cutover/dual-read strategy → monitoring → rollback plan. Keys must preserve logical identity without collisions.
+The selected adapter must be bound explicitly and fail closed if absent or ambiguous. Keep bucket access private and credentials outside Git. Do not invent a configuration key or infer that changing one property migrates stored objects. Any future provider transition needs a separate decision, data inventory, integrity check, cutover and rollback evidence.
 
 ## 10. Security and trust boundary (Security)
 
 - Application authenticates through trusted `CurrentPrincipal` and enforces tenant/resource/attachment ACL; existence and error visibility must respect authorization policy.
-- Adapter uses least-privilege credentials, protected namespaces and non-public buckets. Local filesystem adapter must prevent `..`, symlink traversal, path alias/collision and file escape, including race conditions.
+- Adapter uses least-privilege credentials, protected namespaces and non-public MinIO buckets. Object-key mapping must prevent namespace escape and collisions.
 - Gateway/BFF validates content length, MIME strategy, streaming timeouts and HTTP limits; malware scanning is a separate risk-based control, not a Core guarantee.
 - Avoid direct client storage access by default; signed upload/download URLs need separate scope, expiry and revocation design.
 - Provider errors and logs must not leak secrets, paths or raw SDK exceptions.
@@ -150,7 +135,7 @@ Changing a config selects an **already implemented and tested** adapter. It does
 
 **PostgreSQL and object storage do not share an atomic transaction.** If object upload succeeds and business DB write fails, the object may be orphaned. If a DB attachment reference commits but storage is missing, the record is dangling. Network timeouts can leave uncertain outcomes.
 
-**Recommended strategy (pending DATA-ADR-04):** Application-level orchestration, immutable object keys, reconciliation and bounded cleanup. Publish an attachment as available only when the contractually required storage and binding steps have been verified. Define idempotency keys, retry policy and safe compensation per use case. Do not claim general 2PC, transactional rollback of S3 objects or exactly-once behavior.
+**Recommended strategy (pending DATA-ADR-04):** Application-level orchestration, immutable object keys, reconciliation and bounded cleanup. Publish an attachment as available only when the contractually required storage and binding steps have been verified. Define idempotency keys, retry policy and safe compensation per use case. Do not claim general 2PC, transactional rollback of MinIO objects or exactly-once behavior.
 
 Concurrency must be tested at **the real provider**: `CREATE_ONLY` has one winner on same key; repeated or parallel upload requests do not overwrite successful prior content; access changes are checked at a suitably safe boundary. `OVERWRITE` has no CAS under existing port and should not be used for mutable attachment revisions if lost updates matter.
 
@@ -158,26 +143,25 @@ Workflow state/history atomicity is governed separately by `WorkflowPersistenceP
 
 ## 12. Reusability proof (Reusability)
 
-Proof requires two application use cases, not merely two demos calling a fake:
+Proof requires two distinct Application use cases using the unchanged Core contract, not two demos calling a fake:
 
 | Proof | Helpdesk | Facility | Pass condition |
 |---|---|---|---|
-| Same Core API | Photo/PDF evidence | Repair photo/report | Both call unchanged `ObjectStoragePort` |
-| Separate business metadata | `ticket_id` + owner/ACL | `facility_request_id` + site/ACL | No Facility/Helpdesk imports in Data Core |
-| Provider switch | Filesystem then MinIO | Filesystem then MinIO | Application source unchanged |
+| Same Core API | Photo/PDF evidence | Repair photo/report | Both call unchanged ObjectStoragePort |
+| Separate business metadata | Ticket owner/ACL | Facility request/site/ACL | No Application rules in Data Core |
+| Selected provider | Local Docker MinIO | Same reviewed MinIO adapter | Real-provider evidence pinned to a commit |
 | Security | Ticket authorizations | Facility authorizations | Cross-tenant/unauthorized access rejected |
-| Runtime evidence | Upload/read/delete | Upload/read/delete | Real-provider tests and pinned SHA |
 
-Conformance on an in-memory fake is necessary but not sufficient; demonstrate at least one live provider, preferably both local filesystem and MinIO, including concurrent create and restart persistence.
+In-memory conformance does not prove real MinIO integration. Provider portability remains a design property until a future independently selected adapter passes equivalent tests.
 
 ## 13. Weaknesses, alternatives, and trade-offs (Weaknesses & Ideas)
 
-### DATA-ADR option register — **proposals, not accepted decisions**
+### DATA-ADR option register - **DATA-ADR-02 selected; other rows remain proposals**
 
 | ADR | A | B | C | Reviewer recommendation |
 |---|---|---|---|---|
 | DATA-ADR-01 Scope | Central CRUD owner | Shared storage contracts + per-capability ownership | Data microservice | **B** |
-| DATA-ADR-02 Default | Filesystem | MinIO | Supabase | **A** locally; B for provider-swap proof |
+| DATA-ADR-02 Default | Filesystem (historical) | MinIO | Supabase (historical) | **B selected for new MVP architecture; integration pending** |
 | DATA-ADR-03 Attachment ownership | Data owns ACL/attachment business | Application owns binding/ACL; Data owns bytes | Direct browser-provider operations | **B** |
 | DATA-ADR-04 Cross-store | Unreconciled best effort | Orchestration + recovery | 2PC/XA | **B** |
 | DATA-ADR-05 Transfer | Full `byte[]` | Streaming | Chunked protocol | **B** |
@@ -185,7 +169,7 @@ Conformance on an in-memory fake is necessary but not sufficient; demonstrate at
 | DATA-ADR-07 Security | ACL in Data Core | Application ACL + adapter guards | Provider bucket policy alone | **B** |
 | DATA-ADR-08 Proof | Interface only | Fake tests only | Real-provider conformance | **C** |
 
-**Architectural risks (not resolved by writing this document):** security bypass via raw object-key API (P0), cross-store inconsistent publication (P0), path traversal/file escape (P0), provider semantic differences for conditional writes and lazy streams (P1), missing data migration plan (P1), incomplete attachment lifecycle/cleanup (P1), broadening Data into a God module (P1), false release acceptance based solely on mocks (P1).
+**Architectural risks (not resolved by writing this document):** security bypass via raw object-key API (P0), cross-store inconsistent publication (P0), object-key namespace escape/collision (P0), provider semantic differences for conditional writes and lazy streams (P1), missing data migration plan (P1), incomplete attachment lifecycle/cleanup (P1), broadening Data into a God module (P1), false release acceptance based solely on mocks (P1).
 
 ## 14. Test strategy and acceptance matrix (Tests)
 
@@ -193,19 +177,19 @@ Conformance on an in-memory fake is necessary but not sufficient; demonstrate at
 |---|---|---|
 | DATA-AC-01 | Core has no provider SDK/Spring/JDBC imports | Compile/ArchUnit on pinned SHA |
 | DATA-AC-02 | All adapters implement identical port methods/semantics | Shared conformance suite |
-| DATA-AC-03 | `CREATE_ONLY` concurrent create has exactly one winner | Actual filesystem + S3-compatible provider race tests |
+| DATA-AC-03 | CREATE_ONLY concurrent create has exactly one winner | Real local Docker MinIO race tests |
 | DATA-AC-04 | `OVERWRITE` replaces full content and metadata | Provider integration tests |
 | DATA-AC-05 | `read()` metadata and content match one object version | Concurrent update/read test per provider |
 | DATA-AC-06 | Exact byte length; invalid input mapped consistently | Contract/integration tests |
 | DATA-AC-07 | Caller-owned write stream not closed by adapter | Contract tests with instrumented stream |
 | DATA-AC-08 | Read resource closes deterministically; lazy errors sanitized | Fault injection / provider integration |
 | DATA-AC-09 | `delete` missing/repeated delete returns `NOT_FOUND` | Provider tests |
-| DATA-AC-10 | Object keys cannot escape provider namespace or collide in mapping | Traversal, alias, symlink, Unicode tests |
+| DATA-AC-10 | Object keys cannot escape the private bucket namespace or collide in mapping | Key/alias/collision tests on MinIO |
 | DATA-AC-11 | Unauthorized attachment reads/writes fail before storage access | Application security integration test |
 | DATA-AC-12 | Upload/DB failover leaves no permanently invisible orphan without recovery path | Reconciliation fault injection |
 | DATA-AC-13 | Provider selection is explicit and unambiguous | Configuration tests; missing/dual bean failures |
-| DATA-AC-14 | Filesystem ↔ MinIO swap needs no Application source edits | Commit/diff + E2E comparison |
-| DATA-AC-15 | Historic object migration is verified before cutover | Inventory, hash/metadata check, cutover/rollback drill |
+| DATA-AC-14 | MinIO adapter does not change Application source or Core contract | Commit/diff and real integration review |
+| DATA-AC-15 | Restart and recovery preserve object integrity | MinIO restart, uncertain outcome and reconciliation tests |
 | DATA-AC-16 | Helpdesk and Facility reuse same unchanged Data Core | Real E2E on same pinned baseline |
 | DATA-AC-17 | No SQL/provider secrets leaked in errors/logs | Security error-path tests |
 | DATA-AC-18 | Scope changes and ADR decisions trace to tests | Review matrix and signed-off ADRs |
@@ -222,14 +206,14 @@ Passing unit tests does not substitute for restart, concurrent writer, failure/r
 | Data ownership baseline | [`docs/architecture/data-persistence-boundaries.md`](../../architecture/data-persistence-boundaries.md) | Current architecture boundary |
 | Workflow persistence contract | [`docs/contracts/workflow-core.md`](../../contracts/workflow-core.md) | Separate owner and atomicity guarantees |
 | In-memory fake and tests | `backend/src/test/java/com/tricore/dxos/core/data/` | Contract-level test coverage, not real-provider proof |
-| MinIO candidate | [PR #34](https://github.com/lexuanbao258-collab/dxos-open-core/pull/34) | Unmerged at document authoring |
-| Supabase candidate | [PR #35](https://github.com/lexuanbao258-collab/dxos-open-core/pull/35) | Unmerged at document authoring |
-| Filesystem candidate | [PR #43](https://github.com/lexuanbao258-collab/dxos-open-core/pull/43) | Draft candidate, not accepted release |
+| MinIO candidate | [PR #34](https://github.com/lexuanbao258-collab/dxos-open-core/pull/34) | Unmerged Draft; real MinIO integration NOT VERIFIED |
+| Supabase candidate | [PR #35](https://github.com/lexuanbao258-collab/dxos-open-core/pull/35) | Closed without merge; historical, excluded from new scope |
+| Filesystem candidate | [PR #43](https://github.com/lexuanbao258-collab/dxos-open-core/pull/43) | Closed without merge; historical, excluded from new scope |
 
 ## 16. Decision and review sign-off
 
-**Requested from TRICORE:** approve, amend or reject DATA-ADR-01 to DATA-ADR-08 separately. Record the decision owner, review date, scope, compatibility impact and follow-up issue. Do not mark any provider swap or application reuse as `VERIFIED` until real acceptance evidence is attached.
+ADR-007 records local Docker MinIO as the selected architecture target, with private PostgreSQL 17 and Keycloak. DATA-ADR-02 is therefore no longer an open recommendation. The other DATA-ADR options and Application attachment/recovery policy still require their own review; selecting a provider does not verify them.
 
-**Suggested implementation gates:** D-G0 freeze owner/port semantics → D-G1 independent PR #34/#35/#43 review → D-G2 configuration-selected adapter → D-G3 Application attachment metadata/ACL and recovery → D-G4 real-provider conformance → D-G5 Helpdesk + Facility E2E reuse → D-G6 migration/restart/clean-install acceptance.
+**Implementation gates:** preserve Core port semantics; independently review PR #34; prove real local MinIO conformance, concurrency, failure/restart and security; integrate authorized Application attachment flows and cross-store recovery; then review clean-install and end-to-end evidence on a pinned commit. PR #35 and PR #43 are not implementation gates.
 
-**Reviewer conclusion:** **Architecture direction recommended; implementation and release acceptance PENDING.** Data Core is a portable object-storage capability. It must not evolve into the owner of every DX-OS table simply because all components store data. Provider replacement is adapter substitution **plus** operational migration, compatibility and security verification—not an untested configuration flip.
+**Reviewer conclusion:** architecture provider selected; production adapter integration and release acceptance PENDING. Core portability is a contract property, not an untested configuration flip or a claim of AWS S3 deployment.
