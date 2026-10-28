@@ -10,7 +10,7 @@
 
 Follow the **2026-10-27 isolated-local-MVP scope decision** in Issues #23 and #40: Keycloak-verified identity and application-level authorization in the Backend, private PostgreSQL 17 persistence using a non-admin runtime role, one reproducible IT Helpdesk HTTP path, and negative security/concurrency tests. The independent physical PostgreSQL D2/D3/D4 ACL engine, six privileged Stage 6 SQL ports, offline r5 operator provisioning, and external production reviewer are **DEFERRED_FOR_PRODUCTION**, not completed or silently waived for production.
 
-- Existing [Draft PR #63](../../pull/63) is a **historical SQL-guarded candidate**, not the source of truth for the Java-authorized redesign. Do not merge it as the new MVP or blindly cherry-pick its Stage 6 security engine.
+- Existing [Draft PR #63](https://github.com/lexuanbao258-collab/dxos-open-core/pull/63) is a **historical SQL-guarded candidate**, not the source of truth for the Java-authorized redesign. Do not merge it as the new MVP or blindly cherry-pick its Stage 6 security engine.
 - PR #63 source baseline reported at `e12d105c89400a5fd69dd6cc1fca670ff1f04f51`. It originally targeted `feature/issue23-p1-02-integrity`, not `main`.
 - On 2026-10-28 GitHub comparison, `feature/issue53-helpdesk-backend` was 88 commits ahead of and 10 commits behind `main`. Do not assume direct merge safety.
 - The newer Java-authorization/PG17 refactor was **reported as local worktree-only**. Its exact local HEAD, diff, test XML and uncommitted changes **have not been inspected by this GitHub-only handoff**. Never label them pushed or merged without verification.
