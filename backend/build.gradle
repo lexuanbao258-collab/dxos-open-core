@@ -132,7 +132,7 @@ tasks.register('workflowEventTriggerReview', JavaExec) {
 }
 
 tasks.register('workflowLiveGuard', JavaExec) {
-    description = 'Checks the reviewed Supabase catalog in a verified read-only transaction; no writes or Flyway.'
+    description = 'Checks a reviewed PostgreSQL catalog in a verified read-only transaction; no writes or Flyway.'
     group = 'verification'
     dependsOn classes, workflowSmokeBundle
     classpath = sourceSets.main.runtimeClasspath

@@ -61,9 +61,8 @@ history:
 
 Adapter Workflow #25 còn cần `DXOS_WORKFLOW_SCHEMA`, datasource có `currentSchema`
 đúng schema riêng và `SPRING_FLYWAY_ENABLED=false` ở runtime. Schema/migrations phải
-có trước khi boot; xem **Chạy backend local từ clone mới** hoặc **Kết nối Supabase
-PostgreSQL mặc định cho Issue #25** bên dưới. Login runtime riêng là yêu cầu cho
-triển khai lâu dài, không phải prerequisite của bước kết nối Supabase ban đầu.
+có trước khi boot; xem phần **Chạy backend local từ clone mới** bên dưới.
+Dùng runtime DB role không phải superuser/owner, với quyền tối thiểu cần thiết.
 
 ```powershell
 $env:DB_HOST = Read-Host 'DB_HOST (theo môi trường Issue #3)'
@@ -258,7 +257,7 @@ khi Java đã xác thực identifier; không chạy SQL bằng cơ chế thay pl
 
 ### PostgreSQL local có thể tái lập
 
-Cách kiểm tra đầy đủ từ source, không cần Supabase, WARP hoặc credentials nhóm:
+Cách kiểm tra đầy đủ từ source, không cần dịch vụ database bên ngoài hoặc credentials nhóm:
 
 ```powershell
 # Từ backend/, với Docker đang chạy và JDK 21 trên PATH:
@@ -295,13 +294,13 @@ $env:WORKFLOW_EVENT_GUARD_LOCAL_DISPOSABLE = 'true'
 ```
 
 Integration gồm regression adapter V1–V4 và isolation suite V3/V4 độc lập.
-Không chạy các suite này trên shared Supabase. Không có database thì task test skip
+Chỉ chạy các suite này trên database disposable riêng. Không có database thì task test skip
 integration, còn workflowIntegrationTest fail vì thiếu biến môi trường.
 
 ### Chạy backend local từ clone mới
 
 Các lệnh dưới đây chỉ dùng database loopback do Compose tạo. Không dùng tài khoản
-hoặc endpoint Supabase. Mỗi volume mới chỉ provision role/schema một lần; khi dùng
+hoặc endpoint ngoài loopback. Mỗi volume mới chỉ provision role/schema một lần; khi dùng
 lại volume, giữ mật khẩu cũ và đọc trạng thái trước, không chạy lại `migrate` nếu
 schema đã có Flyway history.
 
@@ -378,312 +377,17 @@ Sau khi dừng backend, `docker compose ... down` giữ named volume; tránh `do
 khi kiểm tra restart. Đọc lại cùng run-id từ process mới để xác minh persistence.
 Không chạy `smoke` lại với run-id cũ: runner từ chối replay trước write.
 
-### Kết nối Supabase PostgreSQL mặc định cho Issue #25
+### Active local PostgreSQL and Storage setup
 
-Theo [Issue #25 cập nhật ngày 2026-10-14](https://github.com/lexuanbao258-collab/dxos-open-core/issues/25),
-dùng Direct Connection của project như pgAdmin: `db.<project-ref>.supabase.co`, port
-`5432`, database `postgres`, tài khoản `postgres` và mật khẩu database hiện có.
-Máy phát triển cần IPv6; PostgreSQL local ở trên vẫn chạy độc lập với Supabase/WARP.
-Không chạy Stage 1A/1B, không cấp SCRAM/LOGIN và không đổi hai custom roles đang
-`NOLOGIN`. Các hồ sơ đó là optional hardening cho triển khai lâu dài.
+The OLP MVP uses **PostgreSQL 17 on an isolated local or private network** through the standard JDBC driver. Use the instructions above (including `scripts/workflow-verify-local.ps1` for disposable integration checks) and keep the migration/runtime roles separate. The database is **not** an external hosted-service dependency.
 
-Trong phiên PowerShell đã có `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`
-và `PGSSLROOTCERT` (CA tin cậy lấy từ project), kiểm tra kết nối chỉ đọc từ repo root:
+The selected object provider is **MinIO running locally (Docker)** behind `ObjectStoragePort`. Deploy a private MinIO endpoint, server-only access/secret keys, non-public buckets and a persistent volume; configure the Java Backend adapter rather than exposing credentials to Portal. [Draft PR #34](https://github.com/lexuanbao258-collab/dxos-open-core/pull/34) is the implementation candidate. Its real local MinIO integration tests remain **NOT VERIFIED**, and this README does not claim it is already on `main`. The filesystem-only candidate PR #43 is superseded.
 
-```powershell
-powershell.exe -NoProfile -File .\scripts\workflow-read-only-preflight.ps1
-if ($LASTEXITCODE -ne 0) { throw 'Read-only connection check failed' }
-```
+Do not run historical remote migration/approval launchers against any database. Existing Flyway V1–V4 bytes/checksums and `COMMIT_OUTCOME_UNKNOWN` handling must remain unchanged. Application authorization belongs to verified Keycloak identity + trusted Backend/Gateway checks, with local PostgreSQL runtime privileges limited to persistence.
 
-Preflight ép JDBC `sslmode=verify-full`, CA, timeout và transaction READ ONLY, rồi
-rollback/close. Không boot Spring, chạy Flyway hay tạo role/schema. Không đưa secrets
-vào URL, args, source, command history hoặc báo cáo; chỉ nhập bằng secure prompt hay
-secret environment hiện có. Kết quả kiểm tra không phải phê duyệt thao tác ghi.
+**Integration status:** nine-route Helpdesk, local MinIO and Portal/BFF real-identity E2E require exact-SHA tests/review before LIVE; no production deployment or remote database mutation is authorized.
 
-Cấu hình Spring dùng cùng `DB_*`; URL phải bổ sung schema và TLS trước khi sử dụng:
-
-```powershell
-$env:DXOS_WORKFLOW_SCHEMA = 'dxos_wf25_smoke_01'
-$caPath = [Uri]::EscapeDataString($env:PGSSLROOTCERT)
-$env:SPRING_DATASOURCE_URL = "jdbc:postgresql://$($env:DB_HOST):$($env:DB_PORT)/$($env:DB_NAME)?currentSchema=$($env:DXOS_WORKFLOW_SCHEMA),pg_catalog,pg_temp&sslmode=verify-full&sslrootcert=$caPath"
-$env:SPRING_FLYWAY_ENABLED = 'false'
-```
-
-Đây chỉ là cấu hình chuẩn bị, chưa phải lệnh boot/migrate. Cloud writes cần owner
-phê duyệt riêng schema, chỉ bundle V3/V4, seed và bounded smoke/restart/read, kèm
-postchecks và recovery; không chạy V1/V2 hoặc clean/repair/baseline trên shared DB.
-Không retry khi COMMIT chưa rõ kết quả. Giữ kiểm tra schema isolation, manifest/event
-triggers và quyền API/PUBLIC hiện có; không tắt guard để kết nối dễ hơn.
-
-`postgres` chỉ là ngoại lệ kiểm chứng một lần được phê duyệt, không dùng cho backend
-chạy lâu dài hoặc frontend. Phải có runtime identity tối thiểu trước triển khai
-persistent/shared production. `WorkflowSmokeRunner` vẫn yêu cầu runtime khác owner;
-entrypoint production và constructor mặc định không đọc các cờ development.
-Cloud migration/smoke/restart DoD còn pending, không thay bằng local PASS.
-
-### Development integration một lần bằng postgres
-
-Task riêng `workflowDevelopmentSmoke` gọi `WorkflowDevelopmentSmokeRunner`, không
-được đăng ký Spring bean hay chạy từ bootRun/build hoặc cấu hình production.
-Nó tái sử dụng bounded smoke/check/restart scenario, chỉ mở ngoại lệ owner/runtime
-cho chế độ development đã opt-in. Runner production giữ kiểm tra non-owner và
-least-privilege hiện có. Không tự tạo schema, roles, GRANT, cleanup hoặc retry.
-
-Yêu cầu đồng thời: argument `--development-integration`, opt-in có giá trị chính xác,
-schema duy nhất `dxos_wf25_smoke_01`, DB_USER/DB_NAME là `postgres`, Direct endpoint
-đúng project, CA và verify-full. Mỗi connection xác minh session_user=current_user
-postgres, backend TLS, schema owner postgres, không schema ACL cho PUBLIC/roles
-khác hoặc quyền hiệu lực của API roles, không relation do owner khác sở hữu.
-Guard/manifest, bundle V3/V4 pin, durability, default ACL, history/checksums và
-inventory checks vẫn hoạt động. Chế độ check/read không có quyền gọi migrate/smoke.
-
-Schema đã bootstrap thành công theo report owner; không chạy lại. Sau preflight
-fresh, chỉ chuẩn bị/check từ repo root (chưa đặt write approval):
-
-```powershell
-# DB_* và PGSSLROOTCERT đã có trong secret environment; không in chúng.
-$env:WORKFLOW_DEV_INTEGRATION_OPT_IN = 'issue-25-postgres-development-only'
-$env:WORKFLOW_DEV_APPROVED_SCHEMA = 'dxos_wf25_smoke_01'
-$env:WORKFLOW_DEV_PROJECT_REF = $env:DB_HOST.Split('.')[1]
-Remove-Item Env:WORKFLOW_DEV_WRITE_APPROVAL -ErrorAction SilentlyContinue
-Push-Location backend
-.\gradlew.bat workflowSmokeBundle --no-daemon
-if ($LASTEXITCODE -ne 0) { throw 'Bundle preparation failed' }
-$env:WORKFLOW_DEV_BUNDLE = (Resolve-Path 'build/workflow-smoke-bundle').Path
-.\gradlew.bat workflowDevelopmentSmoke --args="--development-integration check" --no-daemon
-Pop-Location
-```
-
-Không đặt `WORKFLOW_DEV_LOCAL_DISPOSABLE`, `WF25_DISPOSABLE_TEST` hoặc
-`WORKFLOW_EVENT_GUARD_LOCAL_DISPOSABLE` trên cloud, kể cả giá trị false. Chế độ local
-đòi cả ba cờ fixture cùng marker `dxos.wf25_disposable=on` của login postgres,
-loopback và TLS verify-full; cờ local không thể áp dụng cho endpoint Supabase.
-
-**Owner đã phê duyệt chỉ V3/V4 đã pin sau fresh prechecks PASS.**
-Dùng launcher một mục đích ở phần dưới; không chạy trực tiếp ví dụ Gradle để bỏ qua
-audit/report. Approval không bao gồm smoke, bootstrap hoặc recovery.
-Entry point nội bộ của launcher là mode migration riêng:
-
-~~~powershell
-# Cần explicit WORKFLOW_DEV_WRITE_APPROVAL khớp schema sau approval, không đặt trước.
-# Chạy từ backend; credentials/CA chỉ từ secret environment.
-.\gradlew.bat workflowDevelopmentSmoke --args="--development-integration migrate" --offline --no-daemon --no-configuration-cache --quiet
-~~~
-
-Clear write approval trong finally, kể cả command lỗi. Dừng sau migrate để audit
-qua connection mới READ ONLY. Smoke/read/restart là bước có approval riêng;
-không chạy smoke cùng batch migrate hoặc suy ra approval từ schema bootstrap.
-
-Schema phải đã tồn tại/rỗng và owner postgres; thao tác bootstrap schema là approval
-riêng, không do runner thực hiện. Migrate chỉ V3/V4: 5 tables + Flyway history,
-2 functions/9 explicit triggers (6 row, 3 statement), seed 2 definitions/7 states/5 transitions, 2 success
-history rows/checksums. Smoke tạo tối đa 2 instances/4 history rows cho run-id mới,
-race activation version 0/transition, kiểm tra Instant nanos và replay; read dùng
-process/JVM mới không ghi. Dữ liệu smoke giữ lại. Đây là durability qua JVM mới;
-cloud restart Spring bằng production bean còn cần evidence riêng.
-
-Nếu V3 đã commit/V4 lỗi hoặc `WORKFLOW_DEVELOPMENT_FAIL_COMMIT_OUTCOME_UNKNOWN`,
-dừng, đọc catalog/history/instances bằng connection mới và xin recovery approval;
-không rerun tự động, clean/repair/baseline hay xóa dữ liệu đã commit. Tài khoản admin
-vẫn có thể tác động ngoài schema; guard thu hẹp phạm vi tool, không sandbox quyền
-admin hoặc loại bỏ privileged concurrent DDL.
-
-### Lệnh preflight Supabase chỉ đọc trước cloud migrations
-
-**Cập nhật sau migrations:** owner đã xác nhận V3/V4 `COMMITTED_PASS`, checksum,
-inventory, seed và postcommit audit PASS, `MIGRATIONS_EXIT=0`. Các lệnh migration
-trên/dưới là lịch sử; **không chạy lại bootstrap hoặc Flyway**.
-Owner cũng xác nhận cloud smoke `cloud-20261015-01` COMMITTED_PASS, precheck,
-postcheck và fresh-JVM persistence PASS, 2 instances / 4 history, exit 0.
-Không chạy lại cloud smoke; giữ nguyên dữ liệu thử. Kế hoạch, dữ liệu và recovery ở phần “Cloud smoke sau migrations”
-trong `../docs/evidence/issue-25-readiness.md`.
-
-Từ repo root, Direct host/CA/password đã được cấp qua môi trường bảo mật:
-
-```powershell
-$env:DB_PORT = '5432'
-$env:DB_NAME = 'postgres'
-$env:DB_USER = 'postgres'
-powershell.exe -NoProfile -File .\scripts\workflow-read-only-preflight.ps1
-if ($LASTEXITCODE -ne 0) { throw 'Direct read-only preflight failed' }
-powershell.exe -NoProfile -File .\scripts\workflow-live-guard.ps1
-if ($LASTEXITCODE -ne 0) { throw 'Reviewed catalog guard failed' }
-```
-
-Kiểm tra dự kiến: Direct IPv6, client verify-full/CA, backend SSL=true,
-transaction_read_only=on, session_user=current_user=postgres, đúng database;
-schema absent hoặc owner/ACL/inventory đúng kế hoạch; hai custom roles vẫn NOLOGIN;
-không drift ngoài phạm vi, durability/settings và manifest/bundle pin khớp.
-Owner phải kiểm tra thêm Dashboard API exposed schemas không chứa schema test.
-`LIVE_GUARD=PASS` chỉ xác minh catalog; WRITE_READINESS=BLOCKED không tự cấp approval.
-Target hiện đã bootstrap: nếu preflight fresh báo ABSENT, dừng và báo sai lệch,
-không chạy lại bootstrap. Dev check phải trả EMPTY trước migration. Không chạy Stage 1A/1B hoặc thay credentials/custom roles.
-
-### Schema Bootstrap đã hoàn tất — không chạy lại
-
-Owner báo SCHEMA_BOOTSTRAP=COMMITTED_PASS, POSTCOMMIT_AUDIT=PASS,
-SCHEMA_OWNER=postgres, SCHEMA_EMPTY=YES, FLYWAY_HISTORY=ABSENT,
-OTHER_CLOUD_WRITES=NONE, BOOTSTRAP_EXIT=0.
-Đây là evidence owner cung cấp; Codex không thực thi lại cloud.
-Không chạy workflow-schema-bootstrap.ps1 hoặc CREATE SCHEMA lại.
-
-V3/V4 và cloud smoke đã hoàn tất theo owner report. Phần
-[thực thi Flyway V3/V4](../docs/evidence/issue-25-readiness.md#thực-thi-flyway-v3v4--owner-đã-phê-duyệt)
-là hồ sơ lịch sử; không phải bước tiếp theo và không chạy lại.
-Launcher khóa đúng Direct endpoint và schema; tự dừng nếu precheck FAIL.
-Dùng Direct db.zsfctpnitkdztlfhzqgw.supabase.co:5432/postgres, tài khoản postgres,
-TLS verify-full và CA/credentials từ secret environment. Precheck fresh phải xác
-nhận schema PRESENT/rỗng/owner postgres, guard/hash không drift; không dùng
-điều kiện ABSENT từ kế hoạch bootstrap lịch sử.
-
-Approval migration phải gồm V3/V4 pin, Flyway history, V4 seed và V3 object ACL
-revocations chỉ trong target; không gồm smoke, role changes hoặc recovery.
-Không gọi smoke trong cùng batch migrate. Migrate thất bại hoặc mất ACK:
-dừng, clear write approval trong finally, reconcile qua connection READ ONLY mới;
-không retry/clean/repair/baseline/DROP. Postcheck đầy đủ trước khi báo cloud PASS.
-
-### Launcher V3/V4 lịch sử — đã hoàn tất, không chạy lại
-
-Lệnh lưu để review việc đã thực thi; không chạy trong lúc chuẩn bị PR:
-
-~~~powershell
-& 'C:\Users\Admin\AppData\Local\codex-with-chatgpt\worktrees\dxos-data-postgres-adapter\scripts\workflow-approved-migrations.ps1' -ExecuteApprovedMigrations
-~~~
-
-Mặc định dùng PGSSLROOTCERT; nếu chưa có, hỏi đường dẫn CA. Password lấy từ
-DB_PASSWORD đã có hoặc prompt ẩn. Launcher yêu cầu JDK 21, WARP Connected và Direct
-host có IPv6; không tự bật/sửa WARP, CA hay endpoint sai. Environment cũ được khôi
-phục trong finally; Gradle offline, không configuration cache, không log exception.
-Chỉ in report allowlist đầy đủ; child mất/thiếu report sau handoff là COMMIT_UNKNOWN.
-
-Java task workflowApprovedMigration chỉ chạy V3/V4 đã pin, createSchemas=false,
-không baseline/repair/clean/retry/smoke. Precheck READ ONLY xác minh schema rỗng
-owner postgres, history absent, TLS verify-full/backend SSL, PG17.11, NOLOGIN custom
-roles, manifest raw hash và migration SHA/CRC. Guard lặp lại khi mở connection.
-Sau migrate dùng connection mới READ ONLY: history, exact catalog fingerprint,
-seed/0 instances, schema ACL/owner và outside catalog/roles/membership snapshot.
-Fingerprint bao gồm columns/defaults/NOT NULL, indexes, constraints, function
-definitions/ACL, explicit/internal triggers và types; không chỉ so counts.
-Chỉ exit 0 khi COMMITTED_PASS + audit/inventory/seed PASS; lỗi thì dừng, không retry.
-
-Giữ COMMIT_UNKNOWN khi mất ACK dù audit tìm thấy dữ liệu; history và seed được
-đối chiếu riêng, không suy ra thành công chỉ từ một bên. V3 đã commit/V4 lỗi:
-PARTIAL_COMMIT, giữ nguyên để owner duyệt recovery. Catalog drift hoặc fresh audit
-không đọc được không được claim OTHER_CLOUD_WRITES=NONE. Mọi trường hợp đều dừng
-sau migration/audit, NEXT_APPROVAL_REQUIRED=YES cho cloud smoke.
-
-### Optional hardening — Runtime Privilege Audit READ-ONLY trên Supabase
-
-Từ root worktree, với JDK 21 và các biến DB_HOST, DB_PORT, DB_NAME, DB_USER,
-DB_PASSWORD, PGSSLROOTCERT đã có trong phiên PowerShell:
-
-```powershell
-powershell.exe -NoProfile -File .\scripts\workflow-runtime-privilege-audit.ps1
-$LASTEXITCODE
-```
-
-Launcher hỗ trợ Direct Connection hoặc session pooler, port 5432; ép verify-full/CA,
-search_path pg_catalog,pg_temp và transaction_read_only=on. SQL audit được pin SHA-256;
-thay đổi SQL cần review rồi cập nhật pin. Không chạy Spring/Flyway/provisioning/smoke.
-WORKFLOW_EVENT_GUARD_LOCAL_DISPOSABLE phải không được đặt, kể cả giá trị false.
-Secrets chỉ được kế thừa qua environment; không truyền qua args, in hoặc ghi báo cáo.
-
-AUDIT_REPORT chỉ có role names cố định, statuses, booleans/counts và số quyền true
-theo role/privilege; không chứa host/database/object identifiers, function source,
-passwords hay connection strings. NOT_PROVISIONED nghĩa là chưa có role, không phải
-permission PASS. RUNTIME_PRIVILEGE_AUDIT=PASS chỉ xác nhận catalog audit hoàn tất,
-rollback/close thành công; WRITE_READINESS vẫn BLOCKED và cần reviewer xét ACL/TLS.
-
-### Optional hardening — SECURITY DEFINER metadata và private review
-
-Chạy từ root repo trong phiên PowerShell đã giữ `DB_*` và `PGSSLROOTCERT`:
-
-```powershell
-powershell.exe -NoProfile -File .\scripts\workflow-security-definer-review.ps1
-$LASTEXITCODE
-```
-
-Launcher riêng dùng JDBC `verify-full`, `pg_catalog,pg_temp`, transaction READ ONLY
-và SQL được pin SHA-256. Metadata giữ schema/signature/owner, EXECUTE/schema ACL,
-search_path của function, quyền runtime nullable, membership, dependencies và
-definition/configuration fingerprints. Không trả bodies hoặc các GUC khác.
-`NOT_PROVISIONED` giữ quyền runtime là `null`, không phải `false`.
-
-Chỉ sau khi metadata hợp lệ đã được xem xét, dùng đường dẫn `SHAREABLE_METADATA`
-để lấy bodies/configuration vào một thư mục bảo vệ mới ngoài Git:
-
-```powershell
-powershell.exe -NoProfile -File .\scripts\workflow-security-definer-review.ps1 -MetadataFile '<SHAREABLE_METADATA>'
-```
-
-Baseline phải ở thư mục chỉ current user/SYSTEM truy cập; catalog drift, SQL pin
-sai, rollback/close lỗi hoặc cấu hình TLS sai đều fail closed. Chỉ chia sẻ
-`shareable-metadata.json`; không gửi `private-function-review.json` hay credentials
-vào chat/Git. Helper tìm thấy khi review body cần capture metadata mới bằng
-`-HelperSignature 'schema.helper(argument_types)'`, rồi private capture từ baseline
-mới đó. Catalog dependencies không đầy đủ cho dynamic SQL/string-body routines.
-Mọi routine bắt đầu `NEEDS_REVIEW`; capture thành công không tự cấp PASS bảo mật,
-chấp nhận PUBLIC TEMP, phê duyệt roles hoặc giải quyết TLS backend-hop.
-
-### Optional hardening — runner dùng migrator/runtime riêng
-
-`workflowSmokeBundle` chỉ copy V3/V4. Runner kiểm tra chính xác hai filenames và
-SHA-256 được pin trong `workflow-event-trigger-manifest.json` (chuẩn hóa CRLF thành LF), cùng Flyway checksums/history. Không nạp V1/V2.
-Schema cố định: dxos_wf25_smoke_01; history đặt trong cùng schema.
-Runner không boot Spring, không tự tạo schema/role, không GRANT, không cleanup,
-DROP/TRUNCATE/DELETE hoặc retry khi kết quả commit chưa xác định.
-
-Biến độc lập: WORKFLOW_SMOKE_JDBC_URL (không chứa user/password),
-WORKFLOW_SMOKE_PROJECT_REF (bắt buộc cho cloud),
-WORKFLOW_SMOKE_CA_CERT, WORKFLOW_SMOKE_MIGRATOR_USER/PASSWORD,
-WORKFLOW_SMOKE_RUNTIME_USER/PASSWORD, WORKFLOW_SMOKE_BUNDLE (đường dẫn bundle);
-WORKFLOW_SMOKE_RUN_ID dùng cho smoke/read khi không truyền run-id qua args.
-Cấp secrets bằng secure environment bên ngoài chat. Cloud chỉ chấp nhận Direct
-db.<project-ref>.supabase.co:5432/postgres với đúng project ref, CA file tồn tại và TLS verify-full;
-hai username là tên role PostgreSQL trực tiếp, không có hậu tố project ref.
-URL cloud không có query/fragment; currentSchema và TLS chỉ do runner đặt. Không có CA thì dừng.
-WORKFLOW_SMOKE_LOCAL_DISPOSABLE=true chỉ dùng loopback, không thể hạ TLS cloud.
-
-Migrator là owner của schema riêng, có USAGE/CREATE trong schema và USAGE plpgsql.
-Runtime khác owner, không membership owner, không quyền CREATE schema, không
-superuser/CREATEROLE/CREATEDB/BYPASSRLS. Sau migration, operator cấp runtime:
-USAGE schema, SELECT năm Workflow tables, INSERT instances/history, UPDATE chỉ
-current_state/lifecycle/runtime_version/updated_at_seconds/updated_at_nanos của
-instances. Không cấp DDL, provisioning definitions, DELETE hoặc TRUNCATE.
-Không sửa default privileges, database privileges hay role membership.
-Dùng postgres làm migrator tạo objects do postgres sở hữu; role mạnh có thể tắt
-trigger/sửa history nên chỉ dùng cho bước migration đã duyệt, không dùng runtime.
-Default privileges tùy chỉnh hoặc event triggers lệch manifest khiến runner dừng;
-không tự sửa hoặc tắt triggers. Manifest khóa đúng sáu triggers, function/config hashes,
-owners/ACL và hai helper internal đã review. OID capture chỉ là evidence; helper được
-resolve live theo signature. Remote chỉ nhận bundle filesystem V3/V4 và PostgreSQL 17.11.
-Profile local cần `WORKFLOW_EVENT_GUARD_LOCAL_DISPOSABLE=true`, loopback và inventory
-event triggers hoàn toàn trống; flag không cho phép bỏ qua trigger lạ hoặc cloud.
-Guard đọc hashes/config keys, không tải private bodies/config values; collector riêng
-vẫn giữ private capture ngoài Git. Native binary là giả định tin cậy provider, không
-được attested bằng hash catalog. Các watcher được duyệt có thể gửi NOTIFY reload schema.
-Kiểm tra live chạy trên mỗi connection, trước migration và trước từng migration;
-bundle được kiểm tra lại cả tại connection boundary. Chúng thu hẹp TOCTOU, không
-loại bỏ privileged concurrent DDL hay concurrent filesystem mutation.
-
-```powershell
-.\gradlew.bat workflowSmokeBundle --no-daemon
-.\gradlew.bat workflowSmoke --args=check --no-daemon
-# Các lệnh dưới đây CHỈ sau phê duyệt riêng và bootstrap role/schema phù hợp:
-.\gradlew.bat workflowSmoke --args=migrate --no-daemon
-# Operator cấp các quyền runtime tối thiểu đã duyệt, rồi:
-.\gradlew.bat workflowSmoke --args="smoke unique-run-id" --no-daemon
-.\gradlew.bat workflowSmoke --args="read unique-run-id" --no-daemon
-```
-
-check dùng read-only transactions, xác minh ownership/quyền, mode/durability,
-không có event triggers/default privileges chưa review, schema trống hoặc đúng
-sáu tables, bundle và migration history. migrate chỉ nhận schema đã tồn tại và trống.
-smoke tạo hai instances có prefix issue25/run-id riêng, race activation version 0,
-race transition, hoàn tất cả hai definitions, kiểm tra hai history/instance và
-Instant nanos. Run-id đã dùng bị từ chối. read dùng JVM/connection mới kiểm tra
-snapshots/history; không ghi. Sau lỗi/COMMIT_OUTCOME_UNKNOWN dừng và điều tra,
-không tự chạy lại. Dữ liệu smoke được giữ lại.
+---
 
 ## Phụ thuộc Issue #3 và giới hạn xác minh
 
@@ -700,4 +404,4 @@ tra startup, `/api/v1/health` và `/actuator/health` với PostgreSQL thực t�
 
 Kiểm chứng launcher V3/V4 (2026-10-15): full JDK21/PostgreSQL17.11 TLS disposable
 752 PASS, 0 FAIL/SKIP, 9 integration suites, build PASS; bao gồm 38 tests mới.
-Đây chưa là cloud execution; Codex thiếu credentials/CA và chờ owner chạy launcher.
+Đây là bằng chứng local trên phiên bản được ghi nhận, không phải xác nhận end-to-end hiện tại.
