@@ -207,15 +207,16 @@ class PortalBackendClientTest {
         assertTrue(session.isInvalid());
     }
 
-    @Test
-    void backend403PreservesSessionAndStatus() throws Exception {
-        HttpClient http = httpResponse(403, new ByteArrayInputStream("{}".getBytes()));
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.ValueSource(ints = {403, 404, 409})
+    void backendDenialPreservesSessionAndStatus(int status) throws Exception {
+        HttpClient http = httpResponse(status, new ByteArrayInputStream("{}".getBytes()));
         MockHttpServletRequest request = new MockHttpServletRequest();
         MockHttpSession session = (MockHttpSession) request.getSession();
 
         ResponseEntity<?> result = bff(manager(), http).get(id(), principal(), request);
 
-        assertEquals(403, result.getStatusCode().value());
+        assertEquals(status, result.getStatusCode().value());
         assertTrue(!session.isInvalid());
         verify(http, times(1)).send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class));
     }

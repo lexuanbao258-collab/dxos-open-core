@@ -11,6 +11,7 @@ import org.springframework.security.oauth2.client.OAuth2AuthorizedClientManager;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientProviderBuilder;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
+import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
 import org.springframework.security.oauth2.client.web.DefaultOAuth2AuthorizedClientManager;
 import org.springframework.security.oauth2.client.web.HttpSessionOAuth2AuthorizedClientRepository;
 import org.springframework.security.oauth2.client.web.OAuth2AuthorizedClientRepository;
@@ -29,6 +30,8 @@ class PortalSecurity {
         var registration = registrations.findByRegistrationId("keycloak");
         if (registration == null || registration.getClientSecret() == null
                 || registration.getClientSecret().isBlank()
+                || "tricore-api".equals(registration.getClientId())
+                || !ClientAuthenticationMethod.CLIENT_SECRET_BASIC.equals(registration.getClientAuthenticationMethod())
                 || !AuthorizationGrantType.AUTHORIZATION_CODE.equals(registration.getAuthorizationGrantType())
                 || !(origin + "/login/oauth2/code/keycloak").equals(registration.getRedirectUri())) {
             throw new IllegalArgumentException("Portal OIDC client must be confidential with the pinned HTTPS callback");

@@ -13,6 +13,7 @@ import org.springframework.security.oauth2.client.registration.InMemoryClientReg
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientManager;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
+import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
 import org.springframework.security.oauth2.core.OAuth2AccessToken;
 import org.springframework.security.oauth2.core.OAuth2AuthorizationException;
 import org.springframework.security.oauth2.core.OAuth2Error;
@@ -27,18 +28,22 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 
 import java.time.Instant;
 
-@WebMvcTest(controllers = PortalSessionController.class,
+@WebMvcTest(controllers = {PortalSessionController.class, PortalBackendClient.class},
         properties = {"dxos.portal-bff.backend-base-url=http://127.0.0.1:1",
                 "dxos.portal-bff.public-origin=https://portal.example.test"})
 @Import({PortalSecurity.class, PortalAuthorization.class, PortalSecurityTest.Registration.class})
 class PortalSecurityTest {
     @Autowired MockMvc mvc;
     @MockitoBean OAuth2AuthorizedClientManager manager;
+    @MockitoBean PortalBackendClient backend;
 
     @BeforeEach
     void usableAuthorization() {
@@ -68,6 +73,27 @@ class PortalSecurityTest {
     void logoutRequiresCsrf() throws Exception {
         mvc.perform(post("/bff/logout").with(oauth2Login()))
                 .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void apiWriteRequiresTheSessionCsrfHeader() throws Exception {
+        MockHttpSession session = new MockHttpSession();
+        String body = mvc.perform(get("/bff/session").session(session).with(oauth2Login()))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+        String token = new com.fasterxml.jackson.databind.ObjectMapper().readTree(body).get("csrfToken").asText();
+
+        mvc.perform(post("/bff/api/v1/mvp/requests").session(session).with(oauth2Login())
+                        .contentType("application/json").content("{}"))
+                .andExpect(status().isForbidden());
+        mvc.perform(post("/bff/api/v1/mvp/requests").session(session).with(oauth2Login())
+                        .header("X-CSRF-TOKEN", "forged").contentType("application/json").content("{}"))
+                .andExpect(status().isForbidden());
+        verifyNoInteractions(backend);
+
+        mvc.perform(post("/bff/api/v1/mvp/requests").session(session).with(oauth2Login())
+                        .header("X-CSRF-TOKEN", token).contentType("application/json").content("{}"))
+                .andExpect(status().isOk());
+        verify(backend).create(any(), any());
     }
 
     @Test
@@ -115,12 +141,28 @@ class PortalSecurityTest {
                 .contains("state=");
     }
 
+    @Test
+    void publicOrReusedApiClientCannotConfigureTheBff() {
+        var security = new PortalSecurity();
+        for (ClientRegistration client : new ClientRegistration[]{
+                Registration.client("tricore-api", ClientAuthenticationMethod.CLIENT_SECRET_BASIC),
+                Registration.client("portal-test", ClientAuthenticationMethod.NONE)}) {
+            var registrations = new InMemoryClientRegistrationRepository(client);
+            assertThatThrownBy(() -> security.portalFilterChain(null, registrations, "https://portal.example.test"))
+                    .isInstanceOf(IllegalArgumentException.class);
+        }
+    }
+
     @TestConfiguration(proxyBeanMethods = false)
     static class Registration {
         @Bean
         ClientRegistrationRepository registrations() {
-            ClientRegistration client = ClientRegistration.withRegistrationId("keycloak")
-                    .clientId("portal-test").clientSecret("test-only")
+            return new InMemoryClientRegistrationRepository(client("portal-test", ClientAuthenticationMethod.CLIENT_SECRET_BASIC));
+        }
+
+        static ClientRegistration client(String clientId, ClientAuthenticationMethod method) {
+            return ClientRegistration.withRegistrationId("keycloak")
+                    .clientId(clientId).clientSecret("test-only").clientAuthenticationMethod(method)
                     .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
                     .redirectUri("https://portal.example.test/login/oauth2/code/keycloak")
                     .scope("openid")
@@ -129,7 +171,6 @@ class PortalSecurityTest {
                     .jwkSetUri("https://idp.example.test/keys")
                     .userInfoUri("https://idp.example.test/userinfo")
                     .userNameAttributeName("sub").build();
-            return new InMemoryClientRegistrationRepository(client);
         }
     }
 }
