@@ -7,7 +7,8 @@ param(
     [string]$CoordinatorSubject,
     [string]$WorkerSubject,
     [switch]$Execute,
-    [string]$ConfirmDemoDatabase
+    [string]$ConfirmDemoDatabase,
+    [string]$TrustedDemoRealmFile
 )
 $ErrorActionPreference = 'Stop'
 $root = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
@@ -45,20 +46,13 @@ function Secret([string]$Name) {
     if ($value.Length -lt 24 -or $value -match '[\x00-\x1f\x7f]') { throw "$Name requires at least 24 characters and no control characters" }
     return $value
 }
-function Encode([string]$Value) {
-    return [Convert]::ToBase64String([Text.UTF8Encoding]::new($false,$true).GetBytes($Value)).TrimEnd('=').Replace('+','-').Replace('/','_')
-}
-
 # The existing candidate accepts exactly this loopback database/runtime naming convention.
 $subjects = @($EmployeeSubject, $CoordinatorSubject, $WorkerSubject)
 $seedActors = -not [string]::IsNullOrEmpty($KeycloakIssuer) -or @($subjects | Where-Object { $_ }).Count -gt 0
 if ($seedActors) {
-    $uri = $null
-    if (-not [Uri]::TryCreate($KeycloakIssuer, [UriKind]::Absolute, [ref]$uri) -or
-        $uri.Scheme -notin @('http','https') -or $uri.UserInfo -or $uri.Query -or $uri.Fragment -or
-        @($subjects | Where-Object { [string]::IsNullOrWhiteSpace($_) -or $_ -match '[\x00-\x1f\x7f]' }).Count -gt 0 -or
-        @($subjects | Select-Object -Unique).Count -ne 3) { throw 'Supply the exact Keycloak issuer and three distinct real user sub values, or omit all identity arguments' }
-}
+    $actorSeed = & (Join-Path $PSScriptRoot 'helpdesk-local-actor-seed.ps1') -KeycloakIssuer $KeycloakIssuer `
+        -Subjects $subjects -Schema $schema -Tenant $Tenant -TrustedDemoRealmFile $TrustedDemoRealmFile
+} elseif ($TrustedDemoRealmFile) { throw 'Trusted demo names require the exact issuer and all three subjects' }
 if ($Execute -and $ConfirmDemoDatabase -cne $database) { throw "Execution requires -ConfirmDemoDatabase $database" }
 $files = @('db/migration/V3__create_workflow_persistence.sql', 'db/helpdesk/policy-schema.sql',
     'db/helpdesk/schema.sql', 'db/helpdesk/definition.sql', 'db/helpdesk/runtime-grants.sql')
@@ -115,12 +109,7 @@ INSERT INTO $schema.tenant_guards VALUES ('$Tenant',0);
 INSERT INTO $schema.workflow_definition_bindings VALUES ('$Tenant','mvp_request','it-helpdesk',1,true);
 "@
     if ($seedActors) {
-        for ($i=0; $i -lt 3; $i++) {
-            $actor = 'oidc:' + (Encode $KeycloakIssuer) + '.' + (Encode $subjects[$i])
-            $flags = @('true,false,false','false,true,false','false,false,true')[$i]
-            $seed += "`nINSERT INTO $schema.tenant_memberships VALUES ('$Tenant','$actor',true);"
-            $seed += "`nINSERT INTO $schema.helpdesk_actors (tenant_id,actor_id,submitter,coordinator,worker) VALUES ('$Tenant','$actor',$flags);"
-        }
+        $seed += "`n" + ($actorSeed -join "`n")
     }
     $install = @"
 BEGIN;

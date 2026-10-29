@@ -80,6 +80,24 @@ employee `workflow:create/activate/read/transition` (cần transition để conf
 coordinator và worker `workflow:read/transition`.
 B06 vẫn **NOT VERIFIED** tới khi chạy test với access tokens thật theo runbook B06.
 
+Tên demo là tùy chọn: thêm `-TrustedDemoRealmFile <original-local-realm.json>` khi
+setup một database mới. File phải đến từ nguồn provisioning demo đã tin cậy, có
+`realm`, và ba `users` với `username` employee-demo/coordinator-demo/worker-demo,
+`id` khớp chính xác ba subject đã cung cấp, `firstName`, `lastName` không rỗng.
+Issuer phải là loopback và đúng realm của file. Không có file thì tên vẫn NULL;
+subject/realm lệch hoặc user trùng bị từ chối trước khi tạo tài nguyên. Không commit
+file realm chứa credential. Đây là đối chiếu dữ liệu provisioning, không chứng minh
+đăng nhập Keycloak. Không seed lại database bằng chứng đã tồn tại.
+
+Negative HTTP/PostgreSQL dùng `scripts/helpdesk-negative-local.ps1 -RunId <new_id>`:
+runner chỉ tạo container/volume mới tại `127.0.0.1:55439/helpdesk_disposable_test`,
+từ chối tài nguyên/port có sẵn, sinh credential trong memory và chạy
+`HelpdeskHttpPostgresTest`. Test dùng issuer/JWKS tổng hợp và HTTP server ephemeral,
+không dùng Keycloak/Backend/BFF đang chạy. Log sanitized nằm trong
+`backend/build/closeout-<new_id>/`; container/volume được giữ lại, không tự cleanup.
+Kiểm tra provisioning không cần Docker: `scripts/test-helpdesk-local-actor-seed.ps1`.
+API list vẫn bỏ tên theo contract hiện có; provisioning chỉ bổ sung tên cho detail.
+
 ## Start Backend và kiểm tra
 
 Trong PowerShell có JDK 21 và runtime secret (không dùng setup password):

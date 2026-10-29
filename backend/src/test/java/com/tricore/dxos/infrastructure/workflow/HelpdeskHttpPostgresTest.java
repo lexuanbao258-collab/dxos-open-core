@@ -75,14 +75,14 @@ class HelpdeskHttpPostgresTest {
         assertThat(System.getenv("WORKFLOW_EVENT_GUARD_LOCAL_DISPOSABLE")).isEqualTo("true");
         key = new RSAKeyGenerator(2048).keyID("helpdesk-test").generate();
         oidc = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
-        issuer = "http://127.0.0.1:" + oidc.getAddress().getPort();
-        oidc.createContext("/.well-known/openid-configuration", exchange -> {
+        issuer = "http://127.0.0.1:" + oidc.getAddress().getPort() + "/realms/tricore";
+        oidc.createContext("/realms/tricore/.well-known/openid-configuration", exchange -> {
             byte[] body = json.writeValueAsBytes(Map.of("issuer",issuer,"jwks_uri",issuer+"/jwks"));
             exchange.getResponseHeaders().set("Content-Type","application/json");
             exchange.sendResponseHeaders(200,body.length);
             try (var output=exchange.getResponseBody()) { output.write(body); }
         });
-        oidc.createContext("/jwks", exchange -> {
+        oidc.createContext("/realms/tricore/jwks", exchange -> {
             byte[] body = new JWKSet(key.toPublicJWK()).toString().getBytes(StandardCharsets.UTF_8);
             exchange.getResponseHeaders().set("Content-Type","application/json");
             exchange.sendResponseHeaders(200,body.length);
@@ -215,6 +215,71 @@ class HelpdeskHttpPostgresTest {
             try (var c=admin()) {
                 sql(c,"UPDATE "+schema+".helpdesk_actors SET display_name='Demo employee' WHERE actor_id='"+actors.get("employee")+"'");
             }
+        }
+    }
+
+    @Test
+    @org.junit.jupiter.api.condition.EnabledOnOs(org.junit.jupiter.api.condition.OS.WINDOWS)
+    void trustedLocalProvisioningBindsNamesToExactSubjectsWithoutGrantingAuthority() throws Exception {
+        var subjects=List.of("provisioned-employee","provisioned-coordinator","provisioned-worker");
+        var usernames=List.of("employee-demo","coordinator-demo","worker-demo");
+        var firstNames=List.of("Employee","Coordinator","Worker");
+        var users=new ArrayList<Map<String,String>>();
+        for(int i=0;i<3;i++) users.add(Map.of("id",subjects.get(i),"username",usernames.get(i),
+                "firstName",firstNames.get(i),"lastName","Demo"));
+        Path realm=Files.createTempFile("helpdesk-trusted-demo-", ".json");
+        try {
+            Files.writeString(realm,json.writeValueAsString(Map.of("realm","tricore","users",users)));
+            Path seed=Path.of("../scripts/helpdesk-local-actor-seed.ps1").toAbsolutePath();
+            String command="& '"+seed.toString().replace("'","''")+"' -KeycloakIssuer '"+issuer
+                    +"' -Subjects @('provisioned-employee','provisioned-coordinator','provisioned-worker') -Schema '"
+                    +schema+"' -Tenant tenant-a -TrustedDemoRealmFile '"+realm.toString().replace("'","''")+"'";
+            var process=new ProcessBuilder("powershell.exe","-NoProfile","-ExecutionPolicy","Bypass","-Command",command)
+                    .redirectErrorStream(true).start();
+            boolean finished=process.waitFor(20,TimeUnit.SECONDS);
+            if(!finished) process.destroyForcibly();
+            assertThat(finished).as("local provisioning completed").isTrue();
+            String seedSql=new String(process.getInputStream().readAllBytes(),StandardCharsets.UTF_8);
+            assertThat(process.exitValue()).as("trusted provisioning exit status").isZero();
+            try(var c=admin()) { sql(c,seedSql); }
+            String canonical="oidc:"+encode(issuer)+"."+encode(subjects.getFirst());
+            try(var c=admin();var s=c.prepareStatement("SELECT display_name,submitter,coordinator,worker FROM "+schema+".helpdesk_actors WHERE tenant_id='tenant-a' AND actor_id=?")) {
+                s.setString(1,canonical);
+                try(var rows=s.executeQuery()) {
+                    assertThat(rows.next()).isTrue();
+                    assertThat(rows.getString(1)).isEqualTo("Employee Demo");
+                    assertThat(rows.getBoolean(2)).isTrue();
+                    assertThat(rows.getBoolean(3)).isFalse();
+                    assertThat(rows.getBoolean(4)).isFalse();
+                }
+            }
+            String id=create(subjects.getFirst()).path("id").asText();
+            expect(get(API+"/"+id),subjects.getFirst(),200)
+                    .andExpect(jsonPath("$.requesterDisplayName").value("Employee Demo"))
+                    .andExpect(jsonPath("$.requesterId").value(canonical));
+            var before=snapshot();
+            expect(get(API+"/"+id),subjects.getFirst()+"-mismatched",404);
+            expect(post(API+"/"+id+"/triage").content("{\"expectedVersion\":0}"),subjects.getFirst(),403);
+            mvc.perform(post(API+"/"+id+"/triage").header("Authorization","Bearer "+token(subjects.get(1),List.of("workflow:read"),key))
+                    .contentType("application/json").content("{\"expectedVersion\":0}"))
+                    .andExpect(status().isForbidden());
+            assertThat(snapshot()).isEqualTo(before);
+            expect(post(API+"/"+id+"/triage").content("{\"expectedVersion\":0}"),subjects.get(1),200);
+            String worker="oidc:"+encode(issuer)+"."+encode(subjects.get(2));
+            expect(post(API+"/"+id+"/assign").content(json.writeValueAsString(Map.of("assigneeId",worker,"expectedAssignmentVersion",0))),subjects.get(1),200);
+            expect(get(API+"/"+id),subjects.getFirst(),200)
+                    .andExpect(jsonPath("$.assigneeDisplayName").value("Worker Demo"));
+            expect(get(API),subjects.getFirst(),200)
+                    .andExpect(jsonPath("$.items[0].requesterDisplayName").doesNotExist())
+                    .andExpect(jsonPath("$.items[0].assigneeDisplayName").doesNotExist());
+        } finally {
+            try(var c=admin();var s=c.prepareStatement("UPDATE "+schema+".tenant_memberships SET active=false WHERE tenant_id='tenant-a' AND actor_id=?")) {
+                for(String subject:subjects) {
+                    s.setString(1,"oidc:"+encode(issuer)+"."+encode(subject));
+                    s.executeUpdate();
+                }
+            }
+            Files.deleteIfExists(realm);
         }
     }
 
@@ -680,6 +745,52 @@ class HelpdeskHttpPostgresTest {
                 var detail=client.send(HttpRequest.newBuilder(URI.create(endpoint+API+"/"+id)).header("Authorization",bearer).GET().build(),HttpResponse.BodyHandlers.ofString());
                 assertThat(detail.statusCode()).as(detail.body()).isEqualTo(200);
                 assertThat(json.readTree(detail.body()).path("state").asText()).isEqualTo("SUBMITTED");
+                String employee=token("employee",AUTHORITIES,key);
+                String coordinator=token("coordinator",AUTHORITIES,key);
+                String worker=token("worker",AUTHORITIES,key);
+                var before=snapshot();
+                b06Call(client,endpoint,null,"POST","/"+id+"/triage","{\"expectedVersion\":0}",401);
+                b06Call(client,endpoint,employee,"POST","/"+id+"/triage","{\"expectedVersion\":0}",403);
+                b06Call(client,endpoint,token("employee",List.of("workflow:read-all"),key),"GET","/"+id,null,403);
+                for(String stranger:List.of("employee2","outsider","foreign"))
+                    b06Call(client,endpoint,token(stranger,AUTHORITIES,key),"GET","/"+id,null,404);
+                var original=SignedJWT.parse(employee);
+                var expired=new SignedJWT(original.getHeader(),new JWTClaimsSet.Builder(original.getJWTClaimsSet())
+                        .expirationTime(Date.from(Instant.now().minusSeconds(300))).build());
+                expired.sign(new RSASSASigner(key));
+                b06Call(client,endpoint,expired.serialize(),"GET","/"+id,null,401);
+                assertThat(snapshot()).isEqualTo(before);
+
+                try(var c=admin()) { sql(c,"UPDATE "+schema+".resource_acl SET granted=false WHERE resource_id='"+id
+                        +"' AND actor_id='"+actors.get("coordinator")+"' AND operation='workflow:transition'"); }
+                before=snapshot();
+                assertThat(b06Call(client,endpoint,coordinator,"GET","/"+id,null,200).path("allowedActions")).isEmpty();
+                b06Call(client,endpoint,coordinator,"POST","/"+id+"/triage","{\"expectedVersion\":0}",403);
+                assertThat(snapshot()).isEqualTo(before);
+                try(var c=admin()) { sql(c,"UPDATE "+schema+".resource_acl SET granted=true WHERE resource_id='"+id
+                        +"' AND actor_id='"+actors.get("coordinator")+"' AND operation='workflow:transition'"); }
+                b06Call(client,endpoint,coordinator,"POST","/"+id+"/triage","{\"expectedVersion\":0}",200);
+                before=snapshot();
+                b06Call(client,endpoint,coordinator,"POST","/"+id+"/triage","{\"expectedVersion\":0}",409);
+                b06Call(client,endpoint,coordinator,"POST","/"+id+"/triage","{\"expectedVersion\":1}",409);
+                assertThat(snapshot()).isEqualTo(before);
+                b06Call(client,endpoint,coordinator,"POST","/"+id+"/assign",assignBody("worker",0),200);
+                try {
+                    try(var c=admin()) { sql(c,"UPDATE "+schema+".helpdesk_actors SET worker=false WHERE actor_id='"+actors.get("worker")+"'"); }
+                    before=snapshot();
+                    b06Call(client,endpoint,worker,"POST","/"+id+"/start","{\"expectedVersion\":1}",403);
+                    assertThat(snapshot()).isEqualTo(before);
+                } finally {
+                    try(var c=admin()) { sql(c,"UPDATE "+schema+".helpdesk_actors SET worker=true WHERE actor_id='"+actors.get("worker")+"'"); }
+                }
+                b06Call(client,endpoint,worker,"POST","/"+id+"/start","{\"expectedVersion\":1}",200);
+                b06Call(client,endpoint,worker,"POST","/"+id+"/resolve","{\"expectedVersion\":2,\"resolution\":\"Isolated repair\"}",200);
+                b06Call(client,endpoint,employee,"POST","/"+id+"/confirm","{\"expectedVersion\":3}",200);
+                before=snapshot();
+                b06Call(client,endpoint,worker,"POST","/"+id+"/resolve","{\"expectedVersion\":4,\"resolution\":\"Must roll back\"}",409);
+                b06Call(client,endpoint,employee,"POST","/"+id+"/confirm","{\"expectedVersion\":4}",409);
+                assertThat(snapshot()).isEqualTo(before);
+                System.out.println("REAL_HTTP_NEGATIVES=PASS 401/403/404/IDOR/expired-token/exact-grant/stale-duplicate/revoked-assignee/terminal-rollback");
                 var prototype=client.send(HttpRequest.newBuilder(URI.create(endpoint+"/api/v1/requests")).header("Authorization",bearer).GET().build(),HttpResponse.BodyHandlers.ofString());
                 assertThat(prototype.statusCode()).isEqualTo(404);
             }
