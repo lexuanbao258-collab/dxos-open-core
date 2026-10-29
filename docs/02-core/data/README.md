@@ -153,7 +153,7 @@ workbench/
     └── G4_F17_DECISION_RECORD.md
 ```
 
-The tree is an **organizational proposal**, not proof the future leaf files already exist. Existing canonical sources remain in `docs/contracts/` (see linked canonical data contract) and [data-persistence boundaries](../../architecture/data-persistence-boundaries.md).
+The tree is an **organizational proposal**, not proof the future leaf files already exist. Existing canonical sources remain in `docs/contracts/` (see linked canonical data contract) and [data-persistence boundaries]({repo}docs/architecture/data-persistence-boundaries.md).
 
 | Requirement | Source / contract | Test and evidence to collect | Reviewer | Present status |
 | --- | --- | --- | --- | --- |
