@@ -1,14 +1,14 @@
-﻿---
-title: DX-OS Open-Core â€” Data Core
+---
+title: DX-OS Open-Core — Data Core
 document_id: G4-F17
 version: 1.0-review-draft
-status: DRAFT â€” NOT REVIEWED
+status: DRAFT — NOT REVIEWED
 source_commit: 0f0c3ba0c3eecda0a5c4a798a3cc14b808351bed
-owner: TRICORE / Data â€” to confirm
-reviewers: Data / Application / Security / Independent G4 â€” pending
+owner: TRICORE / Data — to confirm
+reviewers: Data / Application / Security / Independent G4 — pending
 ---
 
-# Data Core â€” Architecture, Contract & Review Portal
+# Data Core — Architecture, Contract & Review Portal
 
 > **Evidence labels:** **OBSERVED** = inspected exact-SHA Java or canonical contract; **SELECTED** = 18 explicitly approved G4-F17 documentation decisions; **PROPOSED** = future adapter, use case, test or policy requiring implementation/review; **VERIFIED** = executed tests with reproducible exact-SHA evidence and independent review. No test was executed for this document; no adapter or Gate is claimed to be accepted.
 
@@ -16,7 +16,7 @@ reviewers: Data / Application / Security / Independent G4 â€” pending
 
 DX-OS requires a reusable mechanism for binary/object content (for example, attachment bytes) without coupling Application code to MinIO, AWS S3, a filesystem provider or SQL database details. At this source baseline, the **observed Data Core capability is a provider-neutral Object Storage contract** in `com.tricore.dxos.core.data`, not a universal ORM, a generic relational repository or a database transaction manager.
 
-**Authority:** [canonical `docs/contracts/data-core.md`](https://github.com/lexuanbao258-collab/dxos-open-core/blob/0f0c3ba0c3eecda0a5c4a798a3cc14b808351bed/docs/contracts/data-core.md) (blob `99b6ad1d67b2e8d730f13b7a082659e4c4e75b3d`), and the Java sources listed below, all pinned to `0f0c3ba0c3eecda0a5c4a798a3cc14b808351bed`. This portal supplementsâ€”does not overrideâ€”the canonical contract. API/semantic changes require a separately reviewed ADR.
+**Authority:** [canonical `docs/contracts/data-core.md`](https://github.com/lexuanbao258-collab/dxos-open-core/blob/0f0c3ba0c3eecda0a5c4a798a3cc14b808351bed/docs/contracts/data-core.md) (blob `99b6ad1d67b2e8d730f13b7a082659e4c4e75b3d`), and the Java sources listed below, all pinned to `0f0c3ba0c3eecda0a5c4a798a3cc14b808351bed`. This portal supplements—does not override—the canonical contract. API/semantic changes require a separately reviewed ADR.
 
 ## 2. Responsibility and capability boundaries
 
@@ -137,20 +137,20 @@ The two Applications can impose different content-type allowlists, retention and
 
 ```text
 docs/
-â”œâ”€â”€ 02-core/
-â”‚   â””â”€â”€ data/
-â”‚       â”œâ”€â”€ README.md                    # G4-F17 â€” this architectural portal
-â”‚       â”œâ”€â”€ architecture.md             # PROPOSED future documentation
-â”‚       â”œâ”€â”€ contracts.md                # PROPOSED future documentation
-â”‚       â”œâ”€â”€ object-storage.md           # PROPOSED future documentation
-â”‚       â”œâ”€â”€ adapters.md                 # PROPOSED future documentation
-â”‚       â””â”€â”€ acceptance-tests.md         # PROPOSED future documentation
-â”œâ”€â”€ 10-reviews/
-â”‚   â””â”€â”€ g4-f17-review-checklist.md
-â””â”€â”€ ...
+├── 02-core/
+│   └── data/
+│       ├── README.md                    # G4-F17 — this architectural portal
+│       ├── architecture.md             # PROPOSED future documentation
+│       ├── contracts.md                # PROPOSED future documentation
+│       ├── object-storage.md           # PROPOSED future documentation
+│       ├── adapters.md                 # PROPOSED future documentation
+│       └── acceptance-tests.md         # PROPOSED future documentation
+├── 10-reviews/
+│   └── g4-f17-review-checklist.md
+└── ...
 workbench/
-â””â”€â”€ decision-records/
-    â””â”€â”€ G4_F17_DECISION_RECORD.md
+└── decision-records/
+    └── G4_F17_DECISION_RECORD.md
 ```
 
 The tree is an **organizational proposal**, not proof the future leaf files already exist. Existing canonical sources remain in `docs/contracts/` (see linked canonical data contract) and [data-persistence boundaries](../../architecture/data-persistence-boundaries.md).
@@ -174,13 +174,13 @@ Canonical `data-core.md` reports that a test-only `InMemoryObjectStorage` and `O
 
 | Gate | Scope | Disposition |
 | --- | --- | --- |
-| G4-D â€” Design | 18 decisions, boundary/architecture/navigation clarity | DRAFT / NOT REVIEWED |
-| G4-S â€” Source | Java types, canonical API and dependency review | TYPES INSPECTED; COMPLETE AUDIT PENDING |
-| G4-C â€” Contract | Positive, negative, concurrency, lifecycle unit tests | NOT RUN HERE |
-| G4-A â€” Adapter | Actual object provider adapter registered and conformance tested | NOT VERIFIED |
-| G4-I â€” Integration | Real provider failure, stream and consistency behavior | NOT RUN HERE |
-| G4-R â€” Reuse | Helpdesk + Facility separate policy integration | NOT RUN HERE |
-| G4-G â€” Independent | Signed reviewer verdict and exact evidence | NOT APPROVED |
+| G4-D — Design | 18 decisions, boundary/architecture/navigation clarity | DRAFT / NOT REVIEWED |
+| G4-S — Source | Java types, canonical API and dependency review | TYPES INSPECTED; COMPLETE AUDIT PENDING |
+| G4-C — Contract | Positive, negative, concurrency, lifecycle unit tests | NOT RUN HERE |
+| G4-A — Adapter | Actual object provider adapter registered and conformance tested | NOT VERIFIED |
+| G4-I — Integration | Real provider failure, stream and consistency behavior | NOT RUN HERE |
+| G4-R — Reuse | Helpdesk + Facility separate policy integration | NOT RUN HERE |
+| G4-G — Independent | Signed reviewer verdict and exact evidence | NOT APPROVED |
 
 **Review blockers:** invented production MinIO/S3 status, silent object-key collisions, content/metadata mismatch, closing caller-owned store stream, leaking provider exceptions/secrets, treating `ObjectKey` as authorization, falsely claiming cross-SQL transactions or provider durability, and self-approving Gates.
 
@@ -197,5 +197,4 @@ Canonical `data-core.md` reports that a test-only `InMemoryObjectStorage` and `O
 | DC-OD-07 | Multi-provider replacement conformance and reviewer evidence |
 | DC-OD-08 | Which proposed Data documentation leaf files should be created next |
 
-**Final status:** `G4-F17 DRAFT / NOT REVIEWED` â€” authoring complete; no tests executed or independent Gate approved.
-
+**Final status:** `G4-F17 DRAFT / NOT REVIEWED` — authoring complete; no tests executed or independent Gate approved.
