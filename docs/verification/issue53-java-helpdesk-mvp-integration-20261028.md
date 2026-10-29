@@ -96,3 +96,41 @@ PR giữ **Draft** để Yến review security và Ánh review API/DTO tại HEA
 Portal/BFF real-login E2E chưa chạy; Keycloak PASS ở đây là fixture riêng, không phải
 hệ thống identity dùng chung. Production D2/D3/D4 SQL security engine vẫn deferred.
 Chưa merge, deploy, đổi production exposure hoặc bật LIVE.
+## Bổ sung: kiểm thử E2E thủ công qua Postman (2026-10-28)
+
+**Loại bằng chứng:** thao tác HTTP thủ công qua Postman GUI, thực hiện sau các lượt JUnit/Gradle nêu trên. Đây là một **luồng nghiệp vụ Helpdesk thực tế trong môi trường local cô lập**, không phải kiểm thử Portal/BFF trên trình duyệt, không phải triển khai tại doanh nghiệp, và không phải một lượt chạy lại 999 unit/integration tests.
+
+**Môi trường:** Backend Spring Boot/Java 21 tại \`127.0.0.1:8080\`; Keycloak 26.8.1 (realm \`tricore\`, issuer \`http://127.0.0.1:8180/realms/tricore\`); PostgreSQL 17.11 disposable tại \`127.0.0.1:55441\`, database \`helpdesk_disposable_demo_20261028\`, schema \`helpdesk_demo\`. Xác thực Postman dùng Authorization Code + PKCE và tài khoản thử nghiệm riêng theo ba vai trò Employee, Coordinator, Worker. Không sử dụng bearer token, mật khẩu, client secret, hoặc dữ liệu thật của doanh nghiệp làm minh chứng.
+
+**Request ID duy nhất được theo dõi:** \`7be09ac9-d928-4349-97d8-d479d47a50a9\` (dữ liệu demo local).
+
+| Bước | Vai trò | HTTP/API | HTTP nhận được | Kết quả thực tế |
+|---|---|---|---|---|
+| 1. Create | Employee | \`POST /api/v1/mvp/requests\` | **201 Created** | Request \`IT_HELPDESK\`; \`SUBMITTED\`, \`version=0\`, \`assignmentVersion=0\` |
+| 2. Triage | Coordinator | \`POST /api/v1/mvp/requests/{id}/triage\` | **200 OK** | \`TRIAGED\`, \`version=1\` |
+| 3. Assign | Coordinator | \`POST /api/v1/mvp/requests/{id}/assign\` | **200 OK** | Gán đúng \`assigneeId\` canonical lấy từ \`eligibleAssignees\`; \`assignmentVersion=1\`; workflow vẫn \`TRIAGED\`, \`version=1\` |
+| 4. Start | Worker | \`POST /api/v1/mvp/requests/{id}/start\` | **200 OK** | \`IN_PROGRESS\`, \`version=2\` |
+| 5. Resolve | Worker | \`POST /api/v1/mvp/requests/{id}/resolve\` | **200 OK** | \`RESOLVED\`, \`version=3\`, có nội dung xử lý |
+| 6. Confirm | Employee | \`POST /api/v1/mvp/requests/{id}/confirm\` | **200 OK** | \`CONFIRMED\`, \`version=4\`, \`assignmentVersion=1\`, \`allowedActions=[]\` |
+| 7. History | Employee | \`GET /api/v1/mvp/requests/{id}/history\` | **200 OK** | Trả về **đúng 4** record workflow transition, versions 1–4 |
+
+**History quan sát từ response JSON thực tế:**
+
+| Action | Trước → Sau | Version | \`occurredAt\` (UTC) |
+|---|---|---|---|
+| \`triage\` | \`SUBMITTED → TRIAGED\` | 1 | \`2026-10-28T14:10:56.188128500Z\` |
+| \`start_work\` | \`TRIAGED → IN_PROGRESS\` | 2 | \`2026-10-28T14:23:23.678576100Z\` |
+| \`resolve\` | \`IN_PROGRESS → RESOLVED\` | 3 | \`2026-10-28T14:24:42.008512500Z\` |
+| \`confirm\` | \`RESOLVED → CONFIRMED\` | 4 | \`2026-10-28T14:29:26.190413500Z\` |
+
+\`assign\` là cập nhật phân công có version riêng, **không** được tính là workflow transition; vì thế 6 thao tác ghi nghiệp vụ tương ứng đúng 4 bản ghi History, không phải thiếu history.
+
+**Nguồn minh chứng và giới hạn:**
+- Kết quả trên được đối chiếu từ các ảnh response Postman do người chạy demo cung cấp trong cuộc trao đổi ngày 28–29/10/2026. Đây là **bản ghi kết quả quan sát**, không phải log tự động có chữ ký/chứng thực độc lập.
+- **Chưa tải các ảnh gốc lên GitHub trong lần cập nhật này**; không khẳng định có screenshot attachment, ảnh CI hay Postman CLI collection mới trong repo. Cần cung cấp ảnh đã che JWT/token, cookie và thông tin nhạy cảm nếu reviewer yêu cầu bằng chứng thị giác.
+- Luồng đã dùng một Request ID đi tới \`CONFIRMED\`. **Không phát lại các lệnh POST trên ID này**; nếu cần tái hiện thì tạo một disposable request mới với token/role thích hợp.
+- Kiểm thử thủ công này xác nhận các endpoint **Create, Triage, Assign, Start, Resolve, Confirm, History**; không tuyên bố đã thao tác thủ công độc lập với List/Detail trong cùng lượt. Phạm vi test tự động cho 9 API được ghi riêng ở phần "Kết quả thực thi".
+- **Vẫn chưa PASS:** Portal → BFF → Backend bằng browser + SSO/session thật; Facility Request E2E; MinIO runtime; deploy doanh nghiệp/production và independent review. Không đổi cổng \`DRAFT / REVIEW_PENDING / LIVE_BLOCKED / DO_NOT_MERGE\`.
+
+**Kết luận của lượt Postman:** \`LOCAL_BACKEND_HTTP_E2E_PASS\` đối với **một** request \`IT_HELPDESK\` end-to-end, kết thúc ở \`CONFIRMED\` cùng 4 history transitions. Đây là bằng chứng bổ sung cho PR #74, **không phải sign-off full-stack hoặc phê duyệt merge/LIVE**.
+
