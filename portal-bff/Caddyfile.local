@@ -1,5 +1,8 @@
 {
     auto_https disable_redirects
+    servers {
+        strict_sni_host on
+    }
 }
 
 https://localhost:8443 {
