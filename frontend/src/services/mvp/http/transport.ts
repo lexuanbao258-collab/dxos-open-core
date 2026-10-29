@@ -1,4 +1,4 @@
-/** JSON decoding/authentication belong to a future separately approved transport. */
+/** The concrete transport handles JSON and the BFF session boundary. */
 export interface HelpdeskHttpRequest {
   readonly method: "GET" | "POST";
   /** Relative path only, scoped to the reviewed Helpdesk namespace. */
@@ -16,7 +16,7 @@ export interface HelpdeskHttpResponse {
 }
 
 /**
- * Injected function only: no fetch implementation, host, credentials or LIVE flag.
+ * Injected boundary; the client selects no host, credentials or integration mode.
  * Resolve ALL HTTP responses, including non-2xx; reject only if no usable response
  * was obtained. One invocation must mean one attempt, with no automatic retry,
  * redirect replay, token-refresh replay or write reconciliation.

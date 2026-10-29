@@ -25,7 +25,7 @@ const BASE = "/api/v1/mvp/requests";
 
 /**
  * PR #63 wire client, unbound to Portal, RequestService and MvpRequestPort.
- * No concrete network transport is shipped. Construction requires injection.
+ * Construction requires an explicit transport; the local BFF adapter is separate.
  * Nine explicit routes only; /start maps to start_work inside Backend, not here.
  */
 export class HelpdeskApiClient {

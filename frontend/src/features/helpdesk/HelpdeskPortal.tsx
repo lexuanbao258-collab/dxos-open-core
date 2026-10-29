@@ -56,7 +56,7 @@ function useHelpdeskWrite(key: string) {
   const busy = portal.helpdeskPending.has(key);
   async function run(write: () => Promise<unknown>, after: () => void) {
     if (
-      !portal.role ||
+      !portal.helpdeskAuthenticated ||
       stopped ||
       invoked.current ||
       !portal.beginHelpdeskWrite(key)

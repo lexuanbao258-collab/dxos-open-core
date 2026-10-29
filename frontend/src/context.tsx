@@ -15,6 +15,7 @@ import type { MvpApplicationError } from "./services/mvp/errors";
 interface PortalContextValue {
   requestService: RequestService;
   helpdeskService?: MvpHelpdeskRequestPort;
+  helpdeskAuthenticated: boolean;
   helpdeskWriteStops: ReadonlyMap<string, MvpApplicationError>;
   stopHelpdeskWrite: (key: string, error: MvpApplicationError) => void;
   releaseHelpdeskReadStop: (key: string) => void;
@@ -37,10 +38,12 @@ export function PortalProvider({
   children,
   requestService = defaultRequestService,
   helpdeskService,
+  helpdeskSession,
 }: {
   children: ReactNode;
   requestService?: RequestService;
   helpdeskService?: MvpHelpdeskRequestPort;
+  helpdeskSession?: boolean;
 }) {
   // Invalidate pending UI work synchronously on logout/expiry/role changes.
   // This is a demo lifecycle boundary, not an authentication credential.
@@ -90,6 +93,7 @@ export function PortalProvider({
     });
   }, []);
   const [role, updateRole] = useState<DemoRole | null>(() => {
+    if (helpdeskSession !== undefined) return null;
     try {
       const value = sessionStorage.getItem("dxos-demo-role");
       return value === "employee" || value === "processor" ? value : null;
@@ -134,6 +138,10 @@ export function PortalProvider({
       value={{
         requestService,
         helpdeskService,
+        helpdeskAuthenticated:
+          helpdeskSession !== undefined
+            ? helpdeskSession && !sessionExpired
+            : Boolean(role),
         helpdeskWriteStops,
         stopHelpdeskWrite,
         releaseHelpdeskReadStop,

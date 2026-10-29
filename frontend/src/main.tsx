@@ -12,8 +12,21 @@ import { App } from "./App";
 import "./styles.css";
 import "./university-theme.css";
 
-ReactDOM.createRoot(document.getElementById("root")!).render(
-  <BrowserRouter>
-    <App />
-  </BrowserRouter>,
-);
+const root = ReactDOM.createRoot(document.getElementById("root")!);
+if (import.meta.env.MODE === "integration-local") {
+  import("./features/helpdesk/LocalHelpdeskIntegration").then(
+    ({ default: LocalHelpdeskIntegration }) => {
+      root.render(
+        <BrowserRouter>
+          <LocalHelpdeskIntegration />
+        </BrowserRouter>,
+      );
+    },
+  );
+} else {
+  root.render(
+    <BrowserRouter>
+      <App />
+    </BrowserRouter>,
+  );
+}
