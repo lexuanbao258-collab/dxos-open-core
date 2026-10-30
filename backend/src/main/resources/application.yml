@@ -39,3 +39,15 @@ tricore:
     oidc:
       audience: ${OIDC_AUDIENCE}
       resource-client-id: ${OIDC_RESOURCE_CLIENT_ID}
+
+# API explorer is local-only and opt-in. The Helpdesk MVP itself stays default-off.
+dxos:
+  openapi:
+    enabled: ${DXOS_OPENAPI_ENABLED:false}
+
+springdoc:
+  api-docs:
+    enabled: ${dxos.openapi.enabled:false}
+  swagger-ui:
+    enabled: ${dxos.openapi.enabled:false}
+    persist-authorization: false

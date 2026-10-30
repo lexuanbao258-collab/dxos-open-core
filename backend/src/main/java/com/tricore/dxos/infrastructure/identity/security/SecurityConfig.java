@@ -35,14 +35,29 @@ public class SecurityConfig {
     @Bean
     SecurityFilterChain securityFilterChain(
             HttpSecurity http,
-            ApiAuthenticationEntryPoint authenticationEntryPoint
+            ApiAuthenticationEntryPoint authenticationEntryPoint,
+            @Value("${dxos.openapi.enabled:false}") boolean openApiEnabled,
+            @Value("${server.address:}") String bindAddress
     ) throws Exception {
+        requireLoopbackOpenApi(openApiEnabled, bindAddress);
         http
                 .csrf(csrf -> csrf.disable())
-                .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers("/api/v1/health").permitAll()
-                        .anyRequest().authenticated()
-                )
+                .authorizeHttpRequests(authorize -> {
+                    authorize.requestMatchers("/api/v1/health").permitAll();
+                    // Never silently expose OpenAPI on a public listener or when disabled.
+                    if (openApiEnabled) {
+                        authorize.requestMatchers(
+                                "/v3/api-docs", "/v3/api-docs/**", "/v3/api-docs.yaml",
+                                "/swagger-ui.html", "/swagger-ui/**"
+                        ).permitAll();
+                    } else {
+                        authorize.requestMatchers(
+                                "/v3/api-docs", "/v3/api-docs/**", "/v3/api-docs.yaml",
+                                "/swagger-ui.html", "/swagger-ui/**"
+                        ).denyAll();
+                    }
+                    authorize.anyRequest().authenticated();
+                })
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
@@ -57,6 +72,13 @@ public class SecurityConfig {
                 );
 
         return http.build();
+    }
+
+    static void requireLoopbackOpenApi(boolean enabled, String bindAddress) {
+        if (enabled && !"127.0.0.1".equals(bindAddress)) {
+            throw new IllegalStateException(
+                    "Swagger/OpenAPI requires server.address=127.0.0.1 in the local MVP");
+        }
     }
 
     @Bean
