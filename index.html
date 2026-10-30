@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="DX-OS Open-Core: tài liệu tích hợp API IT Helpdesk MVP, hợp đồng HTTP và nguyên tắc xác thực/phân quyền.">
+<title>DX-OS • IT Helpdesk API Reference</title>
+<style>
+:root{color-scheme:light;--ink:#172439;--muted:#5c6e84;--line:#dce5ed;--blue:#2563eb;--navy:#0d1729;--pale:#f5f8fc;--green:#087f5b;--soft:#edf8f3;--white:#fff}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;color:var(--ink);background:var(--pale);font:15px/1.65 system-ui,-apple-system,"Segoe UI",sans-serif}a{color:var(--blue);text-decoration:none}a:hover{text-decoration:underline}a:focus-visible,button:focus-visible,summary:focus-visible{outline:3px solid #8ab6ff;outline-offset:3px}
+header{background:var(--navy);color:white}nav{max-width:1150px;margin:auto;padding:15px 28px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}.brand{font-weight:800;letter-spacing:.06em;font-size:18px;color:white}.brand small{color:#93b1d8;font-weight:500;letter-spacing:0}.links{display:flex;gap:22px;flex-wrap:wrap}.links a{color:#dce8fc;font-size:13px}.hero{max-width:1150px;margin:auto;padding:62px 28px 64px}.eyebrow{font-size:12px;color:#9dc4ff;text-transform:uppercase;letter-spacing:.18em;font-weight:800}.hero h1{font-size:clamp(32px,5vw,54px);line-height:1.14;letter-spacing:-.045em;margin:17px 0 16px;max-width:800px}.hero p{font-size:17px;line-height:1.8;color:#becde2;max-width:740px}.tags{display:flex;gap:9px;flex-wrap:wrap;margin:26px 0}.tag{font-size:12px;font-weight:750;border:1px solid #49617c;padding:5px 12px;border-radius:999px;background:#1c2b41}.tag.success{color:#b6f5d3;border-color:#217f63}.hero-links{display:flex;gap:12px;flex-wrap:wrap;margin-top:28px}.action{background:#eaf2ff;color:#0c3b91;font-weight:750;padding:10px 18px;border-radius:10px;display:inline-block}.action.alt{color:white;border:1px solid #536985;background:none}
+.layout{max-width:1150px;margin:auto;padding:36px 28px 80px;display:grid;grid-template-columns:220px minmax(0,1fr);gap:36px}.toc{position:sticky;top:22px;align-self:start;border:1px solid var(--line);border-radius:14px;background:white;padding:17px}.toc strong{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}.toc a{display:block;color:#425877;padding:8px 4px;font-size:13px}.section{scroll-margin-top:20px;margin-bottom:30px}.section h2{font-size:25px;letter-spacing:-.035em;margin:0 0 12px}.section>p{color:var(--muted);margin-top:0}.panel{border:1px solid var(--line);background:white;border-radius:14px;padding:24px;margin:14px 0}.notice{background:#fef9ee;border-left:4px solid #cd8c25;padding:14px 17px;border-radius:5px;color:#594318}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:20px 0}.stat{background:white;border:1px solid var(--line);border-radius:12px;padding:16px}.stat strong{display:block;font-size:27px;line-height:1.25}.stat span{font-size:12px;color:var(--muted)}
+.table-wrap{overflow-x:auto;background:white;border:1px solid var(--line);border-radius:12px}table{border-collapse:collapse;width:100%;min-width:650px}th,td{text-align:left;padding:13px 15px;border-bottom:1px solid var(--line);font-size:13px}th{background:#edf3f9;color:#39506d;font-weight:800}tr:last-child td{border-bottom:0}code{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;background:#ecf1f8;padding:2px 5px;border-radius:4px;font-size:12px;overflow-wrap:anywhere}.method{font-size:10px;letter-spacing:.06em;font-weight:800;padding:5px 8px;border-radius:5px;color:#1254ad;background:#e7f0ff;white-space:nowrap}.method.post{background:var(--soft);color:var(--green)}
+.steps{counter-reset:step}.steps li{margin:12px 0}.steps li::marker{color:var(--blue);font-weight:800}
+.api-item{border:1px solid var(--line);background:white;border-radius:11px;margin:9px 0;overflow:hidden}.api-item summary{list-style:none;cursor:pointer;padding:15px 18px;display:flex;align-items:center;gap:12px;font-size:13px}.api-item summary::-webkit-details-marker{display:none}.api-item summary:after{content:"+";margin-left:auto;font-size:20px;color:var(--muted)}.api-item[open] summary:after{content:"−"}.api-item[open] summary{border-bottom:1px solid var(--line)}.api-detail{padding:15px 19px;color:var(--muted);font-size:13px}.api-detail p{margin:6px 0}.api-detail code{color:var(--ink)}.api-name{font-weight:700}.api-path{color:#253f63;font-weight:600}
+pre{background:#101e31;color:#e0efff;overflow-x:auto;padding:18px;border-radius:11px;line-height:1.65;font-size:12px}pre code{color:inherit;background:none;padding:0;white-space:pre}.key{font-weight:750}.note{font-size:12px;color:var(--muted)}.warning-list{margin:8px 0;padding-left:20px}.warning-list li{margin:6px 0}
+footer{background:#e9f0f8;border-top:1px solid var(--line);padding:26px;text-align:center;font-size:12px;color:#64738a}
+@media(max-width:800px){.layout{grid-template-columns:1fr;gap:18px}.toc{position:static;display:flex;flex-wrap:wrap;gap:0 14px}.toc strong{width:100%}.hero{padding-top:38px;padding-bottom:42px}.stats{grid-template-columns:1fr 1fr}.links{gap:10px}.panel{padding:17px}}
+</style>
+</head>
+<body>
+<header>
+<nav><a class="brand" href="#top">DX—OS <small> / Open-Core</small></a><div class="links"><a href="#api">API endpoints</a><a href="#auth">Bảo mật</a><a href="#integration">Tích hợp</a><a href="https://github.com/lexuanbao258-collab/dxos-open-core/pull/79">Mã nguồn &amp; PR #79</a></div></nav>
+<div class="hero" id="top">
+<div class="eyebrow">Developer Documentation · 30.10.2026</div>
+<h1>IT Helpdesk API Reference</h1>
+<p>Tài liệu tích hợp dành cho bản DX-OS Open-Core MVP: tạo yêu cầu, tiếp nhận, phân công, xử lý và xác nhận hoàn tất, với xác thực OIDC/JWT và kiểm soát truy cập theo tài nguyên.</p>
+<div class="tags"><span class="tag success">Swagger local đã kiểm tra giao diện</span><span class="tag">9 HTTP routes</span><span class="tag">MVP / Draft</span><span class="tag">Không có public API server</span></div>
+<div class="hero-links"><a class="action" href="#api">Xem 9 endpoint</a><a class="action alt" href="#integration">Hướng dẫn tích hợp</a></div>
+</div>
+</header>
+<div class="layout">
+<aside class="toc" aria-label="Mục lục"><strong>Nội dung</strong><a href="#overview">Tổng quan</a><a href="#api">Danh sách API</a><a href="#workflow">Quy trình và phiên bản</a><a href="#auth">Xác thực &amp; phân quyền</a><a href="#integration">Ví dụ tích hợp</a><a href="#errors">Mã lỗi</a><a href="#evidence">Trạng thái kiểm chứng</a></aside>
+<main>
+<section id="overview" class="section"><h2>Tổng quan</h2>
+<p>API thuộc bản thử nghiệm nội bộ và <strong>chỉ được bật khi cấu hình môi trường demo</strong>. Trang này là tài liệu tĩnh, không kết nối hoặc chuyển tiếp yêu cầu đến Backend.</p>
+<div class="notice"><strong>Giới hạn:</strong> Bản tài liệu này được biên soạn từ controller và tài liệu của ứng viên <a href="https://github.com/lexuanbao258-collab/dxos-open-core/pull/79">PR #79</a>, nằm trên PR #74 chưa merge. Không phải chứng nhận production-ready, không có địa chỉ API Internet và không cung cấp tài khoản dùng thử công khai.</div>
+<div class="stats"><div class="stat"><strong>9</strong><span>HTTP operations</span></div><div class="stat"><strong>5</strong><span>Trạng thái nghiệp vụ</span></div><div class="stat"><strong>3</strong><span>Vai trò demo</span></div></div>
+<div class="panel"><span class="key">Base path:</span> <code>/api/v1/mvp/requests</code><p class="note">Giới hạn bản local: Java 21, Spring Boot, PostgreSQL, Keycloak. Backend cần cấu hình riêng và không được công bố public listener.</p></div>
+</section>
+<section id="api" class="section"><h2>9 API của IT Helpdesk</h2><p>Nhấp vào từng endpoint để xem actor và dữ liệu liên quan. Các vai trò dưới đây chỉ là mô tả nghiệp vụ; quyết định cấp quyền cuối cùng luôn thuộc Backend.</p>
+<details class="api-item"><summary><span class="method">GET</span><span class="api-path">/api/v1/mvp/requests</span><span class="api-name">Danh sách yêu cầu</span></summary><div class="api-detail"><p>Danh sách những yêu cầu người gọi được phép đọc; phân trang bằng <code>after</code> (UUID, tùy chọn), <code>limit</code> (mặc định 50, từ 1–100).</p><p><b>Yêu cầu:</b> JWT hợp lệ; tenant membership và quyền đọc tài nguyên.</p></div></details>
+<details class="api-item"><summary><span class="method post">POST</span><span class="api-path">/api/v1/mvp/requests</span><span class="api-name">Tạo yêu cầu</span></summary><div class="api-detail"><p><b>Actor:</b> Employee / submitter, có quyền tạo. <b>Thành công:</b> HTTP 201, trạng thái <code>SUBMITTED</code>, Workflow version 0.</p><p>JSON body: <code>title</code> (tối đa 200), <code>description</code> (tối đa 4000), <code>requestType</code> = <code>IT_HELPDESK</code>.</p></div></details>
+<details class="api-item"><summary><span class="method">GET</span><span class="api-path">/api/v1/mvp/requests/{id}</span><span class="api-name">Chi tiết yêu cầu</span></summary><div class="api-detail"><p>Đọc chi tiết yêu cầu hiển thị và danh sách <code>allowedActions</code> được tính cho người gọi hiện tại; chỉ trả về khi vượt qua các điều kiện visibility/ACL.</p></div></details>
+<details class="api-item"><summary><span class="method">GET</span><span class="api-path">/api/v1/mvp/requests/{id}/history</span><span class="api-name">Lịch sử trạng thái</span></summary><div class="api-detail"><p>Trả về lịch sử chuyển trạng thái của Workflow, theo quyền đọc. Phân công kỹ thuật viên không tạo một transition mới.</p></div></details>
+<details class="api-item"><summary><span class="method post">POST</span><span class="api-path">/api/v1/mvp/requests/{id}/triage</span><span class="api-name">Tiếp nhận</span></summary><div class="api-detail"><p><b>Actor:</b> Coordinator. Chuyển <code>SUBMITTED → TRIAGED</code>. Body: <code>{"expectedVersion":0}</code> (dùng phiên bản hiện tại, không cố định là 0 cho các thao tác khác).</p></div></details>
+<details class="api-item"><summary><span class="method post">POST</span><span class="api-path">/api/v1/mvp/requests/{id}/assign</span><span class="api-name">Phân công</span></summary><div class="api-detail"><p><b>Actor:</b> Coordinator; trạng thái <code>TRIAGED</code>. Body gồm <code>assigneeId</code> lấy từ <code>eligibleAssignees</code> và <code>expectedAssignmentVersion</code>. Phân công không tăng Workflow version.</p></div></details>
+<details class="api-item"><summary><span class="method post">POST</span><span class="api-path">/api/v1/mvp/requests/{id}/start</span><span class="api-name">Bắt đầu xử lý</span></summary><div class="api-detail"><p><b>Actor:</b> Worker được phân công; <code>TRIAGED → IN_PROGRESS</code>. Body: <code>expectedVersion</code>.</p></div></details>
+<details class="api-item"><summary><span class="method post">POST</span><span class="api-path">/api/v1/mvp/requests/{id}/resolve</span><span class="api-name">Ghi nhận hoàn thành</span></summary><div class="api-detail"><p><b>Actor:</b> Worker được phân công; <code>IN_PROGRESS → RESOLVED</code>. Body: <code>expectedVersion</code> và <code>resolution</code> (tối đa 4000 ký tự).</p></div></details>
+<details class="api-item"><summary><span class="method post">POST</span><span class="api-path">/api/v1/mvp/requests/{id}/confirm</span><span class="api-name">Xác nhận hoàn tất</span></summary><div class="api-detail"><p><b>Actor:</b> Employee đã gửi yêu cầu; <code>RESOLVED → CONFIRMED</code>. Body: <code>expectedVersion</code>.</p></div></details>
+</section>
+<section id="workflow" class="section"><h2>Workflow và kiểm soát phiên bản</h2>
+<div class="table-wrap"><table><thead><tr><th>Bước</th><th>Trạng thái trước</th><th>Trạng thái sau</th><th>Actor</th></tr></thead><tbody><tr><td>Tạo</td><td>—</td><td><code>SUBMITTED</code></td><td>Employee</td></tr><tr><td>Triage</td><td><code>SUBMITTED</code></td><td><code>TRIAGED</code></td><td>Coordinator</td></tr><tr><td>Assign</td><td><code>TRIAGED</code></td><td><code>TRIAGED</code></td><td>Coordinator</td></tr><tr><td>Start</td><td><code>TRIAGED</code></td><td><code>IN_PROGRESS</code></td><td>Assigned Worker</td></tr><tr><td>Resolve</td><td><code>IN_PROGRESS</code></td><td><code>RESOLVED</code></td><td>Assigned Worker</td></tr><tr><td>Confirm</td><td><code>RESOLVED</code></td><td><code>CONFIRMED</code></td><td>Original submitter</td></tr></tbody></table></div>
+<p class="note">Workflow version ban đầu là 0 và tăng theo các transition. Assignment có bộ đếm <code>assignmentVersion</code> riêng. Giá trị kỳ vọng phải được lấy từ trạng thái mới nhất của server.</p>
+</section>
+<section id="auth" class="section"><h2>Xác thực và phân quyền</h2>
+<div class="panel"><p><b>Xác thực:</b> Bearer access token được Keycloak OIDC phát hành; Backend kiểm tra chữ ký, issuer, audience, thời hạn và loại token.</p><p><b>Phân quyền:</b> Cần tenant membership hợp lệ, quyền thao tác và ACL theo tài nguyên. Keycloak không tự quyết định quyền truy cập từng request.</p><p><b>Ẩn tài nguyên:</b> yêu cầu thuộc tenant khác, không tồn tại hoặc không được phép thấy có thể cùng cho ra HTTP 404 để tránh lộ sự tồn tại.</p><p><b>Giới hạn tài liệu:</b> local Swagger được bật riêng và chỉ bind <code>127.0.0.1</code>; trang web tĩnh này <strong>không có nút Execute</strong>, không lưu token và không truy cập hệ thống nội bộ.</p></div>
+</section>
+<section id="integration" class="section"><h2>Hướng dẫn tích hợp</h2>
+<ol class="steps"><li>Cấu hình một môi trường Backend demo riêng theo runbook của dự án; không dùng database chung/staging.</li><li>Cấu hình Keycloak client, issuer, audience và quyền phù hợp; sử dụng <b>access token thật</b> đã được cấp cho người dùng hợp lệ.</li><li>Gửi request đến <code>BASE_URL</code> của môi trường được cấp quyền. Public documentation này không cung cấp <code>BASE_URL</code> có thể truy cập từ Internet.</li><li>Đọc response và <code>allowedActions</code>; làm mới phiên bản trước mỗi thao tác cập nhật, xử lý 401/403/404/409 một cách an toàn.</li></ol>
+<p><b>Ví dụ body tạo yêu cầu:</b></p>
+<pre><code>{
+  "title": "Máy tính không kết nối Internet",
+  "description": "Máy tính phòng học không truy cập mạng.",
+  "requestType": "IT_HELPDESK"
+}</code></pre>
+<p><b>Ví dụ gửi HTTP (minh họa, không chạy trực tiếp):</b></p>
+<pre><code>POST {BASE_URL}/api/v1/mvp/requests
+Authorization: Bearer {ACCESS_TOKEN}
+Content-Type: application/json
+
+{"title":"Máy tính không kết nối Internet",
+ "description":"Máy tính phòng học không truy cập mạng.",
+ "requestType":"IT_HELPDESK"}</code></pre>
+<p class="note">Không đặt access token trong URL, ảnh chụp, source code, GitHub Issue hoặc báo cáo. Đây là mẫu tài liệu, không phải bằng chứng request đã thực thi.</p>
+</section>
+<section id="errors" class="section"><h2>HTTP errors dự kiến</h2>
+<div class="table-wrap"><table><thead><tr><th>Mã</th><th>Ý nghĩa theo contract</th></tr></thead><tbody><tr><td><code>400</code></td><td>Request không hợp lệ, khi áp dụng</td></tr><tr><td><code>401</code></td><td>Thiếu hoặc sai access token</td></tr><tr><td><code>403</code></td><td>Tài nguyên nhìn thấy được nhưng thao tác bị cấm</td></tr><tr><td><code>404</code></td><td>Không tồn tại, không thấy hoặc khác tenant</td></tr><tr><td><code>409</code></td><td>Xung đột version hoặc chuyển trạng thái không hợp lệ, tùy mapping</td></tr></tbody></table></div>
+<p class="note">Bảng mô tả trạng thái dự kiến từ nguồn; chưa được xác nhận bằng toàn bộ bộ kiểm thử HTTP thực tế.</p>
+</section>
+<section id="evidence" class="section"><h2>Trạng thái kiểm chứng &amp; nguồn</h2>
+<div class="panel"><ul class="warning-list"><li><b>Đã có bằng chứng:</b> Gradle <code>test build</code> thành công trên Windows/JDK21 theo log chạy local; ảnh Swagger UI hiển thị 9 endpoint; GitHub CI có một job PASS với phạm vi giới hạn.</li><li><b>Chưa xác nhận:</b> tất cả các ca HTTP auth/ACL/403/404/409, xuất bản snapshot OpenAPI JSON đã kiểm duyệt, kiểm thử Keycloak E2E trên database demo đang sử dụng.</li><li><b>Triển khai:</b> Backend production và public API endpoint không thuộc phạm vi trang tài liệu này.</li></ul>
+<p><a href="https://github.com/lexuanbao258-collab/dxos-open-core/pull/79">PR #79 — Swagger/OpenAPI</a> · <a href="https://github.com/lexuanbao258-collab/dxos-open-core/pull/74">PR #74 — Java Helpdesk MVP</a> · <a href="https://github.com/lexuanbao258-collab/dxos-open-core/blob/docs/helpdesk-swagger-openapi-20261030/docs/api/helpdesk-swagger.md">Chi tiết hợp đồng và runbook</a></p></div>
+</section>
+</main></div>
+<footer>DX-OS Open-Core · IT Helpdesk MVP · Static documentation candidate · Không yêu cầu hoặc lưu credentials · 30/10/2026</footer>
+</body></html>
