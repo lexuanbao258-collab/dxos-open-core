@@ -13,6 +13,15 @@
 - Responsive CSS media rules exist, but no independent real-device viewport/accessibility acceptance has been recorded.
 - Relevant candidates: [#79 Swagger/OpenAPI](https://github.com/lexuanbao258-collab/dxos-open-core/pull/79), [#81 Developer Portal V2](https://github.com/lexuanbao258-collab/dxos-open-core/pull/81), [#74 Helpdesk MVP](https://github.com/lexuanbao258-collab/dxos-open-core/pull/74), and [Issue #37](https://github.com/lexuanbao258-collab/dxos-open-core/issues/37). Draft PRs are not approved or merged.
 
+## Operator Windows follow-up — 2026-10-31
+
+- Operator successfully cloned this PR branch into `C:\Users\Admin\dxos-docs-olp-pr92` and confirmed evidence script exists.
+- Script entered **both** public Documentation screenshot branches (which run only after its HTTP 200 probe). This is consistent with a successful operator-side HTTP 200 check; the saved manifest should be inspected for explicit confirmation.
+- PNG capture initially failed after Chromium logged a renderer warning on stderr. Because the original script used direct native invocation with PowerShell stop-on-error, this warning prematurely triggered the catch handler. **This is not evidence that the Documentation HTML failed to load.**
+- Swagger check at `127.0.0.1:8080` returned connection failure: no reachable local Backend listener. Static `gh-pages` checkout alone cannot run Swagger.
+- Candidate script patch uses `Start-Process` with separate stderr/stdout files, validates PNG existence and size, and avoids treating Chromium diagnostic stderr as a capture failure. **This fix is committed but has not yet been executed on the operator machine.**
+- Follow-up: operator runs `git pull --ff-only`, reruns the script, reviews `olp-report-evidence/manifest.json`, checks PNGs visually, and separately starts the opt-in local Backend if a Swagger screenshot is required.
+
 ## Not verified / blockers
 
 1. **GitHub Pages deploy & external HTTP 200: NOT VERIFIED.** Expected URL: https://lexuanbao258-collab.github.io/dxos-open-core/ . Open Repository → Settings → Pages; check Source = Deploy from a branch, Branch = gh-pages, Folder = /(root), then check deployment status, public HTTP 200 and asset loading.
