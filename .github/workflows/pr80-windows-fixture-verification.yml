@@ -1,0 +1,89 @@
+name: Verify PR80 Windows ACL fixture candidate
+on:
+  push:
+    branches: [fix/pr80-windows-acl-test-fixture-20261031]
+permissions:
+  contents: read
+jobs:
+  windows-validation:
+    runs-on: windows-2022
+    timeout-minutes: 30
+    steps:
+      - name: Pin canonical Git checkout bytes
+        shell: pwsh
+        run: |
+          git config --global core.autocrlf false
+          git config --global core.eol lf
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Confirm exact candidate + SQL integrity
+        shell: pwsh
+        run: |
+          git merge-base --is-ancestor 16d1f00493ec6b8eaeb5fac466a48c7f0469ed1e HEAD
+          if ($LASTEXITCODE -ne 0) { throw "PR80 ancestor missing" }
+          Write-Host "CANDIDATE_SHA=$(git rev-parse HEAD)"
+          $a = (Get-FileHash docs/evidence/issue-25-runtime-privilege-review.sql -Algorithm SHA256).Hash.ToLowerInvariant()
+          $b = (Get-FileHash docs/evidence/issue-25-security-definer-review.sql -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($a -ne '4cc070ba08d481b915c7d52ce04a5e26478c3a878c5dc181f517bf04352185a9') { throw 'Runtime SQL byte mismatch' }
+          if ($b -ne 'bc70781e66f90b8d4b5b405f5f77c5fb2fb70b38b2b7f7c4aeda8e29dc8dcca1') { throw 'Definer SQL byte mismatch' }
+          git diff --check
+          if ($LASTEXITCODE -ne 0) { throw 'Invalid diff' }
+          Write-Host "SQL_SHA256_GATES=PASS"
+      - name: Focused security and privilege tests
+        shell: pwsh
+        working-directory: backend
+        run: |
+          .\gradlew.bat test --tests "*WorkflowRuntimePrivilegeAuditTest" --tests "*WorkflowSecurityDefinerReviewTest" --no-daemon --rerun-tasks --console=plain
+          if ($LASTEXITCODE -ne 0) { throw "FOCUSED_TESTS_FAILED" }
+          Write-Host "FOCUSED_TESTS_PASS"
+      - name: Full clean regression
+        shell: pwsh
+        working-directory: backend
+        run: |
+          .\gradlew.bat clean test --no-daemon --rerun-tasks --console=plain
+          if ($LASTEXITCODE -ne 0) { throw "CLEAN_TEST_FAILED" }
+          Write-Host "CLEAN_TEST_PASS"
+      - name: Gradle build
+        shell: pwsh
+        working-directory: backend
+        run: |
+          .\gradlew.bat build --no-daemon --console=plain
+          if ($LASTEXITCODE -ne 0) { throw "BUILD_FAILED" }
+          Write-Host "GRADLE_BUILD_PASS"
+      - name: Summarize JUnit XML, skipped suites, and coverage boundaries
+        if: always()
+        shell: pwsh
+        working-directory: backend
+        run: |
+          @'
+          from pathlib import Path
+          from xml.etree import ElementTree as ET
+          files=sorted(Path('build/test-results/test').glob('TEST-*.xml'))
+          totals={key:0 for key in ['tests','failures','errors','skipped']}
+          skips=[]
+          for f in files:
+              r=ET.parse(f).getroot()
+              count={key:int(r.attrib.get(key,0)) for key in totals}
+              for k in totals: totals[k]+=count[k]
+              if count['skipped']: skips.append((r.get('name'),count['skipped']))
+          print('JUNIT_XML_FILES=',len(files))
+          print('JUNIT_TOTALS=',totals)
+          print('JUNIT_SKIPPED_SUITES=',skips)
+          if not files or totals['tests']==0 or totals['failures'] or totals['errors']:
+              raise SystemExit('JUNIT_REGRESSION_FAILED')
+          print('JUNIT_REGRESSION_PASS_NO_REAL_DB_ACCEPTANCE')
+          '@ | python -
+          if ($LASTEXITCODE -ne 0) { throw 'JUnit XML check failed' }
+      - name: Upload exact-candidate JUnit evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pr80-windows-fixture-candidate-junit
+          path: backend/build/test-results/test/TEST-*.xml
+          if-no-files-found: warn
