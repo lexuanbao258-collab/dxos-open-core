@@ -1,352 +1,235 @@
-# DX-OS Open-Core — Dependency Rules & Architecture Enforcement
+# DX-OS Open-Core — Dependency Rules and Architecture Enforcement
 
-> **Document path:** `docs/01-architecture/dependency-rules.md`
-> **Version:** Review Draft v1.0 — 2026-10-28
-> **Status:** PROPOSED — REVIEW REQUIRED (architecture direction selected; implementation conformance not yet proven)
-> **Source baseline:** `origin/main` at `e06fa429cfd92b032c166eb3ebf32803d13191c2`
-> **Decisions:** SYS-ADR-01 B (Modular Monolith), SYS-ADR-02 B (Ports & Adapters / DIP), SYS-ADR-06 B (capability-owned data), SYS-ADR-08 B (generic state machine)
-> **Audience:** TRICORE Backend / Identity / Application / Data, independent reviewer, OLP judges.
+> **Document:** `docs/01-architecture/dependency-rules.md`  
+> **Lifecycle:** DRAFT — PROPOSED / NOT REVIEWED; canonical lifecycle belongs to the Document Register.  
+> **Source inventory SHA:** `0f0c3ba0c3eecda0a5c4a798a3cc14b808351bed` (read-only document/contract inspection).  
+> **Historical baseline cited by original draft:** `e06fa429cfd92b032c166eb3ebf32803d13191c2`.  
+> **Owner and independent approver:** TO ASSIGN / NOT RECORDED.  
+> **Scope:** Java modular monolith, authorized HTTP boundaries, provider-owned adapters, architecture tests and waivers.  
+> **Evidence boundary:** No source graph, build, ArchUnit, CI, real PostgreSQL or security tests were executed for this revision.
 
-## 1. Purpose, scope, decision status
+## 1. Purpose and Decision Qualification
 
-This document defines **source-code dependency rules** for DX-OS. It translates the chosen system architecture into testable constraints and a staged enforcement plan. It is not a claim that all rules currently pass. The current baseline is a Java 21 / Spring Boot 3.5.16 backend deployed as a modular monolith; a separately deployed Portal BFF is a candidate in PR #70, not a fourth/fifth backend Core or proof of integration on `main`.
+Define testable rules translating the **selected design direction** into enforceable source constraints and separately verified runtime invariants. The four logical Core capabilities are Identity, Workflow, Data Management and API Gateway; four capabilities **do not imply four microservices or four pure `core.*` packages**. In the inspected historical baseline, Gateway-facing code sits in `gateway.*`, not a verified `core.gateway` pure-Java package.
 
-**In scope:** Java production package dependencies, runtime call boundaries, ownership of ports and adapters, restricted HTTP endpoints, data ownership, Gradle/ArchUnit verification, treatment of baseline violations, exemptions, and measurable acceptance.
+The source draft labels **SYS-ADR-01=B** (Modular Monolith), **SYS-ADR-02=B** (Ports & Adapters/DIP), **SYS-ADR-06=B** (capability/application-owned data), **SYS-ADR-08=B** (generic Workflow state machine) as team-selected directions. **SYS-ADR-04, SYS-ADR-05, SYS-ADR-07, SYS-ADR-10 and SYS-ADR-11** are also referenced in the corresponding boundary review. These identifiers are **design-discussion references**, not proof of approved standalone ADR documents or executable tests. The separate decision-record and formal ADR governance must resolve statuses.
 
-**Out of scope:** automatic refactor, package relocation, changes to existing public contracts, Flyway edits, new database transaction semantics, approval of candidate PRs, and final security/operational certification. All existing V1–V4 migrations and historical evidence remain unchanged during this documentation phase.
+**Out of scope:** rewriting Java source, changing Flyway V1–V4, approving HTTP routes, selecting an unreviewed transaction model, claiming provider substitution, or certifying integrated release.
 
-**Architecture principle:** business and capability policy code must not depend on provider-specific implementation details. The direction of source imports is distinct from the direction of runtime calls and from physical deployment topology.
+## 2. Boundary Vocabulary and Architecture Model
 
-## 2. Vocabulary: distinguish four different boundaries
-
-| Term | Precise meaning | Common mistake |
-|---|---|---|
-| **Capability boundary** | Identity, Workflow, Data, API Gateway have separate responsibilities and contracts | Equating four capabilities with four microservices |
-| **Application boundary** | Helpdesk, Facility own use cases, tenancy/resource rules and business facts | Placing Helpdesk roles/states inside generic Core |
-| **Source dependency** | Java type import, field/constructor type, inheritance or method reference | Drawing runtime call arrows as source dependencies |
-| **Provider adapter** | Technical implementation of a capability/application-owned interface | Moving interface ownership into Data because PostgreSQL is involved |
-| **Trust boundary** | Untrusted request becomes a verified principal via validated authentication | Believing a caller-supplied `actorId` or `X-Role` is trusted |
-| **Transaction boundary** | Which operations commit or rollback together | Assuming an outer `@Transactional` joins a JDBC port that commits independently |
-
-**DIP example (valid):** `WorkflowRuntime` depends on `WorkflowPersistencePort` defined in `core.workflow`; `PostgresWorkflowPersistence` lives in `infrastructure.workflow` and implements the port. The adapter imports the Core interface, **not** the reverse. Spring's composition root connects implementation to contract.
-
-## 3. Actual baseline source structure and target boundaries
-
-Source paths checked at the pinned baseline:
-
-```text
-backend/src/main/java/com/tricore/dxos/
-├── core/
-│   ├── identity/                # AuthenticatedPrincipal, Authority, errors
-│   ├── workflow/                # WorkflowRuntime, WorkflowPersistencePort, state machine
-│   └── data/                    # ObjectStoragePort, metadata, errors
-├── application/
-│   ├── identity/                # CurrentPrincipal (verified-caller port)
-│   └── authorization/           # WorkflowAccessPolicy, WorkflowAuthorization
-├── gateway/workflow/            # Controller/DTO/security gate (not enabled as production Workflow HTTP)
-├── infrastructure/
-│   ├── identity/security/       # Spring Security JWT validation, CurrentPrincipal adapter
-│   ├── workflow/                # PostgresWorkflowPersistence, migration/verification tools
-│   ├── persistence/             # package boundary
-│   └── storage/                 # package boundary
-├── request/                     # legacy Request prototype: controller/domain/service/repository
-├── common/                      # ApiError, HealthController
-└── DxosApplication.java         # Spring Boot composition entry
-```
-
-**Important:** `core.gateway` does **not** exist as a pure Java package on this pinned `main`. Gateway is the fourth *logical capability* with HTTP-facing code under `gateway/` and technical integration with Spring. Creating `core.gateway` is optional and must be justified by actual provider-neutral contracts; it is not required to preserve the four-capability architecture.
-
-**Status categories:** `EXISTING` = confirmed source at pinned baseline; `TARGET` = rule for new/refactored code; `EXCEPTION` = historical code maintained temporarily; `BLOCKER` = must be resolved before candidate production exposure. Candidate PRs are not automatically present on main.
-
-## 4. Dependency direction: runtime interactions versus source imports
+| Boundary | Definition | Non-equivalence |
+| --- | --- | --- |
+| Source dependency | Java imports, inheritance, type and method references | Not the same as runtime call direction |
+| Runtime interaction | A controller/use case invokes a service or port | Not proof of allowed compile-time dependency |
+| Capability | Shared contract and invariants with logical owner | Not a deployable service requirement |
+| Application | Business facts, eligibility, tenant/resource ownership | Not a generic Workflow rule |
+| Provider adapter | External/framework implementation of owner-defined port | Does not own port semantics |
+| Trust | Verified authentication and subsequent authorization | Not inferred from client headers or UI role |
+| Transaction | Writes that truly commit/rollback atomically | Not implied by an outer `@Transactional` |
 
 ```mermaid
 flowchart TD
-    Browser[Browser / External client] --> Http[Gateway HTTP adapter / Portal BFF boundary]
-    Http --> UseCases[Application authorized use cases]
-    UseCases --> IPort[Application identity port: CurrentPrincipal]
-    UseCases --> WCore[Workflow Core: WorkflowRuntime]
-    UseCases --> DCore[Data Core: ObjectStoragePort]
-    WCore --> WPort[Workflow-owned WorkflowPersistencePort]
-    PAdapter[PostgreSQL Workflow adapter] -.implements.-> WPort
-    Security[Spring Security / OIDC adapter] -.implements.-> IPort
-    Storage[Local Docker MinIO adapter - target] -.implements.-> DCore
-    UseCases --> RepoPort[Application-owned repository port / authorized transaction boundary]
-    RepoAdapter[Business DB adapter] -.implements.-> RepoPort
+    CLIENT[Browser / Portal] --> BFF[Portal BFF - HTTP trust boundary]
+    BFF --> GW[Gateway HTTP / verified security adapter]
+    GW --> APP[Authorized Application use cases]
+    APP --> IP[CurrentPrincipal - Application-owned port]
+    APP --> WF[WorkflowRuntime - Workflow Core]
+    APP --> OS[ObjectStoragePort - Data Core]
+    APP --> RP[Application-owned repository port]
+    WF --> WP[WorkflowPersistencePort - Workflow Core]
+    SEC[Spring Security OIDC adapter] -. implements .-> IP
+    PG[PostgreSQL Workflow adapter] -. implements .-> WP
+    OBJ[Object Storage provider adapter] -. implements .-> OS
+    BR[Application persistence adapter] -. implements .-> RP
 ```
 
-The diagram is **logical/target architecture**, not an assertion that every connection exists on main. An external HTTP request ordinarily arrives through Gateway and invokes an Application use case; an internal call inside the monolith need not traverse HTTP. Workflow Core need not import Identity Core, and `CurrentPrincipal` resides in `application.identity` today. Real transaction orchestration requires a separate decision (SYS-ADR-05).
+**Diagram classification:** conceptual runtime invocation and port implementation, **not** a source dependency graph nor proven integrated topology. In Java the adapter depends **inward** on the interface it implements; the Core must not depend outward on provider classes.
 
-## 5. Rules matrix (normative target)
+## 3. Baseline Inventory versus Target Structure
 
-**Legend:** YES = allowed through published API; NO = forbidden; CONDITIONAL = only as scoped below; BOOTSTRAP = composition root only.
+| Observed/referenced at historical source baseline | Design implication and caution |
+| --- | --- |
+| `core.identity` | Provider-neutral principal and authority contracts; no IAM provider runtime imports |
+| `core.workflow` / `WorkflowRuntime` / `WorkflowPersistencePort` | Owns generic workflow and persistence semantics |
+| `core.data` / `ObjectStoragePort` | Storage semantics; not an owner of every relational table |
+| `application.identity.CurrentPrincipal`, `application.authorization` | Trusted principal seam and resource authorization orchestration |
+| `infrastructure.identity.security`, `infrastructure.workflow` | Concrete Spring/OIDC and PostgreSQL adapters |
+| `gateway.workflow` | HTTP candidate requires route registration and security verification |
+| `request.*` | Legacy prototype; exposure requires a separate review, not automatic exemption |
+| `backend/build.gradle` | The original draft reports no ArchUnit dependency at its baseline; **not reverified by a build in this revision** |
+| Portal BFF / Helpdesk / Facility candidates | PR-local work and mock flows are not automatically integrated at main |
 
-| Importing module → imported module | Core Identity | Core Workflow | Core Data | Application | Gateway | Infrastructure | `request` prototype |
-|---|---|---|---|---|---|---|---|
-| `core.identity` | YES (self) | NO | NO | NO | NO | NO | NO |
-| `core.workflow` | NO | YES (self) | NO | NO | NO | NO | NO |
-| `core.data` | NO | NO | YES (self) | NO | NO | NO | NO |
-| `application.*` | YES (contracts) | YES (public domain/runtime API) | YES (published ports) | YES (published app APIs) | NO | NO | NO except explicit migration seam |
-| `gateway.*` | CONDITIONAL (facts) | CONDITIONAL (DTO mapping only during migration) | CONDITIONAL | YES (published use cases) | YES (self) | NO | EXCEPTION: legacy controllers only |
-| `infrastructure.*` | YES (implementation) | YES (implementation) | YES (implementation) | YES (ports) | NO except dedicated HTTP wiring | YES (self) | CONDITIONAL (own adapter boundary) |
-| `request.*` | CONDITIONAL (migration only) | CONDITIONAL | CONDITIONAL | CONDITIONAL | NO unless its controllers | CONDITIONAL: legacy JPA | YES (legacy scope) |
-| `DxosApplication` / `bootstrap` | BOOTSTRAP | BOOTSTRAP | BOOTSTRAP | BOOTSTRAP | BOOTSTRAP | BOOTSTRAP | BOOTSTRAP |
+Paths and design facts above come from the original inspected documentation and contracts. A **compiled package inventory at the final review SHA is still required**; the table is not an import-scan result.
 
-**This is not a license for every same-layer import.** Cross-capability Core dependencies are forbidden by default. Application-to-Application use is through explicit published services/ports, not private models. A direct Gateway→Workflow domain call may exist in the historical unregistered controller, but must be replaced by Gateway→Authorized Use Case for production exposure.
+## 4. Target Import Matrix
 
-## 6. Enforceable dependency rules (DR-01 … DR-16)
+**YES** = published port/type allowed; **NO** = forbidden; **CONDITIONAL** = only explicitly reviewed transport/legacy use; **BOOTSTRAP** = composition root only.
 
-| ID | Rule | Severity | Verification |
-|---|---|---|---|
-| **DR-01** | `core.identity` imports neither Spring/Security/Keycloak, infrastructure, gateway nor application | P0 | ArchUnit and classpath scan |
-| **DR-02** | `core.workflow` imports only JDK + its owned Core types; no Identity, Data, Helpdesk, JPA/JDBC/Spring | P0 | ArchUnit |
-| **DR-03** | `core.data` owns `ObjectStoragePort`; no Workflow, business entities, JDBC, AWS/MinIO SDK | P0 | ArchUnit |
-| **DR-04** | `WorkflowPersistencePort` remains owned by Workflow; adapters implement it, never redefine its semantics | P0 | Source review + contract tests |
-| **DR-05** | `application.*` does not import controller/DTO/http framework or concrete infrastructure implementation | P0 target | ArchUnit with explicit legacy treatment |
-| **DR-06** | Production business HTTP endpoints call authorized Application use cases rather than unguarded `WorkflowRuntime` | P0 release gate | Controller review + HTTP integration tests |
-| **DR-07** | Gateway does not own business resource policy; Application validates tenant, ACL, assignment, eligibility | P0 | Security tests |
-| **DR-08** | Gateway never reads a DB repository/SQL directly for business mutations | P0 target | ArchUnit + grep + review |
-| **DR-09** | `CurrentPrincipal` implementation derives identity from Spring Security verified context, not client-controlled actor/header | P0 | Negative auth tests |
-| **DR-10** | Infrastructure implements capability/application-owned ports; Core does not depend on infrastructure | P0 | ArchUnit |
-| **DR-11** | Helpdesk and Facility business states, roles and rules stay out of Core types | P0 | Source review + reuse proof |
-| **DR-12** | Core domain exceptions do not leak HTTP status, SQL, credential or SDK objects | P1 | Dependency + error mapping tests |
-| **DR-13** | Object Storage adapters respect streaming, `CREATE_ONLY`, `OVERWRITE`, metadata, close and normalized errors | P1 | Same contract suite per provider |
-| **DR-14** | Workflow adapter preserves full-snapshot checks, atomic state/history, durable success and unknown-commit semantics | P0 | PostgreSQL real integration/concurrency tests |
-| **DR-15** | Architecture exceptions are explicit, bounded and owned; no blanket exclusions for `application` or `gateway` | P0 process | Exception register and CI |
-| **DR-16** | No production endpoint becomes active solely because an Architecture document/ADR was accepted | P0 | Route registration/feature-flag tests |
+| Importing package | Own Core | Other Core | Application | Gateway/HTTP | Infrastructure/provider |
+| --- | --- | --- | --- | --- | --- |
+| `core.identity` / `core.workflow` / `core.data` | YES | NO by default | NO | NO | NO |
+| `application.*` | YES through published contracts | YES through published contracts | YES, only published seams | NO | NO |
+| `gateway.*` | CONDITIONAL transport mapping | CONDITIONAL, not unguarded mutation | YES, authorized use cases | YES | NO |
+| `infrastructure.*` | YES, implements ports | CONDITIONAL for composition | YES, implements ports | CONDITIONAL wiring | YES |
+| `request.*` legacy | CONDITIONAL | CONDITIONAL | CONDITIONAL | CONDITIONAL | CONDITIONAL, time-bounded debt |
+| `DxosApplication` / bootstrap | BOOTSTRAP | BOOTSTRAP | BOOTSTRAP | BOOTSTRAP | BOOTSTRAP |
 
-**Dependency rules alone cannot establish semantic properties** (ACL, atomicity, revocation races, correctness of claims); targeted runtime and real-provider tests are mandatory.
+An allowed dependency is not blanket permission for private model access, access-control bypass or unregistered endpoint activation.
 
-## 7. Four capability-specific boundaries
+## 5. Normative Target Rules — DR-01 through DR-16
 
-### Identity
+| ID | Rule (preserved semantic intent) | Priority | Evidence required |
+| --- | --- | --- | --- |
+| **DR-01** | `core.identity` has no Spring/Security/Keycloak, infrastructure, Gateway or Application dependency. | P0 | ArchUnit + import audit |
+| **DR-02** | `core.workflow` depends only on JDK and Workflow-owned contracts; no other Core capability, Application or provider imports. | P0 | ArchUnit |
+| **DR-03** | `core.data` owns provider-neutral `ObjectStoragePort`; no provider SDK, JDBC, Workflow or business models. | P0 | ArchUnit + contract review |
+| **DR-04** | `WorkflowPersistencePort` remains Workflow-owned; adapters implement and preserve its complete semantics. | P0 | Source inspection + provider conformance tests |
+| **DR-05** | Application use cases do not depend on HTTP controllers/DTOs or concrete infrastructure providers; migration seams must be explicit. | P0 target | ArchUnit + bounded exception registry |
+| **DR-06** | Published business HTTP mutations invoke authorized Application use cases, not unguarded `WorkflowRuntime`. | P0 release | Route inventory + HTTP integration tests |
+| **DR-07** | Gateway does not decide resource-level business permissions; Application checks tenant, ACL, assignment and actor eligibility. | P0 | Security negative tests |
+| **DR-08** | Gateway does not directly execute business SQL/repository mutations. | P0 target | ArchUnit + code review |
+| **DR-09** | `CurrentPrincipal` implementation obtains identity from trusted Spring Security context, never user-supplied headers/actor ID. | P0 | Forged-identity HTTP tests |
+| **DR-10** | Infrastructure implements owner-defined ports; Core never imports provider implementations. | P0 | ArchUnit + source review |
+| **DR-11** | Generic Core does not contain Helpdesk/Facility states, role names or business policy branches. | P0 | Source review + cross-app reuse evidence |
+| **DR-12** | Core domain errors do not expose HTTP status, JDBC/SQL, credentials or SDK exceptions. | P1 | Dependency and error mapping tests |
+| **DR-13** | Object Storage adapters preserve streaming, CREATE_ONLY, OVERWRITE, metadata, close behavior and normalized errors. | P1 | Same provider conformance suite |
+| **DR-14** | Workflow adapter preserves snapshot checks, atomic state/history, durable success and unknown-commit semantics. | P0 | Real PostgreSQL concurrency/failure tests |
+| **DR-15** | Architecture waivers are explicit, scoped, owned, reviewed and time-bounded; never blanket-ignore Application/Gateway. | P0 process | Waiver register + CI no-new-violation gate |
+| **DR-16** | Documentation or design selection alone never activates production endpoints. | P0 | Registration/feature-flag and HTTP tests |
 
-- **Allowed:** `application.identity.CurrentPrincipal` references `core.identity.AuthenticatedPrincipal`; `infrastructure.identity.security.SpringSecurityCurrentPrincipal` implements `CurrentPrincipal` and uses Spring Security.
-- **Forbidden:** Identity Core reading `SecurityContextHolder`, parsing raw JWT, importing Keycloak; Workflow Core depending directly on `CurrentPrincipal`.
-- **Design consequence:** canonical OIDC `issuer+sub` mapping occurs in adapter. Switching issuer may alter canonical IDs; changing providers can require explicit identity linking/migration.
+The rule table defines **TARGET constraints**. No row is labeled CI PASS, and source-structure plausibility is not runtime verification.
 
-### Workflow
+## 6. Four Capability Boundaries and Application Ownership
 
-- **Allowed:** `core.workflow.WorkflowRuntime` depends on `WorkflowPersistencePort`; `infrastructure.workflow.PostgresWorkflowPersistence` implements that port.
-- **Forbidden:** `WorkflowRuntime` importing `HelpdeskService`, RequestStatus, JWT verification, SQL functions or Spring repositories.
-- **Hard gate:** adapter transaction contract guarantees state/history atomicity and `COMMIT_OUTCOME_UNKNOWN`; an outer business transaction cannot assume it encloses an independently committed JDBC port.
+**Identity:** `core.identity` owns neutral principal/authority types. `application.identity.CurrentPrincipal` is the access seam; a trusted Spring Security adapter must produce the authenticated principal from validated identity context. A manually constructed principal or forged header is not proof of verification. Provider issuer/subject migration can require controlled identity linking.
 
-### Data Management
+**Workflow:** `core.workflow` owns definitions, state, transitions, version, history and `WorkflowPersistencePort`. Helpdesk assignment/resolution and Facility acceptance eligibility stay in their Applications. The persistence adapter's durable-return contract cannot silently be nested inside an unrelated business transaction.
 
-- **Allowed:** `core.data.ObjectStoragePort` and provider-neutral objects; adapters under `infrastructure.storage` or equivalent implement it.
-- **Forbidden:** Data taking over all application repositories or redefining Workflow transition semantics.
-- **Hard gate:** database and object store writes are not a single ACID transaction; recovery, reconciliation and orphan cleanup must be designed at Application level.
+**Data:** `ObjectStoragePort` owns provider-neutral storage semantics, not all business repositories. Real PostgreSQL and MinIO cannot be assumed to share a distributed ACID commit. If metadata references content, failure recovery and orphan cleanup must be explicit.
 
-### API Gateway
+**Gateway:** the HTTP/security boundary verifies tokens and routes actions to an **authorized Application use-case seam**. Exact operation authority is necessary but not sufficient: Application verifies resource/tenant scope, current actor eligibility and concurrency under the intended transaction policy. A generic Workflow route stays restricted until approved and tested.
 
-- **Allowed:** HTTP controllers, routing, validation, request/response mapping, authentication enforcement, error translation, route flags; use Application ports for business execution.
-- **Forbidden:** implementing Helpdesk authorization in a generic Gateway check, accepting caller-provided actor identity, or exposing generic Workflow routes without guarded application orchestration.
-- **Current nuance:** `gateway/workflow/WorkflowController` is deliberately not Spring-registered for production Workflow HTTP on the baseline; tests of a controller class are not evidence a route is safe/live.
+**Application reuse proof:** demonstrate the same Core contracts with Helpdesk golden path and a distinct Facility vertical slice **without generic Core source edits**. Facility's full business journey is deferred; an IT-only or mock UI demonstration is insufficient.
 
-## 8. Concrete correct and incorrect Java examples
-
-**Valid: provider implementation depends on port**
+## 7. Correct and Incorrect Dependency Examples
 
 ```java
-// core.workflow — owns the abstraction
-public interface WorkflowPersistencePort {
-    WorkflowInstance loadInstance(String instanceId);
-}
+// Illustrative abstraction owned by Workflow Core (not a copy of the full interface)
+interface WorkflowPersistencePort { /* load/transition semantics belong to Workflow */ }
 
-// infrastructure.workflow — implements the abstraction
-final class PostgresWorkflowPersistence implements WorkflowPersistencePort {
-    // Implement complete real interface; this is only an illustrative excerpt.
-}
+// Infrastructure implements the complete real published port.
+final class PostgresWorkflowPersistence implements WorkflowPersistencePort { /* ... */ }
 ```
 
-**Invalid: core imports its infrastructure adapter**
-
 ```java
-// WRONG: Core depends on provider and loses substitutability
+// INVALID: Core imports concrete persistence implementation.
 import com.tricore.dxos.infrastructure.workflow.PostgresWorkflowPersistence;
-public final class WorkflowRuntime { /* provider-coupled */ }
-```
 
-**Invalid: generic domain makes a business decision**
-
-```java
-// WRONG: generic Workflow Core cannot know specific applications
-if (resourceType.equals("IT_HELPDESK") && role.equals("TECHNICIAN")) {
-    // business eligibility belongs to Helpdesk Application
+// INVALID business-policy coupling inside generic Workflow Core:
+if ("IT_HELPDESK".equals(resourceType) && "TECHNICIAN".equals(role)) {
+    // Move eligibility checks to the Helpdesk authorized Application boundary.
 }
 ```
 
-**Valid orchestration intent (pseudo-code, not a current published Java API):**
+These are **illustrative** snippets; they are not build-verified implementation code. Check exact interfaces and package names at the implementing commit before copying.
 
-```java
-// Verified identity from CurrentPrincipal
-// -> Application tenant/resource/operation policy
-// -> authoritative entity and Workflow loading
-// -> authorized transition plus business facts under a reviewed transaction design
-// -> response only after confirmed successful commit.
-```
+## 8. Incremental ArchUnit and CI Enforcement Plan
 
-## 9. ArchUnit strategy: incremental, non-deceptive CI enforcement
+| Stage | Work item | Acceptance evidence |
+| --- | --- | --- |
+| A0 — Inventory | Pin final Git SHA, JDK and Gradle; export compiled production dependency graph | Reproducible graph, list of current violations and owner |
+| A1 — Core rules | Introduce reviewed ArchUnit dependency and JUnit rules for DR-01–04/10 | Executable test results at SHA |
+| A2 — No-new-violations | Fail PR if newly introduced forbidden dependency appears; scoped historic waivers only | Baseline delta + CI failure demonstration |
+| A3 — Application/Gateway | Enforce DR-05–09/12/16 and inspect route registrations | ArchUnit plus HTTP/security tests |
+| A4 — Provider contracts | Test DR-13/14 on actual configured providers | Storage conformance and real PostgreSQL tests |
+| A5 — Reuse proof | Helpdesk + Facility share unchanged Core | Diff, integration tests and independent review |
 
-The pinned `backend/build.gradle` includes Spring Boot/JUnit dependencies but **does not include ArchUnit**. Therefore the following is a **proposed test**, not a claim of an existing passing suite. Add a reviewed `testImplementation` ArchUnit dependency before compiling any test code; select a tested compatible release at implementation time and pin the version through the project's dependency practice. No dependency change is authorized by this document.
+**ArchUnit is not sufficient for ACL correctness, TOCTOU revocation races, HTTP exposure, SQL atomicity, lost updates, or unknown commits.** Runtime safeguards require tests at the concrete integration boundary. Avoid broad `ignoreDependency` calls, generic `..application..` exclusions or test-only green builds that conceal new coupling. A seeded forbidden-import test should fail CI before release.
 
-**Example Java test (proposed, compile once ArchUnit is configured):**
+## 9. Legacy Waiver Governance
 
-```java
-package com.tricore.dxos.architecture;
+A waiver requires: stable exception ID (`DEP-EX-nnn` proposed), exact DR ID, fully qualified source class/edge, business/security impact, reason for temporary retention, owner, independent reviewer, linked remediation issue, created date, **expiration date or explicit removal trigger**, and CI suppression scope. Waivers are **proposed, not granted**, until reviewed.
 
-import com.tngtech.archunit.core.importer.ClassFileImporter;
-import com.tngtech.archunit.core.domain.JavaClasses;
-import org.junit.jupiter.api.Test;
+| Candidate waiver | Why candidate only | Release control |
+| --- | --- | --- |
+| `request.*` legacy prototype | Historic layered/JPA design outside new target seams | Review exact writable routes and deployed profiles |
+| Unregistered generic Workflow controller | Source presence does not imply safe HTTP exposure | Verify route inventory, default-off semantics and authorization |
 
-import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
+No blanket exemption for all `application.*` or `gateway.*`. New violations remain CI failures; expired waivers fail review.
 
-class CoreDependencyRulesTest {
-    private final JavaClasses classes = new ClassFileImporter()
-            .importPackages("com.tricore.dxos");
+## 10. Dependency Acceptance Criteria — DEP-AC-01 through DEP-AC-18
 
-    @Test
-    void workflowCoreMustNotDependOnOtherLayers() {
-        noClasses().that().resideInAPackage("..core.workflow..")
-            .should().dependOnClassesThat().resideInAnyPackage(
-                "..gateway..", "..application..", "..infrastructure..",
-                "..request..", "..core.identity..", "..core.data..",
-                "org.springframework..", "jakarta.persistence..", "java.sql..")
-            .check(classes);
-    }
+| ID | Required criterion | Verification class | This revision |
+| --- | --- | --- | --- |
+| DEP-AC-01 | Exact source SHA, JDK and build configuration pinned in review evidence. | Source/config inspection | NOT VERIFIED |
+| DEP-AC-02 | Production class dependency graph exported from compiled code. | ArchUnit/CI executable | NOT VERIFIED |
+| DEP-AC-03 | Identity Core has no forbidden dependencies. | ArchUnit/CI executable | NOT VERIFIED |
+| DEP-AC-04 | Workflow Core has no forbidden dependencies. | ArchUnit/CI executable | NOT VERIFIED |
+| DEP-AC-05 | Data Core has no forbidden dependencies. | ArchUnit/CI executable | NOT VERIFIED |
+| DEP-AC-06 | Infrastructure implements ports without reverse Core-to-provider import. | ArchUnit/CI executable | NOT VERIFIED |
+| DEP-AC-07 | WorkflowPersistencePort ownership and semantics unchanged. | Source/config inspection | NOT VERIFIED |
+| DEP-AC-08 | Verified identity cannot be forged through actor IDs or headers. | Runtime security/DB | NOT VERIFIED |
+| DEP-AC-09 | Business routes dispatch via authorized Application use cases. | Runtime security/DB | NOT VERIFIED |
+| DEP-AC-10 | Exact authority cannot bypass resource/tenant ACL. | Runtime security/DB | NOT VERIFIED |
+| DEP-AC-11 | Rejected mutation leaves business data, state and history unchanged. | Runtime security/DB | NOT VERIFIED |
+| DEP-AC-12 | Concurrent writes do not cause lost update or partial history. | Runtime security/DB | NOT VERIFIED |
+| DEP-AC-13 | Unknown commit outcome reconciled without blind repeat. | Runtime security/DB | NOT VERIFIED |
+| DEP-AC-14 | Existing Flyway migrations remain unchanged. | Source/config inspection | NOT VERIFIED |
+| DEP-AC-15 | Legacy route exposure is gated and independently tested. | Runtime security/DB | NOT VERIFIED |
+| DEP-AC-16 | Helpdesk and Facility reuse the same Core without modifying generic Core. | Runtime security/DB | NOT VERIFIED |
+| DEP-AC-17 | CI detects seeded forbidden dependency (negative architecture test). | ArchUnit/CI executable | NOT VERIFIED |
+| DEP-AC-18 | All waivers have owner, expiry/removal trigger and linked issue. | Source/config inspection | NOT VERIFIED |
 
-    @Test
-    void identityAndDataCoresMustNotDependOnFrameworkOrApplications() {
-        noClasses().that().resideInAnyPackage("..core.identity..", "..core.data..")
-            .should().dependOnClassesThat().resideInAnyPackage(
-                "..gateway..", "..application..", "..infrastructure..", "..request..",
-                "org.springframework..", "jakarta.persistence..", "java.sql..")
-            .check(classes);
-    }
-}
-```
+**Distinct review outcomes:** DOCUMENT REVIEW ≠ SOURCE DEPENDENCY PASS ≠ SECURITY/DB PASS ≠ RELEASE PASS. A reviewer may approve the architecture target without declaring implementation compliance. Preserve the exact HEAD, command, test logs, JUnit XML, environment, waiver diff and reviewer identity for each claim.
 
-**Caution on scope:** package wildcards and nested classes must be reviewed against actual imports. This example does **not** cover runtime reflection, dynamically loaded beans, SQL calls, resource files, Spring configuration, or project-specific aliases. It also does not test HTTP route safety. Dedicated rules for Application and Gateway should be added **after** baseline failures are classified; do not weaken them silently to achieve a green build.
+## 11. Evidence and Claim Mapping
 
-**Recommended CI rollout:**
+| Claim | Rules / criteria | Source or test needed | Evidence state |
+| --- | --- | --- | --- |
+| No inward Core/provider inversion | DR-01–05/10/12; DEP-AC-02–07 | Compiled production import graph, ArchUnit report | UNVERIFIED |
+| Server-authorized HTTP mutation | DR-06–09/16; DEP-AC-08–11/15 | Route inventory, forged-header/ACL tests, actual profile | UNVERIFIED |
+| Atomic Workflow and business write | DR-04/14; DEP-AC-11–13 | PostgreSQL failure injection and concurrency evidence | UNVERIFIED |
+| Storage substitutability | DR-03/13; provider contract suite | Contract test on each real adapter and migration assessment | UNVERIFIED |
+| Shared unchanged Core across applications | DR-11; DEP-AC-16 | Facility/Helpdesk integrated source diff and E2E | UNVERIFIED |
+| No hidden debt/false compliance | DR-15; DEP-AC-17/18 | CI injected violation, bounded waiver register | UNVERIFIED |
 
-| Stage | Gate | Required evidence |
-|---|---|---|
-| A0 — Inventory | Export dependency edges and known baseline breaches at exact SHA | Inventory report + reviewer owner |
-| A1 — Core hard rules | DR-01, DR-02, DR-03, DR-10 Core→Infra part | Test run, JUnit XML, zero violations |
-| A2 — New code policy | No new cross-module violations; allowlisted historical seams only | PR diff inspection + bounded suppression list |
-| A3 — HTTP/Application | DR-05, DR-06, DR-07, DR-08, DR-09 | End-to-end policy/negative tests; route mapping |
-| A4 — Provider contracts | DR-13 and DR-14 | Provider-specific tests, real PostgreSQL evidence |
-| A5 — Reuse | DR-11: Facility vertical slice without generic Core changes | Diff, two golden paths, shared Core coverage |
+No test executions or independent approval were performed to create this document.
 
-No broad `ignoreDependency` suppression; every waiver specifies file/class, rule ID, reason, issue, reviewer and expiry or removal trigger.
+## 12. Risk and Remediation Register
 
-## 10. Baseline findings and candidate PR impact
+| ID | Risk / failure mode | Owner to nominate | Required next evidence |
+| --- | --- | --- | --- |
+| DEP-R01 | Legacy source imports or `request.*` routes bypass target ownership | Backend/Gateway | Exact production graph + HTTP inventory |
+| DEP-R02 | Generic Workflow exposure bypasses resource eligibility | Identity/Security + Application | Negative auth integration suite |
+| DEP-R03 | Independent Workflow JDBC commit defeats composite Helpdesk transaction | Workflow + Application | Real DB rollback/unknown commit tests |
+| DEP-R04 | ACL revoke races with authorized write | Identity/Security + Workflow | Deterministic race test |
+| DEP-R05 | PostgreSQL/object store split produces orphaned objects | Application + Data | Reconciliation/failure proof |
+| DEP-R06 | ArchUnit exceptions conceal new dependencies | CI owner + independent reviewer | Waiver audit + seeded failure |
+| DEP-R07 | Facility reuse unproven | Application + Core | Second vertical slice, unchanged Core diff |
+| DEP-R08 | Documentation/source baseline drift | Documentation owner | Reconciled exact-SHA manifest and link audit |
 
-| Area / source | On pinned `main` | Rule assessment | Action |
-|---|---|---|---|
-| `core.workflow.WorkflowRuntime` | Depends on `WorkflowPersistencePort`, `Clock` | Complies in principle with DR-02/04 | Keep contract stable |
-| `infrastructure.workflow.PostgresWorkflowPersistence` | Implements Workflow-owned port using JDBC | Intended adapter shape; semantics require integration evidence | Provider contract suite |
-| `core.identity` | Provider-neutral value objects | Complies in principle with DR-01 | ArchUnit formalization |
-| `application.identity.CurrentPrincipal` | Verified principal port | Valid application-owned seam | Enforce trusted origin |
-| `infrastructure.identity.security.SpringSecurityCurrentPrincipal` | Spring Security adapter for port | Valid DIP inversion | JWT adversarial tests |
-| `core.data.ObjectStoragePort` | Provider-neutral contract | Complies in principle with DR-03 | Verify real adapters separately |
-| `gateway.workflow.controller.WorkflowController` | Workflow HTTP candidate code, not registered as production controller | Not production-ready by existence alone | Route policy & authorized use case |
-| `request.*` | Legacy JPA/HTTP application prototype | Deliberate debt/exception | Isolate behind profile/route gates; plan migration |
-| `backend/build.gradle` | No ArchUnit test dependency | Enforcement not implemented | Propose dependency + tests |
-| PR #47 / #48 | Stacked AuthorizedWorkflowService / exact-authority regression proposals | Not merged evidence on this baseline | Verify exact head/CI/route handoff |
-| PR #63 | Helpdesk candidate using SQL guarded transaction | Direct SQL/provider coupling at Application boundary | Approved transaction seam + resource-policy test |
-| PR #70 / #71 | BFF and React Portal candidates | External deployment/protocol concerns, not Core imports | BFF CSRF/session/auth integration |
+Owner labels indicate reviewer **roles to assign**, not persons confirmed as accepting accountability.
 
-**Do not mark violation-free** until actual full dependency scan. Conversely, do not label whole legacy `request.*` a P0 production vulnerability solely because it is not hexagonal; evaluate exposure, routing, and resource-level authorization on the actual deployed profile.
+## 13. Staged Governance and Review Questions
 
-## 11. Anti-pattern catalogue and alternatives
+Retain the original staged IDs: **DEP-G0** reviewed target/waivers; **DEP-G1** production graph; **DEP-G2** Core ArchUnit; **DEP-G3** App/Gateway + no-new-violations; **DEP-G4** HTTP/security gates; **DEP-G5** PostgreSQL transactional consistency; **DEP-G6** Facility reuse and release evidence. These are an **implementation proposal**, not the global DX-OS G0–G10 Gate outcomes.
 
-| Anti-pattern | Why it fails | Recommended alternative | Trade-off |
-|---|---|---|---|
-| Controller directly invokes unguarded `WorkflowRuntime` | Bypasses resource policies | Controller→Authorized Use Case→Workflow | Extra orchestration code |
-| Generic Workflow imports `RequestStatus` | Core tied to one app | Definition supplied externally, ResourceReference opaque | Definition/version management needed |
-| Data module owns every SQL table | God module, weak ownership | Capability/business-owned ports and schema | Cross-module composition needed |
-| Application directly calls `wf_port_*` SQL everywhere | Provider coupling and hidden transaction semantics | Transactional application port with adapter | Design cost, potential contract reconciliation |
-| Wrapping independent JDBC commit with `@Transactional` | False atomicity assurance | Explicit composite transaction seam | Must address Workflow port semantics |
-| Internal REST for every Core in same JVM | Latency, unnecessary distributed failure surfaces | Java port calls inside monolith | No independent deploy per Core |
-| ArchUnit blanket exclusion for `request.*` forever | Debt concealed rather than contained | Bounded legacy register + deadline/gate | Migration effort |
-| Automatically sharing `request` entities with Facility | Hidden business coupling | Separate application models + shared Core contracts | Some intentional duplication |
+Before sign-off, decide: legacy route exposure, composite transaction port ownership, generic API default-off enforcement, waiver expiry and owners, mandatory ArchUnit CI gate, and the evidence standard for two-application reuse.
 
-## 12. Exception / waiver process
+## 14. Source References and Review Limits
 
-A temporary exception is permitted only when all fields are recorded:
+Verified document paths at the **inspection SHA** (not all direct source classes were fetched in this authoring pass):
 
-| Field | Required content |
-|---|---|
-| Exception ID | Stable e.g. `DEP-EX-001` |
-| Rule & exact source | `DR-xx`, class/file (not whole package by default) |
-| Why necessary | Current dependency and cost of immediate fix |
-| Risk/mitigation | Security/consistency consequence and guard |
-| Owner / reviewer | One technical owner + independent reviewer |
-| Lifecycle | Creation date, planned removal milestone, issue/PR link |
-| CI behavior | Specific allowlist; new violations still fail |
+- [System Architecture](system-architecture.md) — exists at inspection SHA; separate G3-F04 revision is not yet confirmed merged.
+- [Core/Application Boundary](core-application-boundary.md) — exists at inspection SHA; separate G3-F03 revision is not yet confirmed merged.
+- [Historical architecture overview](../architecture/README.md) — historical reference only; verify link at merging SHA.
+- [Identity Core Contract](../contracts/identity-core.md) — source contract.
+- [Workflow Core Contract](../contracts/workflow-core.md) — source contract.
+- [Data Core Contract](../contracts/data-core.md) — source contract.
+- [PR #47](https://github.com/lexuanbao258-collab/dxos-open-core/pull/47), [PR #48](https://github.com/lexuanbao258-collab/dxos-open-core/pull/48), [PR #63](https://github.com/lexuanbao258-collab/dxos-open-core/pull/63), [PR #70](https://github.com/lexuanbao258-collab/dxos-open-core/pull/70), [PR #71](https://github.com/lexuanbao258-collab/dxos-open-core/pull/71) are **workstream references**, not automatic evidence of merged/release-verified behavior.
+- Immutable inspection anchor: [`0f0c3ba0...`](https://github.com/lexuanbao258-collab/dxos-open-core/commit/0f0c3ba0c3eecda0a5c4a798a3cc14b808351bed).
 
-Suggested initial waivers: legacy `request.*` isolation and the unregistered generic Workflow controller pending guarded exposure. These are **candidates** for review, not automatically granted exemptions.
+Final Git merge requires re-running link checks, build and relevant tests on the **actual target revision**, not inheriting statuses from the inspected document snapshot.
 
-## 13. Architecture acceptance criteria (DEP-AC-01 … DEP-AC-18)
-
-| ID | Criterion / evidence |
-|---|---|
-| DEP-AC-01 | Exact SHA/JDK/build config pinned in report |
-| DEP-AC-02 | Imported package graph generated from compiled production classes |
-| DEP-AC-03 | Core Identity has no forbidden dependencies |
-| DEP-AC-04 | Core Workflow has no forbidden dependencies |
-| DEP-AC-05 | Core Data has no forbidden dependencies |
-| DEP-AC-06 | Infrastructure implements ports; Core does not import adapter |
-| DEP-AC-07 | Workflow Persistence port ownership unchanged |
-| DEP-AC-08 | Verified identity cannot be forged by request headers/actor ID |
-| DEP-AC-09 | Gateway/business endpoints call protected Application use case |
-| DEP-AC-10 | Authority alone cannot bypass tenant/resource ACL |
-| DEP-AC-11 | Rejected operation leaves business facts, state, history unchanged |
-| DEP-AC-12 | Concurrent operations do not yield lost updates or partial history |
-| DEP-AC-13 | Unknown commit outcome is reconciled, not blindly retried |
-| DEP-AC-14 | Existing Flyway migrations not edited |
-| DEP-AC-15 | Legacy route exposure gated and independently tested |
-| DEP-AC-16 | Two different Application golden paths reuse same Core without Core edits |
-| DEP-AC-17 | CI fails on a seeded forbidden import (negative architectural test) |
-| DEP-AC-18 | Exceptions documented with owner, expiry and removal issue |
-
-**Gate definitions:** DOCUMENT REVIEW = owner/reviewer approves statements; SOURCE PASS = dependency tests run and pass at fixed HEAD; SECURITY/DB PASS = relevant real integrations pass; RELEASE PASS = clean install + Helpdesk/Facility proof. Never collapse these into one status.
-
-## 14. Implementation proposal (documentation phase → CI)
-
-| Step | Deliverable | Change scope | Gate |
-|---|---|---|---|
-| DEP-G0 | Approved rules and explicit exception register | Docs only | Architecture review |
-| DEP-G1 | Baseline production dependency graph | Test/report only | Exact SHA |
-| DEP-G2 | ArchUnit dependency and JUnit test | `backend/build.gradle`, tests | Core rules PASS |
-| DEP-G3 | Application/Gateway dependency tests and legacy allowlist | Tests, bounded code refactor | No new violations |
-| DEP-G4 | Protected use cases and HTTP registration governance | Production only after independent approval | Security E2E |
-| DEP-G5 | Provider transactional contract and real Postgres guards | Explicitly reviewed application/infra | Atomicity/NEG evidence |
-| DEP-G6 | Facility reuse and CI gates | Facility app/tests, no Core forks | Two golden paths |
-
-## 15. Review questions and sign-off
-
-1. Is the listed `request.*` prototype allowed in the selected release profile, or must every writable legacy route be disabled?
-2. Which **exact** Application port owns the composite Helpdesk + Workflow transaction, and how does it coexist with `WorkflowPersistencePort` durable-return semantics?
-3. Does the Gateway team commit to **Business API by default / Generic Workflow API disabled** until guarded tests pass?
-4. Who owns and time-bounds each migration exception?
-5. Which ArchUnit baseline gate is mandatory in CI before release candidate?
-6. How will the Facility team prove independent business logic with unchanged Core source?
-
-**Proposed decision:** Approve the dependency direction as the architecture **target**, with incremental enforcement and evidence gates. **Do not declare current repository dependency compliance or release security acceptance without executing checks at exact HEAD.**
-
-## 16. Primary references
-
-- [DX-OS repository](https://github.com/lexuanbao258-collab/dxos-open-core)
-- [Existing architecture baseline](https://github.com/lexuanbao258-collab/dxos-open-core/blob/e06fa429cfd92b032c166eb3ebf32803d13191c2/docs/architecture/README.md)
-- [Data & persistence ownership](https://github.com/lexuanbao258-collab/dxos-open-core/blob/e06fa429cfd92b032c166eb3ebf32803d13191c2/docs/architecture/data-persistence-boundaries.md)
-- [Identity contract](https://github.com/lexuanbao258-collab/dxos-open-core/blob/e06fa429cfd92b032c166eb3ebf32803d13191c2/docs/contracts/identity-core.md)
-- [Workflow contract](https://github.com/lexuanbao258-collab/dxos-open-core/blob/e06fa429cfd92b032c166eb3ebf32803d13191c2/docs/contracts/workflow-core.md)
-- [Data contract](https://github.com/lexuanbao258-collab/dxos-open-core/blob/e06fa429cfd92b032c166eb3ebf32803d13191c2/docs/contracts/data-core.md)
-- [PR #47 AuthorizedWorkflowService](https://github.com/lexuanbao258-collab/dxos-open-core/pull/47)
-- [PR #48 Exact authority tests](https://github.com/lexuanbao258-collab/dxos-open-core/pull/48)
-- [PR #63 Helpdesk candidate](https://github.com/lexuanbao258-collab/dxos-open-core/pull/63)
-- [PR #70 Portal BFF](https://github.com/lexuanbao258-collab/dxos-open-core/pull/70)
-- [PR #71 React Portal](https://github.com/lexuanbao258-collab/dxos-open-core/pull/71)
+**Review outcome: DRAFT / NOT REVIEWED. Source graph/CI/security/DB/reuse gates: NOT VERIFIED.**
