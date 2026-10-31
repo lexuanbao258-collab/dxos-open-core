@@ -1,0 +1,65 @@
+name: Diagnose Windows ACL preconditions for PR80
+on:
+  push:
+    branches: [diagnostic/pr80-windows-acl-20261031]
+permissions:
+  contents: read
+jobs:
+  windows-acl-diag:
+    runs-on: windows-2022
+    timeout-minutes: 18
+    steps:
+      - name: Preserve SQL canonical bytes
+        shell: pwsh
+        run: |
+          git config --global core.autocrlf false
+          git config --global core.eol lf
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Verify PR80 provenance and fixture integrity
+        shell: pwsh
+        run: |
+          git log -3 --oneline
+          $pr = '16d1f00493ec6b8eaeb5fac466a48c7f0469ed1e'
+          git merge-base --is-ancestor $pr HEAD
+          if ($LASTEXITCODE -ne 0) { throw "Missing PR80 ancestry" }
+          $a = (Get-FileHash docs/evidence/issue-25-runtime-privilege-review.sql -Algorithm SHA256).Hash.ToLowerInvariant()
+          $b = (Get-FileHash docs/evidence/issue-25-security-definer-review.sql -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($a -ne '4cc070ba08d481b915c7d52ce04a5e26478c3a878c5dc181f517bf04352185a9') { throw 'SQL1 drift' }
+          if ($b -ne 'bc70781e66f90b8d4b5b405f5f77c5fb2fb70b38b2b7f7c4aeda8e29dc8dcca1') { throw 'SQL2 drift' }
+          Write-Host "PR80_PROVENANCE_SQL_BYTES=PASS"
+      - name: Execute sanitized Java ACL diagnostic on hosted Windows
+        shell: pwsh
+        working-directory: backend
+        run: |
+          .\gradlew.bat test --tests "*WorkflowSecurityDefinerAclCiDiagnosticTest" --no-daemon --rerun-tasks --console=plain
+          if ($LASTEXITCODE -ne 0) { throw 'Diagnostic test failed' }
+      - name: Display redacted JUnit diagnosis
+        if: always()
+        shell: pwsh
+        working-directory: backend
+        run: |
+          @'
+          import glob
+          from xml.etree import ElementTree as ET
+          files=glob.glob("build/test-results/test/TEST-*.WorkflowSecurityDefinerAclCiDiagnosticTest.xml")
+          if not files:
+              print("DIAG_XML_MISSING")
+          for f in files:
+              x=ET.parse(f).getroot()
+              print("DIAG_TESTS",x.get("tests"),"FAILURES",x.get("failures"),"ERRORS",x.get("errors"))
+              for line in (x.findtext("system-out") or "").splitlines():
+                  if line.startswith("DIAG_"):
+                      print(line)
+          '@ | python -
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: pr80-acl-diagnostic-junit
+          path: backend/build/test-results/test/TEST-*.xml
+          if-no-files-found: warn
