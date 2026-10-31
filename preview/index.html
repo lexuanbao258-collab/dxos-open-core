@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="vi" data-root="./" data-page="home">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="DX-OS Developer Portal — Hướng dẫn tích hợp, kiến trúc, xác thực và API Reference của IT Helpdesk MVP."><title>Overview · DX-OS Developer Portal</title><link rel="stylesheet" href="assets/site.css"><script defer src="assets/site.js"></script></head>
+<body><div id="site-header"></div>
+<div class="shell"><aside id="site-sidebar"></aside>
+<main class="page">
+<div class="eyebrow">DX-OS / Open-Core / Developer documentation</div>
+<h1>Build workflows.<br><span style="color:var(--accent)">Keep control.</span></h1>
+<p class="intro">DX-OS là dự án phần mềm nguồn mở hướng tới quy trình xử lý yêu cầu có kiểm soát truy cập theo tài nguyên. Tài liệu này tập trung vào <strong>IT Helpdesk MVP</strong>: hợp đồng HTTP, hướng dẫn tích hợp, Keycloak OIDC/JWT và Workflow Core.</p>
+<div class="chiprow"><span class="chip green">● Public documentation preview</span><span class="chip">9 HTTP endpoints</span><span class="chip">OpenAPI 3.1 draft</span><span class="chip">Java 21 · PostgreSQL · Keycloak</span></div>
+<div class="hero-art" role="img" aria-label="Luồng IT Helpdesk từ Employee gửi yêu cầu qua Coordinator phân công, Worker xử lý và Employee xác nhận.">
+<span class="pill">IT HELPDESK / Workflow lifecycle</span>
+<div class="pipeline"><div class="pipe-node"><b>Employee</b><small>Submit</small></div><span class="pipe-arrow">→</span><div class="pipe-node"><b>Coordinator</b><small>Triage · Assign</small></div><span class="pipe-arrow">→</span><div class="pipe-node"><b>Worker</b><small>Start · Resolve</small></div><span class="pipe-arrow">→</span><div class="pipe-node"><b>Employee</b><small>Confirm</small></div></div>
+<div class="meta-line">Workflow state/version và assignmentVersion được kiểm tra riêng. Server quyết định thẩm quyền tại thời điểm ghi.</div>
+</div>
+<div class="callout warn"><strong>MVP · Không phải public production API</strong>Website này phục vụ đọc tài liệu và hướng dẫn tích hợp. Backend local không được đưa lên Internet. API Reference dùng bản OpenAPI <em>source-derived draft</em> để trình bày, chờ so khớp với bản export thực tế đã review.</div>
+<section class="section" id="start">
+<div class="eyebrow">01 / Start here</div><h2>Bắt đầu từ đây</h2><p class="section-lead">Chọn phần bạn cần mà không phải đọc toàn bộ repository. Mỗi trang phân biệt những gì đã kiểm chứng và những gì vẫn còn ở mức ứng viên.</p>
+<div class="cards"><a class="card" href="guides/index.html"><span class="card-icon">↗</span><h3>Quickstart &amp; Integration</h3><p>Quy trình chuẩn bị môi trường được cấp quyền, lấy token và đọc contract trước khi gọi API.</p><span class="go">Đọc hướng dẫn →</span></a>
+<a class="card" href="api/index.html"><span class="card-icon">{ }</span><h3>API Reference</h3><p>Tra cứu 9 endpoint, request schema và response models qua Scalar, không có nút Test Request.</p><span class="go">Khám phá API →</span></a>
+<a class="card" href="architecture/index.html"><span class="card-icon">⬡</span><h3>Architecture</h3><p>Tách biệt xác thực, phân quyền, Workflow nghiệp vụ và persistence của MVP.</p><span class="go">Xem kiến trúc →</span></a>
+<a class="card" href="guides/index.html#authentication"><span class="card-icon">◎</span><h3>Security &amp; OIDC</h3><p>Hiểu vì sao Keycloak xác thực người dùng nhưng không thay Backend quyết định quyền theo tài nguyên.</p><span class="go">Đọc bảo mật →</span></a></div>
+</section>
+<section class="section" id="apis"><div class="eyebrow">02 / Interface</div><h2>API surface</h2><p class="section-lead">Cả 9 route đều nằm dưới <code>/api/v1/mvp/requests</code>. Đăng nhập không tự động cấp quyền xem hoặc sửa một request.</p>
+<div class="table-wrap"><table><thead><tr><th>Method</th><th>Endpoint</th><th>Chức năng</th></tr></thead><tbody>
+<tr><td><span class="method">GET</span></td><td><code>/requests</code></td><td>Danh sách yêu cầu được phép xem</td></tr>
+<tr><td><span class="method post">POST</span></td><td><code>/requests</code></td><td>Employee tạo yêu cầu</td></tr>
+<tr><td><span class="method">GET</span></td><td><code>/requests/{id}</code></td><td>Đọc chi tiết và allowedActions</td></tr>
+<tr><td><span class="method">GET</span></td><td><code>/requests/{id}/history</code></td><td>Xem lịch sử chuyển trạng thái</td></tr>
+<tr><td><span class="method post">POST</span></td><td><code>/requests/{id}/triage</code></td><td>Coordinator tiếp nhận</td></tr>
+<tr><td><span class="method post">POST</span></td><td><code>/requests/{id}/assign</code></td><td>Coordinator phân công</td></tr>
+<tr><td><span class="method post">POST</span></td><td><code>/requests/{id}/start</code></td><td>Worker bắt đầu xử lý</td></tr>
+<tr><td><span class="method post">POST</span></td><td><code>/requests/{id}/resolve</code></td><td>Worker ghi nhận kết quả</td></tr>
+<tr><td><span class="method post">POST</span></td><td><code>/requests/{id}/confirm</code></td><td>Người gửi xác nhận hoàn tất</td></tr>
+</tbody></table></div>
+<p><a href="api/index.html">Mở API Reference chi tiết →</a></p></section>
+<section class="section" id="integration"><div class="eyebrow">03 / Build</div><h2>Ví dụ hợp đồng request</h2><p class="section-lead">Đây là mẫu body của API tạo yêu cầu, không phải request thực tế đã gửi đến server.</p>
+<div class="code-box"><div class="code-head"><span>JSON · POST /api/v1/mvp/requests</span><button type="button" data-copy="create-example">Sao chép</button></div><pre><code id="create-example">{
+  "title": "Máy tính không kết nối Internet",
+  "description": "Máy tính phòng học không truy cập được mạng.",
+  "requestType": "IT_HELPDESK"
+}</code></pre></div>
+<p class="section-lead">Response dự kiến khi tạo thành công: HTTP <code>201</code>, request ở trạng thái <code>SUBMITTED</code> và Workflow <code>version=0</code>. Backend vẫn kiểm tra token, tenant và quyền tạo.</p></section>
+<section class="section" id="principles"><div class="eyebrow">04 / Engineering</div><h2>Những điều DX-OS ưu tiên</h2>
+<div class="cards three"><div class="card"><span class="card-icon">⊞</span><h3>Resource-level ACL</h3><p>Không dùng mỗi vai trò để quyết định có được nhìn thấy tài nguyên hay không.</p></div><div class="card"><span class="card-icon">⟳</span><h3>Version guards</h3><p>Workflow version và assignment version riêng biệt để ngăn cập nhật dựa trên dữ liệu cũ.</p></div><div class="card"><span class="card-icon">◇</span><h3>Source over claims</h3><p>Tài liệu liên kết nguồn; kiểm thử local không được diễn giải thành production readiness.</p></div></div></section>
+<footer class="foot"><span>DX-OS Open-Core · Preview / Candidate · 31.10.2026</span><span><a href="https://github.com/lexuanbao258-collab/dxos-open-core/pull/79">Nguồn PR #79</a> · <a href="https://github.com/lexuanbao258-collab/dxos-open-core/pull/74">MVP PR #74</a></span></footer>
+</main>
+<aside class="toc"><strong>ON THIS PAGE</strong><a href="#start">Bắt đầu</a><a href="#apis">API surface</a><a href="#integration">Ví dụ request</a><a href="#principles">Nguyên tắc</a><hr><small>Trạng thái bằng chứng</small><div class="chip green">OpenAPI local: PASS cơ bản</div><p style="font-size:11px;color:var(--muted)">Website preview; API production chưa triển khai.</p></aside></div></body></html>
