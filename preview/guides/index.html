@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="vi" data-root="../" data-page="getting-started"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="DX-OS Quickstart — hướng dẫn tích hợp với IT Helpdesk MVP và bảo mật JWT."><title>Quickstart &amp; Security · DX-OS Developer Portal</title><link rel="stylesheet" href="../assets/site.css"><script defer src="../assets/site.js"></script></head><body><div id="site-header"></div>
+<div class="shell"><aside id="site-sidebar"></aside><main class="page">
+<div class="eyebrow">Guides / Quickstart</div><h1>Bắt đầu tích hợp</h1><p class="intro">Lộ trình ngắn để hiểu và thử hợp đồng API trong một môi trường <strong>local được cấp quyền</strong>. Đây không phải hướng dẫn truy cập Backend công khai vì DX-OS chưa cung cấp public production API.</p>
+<div class="callout warn"><strong>Trạng thái ứng viên</strong>Backend Java Helpdesk (PR #74) và Swagger/OpenAPI (PR #79) vẫn ở trạng thái draft. Người dùng chỉ nên thử gọi API trên môi trường disposable riêng với tài khoản Keycloak thật đã provision đúng tenant.</div>
+<section class="section" id="quickstart"><div class="eyebrow">01 / Setup</div><h2>Quickstart theo bốn bước</h2>
+<ol class="steps"><li><strong>Chuẩn bị local environment</strong><p>Java 21, Docker Desktop Linux engine, PostgreSQL disposable và Keycloak. Dùng <a href="https://github.com/lexuanbao258-collab/dxos-open-core/blob/docs/helpdesk-swagger-openapi-20261030/scripts/README-helpdesk-local.md">runbook của repository</a>, không dùng một database staging hoặc production.</p></li>
+<li><strong>Định danh ba actor có thật</strong><p>Employee, Coordinator, Worker phải là tài khoản Keycloak khác nhau, có issuer/sub hợp lệ và membership/role được provision trong tenant demo. Thiết lập database không có actor (ACTORS=0) chưa đủ để thử quy trình.</p></li>
+<li><strong>Kiểm tra tài liệu và hợp đồng</strong><p>OpenAPI JSON local tại <code>/v3/api-docs/it-helpdesk-mvp</code> khi opt-in; Swagger UI chỉ trên loopback. Trên máy demo đã có kiểm tra 9 route và các HTTP 401 cơ bản.</p></li>
+<li><strong>Gọi API bằng access token được cấp hợp lệ</strong><p>Backend phải kiểm tra JWT, tenant, ACL, vai trò, trạng thái và phiên bản trước khi cho phép thao tác. Không lấy token từ screenshot, issue hoặc log.</p></li></ol></section>
+<section class="section" id="authentication"><div class="eyebrow">02 / Identity &amp; authorization</div><h2>Keycloak JWT không thay ACL</h2><p class="section-lead">Xác thực và phân quyền là hai việc khác nhau.</p>
+<div class="detail-cards"><div class="card"><span class="card-icon">◎</span><h3>Identity</h3><p>Keycloak xác nhận danh tính và phát hành access token. Backend xác minh chữ ký, issuer, audience, kiểu token và hạn sử dụng.</p></div><div class="card"><span class="card-icon">▣</span><h3>Authorization</h3><p>Backend quyết định theo tenant membership, operation authorities, độ hiển thị tài nguyên, ACL và quyền theo trạng thái Workflow. Token đúng không đồng nghĩa được đọc mọi request.</p></div></div>
+<div class="code-box"><div class="code-head"><span>HTTP · Chỉ minh họa hợp đồng, không phải lệnh chạy sẵn</span><button type="button" data-copy="http-example">Sao chép</button></div><pre><code id="http-example">GET {BASE_URL}/api/v1/mvp/requests
+Authorization: Bearer {ACCESS_TOKEN}
+Accept: application/json</code></pre></div>
+<p class="section-lead"><code>{BASE_URL}</code> phải là địa chỉ Backend riêng được tổ chức cấp quyền. Website này không cung cấp public API endpoint; không dán token thật vào các form công khai.</p>
+<div class="callout"><strong>Trường hợp không thấy tài nguyên</strong>Backend có thể trả <code>404</code> cho tài nguyên không tồn tại, bị ẩn hoặc thuộc tenant khác. <code>403</code> chỉ dùng khi tài nguyên đã được phép nhìn thấy nhưng thao tác bị cấm, tùy contract/mapping.</div></section>
+<section class="section" id="workflow"><div class="eyebrow">03 / Business process</div><h2>Workflow IT Helpdesk</h2><p class="section-lead">Quy trình demo có 5 trạng thái và 4 lần chuyển trạng thái. Assign là thao tác phân công riêng, không tăng Workflow version.</p>
+<div class="flow-board"><div class="flow-cell">SUBMITTED<small>Employee tạo</small></div><div class="flow-cell">TRIAGED<small>Coordinator tiếp nhận</small></div><div class="flow-cell">IN_PROGRESS<small>Worker bắt đầu</small></div><div class="flow-cell">RESOLVED<small>Worker hoàn tất</small></div><div class="flow-cell">CONFIRMED<small>Employee xác nhận</small></div></div>
+<div class="table-wrap"><table><thead><tr><th>Hành động</th><th>Actor</th><th>Yêu cầu</th><th>Tác động phiên bản</th></tr></thead><tbody>
+<tr><td>create</td><td>Employee</td><td>Quyền tạo và tenant hợp lệ</td><td>Workflow version = 0</td></tr>
+<tr><td>triage</td><td>Coordinator</td><td>SUBMITTED, <code>expectedVersion</code></td><td>Workflow +1</td></tr>
+<tr><td>assign</td><td>Coordinator</td><td>TRIAGED, eligible worker, <code>expectedAssignmentVersion</code></td><td>Assignment +1</td></tr>
+<tr><td>start</td><td>Assigned Worker</td><td>TRIAGED, <code>expectedVersion</code></td><td>Workflow +1</td></tr>
+<tr><td>resolve</td><td>Assigned Worker</td><td>IN_PROGRESS, resolution, version</td><td>Workflow +1</td></tr>
+<tr><td>confirm</td><td>Original submitter</td><td>RESOLVED, <code>expectedVersion</code></td><td>Workflow +1</td></tr></tbody></table></div>
+<h3>Ví dụ phân công</h3><p class="section-lead">Không tự chế <code>assigneeId</code>; hãy dùng actor ID thật từ <code>eligibleAssignees</code> của response được phép đọc.</p>
+<div class="code-box"><div class="code-head"><span>JSON · POST /requests/{id}/assign</span><button type="button" data-copy="assign-example">Sao chép</button></div><pre><code id="assign-example">{
+  "assigneeId": "{CANONICAL_ACTOR_ID}",
+  "expectedAssignmentVersion": 0
+}</code></pre></div></section>
+<section class="section" id="errors"><div class="eyebrow">04 / Errors</div><h2>Hiểu phản hồi API</h2>
+<div class="table-wrap"><table><thead><tr><th>Mã</th><th>Ý nghĩa theo contract</th><th>Trạng thái xác minh</th></tr></thead><tbody>
+<tr><td><code>201</code></td><td>Đã tạo yêu cầu</td><td>Có trong OpenAPI JSON local</td></tr><tr><td><code>401</code></td><td>Thiếu JWT / JWT sai</td><td>Đã có kiểm thử HTTP 401 cơ bản PASS</td></tr><tr><td><code>403</code></td><td>Nhìn thấy tài nguyên nhưng thao tác bị cấm</td><td>Chưa hoàn tất HTTP E2E</td></tr><tr><td><code>404</code></td><td>Không tồn tại, bị ẩn hoặc khác tenant</td><td>Chưa hoàn tất HTTP E2E</td></tr><tr><td><code>409</code></td><td>Version/state conflict</td><td>Chưa hoàn tất HTTP E2E</td></tr></tbody></table></div>
+<div class="callout warn"><strong>Không khẳng định quá bằng chứng</strong>Kiểm tra JSON cấu trúc/HTTP 401 chỉ xác minh phạm vi tương ứng; không thay thế negative tests về resource ACL, tenant và identity E2E.</div>
+</section>
+<footer class="foot"><span>DX-OS Open-Core · Developer Portal Preview</span><span><a href="../api/index.html">API Reference →</a> · <a href="../architecture/index.html">Architecture →</a></span></footer></main>
+<aside class="toc"><strong>ON THIS PAGE</strong><a href="#quickstart">Quickstart</a><a href="#authentication">Keycloak &amp; JWT</a><a href="#workflow">Workflow</a><a href="#errors">Errors</a></aside></div></body></html>
