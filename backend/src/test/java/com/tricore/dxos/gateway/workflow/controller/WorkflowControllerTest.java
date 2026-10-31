@@ -2,6 +2,8 @@ package com.tricore.dxos.gateway.workflow.controller;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.tricore.dxos.application.authorization.WorkflowAccessDecision;
+import com.tricore.dxos.application.authorization.WorkflowAccessException;
 import com.tricore.dxos.core.workflow.ActorReference;
 import com.tricore.dxos.core.workflow.ResourceReference;
 import com.tricore.dxos.core.workflow.TransitionCommand;
@@ -197,12 +199,55 @@ class WorkflowControllerTest {
         mvc.perform(post(BASE).contentType(MediaType.APPLICATION_JSON).content(CREATE))
                 .andExpect(status().is(STATUSES.get(code)))
                 .andExpect(jsonPath("$.status").value(STATUSES.get(code)))
-                .andExpect(jsonPath("$.code").value(code.name()))
+                .andExpect(jsonPath("$.code").value(code == WorkflowErrorCode.INSTANCE_NOT_FOUND
+                        || code == WorkflowErrorCode.DEFINITION_NOT_FOUND ? "NOT_FOUND" : code.name()))
                 .andExpect(jsonPath("$.errors").isEmpty())
                 .andExpect(jsonPath("$.stackTrace").doesNotExist())
                 .andExpect(jsonPath("$.cause").doesNotExist());
         verify(runtime).createInstance("instance-1", "publication", 7, RESOURCE);
         verifyNoMoreInteractions(runtime);
+    }
+
+    @ParameterizedTest
+    @MethodSource("accessDenials")
+    void mapsAclDecisionsToSafeHttpErrors(WorkflowAccessDecision decision, int expectedStatus,
+                                          String expectedCode) throws Exception {
+        when(runtime.loadInstance("instance-1")).thenThrow(new WorkflowAccessException(decision));
+
+        mvc.perform(get(BASE + "/instance-1"))
+                .andExpect(status().is(expectedStatus))
+                .andExpect(jsonPath("$.status").value(expectedStatus))
+                .andExpect(jsonPath("$.code").value(expectedCode))
+                .andExpect(jsonPath("$.errors").isEmpty())
+                .andExpect(jsonPath("$.stackTrace").doesNotExist())
+                .andExpect(jsonPath("$.cause").doesNotExist());
+
+        verify(runtime).loadInstance("instance-1");
+        verifyNoMoreInteractions(runtime);
+    }
+
+    static Stream<Arguments> accessDenials() {
+        return Stream.of(
+                Arguments.of(WorkflowAccessDecision.HIDDEN, 404, "NOT_FOUND"),
+                Arguments.of(WorkflowAccessDecision.FORBIDDEN, 403, "FORBIDDEN"),
+                Arguments.of(WorkflowAccessDecision.UNAVAILABLE, 503, "AUTHORIZATION_UNAVAILABLE"),
+                Arguments.of(WorkflowAccessDecision.ALLOWED, 503, "AUTHORIZATION_UNAVAILABLE"));
+    }
+
+    @Test
+    void hiddenAclAndMissingInstanceHaveIndistinguishableBodies() throws Exception {
+        when(runtime.loadInstance("instance-1"))
+                .thenThrow(new WorkflowAccessException(WorkflowAccessDecision.HIDDEN));
+        String hiddenBody = mvc.perform(get(BASE + "/instance-1"))
+                .andExpect(status().isNotFound())
+                .andReturn().getResponse().getContentAsString();
+
+        reset(runtime);
+        when(runtime.loadInstance("instance-1"))
+                .thenThrow(new WorkflowException(WorkflowErrorCode.INSTANCE_NOT_FOUND));
+        mvc.perform(get(BASE + "/instance-1"))
+                .andExpect(status().isNotFound())
+                .andExpect(content().string(hiddenBody));
     }
 
     @Test
