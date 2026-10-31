@@ -6,6 +6,8 @@
 **Phạm vi:** Workflow Core — capability số 2 trong Identity, Workflow, Data, API Gateway.
 **Mục đích:** Tài liệu thiết kế, đào tạo, phản biện và lập acceptance gate; KHÔNG phải mô tả code v2 đã tồn tại.
 
+**Vai trò tài liệu — ĐỀ XUẤT, chờ owner/team phê duyệt:** bản này bổ trợ về design decisions, lựa chọn và phạm vi MVP cho [tài liệu kiến trúc Workflow chính được đề xuất](architecture.md). Giữ nguyên nội dung lịch sử, review baseline và traceability. Khuyến nghị finite-state cho MVP không phải quyết định bác bỏ việc đánh giá Flowable ở TO-BE; đánh giá đó cũng không cho phép cutover trước demo. Đề xuất này không chuyển thẩm quyền contract, sửa Document IDs hoặc Document Register mapping; xem [quyết định inventory còn mở](../../10-reviews/open-issues.md).
+
 ## 0. Executive summary và quyết định chưa chốt
 
 Workflow Core hiện có domain model, Runtime và provider-neutral `WorkflowPersistencePort` tốt; `PostgresWorkflowPersistence` thực thi JDBC transactions, kiểm soát optimistic version, authoritative definition và history. Tuy nhiên Application Helpdesk trong PR #63 gọi trực tiếp các SQL functions `wf_port_*` và `helpdesk_*`, phối hợp business facts + workflow state + ACL trong một transaction PostgreSQL. Đây là chỗ xung đột với tuyên bố “đổi DB chỉ thay adapter”.

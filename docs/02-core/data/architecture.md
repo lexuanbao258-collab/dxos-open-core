@@ -14,6 +14,8 @@ reviewers: Core / Data / Application / Security / Independent G4 — pending
 
 ## 1. Purpose and authoritative sources
 
+**Proposed document role — owner/team approval pending:** this `architecture.md` is proposed as the principal Data architecture document for capability boundaries and runtime/dependency views. [Data design decisions and MVP review](data-architecture.md) remains supporting material with its historical baseline and traceability preserved. This proposal does not transfer normative contract authority or change Document IDs or Register mappings; see the [open inventory decision](../../10-reviews/open-issues.md).
+
 **AS-IS / IMPLEMENTED:** source at `05c7e04f4e5d1e5693a6422fb301f0774155bf01` exposes provider-neutral `ObjectStoragePort` values and operations; this alone does not establish a general structured Data API or a verified MinIO adapter. **TO-BE / PROPOSED:** Data distinguishes structured records and queries (PostgreSQL default) from unstructured object content (MinIO default). Application records remain owned by their Application; Workflow state, definitions, concurrency, and history remain Workflow-owned semantics even if Data/infrastructure implements storage ports. Alternative relational and object providers require separate contract conformance, migration, access control, failure, and cross-store recovery review. PostgreSQL and MinIO are not one atomic transaction.
 
 This document describes provider-neutral Object Storage architecture for the DX-OS Spring Boot **modular monolith**, including dependency inversion, trust boundaries, storage flows and the absence of automatic SQL/object-storage distributed atomicity. It also states where the Workflow-owned persistence contract ends and the Data/infrastructure implementation begins.
@@ -43,11 +45,12 @@ flowchart TD
   BADAPT --> SQL[(Relational DB)]
   APP --> WF[Workflow Core runtime]
   WF --> WP[Workflow-owned PersistencePort]
-  WADAPT[PROPOSED infrastructure.persistence adapter] -. implements .-> WP
+  WADAPT[PostgresWorkflowPersistence — AS-IS source] -. implements .-> WP
   WADAPT --> SQL
 ```
 
 - **Runtime invocation:** trusted, authorized Application → capability-owned port → infrastructure adapter → provider. For Workflow, a separate runtime invokes a **Workflow-owned** persistence port.
+- **AS-IS source observation:** `PostgresWorkflowPersistence` already implements the Workflow port at the pinned source SHA. Its diagram label records source existence, not runtime conformance, composite Application transaction acceptance or provider-swap verification.
 - **Source dependency inversion:** adapter source imports/implements the Core-owned port; Core does **not** import adapter, SDK, PostgreSQL, MinIO, S3 or Spring types.
 - **Logical modules do not imply microservices.** Deployment topology, provider wiring and ingress enforcement require distinct implementation verification.
 - **Diagram status:** source-grounded contract boundaries plus **PROPOSED** application/infrastructure integrations, not a diagram of verified production wiring.

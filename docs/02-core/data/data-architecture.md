@@ -8,6 +8,8 @@
 > **Related decisions:** SYS-ADR-01=B, 02=B, 06=B, 08=B (selected by TRICORE); DATA-ADR-02 is selected by ADR-007; remaining DATA-ADR options are recommendations pending sign-off.
 > **Scope note:** Open PRs and candidate branches are not treated as merged, production-ready functionality.
 
+**Proposed document role — owner/team approval pending:** this file supplements the proposed principal [Data architecture](architecture.md) with design decisions, alternatives and MVP context. Its historical content, source baseline and traceability remain intact. This proposal does not supersede either document, transfer normative contract authority, or change Document IDs or Register mappings; the [open inventory decision](../../10-reviews/open-issues.md) remains unresolved.
+
 ## 1. Purpose, scope, and non-goals
 
 This document answers four questions: (1) what data belongs to Data Core; (2) who owns business data; (3) how stable contracts support replaceable storage providers; and (4) which tests constitute evidence of real reuse and portability.
@@ -202,7 +204,7 @@ Passing unit tests does not substitute for restart, concurrent writer, failure/r
 |---|---|---|
 | Object Storage contract | `backend/src/main/java/com/tricore/dxos/core/data/ObjectStoragePort.java` | Verified source contract |
 | Domain values/errors | `backend/src/main/java/com/tricore/dxos/core/data/` | Verified provider-neutral model |
-| Contract text | [Data contracts](contracts.md); historical `docs/contracts/data-core.md` at its source pin | Tracked canonical contract; historical source retained |
+| Contract text | [Data contracts](contracts.md); historical `docs/contracts/data-core.md` at its source pin | Current documentation location / review draft; historical canonical contract and pinned Java retain authority for that source revision; transfer pending owner/team approval |
 | Data ownership baseline | [Data architecture](architecture.md); historical `docs/architecture/data-persistence-boundaries.md` at its source pin | Current boundary and historical context |
 | Workflow persistence contract | [Workflow persistence](../workflow/persistence.md); historical `docs/contracts/workflow-core.md` at its source pin | Separate owner and atomicity guarantees |
 | In-memory fake and tests | `backend/src/test/java/com/tricore/dxos/core/data/` | Contract-level test coverage, not real-provider proof |

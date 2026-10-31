@@ -16,11 +16,12 @@ reviewers: Core / Persistence / Application / Independent Gate — pending
 
 **TO-BE / PROPOSED migration assessment:** Flowable's engine tables and transaction manager may implement storage, but Workflow Core still owns definition, state/history, concurrency, and commit-outcome semantics. Assess whether one engine transaction can atomically update the authoritative instance and matching history with the current full-snapshot comparison; determine how engine retries, asynchronous jobs, and process-version migration affect the existing API. Do not infer rollback from a provider exception or convert an uncertain commit into a safe retry. A failing invariant blocks substitution until a reviewed contract change or adapter design resolves it. The current PostgreSQL adapter and source-pinned history remain AS-IS evidence.
 
-Specify provider-neutral persistence semantics for Workflow Core, plus a **proposed PostgreSQL adapter design and conformance plan**. The Workflow capability owns the `WorkflowPersistencePort` and its behavioral invariants. Data/infrastructure owns adapter implementation, schema/migrations, transactions, provisioning and storage operations; it may not redefine Workflow transitions. This is a logical modular-monolith boundary, not a mandate for another microservice.
+Specify provider-neutral persistence semantics for Workflow Core, record the **existing PostgreSQL adapter source**, and describe proposed adapter design choices and a conformance plan. The Workflow capability owns the `WorkflowPersistencePort` and its behavioral invariants. Data/infrastructure owns adapter implementation, schema/migrations, transactions, provisioning and storage operations; it may not redefine Workflow transitions. This is a logical modular-monolith boundary, not a mandate for another microservice.
 
 **OBSERVED source pins:**
 - [WorkflowPersistencePort.java](https://github.com/lexuanbao258-collab/dxos-open-core/blob/0f0c3ba0c3eecda0a5c4a798a3cc14b808351bed/backend/src/main/java/com/tricore/dxos/core/workflow/WorkflowPersistencePort.java) — blob `5009b191a3eb555ba3248eda4728ab8d3aac251b`.
 - [WorkflowRuntime.java](https://github.com/lexuanbao258-collab/dxos-open-core/blob/0f0c3ba0c3eecda0a5c4a798a3cc14b808351bed/backend/src/main/java/com/tricore/dxos/core/workflow/WorkflowRuntime.java) — blob `3b7e7ac755f0021b6ef0ea5a572748bdca585ff2`.
+- [PostgresWorkflowPersistence.java](https://github.com/lexuanbao258-collab/dxos-open-core/blob/0f0c3ba0c3eecda0a5c4a798a3cc14b808351bed/backend/src/main/java/com/tricore/dxos/infrastructure/workflow/PostgresWorkflowPersistence.java) — blob `0f53af47d86f31c85c3b66137f7ad6581dc9f2ef`; AS-IS source observation, not reproduced runtime conformance.
 - [Canonical Workflow Core contract](https://github.com/lexuanbao258-collab/dxos-open-core/blob/0f0c3ba0c3eecda0a5c4a798a3cc14b808351bed/docs/contracts/workflow-core.md) — blob `11c5aaca1e7e08394710a6d0c5fe8e187d549d83`.
 
 **SELECTED:** retain exact-SHA Java SPI, canonical operation semantics and nine error codes. Changes to public contract or error precedence require a separately reviewed ADR. No automatic definition CRUD, idempotency keys, retry engine, REST endpoint, BPMN replacement, or schema migration is introduced by this document.
@@ -32,7 +33,7 @@ flowchart TD
     A[Authorized Helpdesk / Facility Application] --> R[WorkflowRuntime — Core]
     R --> D[Domain models and proposals — Core]
     R --> P[WorkflowPersistencePort — Core-owned]
-    PG[PostgreSQL adapter — proposed implementation design] -. implements .-> P
+    PG[PostgresWorkflowPersistence — AS-IS source] -. implements .-> P
     ALT[Alternate adapter — hypothetical] -. implements .-> P
     PG --> DB[(Authoritative definitions / instances / history)]
 ```
@@ -187,7 +188,9 @@ Separate `loadInstance` and `loadHistory` calls do not promise one shared transa
 
 ## 10. Timestamp fidelity and PostgreSQL representation
 
-Core uses exact `Instant` with possible nanoseconds; PostgreSQL `timestamptz(6)` stores microseconds. The **SELECTED** options are: (a) configure the input/clock boundary to accepted microsecond-aligned values and reject unrepresentable values/ranges before mutation with `OPERATION_FAILURE`; or (b) choose a lossless seconds/nanos representation. These are alternative adapter choices, **not** an assertion that either storage scheme already exists. Do not silently round expected/proposed instances or history; retain `updatedAt == TransitionRecord.occurredAt` after round trip and preserve history order by version. Time zone changes must not change reconstructed `Instant`.
+**AS-IS source observation:** at the pinned `0f0c3ba0c3eecda0a5c4a798a3cc14b808351bed` source, `PostgresWorkflowPersistence` stores `Instant` values as epoch seconds + nanos using `getEpochSecond()` and `getNano()` for instance timestamps and history. Its [`instant(...)` helper](https://github.com/lexuanbao258-collab/dxos-open-core/blob/0f0c3ba0c3eecda0a5c4a798a3cc14b808351bed/backend/src/main/java/com/tricore/dxos/infrastructure/workflow/PostgresWorkflowPersistence.java#L269) reconstructs them with `Instant.ofEpochSecond(seconds, nanos)`. This observes the source representation; no real-database round-trip, runtime conformance or independent acceptance was executed for this documentation candidate.
+
+**Alternative adapter choices:** Core uses exact `Instant` with possible nanoseconds; PostgreSQL `timestamptz(6)` stores microseconds. The **SELECTED** options for an adapter design remain: (a) configure the input/clock boundary to accepted microsecond-aligned values and reject unrepresentable values/ranges before mutation with `OPERATION_FAILURE`; or (b) use a lossless seconds/nanos representation, as observed in the existing adapter source. Describing these choices does not propose changing the current storage format or certify another implementation. Do not silently round expected/proposed instances or history; retain `updatedAt == TransitionRecord.occurredAt` after round trip and preserve history order by version. Time zone changes must not change reconstructed `Instant`.
 
 ## 11. Provider substitution: behavioral parity and unchanged Application code
 
