@@ -1,0 +1,143 @@
+name: Issue 23 HMAC + SQL role disposable PG17 proof
+
+# This test deliberately uses its OWN disposable PostgreSQL service container.
+# Never references DB_*, Supabase, staging, Keycloak or any repository secrets.
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - '.github/workflows/issue23-hmac-disposable-pg17.yml'
+      - 'backend/src/test/java/com/tricore/dxos/infrastructure/workflow/WorkflowSqlProofPrototype.java'
+      - 'backend/src/test/java/com/tricore/dxos/infrastructure/workflow/WorkflowSqlProofPrototypeTest.java'
+      - 'backend/src/test/java/com/tricore/dxos/infrastructure/workflow/WorkflowSqlPrivilegeDisposableProbe.java'
+      - 'backend/src/test/java/com/tricore/dxos/infrastructure/workflow/WorkflowSqlPrivilegeDisposableIntegrationTest.java'
+      - 'backend/src/test/java/com/tricore/dxos/infrastructure/workflow/WorkflowSixPortDisposableContractProbe.java'
+      - 'backend/src/test/java/com/tricore/dxos/infrastructure/workflow/WorkflowSixPortDisposableContractIntegrationTest.java'
+      - 'backend/src/test/java/com/tricore/dxos/infrastructure/workflow/WorkflowV3SixPortSqlParityIntegrationTest.java'
+      - 'backend/src/test/resources/workflow-sql-parity/v3-six-port-exact-wire.sql'
+
+permissions:
+  contents: read
+
+jobs:
+  disposable-proof:
+    name: JDK 21 / PG17 isolated runtime-role negative tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: wfproof-ci-local-only
+          POSTGRES_DB: wfproof_test_ci_20261018
+        ports:
+          - 65521:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d wfproof_test_ci_20261018"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Mark the disposable PG17 database at server scope
+        shell: bash
+        run: |
+          set -euo pipefail
+          CID="$(docker ps -q --filter 'publish=65521' | head -n1)"
+          test -n "$CID"
+          docker exec "$CID" psql -v ON_ERROR_STOP=1 -U postgres \
+            -d wfproof_test_ci_20261018 \
+            -c "ALTER DATABASE wfproof_test_ci_20261018 SET dxos.wfproof_disposable = 'on';"
+      - name: Create disposable-only Core runtime login
+        shell: bash
+        run: |
+          set -euo pipefail
+          CID="$(docker ps -q --filter 'publish=65521' | head -n1)"
+          test -n "$CID"
+          docker exec "$CID" psql -v ON_ERROR_STOP=1 -U postgres \
+            -d wfproof_test_ci_20261018 \
+            -c "CREATE ROLE wfcore_disposable_runtime LOGIN NOINHERIT PASSWORD 'wfcore-ci-disposable-only';"
+      - name: Run test-only HMAC + real runtime SQL role assertions
+        working-directory: backend
+        env:
+          WORKFLOW_SQL_PROOF_DISPOSABLE_ACK: ONLY_DISPOSABLE_PG17
+          WORKFLOW_SQL_PROOF_DISPOSABLE_URL: jdbc:postgresql://127.0.0.1:65521/wfproof_test_ci_20261018
+          WORKFLOW_SQL_PROOF_ADMIN_USER: postgres
+          WORKFLOW_SQL_PROOF_ADMIN_PASSWORD: wfproof-ci-local-only
+          WORKFLOW_TEST_JDBC_URL: jdbc:postgresql://127.0.0.1:65521/wfproof_test_ci_20261018
+          WORKFLOW_TEST_DB_USER: wfcore_disposable_runtime
+          WORKFLOW_TEST_DB_PASSWORD: wfcore-ci-disposable-only
+          WORKFLOW_TEST_MIGRATION_USER: postgres
+          WORKFLOW_TEST_MIGRATION_PASSWORD: wfproof-ci-local-only
+          WORKFLOW_EVENT_GUARD_LOCAL_DISPOSABLE: 'true'
+        run: |
+          set -euo pipefail
+          bash ./gradlew --no-daemon --stacktrace test \
+            --tests 'com.tricore.dxos.infrastructure.workflow.WorkflowSqlProofPrototypeTest' \
+            --tests 'com.tricore.dxos.infrastructure.workflow.WorkflowSqlPrivilegeDisposableIntegrationTest' \
+            --tests 'com.tricore.dxos.infrastructure.workflow.WorkflowSixPortDisposableContractIntegrationTest' \
+            --tests 'com.tricore.dxos.infrastructure.workflow.PostgresWorkflowPersistenceIntegrationTest' \
+            --tests 'com.tricore.dxos.infrastructure.workflow.WorkflowV3SixPortSqlParityIntegrationTest'
+      - name: Summarize baseline failure stage without exposing SQL or credentials
+        if: failure()
+        working-directory: backend
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import pathlib, xml.etree.ElementTree as ET
+          name = "TEST-com.tricore.dxos.infrastructure.workflow.PostgresWorkflowPersistenceIntegrationTest.xml"
+          path = pathlib.Path("build/test-results/test") / name
+          if path.exists():
+              root = ET.parse(path).getroot()
+              print("CORE_BASELINE_FAILURE_COUNTS=" + str({k:root.attrib.get(k) for k in ("tests","failures","errors","skipped")}))
+              failures = root.findall(".//failure")
+              for e in failures[:2]:
+                  message = (e.attrib.get("message") or "").splitlines()[0][:260]
+                  # Only sanitized fixture phase/class names are printed.
+                  print("CORE_BASELINE_FAILURE_TYPE=" + (e.attrib.get("type") or "")[:110])
+                  print("CORE_BASELINE_FAILURE_CAUSE=" + message.replace("password","[redacted]"))
+          else:
+              print("CORE_BASELINE_JUNIT_XML_NOT_PRODUCED")
+          PY
+      - name: Verify 3 security suites plus full V3 Core adapter suite (zero skipped)
+        working-directory: backend
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import pathlib
+          import xml.etree.ElementTree as ET
+          base = pathlib.Path("build/test-results/test")
+          suites = (
+              "com.tricore.dxos.infrastructure.workflow.WorkflowSqlProofPrototypeTest",
+              "com.tricore.dxos.infrastructure.workflow.WorkflowSqlPrivilegeDisposableIntegrationTest",
+              "com.tricore.dxos.infrastructure.workflow.WorkflowSixPortDisposableContractIntegrationTest",
+              "com.tricore.dxos.infrastructure.workflow.PostgresWorkflowPersistenceIntegrationTest",
+              "com.tricore.dxos.infrastructure.workflow.WorkflowV3SixPortSqlParityIntegrationTest",
+          )
+          for suite in suites:
+              path = base / ("TEST-" + suite + ".xml")
+              root = ET.parse(path).getroot()
+              nums = {name: int(root.attrib.get(name, "0"))
+                      for name in ("tests", "failures", "errors", "skipped")}
+              if suite.endswith("WorkflowV3SixPortSqlParityIntegrationTest"):
+                  assert nums == {"tests": 1, "failures": 0, "errors": 0, "skipped": 0}, (suite, nums)
+              elif suite.endswith("PostgresWorkflowPersistenceIntegrationTest"):
+                  assert nums["tests"] >= 15 and all(nums[k] == 0 for k in ("failures", "errors", "skipped")), (suite, nums)
+              else:
+                  assert nums == {"tests": 1, "failures": 0, "errors": 0, "skipped": 0}, (suite, nums)
+              print(suite, nums)
+          print("JUNIT_FIVE_SUITES_INCLUDE_V3_SQL_PARITY_PASS_NO_SKIP")
+          PY
+      - name: Save sanitized JUnit XML evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: issue23-disposable-pg17-proof-junit
+          path: backend/build/test-results/test/TEST-*.xml
+          if-no-files-found: warn
+          retention-days: 7
