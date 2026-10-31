@@ -76,7 +76,11 @@ class PortalQualityTests(unittest.TestCase):
 
     def test_detect_request_unknown_fields_policy(self):
         runtime = copy.deepcopy(self.spec)
-        runtime["components"]["schemas"]["CreateRequest"]["additionalProperties"] = False
+        schema = runtime["components"]["schemas"]["CreateRequest"]
+        if schema.get("additionalProperties") is False:
+            schema.pop("additionalProperties")
+        else:
+            schema["additionalProperties"] = False
         self.assertTrue(any("additionalProperties" in d
                             for d in q.compare_runtime(self.spec, runtime)))
 
