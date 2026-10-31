@@ -29,20 +29,31 @@ function Save-BrowserEvidence([string]$Uri, [string]$Name, [int]$Width, [int]$He
     $target = Join-Path $OutputDir $Name
     $profileDir = Join-Path $env:TEMP ("dxos-olp-docs-" + [guid]::NewGuid().ToString('N'))
     try {
+        # Chromium often logs harmless renderer diagnostics to stderr.
+        # Direct native invocation with $ErrorActionPreference='Stop' turns
+        # those diagnostics into PowerShell errors on Windows PowerShell 5.1.
+        # Start-Process captures stderr separately and checks the PNG itself.
+        New-Item -ItemType Directory -Force -Path $profileDir | Out-Null
+        $browserStderr = Join-Path $profileDir 'chromium-stderr.log'
+        $browserStdout = Join-Path $profileDir 'chromium-stdout.log'
         $flags = @(
             '--headless=new',
             '--disable-gpu',
             '--hide-scrollbars',
             '--no-first-run',
             '--disable-extensions',
-            "--user-data-dir=$profileDir",
+            ('--user-data-dir="' + $profileDir + '"'),
             "--window-size=$Width,$Height",
             '--virtual-time-budget=5000',
-            "--screenshot=$target",
-            $Uri
+            ('--screenshot="' + $target + '"'),
+            ('"' + $Uri + '"')
         )
-        & $browser @flags 2>$null | Out-Null
-        if (-not (Test-Path $target)) { throw "Screenshot was not created: $Name" }
+        $process = Start-Process -FilePath $browser -ArgumentList $flags -Wait -PassThru -WindowStyle Hidden -RedirectStandardError $browserStderr -RedirectStandardOutput $browserStdout
+        # Some Chrome/Edge builds report nonfatal renderer diagnostics even
+        # when screenshot output is valid. The artifact is the source of truth.
+        if (-not (Test-Path $target)) {
+            throw "Screenshot was not created: $Name (browser exit $($process.ExitCode))"
+        }
         if ((Get-Item $target).Length -lt 1024) { throw "Screenshot unexpectedly small: $Name" }
         Write-Host "SCREENSHOT=$target"
         return $true
