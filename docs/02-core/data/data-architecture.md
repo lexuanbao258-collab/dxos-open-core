@@ -202,9 +202,9 @@ Passing unit tests does not substitute for restart, concurrent writer, failure/r
 |---|---|---|
 | Object Storage contract | `backend/src/main/java/com/tricore/dxos/core/data/ObjectStoragePort.java` | Verified source contract |
 | Domain values/errors | `backend/src/main/java/com/tricore/dxos/core/data/` | Verified provider-neutral model |
-| Contract text | [`docs/contracts/data-core.md`](../../contracts/data-core.md) | Existing canonical contract; not overwritten by this proposal |
-| Data ownership baseline | [`docs/architecture/data-persistence-boundaries.md`](../../architecture/data-persistence-boundaries.md) | Current architecture boundary |
-| Workflow persistence contract | [`docs/contracts/workflow-core.md`](../../contracts/workflow-core.md) | Separate owner and atomicity guarantees |
+| Contract text | [Data contracts](contracts.md); historical `docs/contracts/data-core.md` at its source pin | Tracked canonical contract; historical source retained |
+| Data ownership baseline | [Data architecture](architecture.md); historical `docs/architecture/data-persistence-boundaries.md` at its source pin | Current boundary and historical context |
+| Workflow persistence contract | [Workflow persistence](../workflow/persistence.md); historical `docs/contracts/workflow-core.md` at its source pin | Separate owner and atomicity guarantees |
 | In-memory fake and tests | `backend/src/test/java/com/tricore/dxos/core/data/` | Contract-level test coverage, not real-provider proof |
 | MinIO candidate | [PR #34](https://github.com/lexuanbao258-collab/dxos-open-core/pull/34) | Unmerged Draft; real MinIO integration NOT VERIFIED |
 | Supabase candidate | [PR #35](https://github.com/lexuanbao258-collab/dxos-open-core/pull/35) | Closed without merge; historical, excluded from new scope |

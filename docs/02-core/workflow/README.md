@@ -126,6 +126,8 @@ No claim is made that an alternate provider has passed these tests or that Helpd
 
 **Inventory warning:** except for this newly authored README, the rows are a **planned document structure**, not a claim that these files are present in the pinned repository.
 
+**Current-branch navigation:** [Workflow architecture](architecture.md), [contracts](contracts.md), and [persistence](persistence.md) are tracked on `docs/core-architecture-alignment`. Their presence does not establish that the proposed Flowable BPMN adapter is implemented or that these paths existed at the historical source SHA.
+
 ## 9. Source → contract → test → evidence → reviewer
 
 | Requirement | Baseline source or specification | Required executable evidence | Proposed reviewer | State |

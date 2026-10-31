@@ -13,6 +13,8 @@ reviewers: Gateway / Identity-Security / Application / Independent — PENDING
 
 ## 1. Purpose and authoritative boundaries
 
+**AS-IS / IMPLEMENTED:** the inspected source has Spring Boot HTTP-facing Gateway code and Backend security components; no APISIX integration is established. **TO-BE / PROPOSED:** Apache APISIX performs edge exposure, routing, and coarse security policy before requests reach Spring Boot. The Backend independently verifies a trusted principal and enforces exact operation authority and Application-owned resource eligibility. A different edge proxy may replace APISIX only after routing, header provenance, denial, TLS, and failure conformance checks. Neither an edge allow decision nor a JWT's presence grants Helpdesk resource access.
+
 **SELECTED:** Define the logical Gateway seam, protected HTTP runtime path, principal provenance, exact operation authority, Application resource ACL, fail-closed trust boundary, and cross-capability handoff. This is architecture guidance, **not** a replacement canonical Gateway API or verified deployed topology.
 
 **OBSERVED pinned contracts:**

@@ -2,30 +2,42 @@
 
 > **Document ID:** G0-F03  
 > **Revision:** 0.1 (provisional inventory)  
-> **Status:** DRAFT (local authoring only; Git review not verified)  
+> **Status:** DRAFT (document and Gate review not verified)
 > **Owner:** TBD  
 > **Reviewer:** TBD  
 > **Last updated:** 2026-10-28  
-> **Scope:** Documentation repository; not a source-code inventory.
+> **Scope:** Documentation inventory; not a source-code inventory.
 
 ## Purpose and authority
 
-This document is the **canonical intended register** for document identity, lifecycle, owner, and reviewer once accepted at G0. Until a repository baseline and independent review are recorded, the tables below are a **planning-and-audit candidate list only**, not a verified file listing. The initial paths come from a user-provided proposed documentation tree and G0 file plans; none has been verified as tracked in the target documentation Git repository.
+This document is the **canonical intended register** for document identity, lifecycle, owner, and reviewer once accepted at G0. Until independent review is recorded, the tables below remain a **planning-and-audit candidate list**, not an approved file inventory. The initial paths came from a proposed documentation tree and G0 plans; tracked paths have now been checked at the baseline noted below, while absent intended paths remain unapproved.
 
 `docs/README.md` is the navigation portal; `docs/DESIGN_PROCESS.md` specifies stages and approval rules. This register holds the minimum inventory fields, while review records hold PR links, verified SHA and sign-off, and the central requirements traceability matrix holds requirement-to-artifact mappings.
 
 ## Repository verification status
 
+**Verified checkout baseline:** the numbered canonical directories and this register were inspected on `docs/core-architecture-alignment` at HEAD `05c7e04f4e5d1e5693a6422fb301f0774155bf01`; the same commit was previously inspected on `docs/integrate-pr78-workspace`. This is a Git tree/path check, not an independent document or Gate approval. Many rows below remain intended, absent paths; `—` retains its existing unreviewed meaning. Existing files named `architecture.md` and `contracts.md` under each Core capability are tracked even where this provisional inventory names a different intended leaf. Reconcile IDs and paths through independent review before changing the six-column inventory or assigning lifecycle statuses.
+
 | Check | Result | Implication |
 | --- | --- | --- |
 | Proposed structure | Supplied in the design conversation | Candidate paths only |
-| Public GitHub discovery of `DX_OS_DOCS` | Repository not found by public repository-name search | Does **not** prove that a private/unindexed repository is absent |
-| Local repository Git tree, HEAD and branch | Not accessible in this environment | No path classified as tracked or missing |
+| Historical public GitHub discovery of `DX_OS_DOCS` | Repository not found by public repository-name search during initial authoring | Does **not** prove that a private/unindexed repository is absent; not a finding about the current checkout |
+| Current checkout Git tree, HEAD and branch | `docs/core-architecture-alignment` at `05c7e04f4e5d1e5693a6422fb301f0774155bf01` inspected | Tracked paths distinguished from absent intended paths; independent review pending |
 | Draft artifacts generated in conversation | Some, including F01/F02 and this F03 draft | Local files do **not** prove repository existence |
 | Owner/reviewer assignments | Not supplied for individual documents | `TBD` until confirmed |
 | Gate approval evidence | Not supplied | No document marked `Approved` |
 
-**Interpretation of `—` in Status:** repository status not yet audited; **not** a sixth lifecycle state, and **not** synonymous with `Planned`. After verification, assign one of `Planned`, `Draft`, `In Review`, `Approved`, `Superseded` with supporting records. `Planned` means explicitly adopted work not present as an active authored document; it must not be inferred solely from a failed external search. Root and G0 draft items require inspection before lifecycle assignment.
+**Interpretation of `—` in Status:** document lifecycle has not been independently audited; **not** a sixth lifecycle state, and **not** synonymous with `Planned`. After review, assign one of `Planned`, `Draft`, `In Review`, `Approved`, `Superseded` with supporting records. `Planned` means explicitly adopted work not present as an active authored document; it must not be inferred solely from an absent path or a failed external search. Root and G0 draft items require review before lifecycle assignment.
+
+### Tracked Markdown outside this provisional inventory
+
+At the verified checkout, 20 tracked Markdown documents under `docs/` have no `DOC-###` path entry below. This is a registration discrepancy, not authorization to allocate IDs or change lifecycle status:
+
+- **Four potential canonical overlaps:** `docs/02-core/{data,gateway,identity,workflow}/architecture.md` coexist with the four intended `*-architecture.md` register paths. Review which path is canonical before assigning an existing ID or creating a new one.
+- **Twelve additional Core documents:** `docs/02-core/data/{consistency-recovery,domain-model}.md`, `gateway/{error-handling,routing-model,security-model}.md`, `identity/{authorization-model,domain-model,security-boundaries}.md`, and `workflow/{authorization,domain-model,persistence,state-machine}.md`. Several carry `G4-F##` authoring metadata, which is not a `DOC-###` registration or an approved equivalence mapping.
+- **Four supplementary review checklists:** `docs/10-reviews/f04-review-checklist.md` through `f07-review-checklist.md` have no register entries. Decide whether they require registration or are supporting review artifacts.
+
+The 116 existing `DOC-###` IDs remain unique and unchanged. Sixty-three intended register paths are absent at this checkout; absence alone does not establish an approved `Planned` lifecycle status. See [Open Issues](../10-reviews/open-issues.md) for the unresolved inventory decision.
 
 ## Registry rules
 
@@ -78,7 +90,7 @@ The entries below are *intended* documents, not verified repository contents. Cl
 | DOC-018 | `docs/02-core/data/README.md` | G4 | TBD | TBD | — |
 | DOC-019 | `docs/02-core/data/acceptance-tests.md` | G4 | TBD | TBD | — |
 | DOC-020 | `docs/02-core/data/data-architecture.md` | G4 | TBD | TBD | — |
-| DOC-021 | `docs/02-core/data/data-contracts.md` | G4 | TBD | TBD | — |
+| DOC-021 | `docs/02-core/data/contracts.md` | G4 | TBD | TBD | — |
 | DOC-022 | `docs/02-core/data/data-ownership.md` | G4 | TBD | TBD | — |
 | DOC-023 | `docs/02-core/data/lifecycle.md` | G4 | TBD | TBD | — |
 | DOC-024 | `docs/02-core/data/security.md` | G4 | TBD | TBD | — |
@@ -87,7 +99,7 @@ The entries below are *intended* documents, not verified repository contents. Cl
 | DOC-027 | `docs/02-core/gateway/acceptance-tests.md` | G4 | TBD | TBD | — |
 | DOC-028 | `docs/02-core/gateway/bff-integration.md` | G4 | TBD | TBD | — |
 | DOC-029 | `docs/02-core/gateway/gateway-architecture.md` | G4 | TBD | TBD | — |
-| DOC-030 | `docs/02-core/gateway/gateway-contracts.md` | G4 | TBD | TBD | — |
+| DOC-030 | `docs/02-core/gateway/contracts.md` | G4 | TBD | TBD | — |
 | DOC-031 | `docs/02-core/gateway/lifecycle.md` | G4 | TBD | TBD | — |
 | DOC-032 | `docs/02-core/gateway/public-api.md` | G4 | TBD | TBD | — |
 | DOC-033 | `docs/02-core/gateway/routing-and-exposure.md` | G4 | TBD | TBD | — |
@@ -97,7 +109,7 @@ The entries below are *intended* documents, not verified repository contents. Cl
 | DOC-037 | `docs/02-core/identity/authentication-flow.md` | G4 | TBD | TBD | — |
 | DOC-038 | `docs/02-core/identity/authorization-boundary.md` | G4 | TBD | TBD | — |
 | DOC-039 | `docs/02-core/identity/identity-architecture.md` | G4 | TBD | TBD | — |
-| DOC-040 | `docs/02-core/identity/identity-contracts.md` | G4 | TBD | TBD | — |
+| DOC-040 | `docs/02-core/identity/contracts.md` | G4 | TBD | TBD | — |
 | DOC-041 | `docs/02-core/identity/lifecycle.md` | G4 | TBD | TBD | — |
 | DOC-042 | `docs/02-core/identity/provider-adapters.md` | G4 | TBD | TBD | — |
 | DOC-043 | `docs/02-core/identity/security.md` | G4 | TBD | TBD | — |
@@ -109,7 +121,7 @@ The entries below are *intended* documents, not verified repository contents. Cl
 | DOC-049 | `docs/02-core/workflow/state-transition-model.md` | G4 | TBD | TBD | — |
 | DOC-050 | `docs/02-core/workflow/transaction-consistency.md` | G4 | TBD | TBD | — |
 | DOC-051 | `docs/02-core/workflow/workflow-architecture.md` | G4 | TBD | TBD | — |
-| DOC-052 | `docs/02-core/workflow/workflow-contracts.md` | G4 | TBD | TBD | — |
+| DOC-052 | `docs/02-core/workflow/contracts.md` | G4 | TBD | TBD | — |
 
 ## 03-applications
 
@@ -234,16 +246,16 @@ This is a dependency *index*, not a substitute for the traceability matrix or th
 ## Review records and external evidence
 
 - **Document status and people:** this register, after verified baseline and acceptance.
-- **Stage procedure:** `docs/DESIGN_PROCESS.md` (path shown without a link pending Git check).
+- **Stage procedure:** [Design Process](../DESIGN_PROCESS.md) (tracked at the current checkout; approval remains pending).
 - **Requirements traceability:** `docs/00-project/requirements-traceability.md` (candidate path; existence unverified).
-- **Open issues:** `docs/10-reviews/open-issues.md` (candidate path; existence unverified).
+- **Open issues:** [Open Issues](../10-reviews/open-issues.md) (tracked at the current checkout; approval remains pending).
 - **Gate approval:** `docs/10-reviews/g0-gate-review.md` (candidate path; existence unverified).
-- **F03 reviewer checklist:** `docs/10-reviews/f03-review-checklist.md` (local draft; Git status unverified).
+- **F03 reviewer checklist:** [F03 review checklist](../10-reviews/f03-review-checklist.md) (tracked at the current checkout; review status separate).
 - **Implementation evidence:** pinned commit/PR/test-run references supplied by actual reviewers; never infer them from current branch labels.
 
 ## Repository reconciliation procedure
 
-Run the following **read-only** commands in the documentation checkout and attach their exact outputs to the F03 review record:
+The following commands preserve the **historical `DX_OS_DOCS` authoring procedure**; they do not describe the currently verified `D:\DEV\Projects\dxos-open-core` checkout. Run equivalent read-only inventory commands in the actual review checkout and attach their exact outputs to the F03 review record:
 
 ```powershell
 cd D:\DEV\Projects\DX_OS_DOCS

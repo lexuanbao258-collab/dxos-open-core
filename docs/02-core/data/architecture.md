@@ -14,6 +14,8 @@ reviewers: Core / Data / Application / Security / Independent G4 — pending
 
 ## 1. Purpose and authoritative sources
 
+**AS-IS / IMPLEMENTED:** source at `05c7e04f4e5d1e5693a6422fb301f0774155bf01` exposes provider-neutral `ObjectStoragePort` values and operations; this alone does not establish a general structured Data API or a verified MinIO adapter. **TO-BE / PROPOSED:** Data distinguishes structured records and queries (PostgreSQL default) from unstructured object content (MinIO default). Application records remain owned by their Application; Workflow state, definitions, concurrency, and history remain Workflow-owned semantics even if Data/infrastructure implements storage ports. Alternative relational and object providers require separate contract conformance, migration, access control, failure, and cross-store recovery review. PostgreSQL and MinIO are not one atomic transaction.
+
 This document describes provider-neutral Object Storage architecture for the DX-OS Spring Boot **modular monolith**, including dependency inversion, trust boundaries, storage flows and the absence of automatic SQL/object-storage distributed atomicity. It also states where the Workflow-owned persistence contract ends and the Data/infrastructure implementation begins.
 
 **Pinned source:** `0f0c3ba0c3eecda0a5c4a798a3cc14b808351bed`. This document supplements, and does not revise:

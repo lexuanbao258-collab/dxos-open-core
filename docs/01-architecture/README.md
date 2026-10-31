@@ -66,10 +66,12 @@ The entries marked **Verified at source snapshot** have actual repository files 
 | [System Architecture](system-architecture.md) | Overall architecture, logical components and intended flows | Verified at source snapshot; proposed review draft |
 | [Core–Application Boundary](core-application-boundary.md) | Data/business ownership and interface boundary | Verified at source snapshot; proposed review draft |
 | [Dependency Rules](dependency-rules.md) | Dependency direction and forbidden coupling | Verified at source snapshot; proposed review draft |
-| `technology-stack.md` | Technology rationale, status, alternatives | Planned / not found at snapshot |
+| `technology-stack.md` | Technology rationale, status, alternatives | Planned / not found at historical snapshot; tracked on this branch |
 | [Deployment Topology](deployment-topology.md) | Local MVP target layout and network boundaries | Verified at source snapshot; TARGET, not deployed/verified |
 
-**Other navigation:** the [docs index](../README.md) was found at the same snapshot. The intended `docs/08-decisions/README.md` ADR index was **not found** at that snapshot; its existence in a local authoring package does not establish a tracked/approved Git file. Core module deep dives and integration documents should be linked here only after their actual paths are checked against a reviewed documentation baseline.
+**Historical navigation finding:** the [docs index](../README.md) was found at the same snapshot. The intended `docs/08-decisions/README.md` ADR index was **not found** at that snapshot; its existence in a local authoring package did not establish a tracked/approved Git file. Core module deep dives and integration documents require path verification before linking; a link does not establish document approval.
+
+**Current-branch navigation:** [Technology Stack](technology-stack.md) and [ADR governance](../08-decisions/README.md) are tracked on `docs/core-architecture-alignment`. Their presence does not change the historical inspection result or imply approval.
 
 ## Reader Journeys
 

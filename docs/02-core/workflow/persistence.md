@@ -14,6 +14,8 @@ reviewers: Core / Persistence / Application / Independent Gate — pending
 
 ## 1. Purpose, scope, sources and non-goals
 
+**TO-BE / PROPOSED migration assessment:** Flowable's engine tables and transaction manager may implement storage, but Workflow Core still owns definition, state/history, concurrency, and commit-outcome semantics. Assess whether one engine transaction can atomically update the authoritative instance and matching history with the current full-snapshot comparison; determine how engine retries, asynchronous jobs, and process-version migration affect the existing API. Do not infer rollback from a provider exception or convert an uncertain commit into a safe retry. A failing invariant blocks substitution until a reviewed contract change or adapter design resolves it. The current PostgreSQL adapter and source-pinned history remain AS-IS evidence.
+
 Specify provider-neutral persistence semantics for Workflow Core, plus a **proposed PostgreSQL adapter design and conformance plan**. The Workflow capability owns the `WorkflowPersistencePort` and its behavioral invariants. Data/infrastructure owns adapter implementation, schema/migrations, transactions, provisioning and storage operations; it may not redefine Workflow transitions. This is a logical modular-monolith boundary, not a mandate for another microservice.
 
 **OBSERVED source pins:**

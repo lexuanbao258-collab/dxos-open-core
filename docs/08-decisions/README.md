@@ -95,15 +95,15 @@ A proposal may show a preferred alternative without misrepresenting it as an acc
 
 Reviewer assignment, a merged PR, or existence of an ADR file **alone** does not demonstrate Accepted status. If reviewer/approver authority is unknown, leave the ADR Proposed/In Review and approval Pending.
 
-## ADR Index — Provisional, Not Yet Audited
+## ADR Index — Provisional Inventory
 
-A complete inventory of tracked files in the documentation and code repositories has **not** been verified for F07. Accordingly, this table does not invent ADR titles, file links, statuses, approvers or evidence.
+The local documentation tree was inspected at `05c7e04f4e5d1e5693a6422fb301f0774155bf01`; independent F07 review and cross-repository ID reconciliation remain pending. A file's own status statement is not independent acceptance evidence.
 
 | ID | Decision | Status | Supersedes | Evidence |
 | --- | --- | --- | --- | --- |
-| *Pending Git inventory* | *No entries independently verified* | *Unverified* | — | *Repository baseline and ADR search required* |
+| ADR-007 | [MVP object storage provider](ADR-007-data-storage.md) | File states accepted direction; independent approval unverified here | — | Tracked file and its historical source references; review record pending |
 
-**Do not interpret an empty verified index as evidence that no ADRs exist.** Previous project notes contain proposed filenames such as `ADR-001-modular-monolith.md` and references to `ADR-0023`, but neither constitutes a current, audited ADR entry. Once verified, retain the actual existing IDs and titles; create working hyperlinks only for tracked files.
+Other proposed filenames such as `ADR-001-modular-monolith.md` and references to `ADR-0023` are not confirmed tracked ADR files in this tree. Retain historical IDs and titles when independently reconciled; add links only for tracked files.
 
 ## Verification and Traceability
 

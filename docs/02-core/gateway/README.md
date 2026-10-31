@@ -10,6 +10,8 @@ reviewers: Identity-Security / Backend / Application / Independent G4 — pendin
 
 # Gateway — Boundary, Trust & Authorization Overview
 
+**Current-branch navigation:** [Gateway architecture](architecture.md), [contracts](contracts.md), and [security model](security-model.md) are tracked on `docs/core-architecture-alignment`. These documents describe a proposed APISIX edge boundary; their presence is not implementation or verification evidence.
+
 > **Evidence taxonomy:** **OBSERVED** = inspected exact-SHA source or canonical contract; **SELECTED** = user-approved G4-F24 documentation direction; **PROPOSED** = target architecture, threat control, test or runtime design requiring verification; **VERIFIED** = evidence from an actual executed test at an exact SHA, with logs and review. **No tests were executed for this artifact. Nothing here approves a Gate.**
 
 ## 1. Purpose, scope and evidence hierarchy
@@ -144,6 +146,8 @@ These strings are **CANDIDATE**, not a claim that every controller uses them or 
 
 **PROPOSED reuse:** demonstrate a common trusted Gateway/Identity seam on the **same unchanged Core SHA** while Helpdesk and Facility enforce materially different resource ACLs, business actors and authorization rules. Show at least one positive and one deny-with-no-mutation scenario for each Application. Do not infer two-App reuse from a single login screen.
 
+The following tree is the historical F24 navigation sketch, not the current tracked-file inventory or a Document Register lifecycle assignment:
+
 ```text
 docs/
 ├── 02-core/
@@ -162,7 +166,9 @@ workbench/
     └── G4_F24_DECISION_RECORD.md
 ```
 
-**Documentation links:** the canonical [Identity contract](https://github.com/lexuanbao258-collab/dxos-open-core/blob/0f0c3ba0c3eecda0a5c4a798a3cc14b808351bed/docs/contracts/identity-core.md) and [Core/Application boundary draft](https://github.com/lexuanbao258-collab/dxos-open-core/blob/0f0c3ba0c3eecda0a5c4a798a3cc14b808351bed/docs/01-architecture/core-application-boundary.md) are external authority references; all proposed Gateway child paths are only a **navigation plan**, not proof the files exist. Historical evidence in `docs/evidence/` should be indexed by concrete checked path and SHA before citing outcomes.
+**Current-branch inventory:** [architecture](architecture.md), [contracts](contracts.md), [security model](security-model.md), and [acceptance tests](acceptance-tests.md) are tracked. The sketch's `authentication.md`, `authorization.md`, and `threat-model.md` paths are absent on this branch. Tracked existence does not establish an Approved or Verified lifecycle or an implemented APISIX integration.
+
+**Historical documentation links:** the [Identity contract](https://github.com/lexuanbao258-collab/dxos-open-core/blob/0f0c3ba0c3eecda0a5c4a798a3cc14b808351bed/docs/contracts/identity-core.md) and [Core/Application boundary draft](https://github.com/lexuanbao258-collab/dxos-open-core/blob/0f0c3ba0c3eecda0a5c4a798a3cc14b808351bed/docs/01-architecture/core-application-boundary.md) are pinned source references. Historical evidence in `docs/evidence/` should be indexed by concrete checked path and SHA before citing outcomes.
 
 ## 10. Traceability and evidence submission
 

@@ -14,6 +14,8 @@ reviewers: Identity / Gateway / Application / Security — to confirm
 
 ## 1. Contract scope and boundaries
 
+**Compatibility and failure requirement (TO-BE):** a replacement identity adapter must produce the same Core principal and authority meaning from a cryptographically verified issuer, reject absent/invalid/expired or wrong-audience credentials, and never treat a caller header as identity. Keycloak is the default OIDC target; another OIDC issuer is possible only after subject-linking and authority migration review. Conformance must cover valid/invalid tokens, issuer/audience, keys and rotation, claim mapping, error translation, and authorization negatives. Identity facts do not grant Application resource access. These checks are requirements, not a claim of a passing provider-swap suite.
+
 The Identity Core (`com.tricore.dxos.core.identity`) supplies provider-independent value objects, authority matching, authorization-decision representation, and normalized error vocabulary. It is not itself a JWT parser, OIDC client, user database, authorization engine for Helpdesk/Facility resources, provider SDK wrapper, or login endpoint. `CurrentPrincipal` belongs to `com.tricore.dxos.application.identity`; its runtime implementation belongs to infrastructure. This is a **modular monolith** contract topology, not a four-service topology.
 
 **Contract layers:** (1) Core Java API/value semantics, (2) Application port (`CurrentPrincipal`), (3) adapter/provider API (Spring Security, Keycloak/OIDC), (4) public HTTP API owned by Gateway/Application. Java method contracts and external HTTP endpoints have **separate lifecycle and compatibility**. Do not infer any `/identity/login`, `/verify`, or `/refresh` route from these Java types.

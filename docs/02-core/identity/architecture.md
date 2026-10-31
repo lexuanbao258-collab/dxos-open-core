@@ -14,6 +14,8 @@ independent_reviewer: NOT RECORDED
 
 ## 1. Purpose and Architecture Context
 
+**TO-BE / PROPOSED provider boundary:** Identity Core publishes provider-independent principal, opaque subject, authentication context, and authority representations. `AuthenticatedPrincipal` is a data representation, not independent proof that a token was validated: even its `authenticated` invariant does not establish provenance. A Keycloak OIDC adapter is the default target; another conforming OIDC provider could replace it without adding provider types to Core. Only a trusted Backend identity adapter, backed by a genuinely verified authentication context, may establish the provenance required by `CurrentPrincipal.requireVerified()` and map claims before an Application checks its own resource policy. APISIX-forwarded identity headers are not automatically trusted; the Backend must verify their origin and integrity or establish identity from a validated token. Provider replacement must review issuer/subject continuity, claim mapping, key rotation, denial behavior, and audit identity migration. Source-level OIDC components documented below are AS-IS at their cited commit; full deployment and provider interchangeability remain unverified.
+
 DX-OS is an internal service platform that aims to reuse Identity, Workflow, Data and Gateway capabilities across Helpdesk and Facility Applications. Identity Core defines **provider-neutral identity facts and authorization primitives**; it does **not** operate Keycloak, parse tokens, manage usernames/passwords, own application-specific eligibility or perform a Workflow transition. This distinction permits a modular monolith with adapter substitution without turning the Core into the identity provider.
 
 The inspected source baseline uses Java 21 and Spring Boot 3.5.16. The four Core capabilities are **logical responsibilities**, not necessarily separate `core.*` Java packages or deployable processes. G3 documents remain review drafts until an independent Gate review establishes their status.
@@ -136,7 +138,7 @@ For example, an IT technician holding `workflow:transition` still must not trans
 
 ## 7. Contracts and Architectural Invariants
 
-The legacy [`Identity Core contract`](../../contracts/identity-core.md) defines `Authority`, `RequiredAuthority`, `AuthenticatedPrincipal`, `AuthenticationContext`, `AuthorizationDecision`, `AuthorizationReason`, `IdentityErrorCode` and `IdentityException`. It distinguishes a structurally valid context from a validated authentication and leaves **missing-context error mapping unresolved**; do not invent a new code without an owner decision.
+The legacy `docs/contracts/identity-core.md` at the cited source revision defines `Authority`, `RequiredAuthority`, `AuthenticatedPrincipal`, `AuthenticationContext`, `AuthorizationDecision`, `AuthorizationReason`, `IdentityErrorCode` and `IdentityException`. The [tracked contract](contracts.md) carries the current canonical discussion. A structurally valid context is distinct from validated authentication, and **missing-context error mapping remains unresolved**; do not invent a new code without an owner decision.
 
 **Design invariants to review:**
 
@@ -201,7 +203,7 @@ Roles are suggested, not confirmed assignments. Corresponding decisions require 
 
 ## 10. Related Sources and Review Status
 
-- [Identity Core contract](../../contracts/identity-core.md) — verified path at inspected SHA, canonical during documentation migration.
+- [Tracked Identity Core contract](contracts.md) — current branch; historical `docs/contracts/identity-core.md` remains available at the cited source SHA.
 - [System Architecture](../../01-architecture/system-architecture.md) — inspected design review draft.
 - [Core/Application Boundary](../../01-architecture/core-application-boundary.md) — inspected design review draft.
 - [Dependency Rules](../../01-architecture/dependency-rules.md) — inspected enforcement proposal.

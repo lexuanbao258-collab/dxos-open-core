@@ -9,6 +9,8 @@
 
 ## 1. Purpose, Decision Scope and Evidence Semantics
 
+**AS-IS / IMPLEMENTED at `05c7e04f4e5d1e5693a6422fb301f0774155bf01`:** the Java source contains provider-neutral Identity values, `WorkflowRuntime` with `WorkflowPersistencePort`, `ObjectStoragePort`, and Spring Boot HTTP-facing code. These observations do not establish a complete integrated platform or reproduced runtime verification. **TO-BE / PROPOSED:** Keycloak/OIDC supplies identity assertions, Flowable BPMN is evaluated behind a Workflow-owned process contract, PostgreSQL and MinIO implement distinct Data needs, and APISIX supplies edge policies before the Spring Boot Backend. The Backend still establishes trusted principals and authorizes operations on resources. Provider adapters depend on Core contracts; Core does not import their SDKs. Flowable and APISIX are not evidenced as integrated at this commit.
+
 DX-OS Open-Core is a reusable platform for internal service applications, **not a computer operating system**. It separates reusable capability contracts from IT Helpdesk and Facility-specific behavior. This document provides a system-wide design and review map; it does not replace detailed Core contracts, business specifications, formal ADRs, migration plans or executable evidence.
 
 **Claim qualification:** `BASELINE` means directly observed in a named, pinned repository source or contract; `CANDIDATE` means proposed on a separate PR or branch, not automatically in the inspected snapshot; `PROPOSED` means a target or selected design direction; `UNVERIFIED` means the relevant executable evidence was not reviewed for this artifact. A selected design direction is not an ADR approval or release Gate PASS.
@@ -32,13 +34,15 @@ At Context level the Portal and Backend belong to one logical **DX-OS Internal S
 flowchart LR
     Employee[Employee / Requester] --> Portal[DX-OS Portal / BFF]
     Staff[Coordinator / Technician] --> Portal
-    Portal -->|Published, authorized HTTP| API[Spring Boot backend / Gateway HTTP boundary]
+    Portal -->|Published HTTP| Edge[Apache APISIX edge - proposed]
+    Edge -->|Reviewed route and trust handoff| API[Spring Boot backend / authorization boundary]
     Portal <-->|OIDC session flow, target| IdP[Keycloak / OIDC provider]
     API -->|Token validation / trusted subject| IdP
     API --> PG[(Private PostgreSQL)]
     API --> ObjectStore[(Object storage / MinIO target)]
     subgraph DXOS[DX-OS system boundary — logical]
       Portal
+      Edge
       API
     end
 ```
@@ -49,13 +53,15 @@ This picture is a target interaction model, not proof of integrated OIDC, TLS or
 
 ```mermaid
 flowchart TD
-    HTTP[Gateway / inbound HTTP adapter] --> Sec[Verified principal adapter]
+    Edge[APISIX edge adapter - proposed] --> HTTP[Backend inbound HTTP adapter]
+    HTTP --> Sec[Verified principal adapter]
     HTTP --> UC[Authorized Application use cases]
     UC --> Identity[Identity Core contracts]
     UC --> Workflow[Workflow Core contracts / engine]
     UC --> Data[Data Core ObjectStoragePort]
     UC --> BizPort[Application-owned business ports]
     WFAdapter[PostgreSQL workflow adapter] -. implements .-> Workflow
+    BPMN[Flowable BPMN adapter - proposed] -. candidate implementation .-> Workflow
     BizAdapter[Business persistence adapter] -. implements .-> BizPort
     StoreAdapter[Object storage adapter] -. implements .-> Data
     Sec --> OIDC[Keycloak/OIDC adapter]
@@ -128,9 +134,11 @@ A valid JWT is not a resource grant. The backend must reject forged identity hea
 | Core/Application import rules | [Dependency rules](dependency-rules.md) | Review draft, not CI enforcement proof |
 | Domain and authorized seam boundaries | [Core/Application boundary](core-application-boundary.md) | Existing review draft at this source SHA; later G3-F03 package is not included in that SHA |
 | Platform implementation target | [Deployment topology](deployment-topology.md) | Target, not deployed acceptance |
-| Identity Core contract | [Identity contract](../contracts/identity-core.md) | Contract exists; real OIDC integration evidence separate |
-| Workflow Core contract | [Workflow contract](../contracts/workflow-core.md) | Contract exists; composite Application transaction unproven |
-| Data Core contract | [Data contract](../contracts/data-core.md) | Object-storage contract exists; MinIO live conformance unproven |
+| Identity Core contract | [Historical Identity contract](https://github.com/lexuanbao258-collab/dxos-open-core/blob/0f0c3ba0c3eecda0a5c4a798a3cc14b808351bed/docs/contracts/identity-core.md) | Contract existed at source SHA; real OIDC integration evidence separate |
+| Workflow Core contract | [Historical Workflow contract](https://github.com/lexuanbao258-collab/dxos-open-core/blob/0f0c3ba0c3eecda0a5c4a798a3cc14b808351bed/docs/contracts/workflow-core.md) | Contract existed at source SHA; composite Application transaction unproven |
+| Data Core contract | [Historical Data contract](https://github.com/lexuanbao258-collab/dxos-open-core/blob/0f0c3ba0c3eecda0a5c4a798a3cc14b808351bed/docs/contracts/data-core.md) | Object-storage contract existed at source SHA; MinIO live conformance unproven |
+
+**Current-branch documentation:** [Identity contracts](../02-core/identity/contracts.md), [Workflow contracts](../02-core/workflow/contracts.md), and [Data contracts](../02-core/data/contracts.md) are tracked on `docs/core-architecture-alignment`. These files did not exist at the historical source SHA; their presence does not revise its evidence or confer approval.
 
 **Snapshot limitations:** at the pinned SHA, `docs/01-architecture/README.md` and `system-context.md` were not found, although G3-F01/F02 packages were separately prepared in conversation. G3-F03 is likewise a proposed replacement outside the pinned GitHub snapshot. References to these drafts are **plain paths without links** until integrated into one verified baseline. Legacy architecture/contracts/evidence sources remain authoritative during documentation migration. The original `source_baseline: e06fa429...` records historical review context and must not be confused with this read-only snapshot. Candidate PRs must be checked at their individual head SHAs.
 

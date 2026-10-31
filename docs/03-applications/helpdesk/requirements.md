@@ -8,6 +8,8 @@
 
 ## Purpose and Context
 
+**TO-BE / PROPOSED integration:** IT Helpdesk consumes published DX-OS Identity, Workflow, structured/unstructured Data, and Gateway contracts through authorized Backend APIs. It owns ticket fields, business use cases, actor eligibility, and resource access policy. Its code must not call Flowable Engine APIs, PostgreSQL drivers, Keycloak or MinIO SDKs, or APISIX implementation APIs. Flowable and APISIX are target adapters, not supported Helpdesk endpoints or AS-IS integration claims. Existing FR IDs and the candidate lifecycle below remain subject to their documented review.
+
 In a **hypothetical** multi-department organization, employees may need a controlled way to submit and track IT support requests. The absence of a validated customer study means operational pain points and claimed benefits remain hypotheses; see the G1 Problem Statement. This specification translates the current IT-focused Application candidate into testable requirements without asserting production readiness.
 
 This document refines, rather than supersedes by authority, the [nine-file documentation PR #76](https://github.com/lexuanbao258-collab/dxos-open-core/pull/76) and the [draft business contract in Issue #53](https://github.com/lexuanbao258-collab/dxos-open-core/issues/53). It must be reconciled with the existing source documents before any merge.

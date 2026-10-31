@@ -8,6 +8,8 @@
 
 ## 1. Context and Business Actors
 
+**Architecture boundary (TO-BE / PROPOSED):** Helpdesk rules decide who may create, assign, progress, read, and confirm a request. Core supplies reusable principal, process, data, and API contracts; provider adapters do not own these business decisions. A future Flowable engine must preserve the Workflow contract rather than redefining these rules, and APISIX edge policy cannot authorize a ticket resource. No Flowable or APISIX integration is claimed by this business-rule draft.
+
 The Internal Service Portal is intended to let authorized people create, triage, assign, work on, resolve and confirm IT service requests. Its representative organization and user pain points remain hypotheses rather than validated customer research. The Application owns IT-specific data and rules, while Workflow Core owns authoritative state, instance version and transition history.
 
 | Actor | Business responsibility | Authorization qualification |
