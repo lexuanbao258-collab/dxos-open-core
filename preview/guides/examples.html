@@ -1,0 +1,60 @@
+<!doctype html><html lang="vi" data-root="../" data-page="examples"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Code examples · DX-OS Developer Portal</title><meta name="description" content="Ví dụ tích hợp DX-OS IT Helpdesk MVP bằng PowerShell, Node.js và Java 21, chỉ dành cho sandbox local."><link rel="stylesheet" href="../assets/site.css"><script defer src="../assets/site.js"></script></head><body><div id="site-header"></div><div class="shell"><aside id="site-sidebar"></aside><main class="page">
+<div class="eyebrow">Integration / Source-derived examples</div><h1>Ví dụ tích hợp</h1><p class="intro">Các ví dụ chỉ dùng Backend demo local. Đây là mã tham khảo, không phải bằng chứng đã chạy valid-JWT end-to-end. Không đưa token thật vào GitHub hoặc website.</p>
+<div class="callout warn"><strong>Điều kiện trước khi thử</strong>Backend local trên <code>127.0.0.1:8080</code>, Keycloak issuer thật, database disposable, tài khoản đã được cấp tenant membership và quyền đọc. Database Swagger trước đó có <code>ACTORS=0</code>: nếu chưa provision actor, các ví dụ sẽ không thành công.</div>
+<section id="powershell" class="section"><div class="eyebrow">01 / PowerShell</div><h2>PowerShell — đọc danh sách</h2>
+<div class="code-box"><div class="code-head"><span>PowerShell 5.1+ · GET</span><button data-copy="ps-example">Sao chép</button></div><pre><code id="ps-example">$secure = Read-Host 'Access token (ẩn)' -AsSecureString
+$cred = [pscredential]::new('token', $secure)
+$jwt = $cred.GetNetworkCredential().Password
+try {
+  $options = @{
+    Uri = 'http://127.0.0.1:8080/api/v1/mvp/requests?limit=10'
+    Headers = @{Authorization = "Bearer $jwt"}
+    Method = 'GET'
+  }
+  $page = Invoke-RestMethod @options
+  $page.items | Select-Object id, title, state, version
+} finally {
+  $jwt = $null
+  $cred = $null
+  $secure = $null
+}</code></pre></div><p class="section-lead">Không in JWT trong console/screenshot. Mật khẩu hoặc token vẫn có thể tồn tại trong process memory; đây là demo local, không phải kho lưu trữ bí mật.</p></section>
+<section id="javascript" class="section"><div class="eyebrow">02 / JavaScript</div><h2>Node.js — Fetch API</h2>
+<div class="code-box"><div class="code-head"><span>Node.js 20+ · GET</span><button data-copy="node-example">Sao chép</button></div><pre><code id="node-example">const token = process.env.DXOS_DEMO_ACCESS_TOKEN;
+if (!token) throw new Error('Missing local demo token');
+const response = await fetch(
+  'http://127.0.0.1:8080/api/v1/mvp/requests?limit=10',
+  { headers: { Authorization: 'Bearer ' + token } }
+);
+if (!response.ok) {
+  throw new Error('HTTP ' + response.status);
+}
+const page = await response.json();
+console.log(page.items.map(({ id, state }) => ({ id, state })));
+</code></pre></div><p class="section-lead">Chỉ chạy trong Node.js local, không nhúng bearer token vào mã frontend công khai. Không log nội dung request nếu có dữ liệu nội bộ.</p></section>
+<section id="java" class="section"><div class="eyebrow">03 / Java 21</div><h2>Java HttpClient — kiểm tra HTTP</h2>
+<div class="code-box"><div class="code-head"><span>Java 21 · GET</span><button data-copy="java-example">Sao chép</button></div><pre><code id="java-example">import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+
+class DxosExample {
+  public static void main(String[] args) throws Exception {
+    String token = System.getenv("DXOS_DEMO_ACCESS_TOKEN");
+    if (token == null || token.isBlank())
+      throw new IllegalStateException("Missing local token");
+    var req = HttpRequest.newBuilder(URI.create(
+        "http://127.0.0.1:8080/api/v1/mvp/requests?limit=10"))
+        .header("Authorization", "Bearer " + token)
+        .GET().build();
+    try (var client = HttpClient.newHttpClient()) {
+      var response = client.send(req, HttpResponse.BodyHandlers.discarding());
+      System.out.println("HTTP " + response.statusCode());
+      if (response.statusCode() != 200)
+        throw new IllegalStateException("Read failed");
+    }
+  }
+}</code></pre></div><p class="section-lead">Không in response body để tránh đưa dữ liệu nội bộ vào log. Parse JSON sau khi xác minh schema thực tế.</p></section>
+<section id="notes" class="section"><h2>Nguyên tắc tích hợp</h2><div class="table-wrap"><table><thead><tr><th>Tình huống</th><th>Hướng xử lý</th></tr></thead><tbody>
+<tr><td>401</td><td>Kiểm tra issuer, audience, hạn dùng và kiểu access token.</td></tr><tr><td>403</td><td>Kiểm tra scope/ACL; không dùng token người khác.</td></tr><tr><td>404</td><td>Tài nguyên có thể bị ẩn; không suy đoán sự tồn tại.</td></tr><tr><td>409</td><td>Đọc lại state/version, yêu cầu người dùng xác nhận trước khi ghi tiếp.</td></tr><tr><td>Retry POST</td><td>Không giả định idempotent; cần xác minh contract trước retry.</td></tr>
+</tbody></table></div><p><a href="troubleshooting.html">Troubleshooting →</a> · <a href="../api/index.html">API Reference →</a></p></section>
+<footer class="foot"><span>DX-OS Open-Core · Ví dụ tham khảo chưa kiểm tra E2E</span><span>Không có public production API</span></footer></main><aside class="toc"><strong>ON THIS PAGE</strong><a href="#powershell">PowerShell</a><a href="#javascript">Node.js</a><a href="#java">Java 21</a><a href="#notes">Ghi chú</a></aside></div></body></html>
