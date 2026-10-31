@@ -62,6 +62,9 @@ $manifest = [ordered]@{
     swaggerUrl = $SwaggerUrl
     swaggerHttp200 = $false
     swaggerScreenshot = $false
+    openApiGroupHttp200 = $false
+    openApiExactNineOperations = $false
+    openApiBearerAuthPresent = $false
     disclaimer = 'Local evidence only. Narrow viewport is not a real-device mobile test; screenshots do not establish auth/ACL E2E.'
 }
 $manifest.documentationHttp200 = Test-Http200 $DocumentationUrl
@@ -75,6 +78,25 @@ if ($SwaggerUrl -notmatch '^http://(127\.0\.0\.1|localhost):[0-9]+/') {
 } else {
     $manifest.swaggerHttp200 = Test-Http200 $SwaggerUrl
     if ($manifest.swaggerHttp200) {
+        # Safe, read-only inspection of the local group JSON. Count operations; do not log JWT or payload data.
+        try {
+            $openApiUri = ([uri]$SwaggerUrl).GetLeftPart([System.UriPartial]::Authority) + '/v3/api-docs/it-helpdesk-mvp'
+            $spec = Invoke-RestMethod -Uri $openApiUri -TimeoutSec 20
+            $manifest.openApiGroupHttp200 = $true
+            $httpMethods = @('get', 'post', 'put', 'patch', 'delete', 'options', 'head')
+            $count = 0
+            foreach ($pathEntry in $spec.paths.PSObject.Properties) {
+                foreach ($verb in $pathEntry.Value.PSObject.Properties) {
+                    if ($httpMethods -contains $verb.Name.ToLowerInvariant()) { $count++ }
+                }
+            }
+            $manifest.openApiExactNineOperations = ($count -eq 9)
+            $manifest.openApiBearerAuthPresent = ($null -ne $spec.components.securitySchemes.bearerAuth)
+            Write-Host "OPENAPI_OPERATIONS=$count; BEARER_AUTH_PRESENT=$($manifest.openApiBearerAuthPresent)"
+        } catch {
+            Write-Warning "Runtime OpenAPI group could not be parsed: $($_.Exception.Message)"
+        }
+
         $manifest.swaggerScreenshot = Save-BrowserEvidence $SwaggerUrl '03-swagger-local-no-auth.png' 1440 1050
     }
 }
