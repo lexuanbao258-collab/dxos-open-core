@@ -20,7 +20,7 @@ footer{background:#e9f0f8;border-top:1px solid var(--line);padding:26px;text-ali
 </head>
 <body>
 <header>
-<nav><a class="brand" href="#top">DX—OS <small> / Open-Core</small></a><div class="links"><a href="#api">API endpoints</a><a href="#auth">Bảo mật</a><a href="#integration">Tích hợp</a><a href="https://github.com/lexuanbao258-collab/dxos-open-core/pull/79">Mã nguồn &amp; PR #79</a></div></nav>
+<nav><a class="brand" href="#top">DX—OS <small> / Open-Core</small></a><div class="links"><a href="#api">API endpoints</a><a href="#contract">Hợp đồng API</a><a href="#auth">Bảo mật</a><a href="#integration">Tích hợp</a><a href="https://github.com/lexuanbao258-collab/dxos-open-core/pull/79">Mã nguồn &amp; PR #79</a></div></nav>
 <div class="hero" id="top">
 <div class="eyebrow">Developer Documentation · 30.10.2026</div>
 <h1>IT Helpdesk API Reference</h1>
@@ -30,7 +30,7 @@ footer{background:#e9f0f8;border-top:1px solid var(--line);padding:26px;text-ali
 </div>
 </header>
 <div class="layout">
-<aside class="toc" aria-label="Mục lục"><strong>Nội dung</strong><a href="#overview">Tổng quan</a><a href="#api">Danh sách API</a><a href="#workflow">Quy trình và phiên bản</a><a href="#auth">Xác thực &amp; phân quyền</a><a href="#integration">Ví dụ tích hợp</a><a href="#errors">Mã lỗi</a><a href="#evidence">Trạng thái kiểm chứng</a></aside>
+<aside class="toc" aria-label="Mục lục"><strong>Nội dung</strong><a href="#overview">Tổng quan</a><a href="#api">Danh sách API</a><a href="#contract">Ma trận contract</a><a href="#workflow">Quy trình và phiên bản</a><a href="#auth">Xác thực &amp; phân quyền</a><a href="#integration">Ví dụ tích hợp</a><a href="#errors">Mã lỗi</a><a href="#evidence">Trạng thái kiểm chứng</a></aside>
 <main>
 <section id="overview" class="section"><h2>Tổng quan</h2>
 <p>API thuộc bản thử nghiệm nội bộ và <strong>chỉ được bật khi cấu hình môi trường demo</strong>. Trang này là tài liệu tĩnh, không kết nối hoặc chuyển tiếp yêu cầu đến Backend.</p>
@@ -48,6 +48,22 @@ footer{background:#e9f0f8;border-top:1px solid var(--line);padding:26px;text-ali
 <details class="api-item"><summary><span class="method post">POST</span><span class="api-path">/api/v1/mvp/requests/{id}/start</span><span class="api-name">Bắt đầu xử lý</span></summary><div class="api-detail"><p><b>Actor:</b> Worker được phân công; <code>TRIAGED → IN_PROGRESS</code>. Body: <code>expectedVersion</code>.</p></div></details>
 <details class="api-item"><summary><span class="method post">POST</span><span class="api-path">/api/v1/mvp/requests/{id}/resolve</span><span class="api-name">Ghi nhận hoàn thành</span></summary><div class="api-detail"><p><b>Actor:</b> Worker được phân công; <code>IN_PROGRESS → RESOLVED</code>. Body: <code>expectedVersion</code> và <code>resolution</code> (tối đa 4000 ký tự).</p></div></details>
 <details class="api-item"><summary><span class="method post">POST</span><span class="api-path">/api/v1/mvp/requests/{id}/confirm</span><span class="api-name">Xác nhận hoàn tất</span></summary><div class="api-detail"><p><b>Actor:</b> Employee đã gửi yêu cầu; <code>RESOLVED → CONFIRMED</code>. Body: <code>expectedVersion</code>.</p></div></details>
+</section>
+<section id="contract" class="section"><h2>Ma trận hợp đồng API (MVP / Draft)</h2>
+<p>Ma trận dưới đây tổng hợp từ <a href="https://github.com/lexuanbao258-collab/dxos-open-core/pull/79">ứng viên Backend/Swagger PR #79</a> và tài liệu nguồn; <strong>không phải schema phản hồi đã được chứng thực trên mọi endpoint</strong>.</p>
+<div class="table-wrap"><table><thead><tr><th>Method</th><th>Đường dẫn</th><th>Đầu vào quan trọng</th><th>Kết quả nghiệp vụ mong đợi</th><th>Điều kiện quyền</th></tr></thead><tbody>
+<tr><td><span class="method">GET</span></td><td><code>/api/v1/mvp/requests</code></td><td><code>after, limit (tùy chọn)</code></td><td>Danh sách yêu cầu được phép xem; phân trang</td><td>Người có quyền đọc tài nguyên</td></tr>
+<tr><td><span class="method post">POST</span></td><td><code>/api/v1/mvp/requests</code></td><td><code>title, description, requestType</code></td><td>201; tạo SUBMITTED, version 0</td><td>Employee có quyền tạo</td></tr>
+<tr><td><span class="method">GET</span></td><td><code>/api/v1/mvp/requests/{id}</code></td><td><code>id (path)</code></td><td>Chi tiết yêu cầu, allowedActions</td><td>Người có quyền xem</td></tr>
+<tr><td><span class="method">GET</span></td><td><code>/api/v1/mvp/requests/{id}/history</code></td><td><code>id (path)</code></td><td>Lịch sử transition của Workflow</td><td>Người có quyền xem</td></tr>
+<tr><td><span class="method post">POST</span></td><td><code>/api/v1/mvp/requests/{id}/triage</code></td><td><code>expectedVersion</code></td><td>SUBMITTED → TRIAGED</td><td>Coordinator có quyền</td></tr>
+<tr><td><span class="method post">POST</span></td><td><code>/api/v1/mvp/requests/{id}/assign</code></td><td><code>assigneeId, expectedAssignmentVersion</code></td><td>Gán Worker; tăng assignmentVersion riêng</td><td>Coordinator có quyền</td></tr>
+<tr><td><span class="method post">POST</span></td><td><code>/api/v1/mvp/requests/{id}/start</code></td><td><code>expectedVersion</code></td><td>TRIAGED → IN_PROGRESS</td><td>Worker đã được phân công</td></tr>
+<tr><td><span class="method post">POST</span></td><td><code>/api/v1/mvp/requests/{id}/resolve</code></td><td><code>expectedVersion, resolution</code></td><td>IN_PROGRESS → RESOLVED</td><td>Worker đã được phân công</td></tr>
+<tr><td><span class="method post">POST</span></td><td><code>/api/v1/mvp/requests/{id}/confirm</code></td><td><code>expectedVersion</code></td><td>RESOLVED → CONFIRMED</td><td>Người gửi ban đầu</td></tr>
+</tbody></table></div>
+<div class="notice"><strong>Trạng thái kiểm chứng:</strong> 9 operation, bearerAuth và HTTP 401 khi thiếu/sai token đã có kết quả kiểm tra local theo log người vận hành tại PR #79. DTO response chi tiết, nullability, validation và ánh xạ lỗi 403/404/409 <strong>còn cần đối chiếu lại với Springdoc JSON runtime</strong> và kiểm thử quyền theo tài nguyên. Không xem bảng này là bằng chứng E2E.</div>
+<p class="note">Lỗi tham khảo: 400 đầu vào không hợp lệ; 401 thiếu/sai token; 403 không được phép thao tác với tài nguyên nhìn thấy; 404 không tồn tại/không có quyền thấy; 409 xung đột phiên bản hoặc trạng thái. Khả năng phát sinh từng mã tùy endpoint và cần được xác nhận bằng test.</p>
 </section>
 <section id="workflow" class="section"><h2>Workflow và kiểm soát phiên bản</h2>
 <div class="table-wrap"><table><thead><tr><th>Bước</th><th>Trạng thái trước</th><th>Trạng thái sau</th><th>Actor</th></tr></thead><tbody><tr><td>Tạo</td><td>—</td><td><code>SUBMITTED</code></td><td>Employee</td></tr><tr><td>Triage</td><td><code>SUBMITTED</code></td><td><code>TRIAGED</code></td><td>Coordinator</td></tr><tr><td>Assign</td><td><code>TRIAGED</code></td><td><code>TRIAGED</code></td><td>Coordinator</td></tr><tr><td>Start</td><td><code>TRIAGED</code></td><td><code>IN_PROGRESS</code></td><td>Assigned Worker</td></tr><tr><td>Resolve</td><td><code>IN_PROGRESS</code></td><td><code>RESOLVED</code></td><td>Assigned Worker</td></tr><tr><td>Confirm</td><td><code>RESOLVED</code></td><td><code>CONFIRMED</code></td><td>Original submitter</td></tr></tbody></table></div>
@@ -80,7 +96,7 @@ Content-Type: application/json
 </section>
 <section id="evidence" class="section"><h2>Trạng thái kiểm chứng &amp; nguồn</h2>
 <div class="panel"><ul class="warning-list"><li><b>Đã có bằng chứng:</b> Gradle <code>test build</code> thành công trên Windows/JDK21 theo log chạy local; ảnh Swagger UI hiển thị 9 endpoint; GitHub CI có một job PASS với phạm vi giới hạn.</li><li><b>Chưa xác nhận:</b> tất cả các ca HTTP auth/ACL/403/404/409, xuất bản snapshot OpenAPI JSON đã kiểm duyệt, kiểm thử Keycloak E2E trên database demo đang sử dụng.</li><li><b>Triển khai:</b> Backend production và public API endpoint không thuộc phạm vi trang tài liệu này.</li></ul>
-<p><a href="https://github.com/lexuanbao258-collab/dxos-open-core/pull/79">PR #79 — Swagger/OpenAPI</a> · <a href="https://github.com/lexuanbao258-collab/dxos-open-core/pull/74">PR #74 — Java Helpdesk MVP</a> · <a href="https://github.com/lexuanbao258-collab/dxos-open-core/blob/docs/helpdesk-swagger-openapi-20261030/docs/api/helpdesk-swagger.md">Chi tiết hợp đồng và runbook</a></p></div>
+<p><a href="https://github.com/lexuanbao258-collab/dxos-open-core/pull/79">PR #79 — Swagger/OpenAPI</a> · <a href="https://github.com/lexuanbao258-collab/dxos-open-core/pull/74">PR #74 — Java Helpdesk MVP</a> · <a href="https://github.com/lexuanbao258-collab/dxos-open-core/issues/37">Issue #37 — Review gate</a> · <a href="https://github.com/lexuanbao258-collab/dxos-open-core/blob/docs/helpdesk-swagger-openapi-20261030/docs/api/helpdesk-swagger.md">Chi tiết hợp đồng và runbook</a></p></div>
 </section>
 </main></div>
 <footer>DX-OS Open-Core · IT Helpdesk MVP · Static documentation candidate · Không yêu cầu hoặc lưu credentials · 30/10/2026</footer>
