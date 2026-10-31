@@ -1,4 +1,4 @@
-name: Independent verification of PR80 SQL fixtures
+name: Independent Windows verification of PR80 SQL fixtures
 on:
   push:
     branches:
@@ -7,8 +7,8 @@ permissions:
   contents: read
 jobs:
   verify-exact-head:
-    runs-on: ubuntu-24.04
-    timeout-minutes: 25
+    runs-on: windows-2022
+    timeout-minutes: 30
     steps:
       - name: Checkout exact PR80 head (read-only)
         uses: actions/checkout@v4
@@ -16,13 +16,13 @@ jobs:
           ref: 16d1f00493ec6b8eaeb5fac466a48c7f0469ed1e
           persist-credentials: false
       - name: Verify exact source SHA
-        shell: bash
+        shell: pwsh
         run: |
-          set -euo pipefail
-          actual="$(git rev-parse HEAD)"
-          echo "SOURCE_HEAD=$actual"
-          test "$actual" = "16d1f00493ec6b8eaeb5fac466a48c7f0469ed1e"
+          $actual = (git rev-parse HEAD).Trim()
+          Write-Host "SOURCE_HEAD=$actual"
+          if ($actual -ne '16d1f00493ec6b8eaeb5fac466a48c7f0469ed1e') { throw "Wrong HEAD" }
           git diff --check
+          if ($LASTEXITCODE -ne 0) { throw "git diff --check failed" }
           git status --short
       - name: Setup Java 21
         uses: actions/setup-java@v4
@@ -31,53 +31,54 @@ jobs:
           java-version: '21'
       - name: Run focused SQL security fixture tests
         working-directory: backend
-        shell: bash
+        shell: pwsh
         run: |
-          set -euo pipefail
-          bash ./gradlew test --tests '*WorkflowRuntimePrivilegeAuditTest' --tests '*WorkflowSecurityDefinerReviewTest' --no-daemon --rerun-tasks --console=plain
+          .\gradlew.bat test --tests "*WorkflowRuntimePrivilegeAuditTest" --tests "*WorkflowSecurityDefinerReviewTest" --no-daemon --rerun-tasks --console=plain
+          if ($LASTEXITCODE -ne 0) { throw "Focused fixture tests failed" }
       - name: Run all Gradle tests
         working-directory: backend
-        shell: bash
+        shell: pwsh
         run: |
-          set -euo pipefail
-          bash ./gradlew clean test --no-daemon --rerun-tasks --console=plain
+          .\gradlew.bat clean test --no-daemon --rerun-tasks --console=plain
+          if ($LASTEXITCODE -ne 0) { throw "Full Gradle tests failed" }
       - name: Run Gradle build
         working-directory: backend
-        shell: bash
+        shell: pwsh
         run: |
-          set -euo pipefail
-          bash ./gradlew build --no-daemon --console=plain
-      - name: Independently summarize JUnit results
+          .\gradlew.bat build --no-daemon --console=plain
+          if ($LASTEXITCODE -ne 0) { throw "Gradle build failed" }
+      - name: Independently summarize JUnit reports
         working-directory: backend
-        shell: bash
+        shell: pwsh
         if: success()
         run: |
-          python3 - <<'PY'
+          @'
           from pathlib import Path
           import xml.etree.ElementTree as ET
-          files = sorted(Path('build/test-results/test').glob('TEST-*.xml'))
-          assert files, 'JUnit XML missing'
+          files = sorted(Path("build/test-results/test").glob("TEST-*.xml"))
+          assert files, "Missing XML"
           totals = dict(tests=0, skipped=0, failures=0, errors=0)
-          skipped_suites = []
-          for file in files:
-              root = ET.parse(file).getroot()
-              vals = {k: int(root.attrib.get(k, 0)) for k in totals}
-              for k in totals: totals[k] += vals[k]
-              if vals['skipped']: skipped_suites.append((file.name, vals['skipped']))
-          print('EXACT_SHA=16d1f00493ec6b8eaeb5fac466a48c7f0469ed1e')
-          print('XML_FILES=', len(files), 'TOTALS=', totals)
-          print('SKIPPED_SUITES=', skipped_suites)
-          assert totals['tests'] > 0
-          assert totals['failures'] == 0 and totals['errors'] == 0
-          assert any('WorkflowRuntimePrivilegeAuditTest' in f.name for f in files)
-          assert any('WorkflowSecurityDefinerReviewTest' in f.name for f in files)
-          print('PR80_SCOPED_JUNIT_CHECK_PASS')
-          print('NOTE: Real PostgreSQL security integration is NOT part of this runner.')
-          PY
-      - name: Upload JUnit evidence
+          skips = []
+          for f in files:
+              s = ET.parse(f).getroot()
+              d = {k: int(s.attrib.get(k, 0)) for k in totals}
+              for k in totals: totals[k] += d[k]
+              if d["skipped"]: skips.append((f.name, d["skipped"]))
+          print("SOURCE_HEAD=16d1f00493ec6b8eaeb5fac466a48c7f0469ed1e")
+          print("XML_FILES", len(files), "TOTALS", totals)
+          print("SKIPPED_SUITES", skips)
+          assert totals["tests"] > 0
+          assert totals["failures"] == 0 and totals["errors"] == 0
+          assert any("WorkflowRuntimePrivilegeAuditTest" in f.name for f in files)
+          assert any("WorkflowSecurityDefinerReviewTest" in f.name for f in files)
+          print("PR80_INDEPENDENT_WINDOWS_JUNIT_PASS")
+          print("No real PostgreSQL security integration acceptance is claimed.")
+          '@ | python -
+          if ($LASTEXITCODE -ne 0) { throw "JUnit summary failed" }
+      - name: Upload JUnit XML evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: independent-pr80-junit
+          name: independent-windows-pr80-junit
           path: backend/build/test-results/test/TEST-*.xml
           if-no-files-found: warn
