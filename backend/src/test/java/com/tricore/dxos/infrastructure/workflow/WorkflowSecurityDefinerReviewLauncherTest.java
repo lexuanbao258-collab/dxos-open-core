@@ -69,7 +69,8 @@ class WorkflowSecurityDefinerReviewLauncherTest {
         Path scripts = Files.createDirectories(temporary.resolve("scripts"));
         Path backend = Files.createDirectories(temporary.resolve("backend"));
         Path launcher = scripts.resolve("workflow-security-definer-review.ps1");
-        Files.copy(Path.of("../scripts/workflow-security-definer-review.ps1"), launcher);
+        Files.writeString(launcher, Files.readString(Path.of("../scripts/workflow-security-definer-review.ps1"))
+                .replace("} catch {", "} catch { Write-Output ('DEBUG_PR93_TYPE=' + $_.Exception.GetType().FullName); Write-Output ('DEBUG_PR93_LINE=' + $_.InvocationInfo.ScriptLineNumber); Write-Output ('DEBUG_PR93_ID=' + $_.FullyQualifiedErrorId);"));
         Files.writeString(backend.resolve("gradlew.bat"), batch);
         Path output = temporary.resolve("output.txt");
         var arguments = new ArrayList<>(List.of("powershell.exe", "-NoProfile", "-NonInteractive", "-File", launcher.toString()));
@@ -90,7 +91,7 @@ class WorkflowSecurityDefinerReviewLauncherTest {
             running.destroyForcibly();
             throw new AssertionError("Launcher timed out");
         }
-        assertThat(running.exitValue()).isEqualTo(expectedExit);
+        assertThat(running.exitValue()).withFailMessage(Files.readString(output)).isEqualTo(expectedExit);
         return Files.readString(output);
     }
 }

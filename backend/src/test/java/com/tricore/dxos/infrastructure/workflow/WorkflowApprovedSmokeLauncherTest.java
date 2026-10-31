@@ -42,7 +42,8 @@ class WorkflowApprovedSmokeLauncherTest {
         // Only this disposable launcher fixture replaces network and interactive input.
         source = source.replaceAll("    Assert-WarpIpv6\\r?\\n", "    # fixture network check\\n")
                 .replace("Read-Host 'Supabase postgres password (hidden)' -AsSecureString",
-                        "ConvertTo-SecureString 'private-unit-password' -AsPlainText -Force");
+                        "ConvertTo-SecureString 'private-unit-password' -AsPlainText -Force")
+                .replace("} catch {", "} catch { Write-Output ('DEBUG_PR93_TYPE=' + $_.Exception.GetType().FullName); Write-Output ('DEBUG_PR93_LINE=' + $_.InvocationInfo.ScriptLineNumber); Write-Output ('DEBUG_PR93_ID=' + $_.FullyQualifiedErrorId);");
         Files.writeString(scripts.resolve("workflow-approved-smoke.ps1"), source);
         var ca = Files.writeString(temporary.resolve("ca.pem"), "fixture only");
         String zero = "0".repeat(64), one = "1".repeat(64);
