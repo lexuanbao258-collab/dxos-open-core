@@ -48,7 +48,7 @@ class WorkflowSecurityDefinerReviewLauncherTest {
     }
 
     @Test void privateModeUsesEnvironmentAndNeverPrintsBodies() throws Exception {
-        Path metadata = Files.writeString(temporary.resolve("shareable-metadata.json"), "{}");
+        Path metadata = Files.writeString(temporary.toRealPath().resolve("shareable-metadata.json"), "{}");
         String output = launch("@echo off\r\necho fixture-private-body 1>&2\r\n"
                 + "echo fixture-private-body > \"%WORKFLOW_DEFINER_REVIEW_DIR%\\private-function-review.json\"\r\n"
                 + "echo %WORKFLOW_DEFINER_METADATA_FILE% > baseline-env.txt\r\n"
