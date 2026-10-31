@@ -9,6 +9,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.nio.file.*;
 import java.nio.file.attribute.PosixFilePermission;
+import java.nio.file.attribute.AclEntryType;
+import java.nio.file.attribute.AclFileAttributeView;
 import java.sql.*;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -160,7 +162,9 @@ class WorkflowSecurityDefinerReviewTest {
     }
 
     static Path protectedDirectory(Path root) throws Exception {
-        Path directory = Files.createDirectory(root.resolve(UUID.randomUUID().toString()));
+        // JUnit's @TempDir may contain Windows path aliases on hosted runners.
+        // Use the real parent so the production canonical-path precondition stays enforced.
+        Path directory = Files.createDirectory(root.toRealPath().resolve(UUID.randomUUID().toString()));
         if (System.getProperty("os.name").startsWith("Windows")) {
             String user = System.getenv("USERDOMAIN") + "\\" + System.getenv("USERNAME");
             Files.setOwner(directory, directory.getFileSystem().getUserPrincipalLookupService().lookupPrincipalByName(user));
@@ -168,8 +172,18 @@ class WorkflowSecurityDefinerReviewTest {
                     "/grant:r", "*S-1-5-18:(OI)(CI)F").redirectOutput(ProcessBuilder.Redirect.DISCARD)
                     .redirectError(ProcessBuilder.Redirect.DISCARD).start();
             assertThat(process.waitFor()).isZero();
+
+            // /grant:r updates only the named ACEs; CI may retain an explicit
+            // ALLOW for another principal. Tighten this disposable test fixture
+            // to the same owner/SYSTEM-only ACL required by the production guard.
+            var acl = Files.getFileAttributeView(directory, AclFileAttributeView.class, LinkOption.NOFOLLOW_LINKS);
+            var owner = acl.getOwner();
+            acl.setAcl(acl.getAcl().stream().filter(entry -> entry.type() != AclEntryType.ALLOW
+                    || entry.principal().equals(owner)
+                    || entry.principal().getName().equalsIgnoreCase("NT AUTHORITY\\SYSTEM")).toList());
         } else Files.setPosixFilePermissions(directory, Set.of(PosixFilePermission.OWNER_READ,
                 PosixFilePermission.OWNER_WRITE, PosixFilePermission.OWNER_EXECUTE));
+        WorkflowEventTriggerReview.verifyDirectory(directory);
         return directory;
     }
 
