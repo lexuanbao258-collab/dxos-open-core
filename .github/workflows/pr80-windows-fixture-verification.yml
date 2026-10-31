@@ -57,7 +57,6 @@ jobs:
           $testExit = $LASTEXITCODE
           Copy-Item build/test-results/test ../.ci-evidence/focused -Recurse
           if ($testExit -ne 0) { throw "FOCUSED_TESTS_FAILED" }
-          if ($LASTEXITCODE -ne 0) { throw "FOCUSED_TESTS_FAILED" }
           Write-Host "FOCUSED_TESTS_PASS"
       - name: Full clean regression
         shell: pwsh
@@ -67,7 +66,6 @@ jobs:
           $testExit = $LASTEXITCODE
           Copy-Item build/test-results/test ../.ci-evidence/full -Recurse
           if ($testExit -ne 0) { throw "CLEAN_TEST_FAILED" }
-          if ($LASTEXITCODE -ne 0) { throw "CLEAN_TEST_FAILED" }
           Write-Host "CLEAN_TEST_PASS"
       - name: Gradle build
         shell: pwsh

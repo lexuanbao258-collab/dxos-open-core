@@ -69,8 +69,7 @@ class WorkflowSecurityDefinerReviewLauncherTest {
         Path scripts = Files.createDirectories(temporary.resolve("scripts"));
         Path backend = Files.createDirectories(temporary.resolve("backend"));
         Path launcher = scripts.resolve("workflow-security-definer-review.ps1");
-        Files.writeString(launcher, Files.readString(Path.of("../scripts/workflow-security-definer-review.ps1"))
-                .replace("} catch {", "} catch { Write-Output ('DEBUG_PR93_TYPE=' + $_.Exception.GetType().FullName); Write-Output ('DEBUG_PR93_LINE=' + $_.InvocationInfo.ScriptLineNumber); Write-Output ('DEBUG_PR93_ID=' + $_.FullyQualifiedErrorId);"));
+        Files.copy(Path.of("../scripts/workflow-security-definer-review.ps1"), launcher);
         Files.writeString(backend.resolve("gradlew.bat"), batch);
         Path output = temporary.resolve("output.txt");
         var arguments = new ArrayList<>(List.of("powershell.exe", "-NoProfile", "-NonInteractive", "-File", launcher.toString()));
@@ -82,6 +81,8 @@ class WorkflowSecurityDefinerReviewLauncherTest {
                 "PGSSLROOTCERT", "fixture.pem", "LOCALAPPDATA", temporary.resolve("local-data").toString(),
                 "WORKFLOW_DEFINER_METADATA_FILE", "inherited-private-mode"));
         process.environment().remove("WORKFLOW_EVENT_GUARD_LOCAL_DISPOSABLE");
+        // Windows PowerShell must not inherit PowerShell 7's incompatible core modules.
+        process.environment().remove("PSModulePath");
         if (invalidKey != null) {
             if (invalidKey.equals("DB_PASSWORD")) process.environment().remove(invalidKey);
             else process.environment().put(invalidKey, "false");

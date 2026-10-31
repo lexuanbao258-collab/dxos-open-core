@@ -39,6 +39,38 @@ class WorkflowSecurityDefinerReviewTest {
         assertFailure(Map.of(), changed, (url, properties) -> { throw new AssertionError("Must not connect"); }, "validation");
     }
 
+    @Test void unsafeDirectoryPermissionsStopBeforeConnecting() throws Exception {
+        Path directory = protectedDirectory(temporary);
+        if (System.getProperty("os.name").startsWith("Windows")) {
+            var process = new ProcessBuilder("icacls.exe", directory.toString(), "/grant", "*S-1-1-0:(OI)(CI)RX")
+                    .redirectErrorStream(true).start();
+            assertThat(process.waitFor()).isZero();
+        } else {
+            Files.setPosixFilePermissions(directory, Set.of(PosixFilePermission.OWNER_READ,
+                    PosixFilePermission.OWNER_WRITE, PosixFilePermission.OWNER_EXECUTE, PosixFilePermission.GROUP_READ));
+        }
+        assertFailure(environment(directory), SQL, (url, properties) -> {
+            throw new AssertionError("Unsafe permissions must stop before JDBC");
+        }, "validation");
+    }
+
+    @Test void noncanonicalDirectoryStopsBeforeConnecting() throws Exception {
+        Path directory = protectedDirectory(temporary);
+        Path alias = temporary.toRealPath().resolve("review-alias");
+        if (System.getProperty("os.name").startsWith("Windows")) {
+            var process = new ProcessBuilder("cmd.exe", "/d", "/c", "mklink", "/J", alias.toString(), directory.toString())
+                    .redirectErrorStream(true).start();
+            assertThat(process.waitFor()).isZero();
+        } else Files.createSymbolicLink(alias, directory);
+        try {
+            assertThat(alias.toRealPath()).isEqualTo(directory);
+            assertThat(alias.normalize()).isNotEqualTo(directory);
+            assertFailure(environment(alias), SQL, (url, properties) -> {
+                throw new AssertionError("Noncanonical paths must stop before JDBC");
+            }, "validation");
+        } finally { Files.delete(alias); }
+    }
+
     @Test void capturesUnknownPrivilegesAsNullAndPublishesOnlyAfterCleanup() throws Exception {
         Path directory = protectedDirectory(temporary);
         Connection connection = connection("on", routine());
