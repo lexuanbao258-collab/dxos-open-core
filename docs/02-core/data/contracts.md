@@ -21,13 +21,13 @@ reviewers: Data / Application / Security / Independent G4 — pending
 
 **Source pin:** `0f0c3ba0c3eecda0a5c4a798a3cc14b808351bed`.
 
-- [Canonical Data Core contract](https://github.com/lexuanbao258-collab/dxos-open-core/blob/0f0c3ba0c3eecda0a5c4a798a3cc14b808351bed/docs/contracts/data-core.md) — blob `99b6ad1d67b2e8d730f13b7a082659e4c4e75b3d`.
+- [Historical canonical Data Core contract](https://github.com/lexuanbao258-collab/dxos-open-core/blob/0f0c3ba0c3eecda0a5c4a798a3cc14b808351bed/docs/contracts/data-core.md) — blob `99b6ad1d67b2e8d730f13b7a082659e4c4e75b3d`.
 - [`ObjectStoragePort.java`](https://github.com/lexuanbao258-collab/dxos-open-core/blob/0f0c3ba0c3eecda0a5c4a798a3cc14b808351bed/backend/src/main/java/com/tricore/dxos/core/data/ObjectStoragePort.java) — blob `0392d78bf86f828a6f21fdc6947e2c57ab93ec47`.
 - [`ObjectContent.java`](https://github.com/lexuanbao258-collab/dxos-open-core/blob/0f0c3ba0c3eecda0a5c4a798a3cc14b808351bed/backend/src/main/java/com/tricore/dxos/core/data/ObjectContent.java) — blob `8ff5db66049d8e70cd7ef8bfa252022a7042bd27`.
 - [`StorageException.java`](https://github.com/lexuanbao258-collab/dxos-open-core/blob/0f0c3ba0c3eecda0a5c4a798a3cc14b808351bed/backend/src/main/java/com/tricore/dxos/core/data/StorageException.java) — blob `c14a4ccd64efdbd079327552644a6c65346f30c6`.
 - [Data/persistence boundaries](https://github.com/lexuanbao258-collab/dxos-open-core/blob/0f0c3ba0c3eecda0a5c4a798a3cc14b808351bed/docs/architecture/data-persistence-boundaries.md) — capability ownership and SQL/object transaction limits.
 
-The canonical contract remains authoritative. Contract changes, signature additions, changes to error semantics, write mode defaults or ownership rules require a separate reviewed ADR and compatibility assessment. **No universal error precedence is established in the source**, so none is invented here.
+**Documentation location versus authority:** this tracked `contracts.md` is the current documentation location and a review draft. The `canonical_contract` metadata names the historical canonical contract linked above, interpreted at `source_commit`; that contract and the pinned Java sources remain authoritative for claims about that revision. Moving documentation does not transfer normative authority or supersede the historical contract. Any transfer requires explicit owner/team approval. Contract changes, signature additions, changes to error semantics, write mode defaults or ownership rules require a separate reviewed ADR and compatibility assessment. **No universal error precedence is established in the source**, so none is invented here.
 
 ## 2. Ownership and dependency rules
 

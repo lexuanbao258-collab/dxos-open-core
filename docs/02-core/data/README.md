@@ -16,7 +16,7 @@ reviewers: Data / Application / Security / Independent G4 — pending
 
 DX-OS requires a reusable mechanism for binary/object content (for example, attachment bytes) without coupling Application code to MinIO, AWS S3, a filesystem provider or SQL database details. At this source baseline, the **observed Data Core capability is a provider-neutral Object Storage contract** in `com.tricore.dxos.core.data`, not a universal ORM, a generic relational repository or a database transaction manager.
 
-**Historical authority:** [the pinned `docs/contracts/data-core.md`](https://github.com/lexuanbao258-collab/dxos-open-core/blob/0f0c3ba0c3eecda0a5c4a798a3cc14b808351bed/docs/contracts/data-core.md) (blob `99b6ad1d67b2e8d730f13b7a082659e4c4e75b3d`), and the Java sources listed below, all pinned to `0f0c3ba0c3eecda0a5c4a798a3cc14b808351bed`. The [tracked Data contract](contracts.md) is the current documentation location; this portal does not override either source's semantics. API/semantic changes require a separately reviewed ADR.
+**Historical authority:** [the pinned `docs/contracts/data-core.md`](https://github.com/lexuanbao258-collab/dxos-open-core/blob/0f0c3ba0c3eecda0a5c4a798a3cc14b808351bed/docs/contracts/data-core.md) (blob `99b6ad1d67b2e8d730f13b7a082659e4c4e75b3d`), and the Java sources listed below, all pinned to `0f0c3ba0c3eecda0a5c4a798a3cc14b808351bed`, control claims about that source revision. The [tracked Data contract](contracts.md) is the current documentation location and a review draft, not a transfer of normative authority. This portal does not override the pinned contract or Java semantics. Any transfer of canonical authority requires explicit owner/team approval; API/semantic changes require a separately reviewed ADR.
 
 ## 2. Responsibility and capability boundaries
 
@@ -153,7 +153,7 @@ workbench/
     └── G4_F17_DECISION_RECORD.md
 ```
 
-The tree is an **organizational proposal**, not proof the future leaf files already exist. The tracked [Data contract](contracts.md) is canonical in this branch. Historical `docs/contracts/data-core.md` and `docs/architecture/data-persistence-boundaries.md` remain available through their original commit-pinned references; they are not paths in this tracked tree.
+The tree is an **organizational proposal**, not proof the future leaf files already exist. The tracked [Data contract](contracts.md) is the current documentation location and remains a review draft; canonical authority has not been transferred. Historical `docs/contracts/data-core.md` and `docs/architecture/data-persistence-boundaries.md` remain available through their original commit-pinned references; they are not paths in this tracked tree.
 
 | Requirement | Source / contract | Test and evidence to collect | Reviewer | Present status |
 | --- | --- | --- | --- | --- |
