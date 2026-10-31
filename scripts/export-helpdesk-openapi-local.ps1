@@ -22,13 +22,37 @@ if ((Test-Path -LiteralPath $out) -and -not $Overwrite) {
 }
 $endpoint = "http://127.0.0.1:$Port/v3/api-docs/it-helpdesk-mvp"
 Write-Host "SOURCE=$endpoint (loopback GET; no token)"
+# IMPORTANT: PowerShell 5.1 Invoke-WebRequest.Content may decode missing-charset
+# application/json as Latin-1 and silently corrupt Vietnamese text. Always read
+# response bytes and decode strict UTF-8 independent of HTTP Content-Type charset.
+Add-Type -AssemblyName System.Net.Http
+$client = [System.Net.Http.HttpClient]::new()
+$client.Timeout = [TimeSpan]::FromSeconds(20)
 try {
-    $res = Invoke-WebRequest -Method Get -Uri $endpoint -UseBasicParsing -TimeoutSec 20
+    $response = $client.GetAsync($endpoint, [System.Net.Http.HttpCompletionOption]::ResponseHeadersRead).GetAwaiter().GetResult()
+    try {
+        if ([int]$response.StatusCode -ne 200) {
+            throw "OpenAPI returned HTTP $([int]$response.StatusCode)"
+        }
+        $bytes = $response.Content.ReadAsByteArrayAsync().GetAwaiter().GetResult()
+    } finally {
+        $response.Dispose()
+    }
 } catch {
-    throw 'OpenAPI endpoint not readable (confirm local Backend, OIDC, and opt-in docs settings).'
+    throw "OpenAPI endpoint not readable locally: $($_.Exception.GetType().Name). Verify loopback Backend and docs opt-in."
+} finally {
+    $client.Dispose()
 }
-if ([int]$res.StatusCode -ne 200) { throw "Expected HTTP 200, got $($res.StatusCode)" }
-$data = $res.Content | ConvertFrom-Json
+$strictUtf8 = [System.Text.UTF8Encoding]::new($false, $true)
+try {
+    $rawJson = $strictUtf8.GetString($bytes)
+} catch [System.Text.DecoderFallbackException] {
+    throw 'OpenAPI response is not valid UTF-8; refusing to export broken text.'
+}
+if ($rawJson.Contains([char]0xFFFD)) {
+    throw 'OpenAPI contains Unicode replacement character; refusing to publish suspicious text.'
+}
+$data = $rawJson | ConvertFrom-Json
 if (-not $data.openapi -or -not $data.paths) { throw 'Not an OpenAPI JSON object' }
 $operations = @()
 foreach ($p in $data.paths.PSObject.Properties) {
