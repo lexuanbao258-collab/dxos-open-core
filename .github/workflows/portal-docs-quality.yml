@@ -1,0 +1,75 @@
+name: Developer Portal quality gates
+
+on:
+  pull_request:
+    branches: [gh-pages]
+    paths:
+      - 'preview/**'
+      - 'portal-tools/**'
+      - '.github/workflows/portal-docs-quality.yml'
+  push:
+    branches: [gh-pages]
+    paths:
+      - 'preview/**'
+      - 'portal-tools/**'
+      - '.github/workflows/portal-docs-quality.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: portal-quality-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  static-doc-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Unit tests, including negative cases
+        run: python portal-tools/test_portal_quality.py -v
+      - name: Validate static OpenAPI, pages and links
+        run: python portal-tools/portal_quality.py
+      - name: Reject selected breaking changes against PR base
+        if: github.event_name == 'pull_request'
+        shell: bash
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          git show "${BASE_SHA}:preview/api/openapi.source-draft.json" > "${RUNNER_TEMP}/portal-baseline.json"
+          python portal-tools/portal_quality.py --baseline "${RUNNER_TEMP}/portal-baseline.json"
+      - name: Evidence boundary
+        run: |
+          echo "PASS means static documents verified only."
+          echo "Not tested: live Springdoc export, Keycloak E2E, 403/404/409, performance, accessibility, production."
+
+  lighthouse-measure:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # Measurements are evidence; do not claim a passing performance score yet.
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Collect mobile-oriented Lighthouse performance and accessibility reports
+        run: |
+          npm install --global @lhci/cli@0.15.1
+          lhci collect --staticDistDir=./preview --numberOfRuns=1
+      - name: Save raw reports for independent review
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: portal-lighthouse-reports
+          path: .lighthouseci/
+          retention-days: 14
+          if-no-files-found: warn
+          include-hidden-files: true
