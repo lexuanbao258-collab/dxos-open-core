@@ -117,3 +117,44 @@ accepted evidence, check: 9 documented routes, proper schemas, 201 create,
 JWT behavior, denied writes, version conflicts, list pagination, Swagger off
 by default, loopback-only startup, and CI regressions. Test counts must come
 from the **new** branch/commit, not from prior PR #74 evidence.
+
+
+## Runtime OpenAPI export and drift review (added 2026-10-31)
+
+The public Developer Portal currently renders `preview/api/openapi.source-draft.json`
+from `gh-pages`. It is a source-derived candidate, **not the direct Springdoc
+runtime export**, and must not silently replace an authoritative artifact.
+
+From the existing Windows terminal with the **local** Helpdesk Backend still
+running at `127.0.0.1:8080` (real Keycloak issuer and disposable database):
+
+```powershell
+Set-Location D:\olp\dxos-swagger-review
+git pull --ff-only origin docs/helpdesk-swagger-openapi-20261030
+.\scripts\verify-helpdesk-openapi-local.ps1
+.\scripts\export-helpdesk-openapi-local.ps1
+```
+
+The exporter performs a read-only GET against
+`http://127.0.0.1:8080/v3/api-docs/it-helpdesk-mvp`,
+requires precisely the nine expected operations, strips the transient
+`servers` block, rejects likely embedded credentials, and writes to
+`backend/build/openapi-review/it-helpdesk.runtime.local.json`.
+It **never uploads or commits** the file. Do not paste any real JWT.
+
+To review the result against a current portal-quality checkout (branch
+`docs/portal-quality-gates-20261031`), pass it to the static contract tool:
+
+```powershell
+py portal-tools/portal_quality.py --runtime-json "D:\olp\dxos-swagger-review\backend\build\openapi-review\it-helpdesk.runtime.local.json"
+```
+
+The tool compares method/path inventory and request property names,
+plus response fields where both versions expose properties.
+It does **not** replace manual schema/examples/ACL review, and a PASS
+does not constitute an authenticated HTTP E2E test.
+
+CI for this Swagger PR now verifies source-controller routes against the
+`gh-pages` source draft and runs full Gradle tests on Java 21.
+It is **not** a live runtime Springdoc exporter. Do not claim the actual
+export has been validated until a reviewed local export exists.
