@@ -1,6 +1,8 @@
 package com.tricore.dxos.infrastructure.workflow;
 
 import com.tricore.dxos.core.workflow.*;
+import com.tricore.dxos.application.authorization.WorkflowAccessDecision;
+import com.tricore.dxos.application.authorization.WorkflowAccessException;
 import com.tricore.dxos.request.domain.Request;
 import com.tricore.dxos.request.domain.RequestAction;
 import com.tricore.dxos.request.domain.RequestStatus;
@@ -454,6 +456,86 @@ class PostgresWorkflowPersistenceIntegrationTest {
         WorkflowInstance initial = WorkflowInstance.notStarted("cleanup", definition, RESOURCE, NOW);
         assertSnapshot(initial, faultAdapter("close-after", new AtomicInteger()).createInstance(initial));
         assertSnapshot(initial, persistence.loadInstance("cleanup"));
+    }
+
+    @Test
+    void connectionHelpersShareOneTransactionWithoutEarlyCommit() {
+        AtomicInteger connections = new AtomicInteger();
+        var adapter = faultAdapter("count", connections);
+        TransitionResult committed = adapter.guardedTransaction(true, connection -> {
+            assertThat(connection.getAutoCommit()).isFalse();
+            TransitionResult result = joinedTransition(adapter, connection, "joined");
+            expectCode(INSTANCE_NOT_FOUND, () -> persistence.loadInstance("joined"));
+            return result;
+        });
+        assertThat(connections).hasValue(1);
+        assertSnapshot(committed.instance(), persistence.loadInstance("joined"));
+        assertThat(persistence.loadHistory("joined")).containsExactly(committed.record());
+    }
+
+    @Test
+    void connectionHelpersRollBackCallerFactsAndWorkflowOnHistoryFailure() throws SQLException {
+        var migrator = dataSource(false, schema);
+        sql(migrator, "CREATE TABLE connection_business (id text PRIMARY KEY)");
+        String runtimeRole = database.getUsername().replace("\"", "\"\"");
+        sql(migrator, "GRANT SELECT, INSERT ON connection_business TO \"" + runtimeRole + "\"");
+        rejectHistoryInsert();
+        AtomicInteger connections = new AtomicInteger();
+        var adapter = faultAdapter("count", connections);
+        assertThatThrownBy(() -> adapter.guardedTransaction(true, connection -> {
+            try (var statement = connection.prepareStatement(
+                    "INSERT INTO " + schema + ".connection_business (id) VALUES (?)")) {
+                statement.setString(1, "joined");
+                assertThat(statement.executeUpdate()).isEqualTo(1);
+            }
+            return joinedTransition(adapter, connection, "joined");
+        })).isInstanceOfSatisfying(WorkflowAccessException.class,
+                failure -> assertThat(failure.decision()).isEqualTo(WorkflowAccessDecision.UNAVAILABLE));
+        assertThat(connections).hasValue(1);
+        expectCode(INSTANCE_NOT_FOUND, () -> persistence.loadInstance("joined"));
+        try (var connection = database.getConnection();
+             var statement = connection.createStatement();
+             var rows = statement.executeQuery("SELECT count(*) FROM " + schema + ".connection_business")) {
+            assertThat(rows.next()).isTrue();
+            assertThat(rows.getInt(1)).isZero();
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"commit-before", "commit-after"})
+    void connectionHelpersPreserveUnknownCommitWithoutRetry(String fault) {
+        AtomicInteger connections = new AtomicInteger();
+        var adapter = faultAdapter(fault, connections);
+        expectCode(COMMIT_OUTCOME_UNKNOWN, () -> adapter.guardedTransaction(true,
+                connection -> joinedTransition(adapter, connection, "joined")));
+        assertThat(connections).hasValue(1);
+        if (fault.equals("commit-after")) {
+            var initial = WorkflowInstance.notStarted("joined", definition, RESOURCE, NOW);
+            var expected = proposal(initial.activate(definition, NOW), "submit", NOW);
+            assertSnapshot(expected.instance(), persistence.loadInstance("joined"));
+            assertThat(persistence.loadHistory("joined")).containsExactly(expected.record());
+        } else {
+            expectCode(INSTANCE_NOT_FOUND, () -> persistence.loadInstance("joined"));
+        }
+    }
+
+    private TransitionResult joinedTransition(PostgresWorkflowPersistence adapter, Connection connection,
+                                              String id) throws SQLException {
+        var exact = adapter.loadDefinition(connection, definition.definitionId(), definition.definitionVersion());
+        assertThat(exact).isEqualTo(definition);
+        var initial = WorkflowInstance.notStarted(id, exact, RESOURCE, NOW);
+        assertSnapshot(initial, adapter.createInstance(connection, initial));
+        var active = initial.activate(exact, NOW);
+        assertSnapshot(active, adapter.commitActivation(connection, initial, active));
+        assertSnapshot(active, adapter.loadInstance(connection, id));
+        assertThat(adapter.loadHistory(connection, id)).isEmpty();
+        var result = proposal(active, "submit", NOW);
+        var committed = adapter.commitTransition(connection, result);
+        assertSnapshot(result.previousInstance(), committed.previousInstance());
+        assertSnapshot(result.instance(), committed.instance());
+        assertThat(committed.record()).isEqualTo(result.record());
+        assertThat(adapter.loadHistory(connection, id)).containsExactly(result.record());
+        return result;
     }
 
     @Test
