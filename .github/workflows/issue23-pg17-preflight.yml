@@ -1,0 +1,25 @@
+name: Stage 6 PG17 read-only preflight unit tests
+on:
+  pull_request:
+    paths:
+      - "scripts/olp_e2e_preflight.py"
+      - "scripts/test_olp_e2e_preflight.py"
+      - "docs/verification/issue23-olp-pg17-e2e-preflight.md"
+      - ".github/workflows/issue23-pg17-preflight.yml"
+permissions:
+  contents: read
+jobs:
+  preflight-unit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Unit tests (mocked subprocess; no Docker or database)
+        run: python -m unittest discover -s scripts -p "test_olp_e2e_preflight.py" -v
+      - name: Compile Python source
+        run: python -m py_compile scripts/olp_e2e_preflight.py scripts/test_olp_e2e_preflight.py
