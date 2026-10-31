@@ -4,7 +4,7 @@
 
 DX-OS Open-Core is TRICORE's modular monolith for exploring reusable capabilities behind internal service applications. The Internal Service Portal / IT Support scenario is the main demonstration target. DX-OS is a digital transformation platform concept, not a computer operating system or a claim about the competition's required product.
 
-**Source baseline:** `origin/main` at `2115de3`. This README describes that source snapshot; work on unmerged branches and pull requests is identified separately.
+**Source provenance:** The original README was authored against `2115de3`; for current repository layout and the exact reviewed baseline see [Repository Layout and Ownership](docs/01-architecture/repository-layout-and-ownership.md). The current runtime state must be verified against the checked-out SHA; draft PR capabilities are not on `main`.
 
 **Navigate:** [Overview](#overview) · [Architecture](#architecture-overview) · [Status](#implementation-status) · [Getting started](#getting-started) · [Documentation](#documentation-and-verification) · [License](#license-and-third-party-notices)
 
@@ -56,7 +56,7 @@ External client / application
 
 This is an architecture view, not evidence that the full Gateway → Identity → Portal → Workflow → database path is integrated. Workflow owns `WorkflowPersistencePort`; a Data adapter can implement it without redefining Workflow semantics. Workflow does not own IT Support-specific rules, and Gateway does not own business workflows or persistence. Client-supplied identity headers are not trusted merely because they reached an HTTP boundary.
 
-See the [architecture baseline](docs/architecture/README.md) and [Core contracts](docs/contracts/).
+See the [architecture baseline](docs/01-architecture/system-architecture.md) and [Core contracts](docs/02-core/).
 
 ## Core Capabilities
 
@@ -83,7 +83,7 @@ Identity–Gateway integration, the Portal, a complete demonstration, proof of C
 
 ### Historical test checkpoint
 
-On **October 7, 2026**, at commit **`2b51a41`**, project documentation recorded **29 Workflow tests, 109 Request tests, and 139 backend tests**, with a successful build. The commands, environment, and limits are in the [Workflow POC](docs/poc/workflow-core-poc.md). These are historical results, **not** test counts or results from October 22.
+On **October 7, 2026**, at commit **`2b51a41`**, project documentation recorded **29 Workflow tests, 109 Request tests, and 139 backend tests**, with a successful build. The commands, environment, and limits are in the [Workflow POC](docs/README.md). These are historical results, **not** test counts or results from October 22.
 
 At that checkpoint, [Workflow Core Issue #13](https://github.com/lexuanbao258-collab/dxos-open-core/issues/13) was closed through [PR #15](https://github.com/lexuanbao258-collab/dxos-open-core/pull/15); [Identity Issue #12](https://github.com/lexuanbao258-collab/dxos-open-core/issues/12) and [Data Issue #14](https://github.com/lexuanbao258-collab/dxos-open-core/issues/14) were open. These are historical issue states, not a claim about their current status.
 
@@ -198,10 +198,10 @@ This is a high-level map, not a claim that every package is fully implemented.
 ## Documentation and Verification
 
 - [Backend guide](backend/README.md): setup, configuration, APIs, and test limits.
-- [Architecture](docs/architecture/README.md): boundaries and dependency direction.
-- [Workflow contract](docs/contracts/workflow-core.md): mechanisms and invariants.
-- [Workflow POC](docs/poc/workflow-core-poc.md): historical test evidence.
-- [Evidence index](docs/evidence/README.md): checkpoints and limitations.
+- [Architecture](docs/01-architecture/system-architecture.md): boundaries and dependency direction.
+- [Workflow contract](docs/02-core/workflow/workflow-architecture.md): mechanisms and invariants.
+- [Workflow POC](docs/README.md): historical test evidence.
+- [Evidence index](docs/README.md): checkpoints and limitations.
 - [Glossary](GLOSSARY.md): project terminology.
 - [Issue #38](https://github.com/lexuanbao258-collab/dxos-open-core/issues/38): license, attribution, and SPDX review.
 
