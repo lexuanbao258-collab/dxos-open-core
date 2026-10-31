@@ -1,136 +1,141 @@
 # DX-OS Open-Core — Project Overview
 
-> **Document status:** PROPOSED — REVIEW REQUIRED
-> **Decision basis:** P01=B (Product & Architecture Overview); P02=C with P06=B (no unverified detailed AS-IS, retain hypotheses); P03=B (Reusable Internal Service Platform); P04=B (Helpdesk golden path + Facility vertical slice); P05=C (hybrid glossary); P07=C (goal-oriented overview, detailed progress tracked elsewhere).
-> **Source reference baseline:** `origin/main` — `e06fa429cfd92b032c166eb3ebf32803d13191c2` (2026-10-28). This is a reference point, not a claim of end-to-end verification.
-> **Document owner:** TRICORE — responsible owner and reviewers to be assigned.
-> **Purpose:** Orient readers to the product, rationale, users, boundaries and intended outcomes; not a release or testing report.
+> **Document ID:** G1-F01  
+> **Purpose:** Introduce the product problem, intended solution, stakeholders, scope, and validation approach.  
+> **Scope:** High-level product and engineering context; not an implementation or acceptance report.
 
-## 1. DX-OS in one minute
+## Purpose
 
-**DX-OS Open-Core** is a proposed **reusable capability foundation for internal service applications**. Its initial product demonstration is **IT Helpdesk**; a smaller but real **Facility** vertical slice is planned to test whether another application can use the same Core contracts without copying or modifying application-specific logic inside Core.
+DX-OS Open-Core is a proposed reusable platform for building internal enterprise request-processing applications. Its design separates shared capabilities—identity, workflow, data management, and API gateway—from application-specific rules and user interfaces. The first reference journey is an IT Helpdesk request. A second distinct business workflow is intended to test whether the same Core can be reused without embedding department-specific logic in Core modules. This document explains the hypothetical organizational problem, the intended consumers, the principal boundaries, and the proof required to support the reuse claim. Detailed business rules, API contracts, architectural decisions, and test results belong to their dedicated documents.
 
-The name **DX-OS does not mean a computer operating system**. The intended shared capabilities are exactly four: **Identity**, **Workflow**, **Data Management** and **API Gateway**. The architecture direction selected by TRICORE is a **Java/Spring Boot Modular Monolith** applying **Hexagonal Architecture (Ports & Adapters)** and the **Dependency Inversion Principle (DIP)**. Browser-facing Portal/BFF components may run separately; that does not turn the backend Core into microservices.
+## Problem Context and Evidence Boundary
 
-**Product proposition:** create new internal service applications by composing reusable mechanisms for verified identity, controlled workflow, provider-neutral file storage and consistent HTTP entry, while keeping each application's business rules and data ownership independent.
+In the **hypothetical reference organization**, employees submit internal requests (for example, software incidents or facility problems), while responsible teams triage, assign, perform, and confirm work. When requests are dispersed across messages or manually maintained records, an organization *may* have difficulties with consistent ownership, authorization, transition history, and reporting.
 
-## 2. Problem addressed and intended value
+These are **design hypotheses**, not validated findings about a particular enterprise. No verified survey sample, request volume, baseline completion time, financial return, or quantified performance improvement is available for assertion here. User interviews, process observations, or controlled measurements must be documented separately before such claims can be made. The draft business contract explicitly treats its reference organization as hypothetical ([Issue #53](https://github.com/lexuanbao258-collab/dxos-open-core/issues/53)).
 
-Internal support requests **may** be received through multiple channels (e.g., messaging, email, calls and spreadsheets). Such fragmentation can make assignment, status visibility and reconstruction of decisions difficult. **These are problem hypotheses motivating the demonstration, not claims based on a completed enterprise field study.** Validation methods and evidence gaps belong in [Problem Statement](problem-statement.md).
+The engineering question is not only how to build a ticket screen, but **whether multiple request applications can share trustworthy platform capabilities without duplicating identity, workflow authorization, and persistence mechanisms**.
 
-| Audience | Need / intended value | What would demonstrate it |
-|---|---|---|
-| Employee / requester | Submit a request and follow its progress | Authorized create/read/status journey |
-| IT technician / Facility operator | See assigned work and perform allowed steps | Role/resource-policy and transition tests |
-| Team manager | Identify responsibility and review processing history | Auditable, queryable records with defined visibility |
-| Application developer | Reuse capabilities instead of rebuilding integrations | Second application uses shared contracts without Core-domain changes |
-| System administrator / deployer | Configure and operate a reproducible system | Clean installation and documented security/operational constraints |
+## Stakeholders
 
-**No numeric productivity, SLA or cost improvement is claimed without measurements.** The problem statement describes needs; architecture selection is an engineering response to those needs, not proof that each organization requires four Core modules.
+| Group | Intended interest or responsibility |
+| --- | --- |
+| Requesters (employees) | Submit requests; track permitted requests; view outcomes and history. |
+| Intake coordinators and service managers | Triage requests and oversee permitted operational actions. |
+| IT technicians / facility workers | Perform assigned work within workflow and resource permissions. |
+| Acceptance or confirmation actors | Evaluate outcomes and perform authorized confirmation or closure actions. |
+| Platform engineers and application developers | Maintain Core contracts, adapters, and independently integrated applications. |
+| Security and architecture reviewers | Inspect trust boundaries, decisions, and supporting evidence. |
+| Open-source contributors and OLP evaluators | Reproduce a scoped deployment and verify the stated architecture and limitations. |
 
-## 3. Product structure and ownership
+The exact actor-role-to-authority mapping is a **business and security contract question**, not a permission grant implied by this table.
+
+## Product Objectives
+
+DX-OS aims to:
+
+1. Reuse shared identity, workflow, data, and API exposure capabilities across distinct business applications.
+2. Make authorized workflow transitions and history inspectable without reducing workflow behavior to an editable status column.
+3. Preserve a clear boundary between platform rules and application-owned forms, validation, and business facts.
+4. Offer an independently consumable HTTP interface for a sample Portal, rather than coupling its UI directly to Core Java services or database access.
+5. Enable reproducible installation and evidence-based verification of security, business journeys, and reuse.
+
+These are **qualitative objectives**. Success measures, baselines, thresholds, and empirical outcomes must be defined and collected in dedicated scope, testing, and evidence artifacts; no improvement percentage is assumed.
+
+## Solution Overview
+
+The intended design has two logical layers: a **headless reusable Core** and one or more **independent application consumers**. The Portal/BFF consumes published, authorized backend HTTP interfaces; the Core must not depend on a specific department's process definition or UI.
 
 ```mermaid
-flowchart TD
-    User[Employee / Operator] --> Portal[Portal / BFF]
-    Portal --> Gateway[HTTP / API Gateway Boundary]
-    Gateway --> App[Authorized Application Use Cases]
-    App --> Identity[Identity contracts / verified principal]
-    App --> Workflow[Workflow Core]
-    App --> Data[Data Core: ObjectStoragePort]
-    Workflow --> WPort[WorkflowPersistencePort]
-    WPort --> Pg[PostgreSQL adapter]
-    Data --> Storage[Selected local Docker MinIO adapter - target]
-    Gateway --> Security[Spring Security / OIDC adapter]
-    Security --> IdP[Keycloak or compatible IdP]
+flowchart TB
+    U[Business actors] --> P[Internal Service Portal / BFF]
+    P --> H[Published HTTP/API boundary]
+    H --> G[Gateway and authorization boundary]
+    G --> I[Identity capability]
+    G --> W[Workflow capability]
+    G --> D[Data capability]
+    A[Application-specific rules and workflow definitions] --> H
+    I -. provider integration .-> K[Keycloak / OIDC]
+    W --> DB[(Private PostgreSQL)]
+    D --> DB
+    D -. storage adapter .-> M[(Private MinIO)]
 ```
 
-*This is a simplified **runtime interaction view**, not a Java import graph or proof of complete integration. Infrastructure adapters depend **inward** on the port interfaces they implement.*
+**Diagram interpretation:** This is a **conceptual responsibility and integration map**, not a deployment topology, a class dependency diagram, or proof that all connections are live. The Application owns its business rules and definitions; Core owns reusable runtime capabilities. The eventual authorized call chain and persistence transaction boundaries require separate contract and integration review. External products appear only as selected reference adapters/providers, not as proof of validated runtime integration.
 
-| Capability / layer | Shared or owned responsibility | Explicit boundary |
-|---|---|---|
-| **Identity Core** | Provider-neutral principal and authority concepts; trusted principal access through an application port and verified adapter | No self-built password database; no Helpdesk-specific resource ACL |
-| **Workflow Core** | Definitions, states, transitions, lifecycle, exact versions and history invariants | Does not assign technicians or decide Facility-specific permissions |
-| **Data Core** | Provider-neutral Object Storage API (`ObjectStoragePort`) | Does **not** own every PostgreSQL table, business repository or Workflow persistence contract |
-| **API Gateway capability** | HTTP entry/exposure, common authentication boundary, routing/error conventions | Does not execute business transitions or replace Application resource authorization |
-| **Helpdesk / Facility Applications** | Use cases, business rules, tenant/resource permissions, business facts, attachment ownership | Must not hardcode vendor SDK semantics into reusable Core |
-| **Infrastructure** | OIDC, private PostgreSQL 17 and selected local Docker MinIO adapters/configuration | Candidate adapter implementation and integration remain unverified |
+### Shared Core Capabilities
 
-**Ownership rule:** `WorkflowPersistencePort` belongs to Workflow, even if a PostgreSQL implementation is developed by a Data/infrastructure contributor. Business tables belong to the corresponding Application.
+| Capability | Intended responsibility | Key boundary |
+| --- | --- | --- |
+| Identity | Integrate verified OIDC principals and canonical identity information | Identity provider credentials and token validation do not become application-controlled trust claims. |
+| Workflow | Execute configured state transitions with authorization, versioning, and history | Business workflow definitions must not require department-specific changes to the shared engine. |
+| Data Management | Define structured/unstructured storage access contracts and adapters | Application-specific facts and object access rules must retain explicit ownership. |
+| API Gateway | Expose permitted capabilities across a trusted request boundary | A UI-visible action is not proof that the backend authorizes the actual resource. |
 
-## 4. Demonstration strategy: one product and one reuse proof
+The exact service interfaces, trust checks, adapter behavior, and transaction semantics are specified and validated in Core and Integration documentation, not established by this overview.
 
-### 4.1 IT Helpdesk — primary golden path
+## Application Scenarios
 
-Target request journey: **create → triage/review → assign → in progress → resolve → requester confirmation → close**. `CONFIRMED` and `CLOSED` must not be treated as interchangeable. Exact states, actor permissions, exception flows and transition acceptance must be aligned with the approved Business Contract; this line is a **product-level target**, not proof that every step is implemented in the selected baseline.
+### Primary Reference: IT Helpdesk
 
-The demo should include meaningful rejection paths: unauthenticated calls, unauthorized resource access, forbidden transitions and concurrent modification conflicts. A smooth UI walkthrough alone is insufficient.
+An employee reports a software issue; responsible personnel triage and work on the request; an authorized actor confirms or closes the outcome. The reference Golden Path includes authenticated entry, validated creation, permitted transitions, and an authorized view of history. States and roles remain subject to the ratified business contract and published runtime definition.
 
-### 4.2 Facility — second-application vertical slice
+### Reuse Demonstration: Distinct Business Workflow
 
-Facility should implement one real, narrowly scoped request flow with **Facility-owned** roles/rules/business records while reusing relevant Identity, Workflow, Data and Gateway mechanisms. Facility details (actors, transitions, endpoints and minimal completion criteria) require business approval. A mock-only Facility screen or merely adding a second workflow definition **does not** prove end-to-end reuse.
+The current OLP MVP planning in [Issue #40](https://github.com/lexuanbao258-collab/dxos-open-core/issues/40) identifies **Facility Maintenance** alongside IT Helpdesk as two candidate definitions in one Portal. [Issue #53](https://github.com/lexuanbao258-collab/dxos-open-core/issues/53) retains the associated business rules and transition names as draft pending ratification. **Access Request** is mentioned there as a design-only reuse exercise, not an approved third implementation.
 
-**Reuse acceptance hypothesis:** adding the Facility slice does not require changing Core domain rules or creating Facility-specific branches inside `WorkflowRuntime` or other shared Core implementations.
+The decisive reuse question is whether a distinct workflow can be introduced through application-owned definitions, validations, and integration without modifying the published Core algorithm. A second screen alone does not demonstrate Core reuse.
 
-## 5. Architectural direction and provider independence
+## MVP Summary and Non-Goals
 
-| Architectural choice | Why it fits the demonstration | Boundary / limitation |
-|---|---|---|
-| **Modular Monolith** | Enables shared process and simpler local transactions while isolating logical capabilities | Package names alone do not prove modularity; enforce dependency rules |
-| **Hexagonal / DIP** | Consumers depend on stable capability-owned ports rather than PostgreSQL or storage SDKs | An adapter swap still needs semantic contract/conformance tests |
-| **Verified OIDC identity** | Decouples Core identity concepts from Keycloak credentials | `issuer + sub` continuity across providers needs deliberate linking/migration |
-| **Generic Workflow State Machine** | Reuses controlled transitions/history for different request applications | Business authorization remains Application-owned; BPMN breadth is out of scope |
-| **ObjectStoragePort** | Keeps Data Core independent of the selected MinIO adapter | Portability is a contract goal; real provider substitution and data migration are not verified |
-| **Application-owned data** | Avoids turning Data Core into a central repository for all business modules | Shared physical PostgreSQL does not imply shared schema ownership |
+**Intended MVP journey:** authenticated Portal access; a request created through an authorized API; a valid workflow transition and durable history; a permitted user inspecting the outcome; and negative checks for invalid tokens, forbidden resources, illegal transitions, and concurrency conflicts. A second business definition is used to examine reuse. The exact in-scope acceptance scenarios and exclusions must be ratified in the separate MVP scope and business contract.
 
-The selected MVP runtime direction is **Java 21, Spring Boot, Gradle, private PostgreSQL 17, local Docker MinIO and Keycloak**. MinIO uses an S3-compatible protocol; this is not an AWS S3 deployment claim. The Data Core port exists at the pinned source baseline, while the MinIO implementation and real integration remain candidate work. See [ADR-007](../08-decisions/ADR-007-data-storage.md), the [deployment topology](../01-architecture/deployment-topology.md), [System Architecture](../01-architecture/system-architecture.md), [Core-Application Boundary](../01-architecture/core-application-boundary.md), and [Dependency Rules](../01-architecture/dependency-rules.md).
+**Non-goals for this scoped demonstration:** building a full enterprise resource planning (ERP) suite, asset inventory/procurement, a business process model and notation (BPMN) designer, arbitrary enterprise automation, or a speculative microservices rewrite. No unregistered API, client-side admin credential, or direct Portal database access is part of the intended architecture.
 
-## 6. Boundaries of the MVP and non-goals
+## Technology Context
 
-The near-term demonstration aims to validate a secure Helpdesk golden path, Workflow consistency, capability contracts, a Facility reuse slice, reproducible installation and appropriate open-source licensing/attribution review.
+The current local demonstration direction documented in [Issue #40](https://github.com/lexuanbao258-collab/dxos-open-core/issues/40) is **Keycloak/OIDC → Portal/BFF → Java Backend/Gateway/Workflow → private PostgreSQL 17**, with **self-hosted MinIO** behind an object-storage port. This describes a selected deployment direction, **not** an assertion of a completed clean installation, live E2E approval, or deployment portability. Technology choices, exact versions, security configurations, and adapter acceptance belong to the Architecture, Core, and Deployment records.
 
-The following are **not automatically promised by this MVP**: a general-purpose operating system; a full ERP/CRM; BPMN editor or arbitrary process automation; microservice decomposition; enterprise-scale high availability; automatic migration between all storage providers; seamless user identity continuity across new OIDC issuers; or measurable business improvement before field validation.
+## Reuse Hypothesis and Verification
 
-The authoritative **proposed scope**, MoSCoW priorities, exclusions and acceptance cases are specified in [Scope and MVP](scope-and-mvp.md). Business rules require a separately reviewed/approved contract, including Issue #53 where applicable.
+**Hypothesis:** A common Core can support at least two distinct request workflows by varying application-owned business definitions and adapters while preserving the published Core contracts and algorithms.
 
-## 7. Product success criteria (targets, not completed results)
+A credible reuse demonstration should provide all of the following:
 
-| ID | Target outcome | Required proof |
-|---|---|---|
-| PO-01 | The four Core capabilities have unambiguous ownership | Architecture, contracts and dependency review |
-| PO-02 | Helpdesk performs its approved end-to-end journey | Authenticated live integration evidence and negative tests |
-| PO-03 | Workflow history/state/version semantics remain consistent | Contract, transaction and concurrency evidence |
-| PO-04 | Facility reuses Core without changing Core domain logic | Source diff and second-application E2E evidence |
-| PO-05 | Storage implementation can be selected behind one port | Real-provider conformance tests and explicit migration limits |
-| PO-06 | Access to business resources respects verified identity and resource policy | Security-negative and authorization tests |
-| PO-07 | Release can be installed and reviewed by another developer | Pinned clean-install/release evidence, documented configuration |
-| PO-08 | Distribution obligations are satisfied | License/attribution review and approval by rights holders |
+- Two genuinely distinct business definitions and explicit actor/transition rules.
+- The same Core revision for both scenarios, with no department-specific branching introduced into Core.
+- An independent application consumer accessing published HTTP capabilities, without direct Core service injection or database access.
+- Evidence of allowed transitions, denied actions, visibility protection, version/concurrency handling, and auditable history.
+- A pinned code revision, executable reproduction steps, observed test outputs, and independent review of the claim.
 
-A source file, open/draft PR, passing fake test or design sign-off **is not** by itself a verified integrated release. This overview intentionally avoids a changing per-PR progress table.
+An accepted architecture decision, a mock UI, or an unexecuted test plan cannot substitute for runtime evidence. Until a pinned end-to-end run and review are available, the reuse claim remains **to be demonstrated**.
 
-## 8. Where to find implementation status and evidence
+## Assumptions, Risks, and Limitations
 
-This document explains **what DX-OS is intended to be**, not the current completion percentage. Review current state using commit-pinned evidence, not product-level descriptions.
+| ID | Assumption or risk | Required follow-up |
+| --- | --- | --- |
+| AS-01 | Enterprise process pain points are hypothetical. | Collect and cite real observations or keep claims explicitly hypothetical. |
+| AS-02 | The business contract and second workflow details are subject to ratification. | Confirm the current approved scope and authoritative workflow definitions. |
+| RK-01 | Application/Core boundaries may diverge during parallel development. | Review contracts and track design–code discrepancies at pinned revisions. |
+| RK-02 | Identity and Gateway integration could be described as secure without full negative-test evidence. | Require exact-SHA authorization and resource-visibility verification. |
+| RK-03 | Two workflow configurations might be mistaken for proven end-to-end reuse. | Validate independent HTTP consumption and unchanged Core behavior. |
+| RK-04 | Deployment choice could be mistaken for reproduced installation. | Produce clean-environment installation and restart evidence. |
 
-- [Existing Core contracts](../contracts/README.md) — existing contract baseline during docs migration.
-- [Evidence index](../evidence/README.md) — current legacy evidence index; legacy paths remain canonical until approved migration.
+## Related Documentation and Sources
 
-**Reference snapshot:** `origin/main` `e06fa429cfd92b032c166eb3ebf32803d13191c2`. Check subsequent merges and independent evidence before reporting implementation or release status.
+The following are **intended documentation paths**, not hyperlinks: they must be linked only after repository existence and baseline verification.
 
-## 9. Document navigation and governance
+- `docs/00-project/problem-statement.md` — problem evidence and hypotheses.
+- `docs/00-project/product-vision.md` — product principles and outcomes.
+- `docs/00-project/scope-and-mvp.md` — scope, Golden Paths and acceptance boundaries.
+- `docs/01-architecture/system-architecture.md` — system architecture and its rationale.
+- `docs/09-evidence/README.md` — evidence navigation and runtime proof.
 
-| Read next | Question answered |
-|---|---|
-| [Problem Statement](problem-statement.md) | Which needs and current-process hypotheses motivate DX-OS? |
-| [Product Vision](product-vision.md) | What reusable platform value does DX-OS aspire to create? |
-| [Scope and MVP](scope-and-mvp.md) | What is committed or proposed for the demo? |
-| [Glossary](glossary.md) | What do key business and technical terms mean? |
-| [System Architecture](../01-architecture/system-architecture.md) | How is the product structured? |
-| [Identity Architecture](../02-core/identity/identity-architecture.md) | How is trusted identity abstracted? |
-| [Workflow Architecture](../02-core/workflow/workflow-architecture.md) | How are state transitions and concurrency handled? |
-| [Data Architecture](../02-core/data/data-architecture.md) | How are object storage providers abstracted? |
-| [Gateway Architecture](../02-core/gateway/gateway-architecture.md) | Where are HTTP/session/authentication boundaries? |
+Public planning sources used for this draft:
 
-**Review policy:** Product direction may be selected while implementation or test evidence remains pending. Changes to approved business requirements, Core contracts, security boundaries or licensing must be explicitly reviewed and traced through Issues/PRs.
+- [Issue #53 — Business Rules & API Contract](https://github.com/lexuanbao258-collab/dxos-open-core/issues/53)
+- [Issue #39 — Independent Internal Service Portal](https://github.com/lexuanbao258-collab/dxos-open-core/issues/39)
+- [Issue #40 — Reproducible Deployment and OLP Demo](https://github.com/lexuanbao258-collab/dxos-open-core/issues/40)
+- [Issue #27 — Core E2E Demonstration](https://github.com/lexuanbao258-collab/dxos-open-core/issues/27)
 
-**Sign-off:** Product owner — PENDING; Application/business owner — PENDING; Architecture reviewer — PENDING. This document must not be marked VERIFIED solely because it is merged.
+This overview is a **draft design description**. Document ownership, lifecycle, approved baseline, independent review, and Gate outcome must be recorded in their respective G0/G1 governance artifacts.
