@@ -26,7 +26,7 @@ Unverified:
 ## Safety
 - The website is static and does not proxy the Backend, expose a public API server, or contain credentials.
 - Scalar configuration: \`hideTestRequestButton: true\`, \`persistAuth: false\`, no proxy URL, Agent disabled, telemetry disabled, developer tools hidden.
-- Scalar ESM bundle is loaded from a **version-pinned CDN**: \`@scalar/api-reference@1.69.2\`. Fallback static route list is available if CDN fails.
+- Scalar ESM bundle is loaded from a **version-pinned CDN**: \`@scalar/api-reference@1.72.4\`. Fallback static route list is available if CDN fails.
 - Before adopting as the main site, export and review the generated spec from the **same code version**, compare methods/schemas/responses and replace \`openapi.source-draft.json\` with a verified artifact. Keep the browser-side request test disabled until safe backend access exists.
 
 ## Promotion
