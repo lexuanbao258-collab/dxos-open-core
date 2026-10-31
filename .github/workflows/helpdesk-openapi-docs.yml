@@ -40,7 +40,10 @@ jobs:
           python scripts/check-helpdesk-openapi-doc-routes.py --spec "${RUNNER_TEMP}/docs-openapi.json"
       - name: Full Java build and JUnit suite
         working-directory: backend
-        run: ./gradlew --no-daemon test build
+        shell: bash
+        run: |
+          chmod u+x ./gradlew
+          ./gradlew --no-daemon test build
       - name: Evidence limits
         run: |
           echo "This checks static method-to-path drift + full Gradle build."
