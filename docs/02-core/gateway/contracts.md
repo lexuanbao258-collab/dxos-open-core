@@ -14,6 +14,8 @@ reviewers: Backend, Application, Security, Independent G4 — pending
 
 ## 1. Purpose, authority and scope
 
+**TO-BE / PROPOSED edge contract:** APISIX is an adapter for published API exposure, routes, and edge security; it is not the Core contract itself. Backend APIs and errors must remain stable across edge-provider replacement. The Backend must reject untrusted identity headers, verify the principal at its approved trust boundary, and authorize the operation and resource before mutation or disclosure. Conformance requires route allow/deny and method tests, malformed or missing credentials, forged-header negatives, upstream failure handling, and consistency of Backend error/privacy behavior. No APISIX route or conformance result is claimed implemented.
+
 **SELECTED:** Define externally relevant Gateway-facing contracts for authentication provenance, principal transfer, exact operation authority, business-resource authorization, HTTP exposure, failure isolation, browser/BFF separation, security controls, acceptance traceability and independent review. This is a **design/specification document**, not an assertion that a standalone Gateway Java SPI exists, a new API or a retrofit of canonical contracts.
 
 **Pinned commit:** `0f0c3ba0c3eecda0a5c4a798a3cc14b808351bed`.

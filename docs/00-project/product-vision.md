@@ -12,6 +12,8 @@ This **problem-driven platform vision** connects the hypothetical needs in the [
 
 ## 2. Vision Statement
 
+**TO-BE / PROPOSED product shape:** DX-OS Open-Core is a headless platform whose published Identity, Workflow, structured/unstructured Data, and API Gateway contracts can serve IT Helpdesk and later Applications. New Applications should need no Core business-logic change when those contracts already support their requirements. Keycloak, Flowable, PostgreSQL, MinIO, and APISIX are replaceable target providers; this vision does not establish that their adapters or cross-Application reuse are implemented.
+
 **DX-OS Open-Core aims to provide a reusable, security-conscious foundation for internal service applications that need consistent identity, authorized workflow execution and traceable data handling. It seeks to let different service domains use published platform contracts without embedding domain-specific rules in the reusable Core. Initial validation focuses on a narrow Internal Service Portal and demonstrable end-to-end and cross-workflow evidence rather than a claim of general enterprise adoption.**
 
 This statement is a **north-star aspiration**, not a declaration that the target architecture, integrations or outcomes have been delivered. The primary product proposition is not simply a better ticket screen; it is the ability to preserve reliable cross-cutting behavior while application-specific workflows vary.

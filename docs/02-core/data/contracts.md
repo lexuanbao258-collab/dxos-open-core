@@ -15,6 +15,8 @@ reviewers: Data / Application / Security / Independent G4 — pending
 
 ## 1. Scope and contract authority
 
+**Contract boundary:** the Java `ObjectStoragePort` is the AS-IS provider-independent unstructured Data contract, with opaque object keys, metadata, content streams, write modes, and normalized storage failures. A general structured Data public contract is TO-BE and must be defined before claiming provider-independent PostgreSQL replacement; existing Application repositories and Workflow's persistence port are not silently reclassified as that contract. Access to a key is not authorization. Conformance for MinIO or an alternative S3-compatible/object provider must test bytes and metadata, create-only conflict, overwrite, missing objects, streaming and close behavior, provider failure translation, privacy, and uncertain cross-store outcomes.
+
 **SELECTED:** This document specifies the existing `com.tricore.dxos.core.data` Object Storage Java SPI, value objects, behavioral semantics, failure rules, stream ownership, adapter obligations and test traceability. It neither alters the public API nor establishes a new REST endpoint, provider integration or SQL repository.
 
 **Source pin:** `0f0c3ba0c3eecda0a5c4a798a3cc14b808351bed`.

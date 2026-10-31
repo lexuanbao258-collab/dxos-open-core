@@ -10,6 +10,8 @@
 
 ## 1. Purpose and Decision Qualification
 
+**Target import rule:** Core-owned contracts and Application use cases must not import Keycloak, Flowable, PostgreSQL JDBC, MinIO, or APISIX SDK types. Infrastructure adapters may import those implementations while depending inward on the relevant published port. APISIX edge checks cannot replace Backend trusted-principal verification, exact operation authority, or Application resource policy. Verify these rules with source import checks and provider conformance tests before claiming enforcement.
+
 Define testable rules translating the **selected design direction** into enforceable source constraints and separately verified runtime invariants. The four logical Core capabilities are Identity, Workflow, Data Management and API Gateway; four capabilities **do not imply four microservices or four pure `core.*` packages**. In the inspected historical baseline, Gateway-facing code sits in `gateway.*`, not a verified `core.gateway` pure-Java package.
 
 The source draft labels **SYS-ADR-01=B** (Modular Monolith), **SYS-ADR-02=B** (Ports & Adapters/DIP), **SYS-ADR-06=B** (capability/application-owned data), **SYS-ADR-08=B** (generic Workflow state machine) as team-selected directions. **SYS-ADR-04, SYS-ADR-05, SYS-ADR-07, SYS-ADR-10 and SYS-ADR-11** are also referenced in the corresponding boundary review. These identifiers are **design-discussion references**, not proof of approved standalone ADR documents or executable tests. The separate decision-record and formal ADR governance must resolve statuses.
@@ -219,16 +221,15 @@ Before sign-off, decide: legacy route exposure, composite transaction port owner
 
 ## 14. Source References and Review Limits
 
-Verified document paths at the **inspection SHA** (not all direct source classes were fetched in this authoring pass):
+The following architecture documents existed at historical inspection SHA `0f0c3ba0c3eecda0a5c4a798a3cc14b808351bed` (not all direct source classes were fetched in that authoring pass):
 
 - [System Architecture](system-architecture.md) — exists at inspection SHA; separate G3-F04 revision is not yet confirmed merged.
 - [Core/Application Boundary](core-application-boundary.md) — exists at inspection SHA; separate G3-F03 revision is not yet confirmed merged.
-- [Historical architecture overview](../architecture/README.md) — historical reference only; verify link at merging SHA.
-- [Identity Core Contract](../contracts/identity-core.md) — source contract.
-- [Workflow Core Contract](../contracts/workflow-core.md) — source contract.
-- [Data Core Contract](../contracts/data-core.md) — source contract.
+- Historical `docs/architecture/README.md` and `docs/contracts/identity-core.md`, `workflow-core.md`, and `data-core.md` existed at that SHA; retain their original pinned references.
 - [PR #47](https://github.com/lexuanbao258-collab/dxos-open-core/pull/47), [PR #48](https://github.com/lexuanbao258-collab/dxos-open-core/pull/48), [PR #63](https://github.com/lexuanbao258-collab/dxos-open-core/pull/63), [PR #70](https://github.com/lexuanbao258-collab/dxos-open-core/pull/70), [PR #71](https://github.com/lexuanbao258-collab/dxos-open-core/pull/71) are **workstream references**, not automatic evidence of merged/release-verified behavior.
 - Immutable inspection anchor: [`0f0c3ba0...`](https://github.com/lexuanbao258-collab/dxos-open-core/commit/0f0c3ba0c3eecda0a5c4a798a3cc14b808351bed).
+
+Current-branch documentation: [Architecture index](README.md), [Identity contracts](../02-core/identity/contracts.md), [Workflow contracts](../02-core/workflow/contracts.md), and [Data contracts](../02-core/data/contracts.md) are tracked on `docs/core-architecture-alignment`. Their links do not assert presence at the historical SHA or approval of changed semantics.
 
 Final Git merge requires re-running link checks, build and relevant tests on the **actual target revision**, not inheriting statuses from the inspected document snapshot.
 

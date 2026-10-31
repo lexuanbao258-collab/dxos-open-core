@@ -9,6 +9,8 @@
 
 ## 1. Purpose and evidence policy
 
+**TO-BE / PROPOSED boundary:** IT Helpdesk and future Applications consume DX-OS-owned published contracts and own their business models, use cases, and resource authorization policies. No Application should call Flowable Engine APIs, PostgreSQL drivers, Keycloak or MinIO SDKs, or APISIX implementation APIs. Workflow Core retains process semantics even when a Data/infrastructure adapter implements its persistence port. Structured Data and object storage are separate capabilities; neither owns Helpdesk business facts merely because it stores them. Replacing a provider requires contract conformance and assessment of migration, errors, security, and consistency.
+
 This document refines the [existing boundary review draft](https://github.com/lexuanbao258-collab/dxos-open-core/blob/0f0c3ba0c3eecda0a5c4a798a3cc14b808351bed/docs/01-architecture/core-application-boundary.md) without reassigning domain ownership or asserting acceptance. The original was marked `PROPOSED — REVIEW REQUIRED`, used an earlier historical source baseline `e06fa429cfd92b032c166eb3ebf32803d13191c2`, and recorded sixteen `BND` conditions. The current inspection revision is **not** a claim that the source was rebuilt or tested at this commit.
 
 **Evidence vocabulary:** `BASELINE` means content observed at the pinned Git commit; `CANDIDATE` means proposal/PR not accepted by a separate gate; `PROPOSED` means design intent; `UNVERIFIED` means no sufficient acceptance evidence. A design direction marked *selected* is not an approved numbered ADR, verified Java dependency, or runtime PASS. Only the canonical Document Register may assign a formal document lifecycle status after it is established in the reviewed documentation baseline.

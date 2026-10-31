@@ -11,13 +11,16 @@ DX-OS Open-Core is TRICORE's proposed foundation for internal service-request ap
 
 ## Architecture at a Glance
 
+**TO-BE / PROPOSED:** DX-OS exposes four provider-independent Core capabilities through published contracts. Keycloak/OIDC, Flowable BPMN, PostgreSQL/MinIO, and Apache APISIX with a Spring Boot Backend are selected target implementations, not definitions of Core. Flowable and APISIX integration is not established by this documentation. Provider replacement requires contract conformance, migration assessment, and verified security and consistency behavior.
+
 This diagram shows **intended logical responsibilities**, not deployed services or verified runtime interactions. The second application remains to be selected and approved.
 
 ```mermaid
 flowchart TB
     User[Employee / Internal User]
     Portal[Client / Portal]
-    Gateway[API Gateway Boundary]
+    Gateway[APISIX edge - proposed]
+    Backend[Spring Boot trusted Backend boundary]
     Identity[Identity Core Contracts]
     Helpdesk[IT Helpdesk Application]
     Reuse[Second Application - Reuse Demonstration]
@@ -26,9 +29,10 @@ flowchart TB
 
     User --> Portal
     Portal --> Gateway
-    Gateway --> Identity
-    Gateway --> Helpdesk
-    Gateway -. proposed .-> Reuse
+    Gateway --> Backend
+    Backend --> Identity
+    Backend --> Helpdesk
+    Backend -. proposed .-> Reuse
     Helpdesk --> Workflow
     Reuse -. reuse objective .-> Workflow
     Helpdesk --> Data
@@ -49,6 +53,10 @@ Read in this order to understand the design and then evaluate its evidence:
 6. **Verification:** `05-testing/`, `09-evidence/`, `10-reviews/` — tests, reproducible evidence, review findings, and acceptance decisions.
 
 These paths identify **documentation areas**, not a claim that every file already exists or is approved.
+
+Tracked canonical entry points: [Document Register](00-project/document-register.md), [System Architecture](01-architecture/system-architecture.md), [Core/Application Boundary](01-architecture/core-application-boundary.md), [Identity contracts](02-core/identity/contracts.md), [Workflow contracts](02-core/workflow/contracts.md), [Data contracts](02-core/data/contracts.md), [Gateway contracts](02-core/gateway/contracts.md), and [IT Helpdesk requirements](03-applications/helpdesk/requirements.md). [ADR governance](08-decisions/README.md) and [Open Issues](10-reviews/open-issues.md) record decisions and unresolved review work.
+
+For a guided path through tracked files, start with [Product Vision](00-project/product-vision.md), [Scope and MVP](00-project/scope-and-mvp.md), [Architecture](01-architecture/README.md), the [Identity](02-core/identity/README.md), [Workflow](02-core/workflow/README.md), [Data](02-core/data/README.md), and [Gateway](02-core/gateway/README.md) capability indexes, then [Applications](03-applications/README.md). These indexes distinguish current navigation from historical source pins and planned files.
 
 ## Reading Paths by Role
 
@@ -92,14 +100,14 @@ Use commit-specific permalinks when citing implementation evidence. Do not descr
 
 ## Documentation Governance
 
-The planned **Document Register** (`00-project/document-register.md`) is the authoritative source of document inventory, ownership, lifecycle status, and review outcomes. The intended supporting documents are:
+The tracked [Document Register](00-project/document-register.md) is the document authority for inventory, ownership, lifecycle status, and review outcomes. Its provisional entries still require reconciliation. The supporting documents are:
 
 - `00-project/document-style-guide.md` — Markdown language, naming, links, diagrams, and metadata conventions.
 - `DESIGN_PROCESS.md` — design stages, deliverables, reviewers, and gate criteria.
 - `08-decisions/README.md` — ADR index and decision lifecycle.
 - `10-reviews/open-issues.md` — unresolved findings, severity, owner, and resolution.
 
-Until these files have been verified in the tracked documentation baseline, the paths above are **references to intended artifacts**, not clickable links. Use `PLANNED`, `DRAFT`, `IN_REVIEW`, `APPROVED`, and `SUPERSEDED` only with definitions and evidence established by the governance process.
+These supporting files are tracked at the documentation baseline above. Use `PLANNED`, `DRAFT`, `IN_REVIEW`, `APPROVED`, and `SUPERSEDED` only with definitions and evidence established by the governance process.
 
 ## Contributing to Documentation
 

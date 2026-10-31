@@ -9,6 +9,8 @@
 
 ## 1. Purpose, Scope and Evidence Classification
 
+**TO-BE / PROPOSED topology addition:** place Apache APISIX at the external API edge for routing, exposure, and edge security policies. Forward only a reviewed trust context to the Spring Boot Backend; Backend verification and resource authorization remain mandatory. Flowable BPMN, if adopted, is a Workflow adapter behind Core contracts, not an Application dependency. No APISIX or Flowable process, network route, or deployment is verified by this document.
+
 Define the **local/demo MVP target deployment** and the security, process, host, network, data and recovery boundaries that must be verified. This is a G3 architecture specification, **not** an executable installation runbook; exact commands, credentials, operational checks and recovery instructions belong in G6 deployment documentation.
 
 - **OBSERVED AT INSPECTED SHA:** Java 21 toolchain, Spring Boot 3.5.16 plugin, Gradle Wrapper 8.14.3 in Backend build configuration; architecture and deployment prerequisite drafts exist.
@@ -37,6 +39,7 @@ flowchart LR
   subgraph FRONT["Local HTTPS entry - TARGET"]
     INGRESS["HTTPS reverse proxy"]
     PORTAL["Portal and BFF candidate"]
+    EDGE["Apache APISIX API edge - proposed"]
   end
   subgraph APP["Private application zone - TARGET"]
     BE["Spring Boot modular backend"]
@@ -50,7 +53,8 @@ flowchart LR
   end
   USER -->|HTTPS| INGRESS
   INGRESS -->|Approved routes| PORTAL
-  PORTAL -->|Authenticated HTTP| BE
+  PORTAL -->|Published HTTP| EDGE
+  EDGE -->|Reviewed trust handoff| BE
   USER -->|OIDC browser redirect| KC
   KC -->|OIDC redirect response| USER
   PORTAL -->|OIDC protocol| KC

@@ -16,7 +16,7 @@ reviewers: Identity / Gateway / Application — to confirm
 
 Identity Core provides **provider-neutral value types** for subjects, authorities, authentication references, decisions, and normalized errors. It is not a Keycloak wrapper, JWT verifier, principal repository, session manager, authorization policy engine for ticket ownership, or HTTP gateway. `com.tricore.dxos.core.identity` has no provider SDK or Spring Security dependency in the eight inspected type files.
 
-**Selected G4 foundation:** stable contracts, modular monolith, distinct Java API and external HTTP API, provider substitutions via trusted adapters, exact-source evidence and independent review. `docs/contracts/identity-core.md` remains the existing canonical contract source until reviewed migration or explicit supersession. This design document does not change the eight Java types.
+**Selected G4 foundation:** stable contracts, modular monolith, distinct Java API and external HTTP API, provider substitutions via trusted adapters, exact-source evidence and independent review. Historical `docs/contracts/identity-core.md` remains source evidence for its pinned revision; [tracked contracts](contracts.md) are the current documentation location. This design document does not change the eight Java types or silently supersede historical semantics.
 
 ## 2. Domain vocabulary and exact observed Java API
 

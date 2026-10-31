@@ -14,6 +14,8 @@ reviewers: Data / Application / Security / Operations / Independent G4 — pendi
 
 ## 1. Purpose, baseline and non-goals
 
+**TO-BE / PROPOSED defaults:** PostgreSQL implements reviewed structured persistence ports; MinIO implements `ObjectStoragePort`. A different relational store or S3-compatible object store is possible only when contract behavior, migration, security, and operational recovery are demonstrated. Adapter source may use provider SDKs; Core and IT Helpdesk business logic may not. Object operations and PostgreSQL writes have separate failure and commit outcomes, so Application orchestration must avoid false attachment references and define reconciliation. This target selection does not certify a MinIO adapter or turn Workflow-owned persistence semantics into Data business logic.
+
 **SELECTED:** Document infrastructure adapter boundaries and required semantics for a provider-neutral Java 21 `ObjectStoragePort`. Cover provider configuration, logical key and metadata mapping, concurrent conditional writes, stream management, sanitized failures, uncertain provider outcomes, provider substitution, security and evidence collection.
 
 **OBSERVED sources (all at `0f0c3ba0c3eecda0a5c4a798a3cc14b808351bed`):**

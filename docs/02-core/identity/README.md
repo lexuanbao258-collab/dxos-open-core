@@ -86,28 +86,31 @@ Suggested review journey:
 
 ## 6. Source and Documentation Map
 
-The following paths were **verified as existing at inspection SHA**:
+The following architecture paths existed at historical inspection SHA `0f0c3ba0c3eecda0a5c4a798a3cc14b808351bed`:
 
-- [Identity Core canonical contract](../../contracts/identity-core.md).
 - [Core/Application architectural boundary](../../01-architecture/core-application-boundary.md).
 - [Architecture dependency rules](../../01-architecture/dependency-rules.md).
 - [System architecture](../../01-architecture/system-architecture.md).
 
+**Current-branch navigation:** [Identity architecture](architecture.md), [domain model](domain-model.md), and [contracts](contracts.md) are tracked on `docs/core-architecture-alignment`. The historical [Identity Core contract](https://github.com/lexuanbao258-collab/dxos-open-core/blob/0f0c3ba0c3eecda0a5c4a798a3cc14b808351bed/docs/contracts/identity-core.md) existed at the inspection SHA; the current-branch files did not.
+
 Source inspection anchor: [commit `0f0c3ba0...`](https://github.com/lexuanbao258-collab/dxos-open-core/commit/0f0c3ba0c3eecda0a5c4a798a3cc14b808351bed). The source contract explicitly defines provider-neutral Identity and names the `CurrentPrincipal` verified-context seam. The present README does **not** claim a complete Java import scan or executed test results.
 
-### Planned Identity documentation — do not treat paths as verified links
+### Identity documentation inventory on the current branch
 
-| Planned file (in `docs/02-core/identity/`) | Scope | Status |
-| --- | --- | --- |
-| `architecture.md` | Internal contracts, adapters, sequence/trust boundaries | PLANNED |
-| `domain-model.md` | Principal/authority/context/error invariants | PLANNED |
-| `contracts.md` | Published contract signatures and semantics | PLANNED |
-| `authentication-flow.md` | OIDC/PKCE, token verification and failure flow | PLANNED |
-| `authorization-model.md` | Exact authority and business policy separation | PLANNED |
-| `security-boundaries.md` | Threats, forged context and negative cases | PLANNED |
-| `acceptance-tests.md` | Test matrix, real OIDC and adversarial evidence | PLANNED |
+The paths below originated in the historical documentation plan. All seven files are tracked on `docs/core-architecture-alignment`; tracked existence does not assign a formal Document Register lifecycle status or establish approval or runtime verification.
 
-Before converting these names to clickable relative links, verify actual files exist at the **merge target SHA**. Historical `docs/contracts/` remains the source authority until a reviewed migration supersedes it.
+| Current tracked file (in `docs/02-core/identity/`) | Scope |
+| --- | --- |
+| [architecture.md](architecture.md) | Internal contracts, adapters, sequence/trust boundaries |
+| [domain-model.md](domain-model.md) | Principal/authority/context/error invariants |
+| [contracts.md](contracts.md) | Published contract signatures and semantics |
+| [authentication-flow.md](authentication-flow.md) | OIDC/PKCE, token verification and failure flow |
+| [authorization-model.md](authorization-model.md) | Exact authority and business policy separation |
+| [security-boundaries.md](security-boundaries.md) | Threats, forged context and negative cases |
+| [acceptance-tests.md](acceptance-tests.md) | Test matrix, real OIDC and adversarial evidence |
+
+Recheck these paths at the **merge target SHA**. Historical `docs/contracts/` remains source evidence for its pinned revision; [tracked contracts](contracts.md) are the current documentation location. Any semantic supersession requires review.
 
 ## 7. Review Claims, Tests and Evidence
 

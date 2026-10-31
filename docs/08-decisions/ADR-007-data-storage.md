@@ -17,4 +17,4 @@ Applications authorize attachment access and own business metadata; they do not 
 
 Implementation acceptance requires a pinned commit, disposable local MinIO, private configuration, real-provider contract/concurrency and failure/restart tests, and reviewed Application integration. This architecture decision is not a runtime or release PASS.
 
-See [storage adapters](../02-core/data/storage-adapters.md), [Data architecture](../02-core/data/data-architecture.md), and the [canonical Data contract](../contracts/data-core.md).
+See [storage adapters](../02-core/data/storage-adapters.md), [Data architecture](../02-core/data/data-architecture.md), and the [tracked Data contract](../02-core/data/contracts.md). Historical `docs/contracts/data-core.md` remains available at its original source revision.

@@ -20,6 +20,10 @@ The register's **OI-###** IDs are stable, independent of GitHub issue numbers. I
 
 ## 3. Open issues — sourced working inventory
 
+**Target-architecture decisions pending review:** assess Flowable BPMN against the existing `WorkflowRuntime`/`WorkflowPersistencePort` definition, version, history, concurrency, and uncertain-commit semantics; define APISIX-to-Backend trust and bypass protection without transferring resource authorization to the edge; define the structured Data public contract separately from `ObjectStoragePort`, Application repositories, and Workflow-owned persistence; and approve provider migration and conformance criteria. These are proposed review topics under the existing issue lifecycle, not closed decisions or verified implementations. Assign stable OI IDs only through the register's review process.
+
+**Document inventory decision pending review:** reconcile the 20 tracked Markdown files absent from the [Document Register](../00-project/document-register.md), including four potential `architecture.md`/`*-architecture.md` canonical overlaps, twelve additional Core documents, and four supplementary review checklists. Decide registration, canonical paths, and whether existing `G4-F##` authoring metadata needs a reviewed relationship to `DOC-###` IDs. Do not infer that relationship, assign owners, change statuses, or create the 63 absent intended files from this audit. Allocate any new OI ID through the existing review process.
+
 `TBD` = not independently assigned/confirmed. Priorities labeled *source P0* come from the linked issue, not an independent F05 severity review. Proposed Gates are marked `Gx?`.
 
 | ID | Type | Priority | Affected Gate | OI Owner | Status | Source / unresolved acceptance concern |

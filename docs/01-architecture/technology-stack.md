@@ -12,6 +12,8 @@ reviewers: NOT RECORDED
 
 ## 1. Purpose, Scope and Evidence Rules
 
+**Additional TO-BE selections:** Flowable BPMN is the proposed Workflow engine adapter; Apache APISIX is the proposed edge gateway. Neither appears as an integrated implementation in the inspected source at `05c7e04f4e5d1e5693a6422fb301f0774155bf01`. Their versions, configuration, migration path, and conformance results remain unknown. The existing Workflow state-machine runtime and Spring Boot HTTP boundary are the AS-IS comparison points, not evidence that either replacement is compatible.
+
 This document records **why** technologies support DX-OS's architectural capabilities, **where** they are configured, their verified or unknown versions, alternatives and trade-offs, and the tests needed before claiming operational readiness. It covers backend, browser Portal/BFF, identity, data persistence, object storage, integration, build, testing and local deployment. It is not a purchase recommendation, an automatic upgrade authorization, a release bill of materials or proof that candidate PRs run end to end.
 
 **Inspection anchor:** immutable repository commit [`0f0c3ba0c3eecda0a5c4a798a3cc14b808351bed`](https://github.com/lexuanbao258-collab/dxos-open-core/commit/0f0c3ba0c3eecda0a5c4a798a3cc14b808351bed). The separately authored G3-F03/F04/F05 review packages have *not* been established as merged at this source SHA. Their design directions are used for consistency; this document does not silently promote their revisions to the inspected Git baseline.
@@ -136,7 +138,7 @@ Open questions: accepted backend/Portal lockfiles, current Keycloak image and is
 - [System Architecture](system-architecture.md), [Core/Application Boundary](core-application-boundary.md), [Dependency Rules](dependency-rules.md) — existing review drafts at inspected SHA; separately revised G3-F03/F04/F05 packages must be reconciled at merge.
 - [Deployment Topology](deployment-topology.md) — existing target draft at inspected SHA; a separate G3-F07 package describes the expanded target, not confirmed merged.
 - [Deployment Prerequisites](../06-deployment/prerequisites.md) — target-only status.
-- [Identity Core](../contracts/identity-core.md), [Workflow Core](../contracts/workflow-core.md), [Data Core](../contracts/data-core.md).
+- [Identity Core](../02-core/identity/contracts.md), [Workflow Core](../02-core/workflow/contracts.md), [Data Core](../02-core/data/contracts.md).
 - [Portal BFF PR #70](https://github.com/lexuanbao258-collab/dxos-open-core/pull/70), [Portal PR #71](https://github.com/lexuanbao258-collab/dxos-open-core/pull/71), [Helpdesk PR #63](https://github.com/lexuanbao258-collab/dxos-open-core/pull/63) — **candidate references**; do not treat as merged or accepted.
 
 `docs/08-decisions/README.md` was not found at this SHA; ADR-007 and other planned decision files are **not linked** without explicit path verification. The intended G3-F02 System Context draft was also not found in the inspected Git tree. Review the merged Documentation Workspace before inserting those links.

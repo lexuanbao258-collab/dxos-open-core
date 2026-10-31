@@ -14,6 +14,8 @@ independent_review: PENDING
 
 ## 1. Scope and source authority
 
+**TO-BE / PROPOSED split of controls:** APISIX can terminate TLS and apply edge routing, rate limits, and coarse credential policy, subject to reviewed configuration. Spring Boot remains the trusted-principal and resource-authorization boundary; IT Helpdesk supplies its resource policy. A proxy-supplied identity assertion is accepted only through an explicitly protected, tested trust channel, never from an ordinary client header. Test direct-to-Backend bypass, forged forwarding headers, invalid tokens, route mismatch, and upstream failure before claiming the APISIX deployment secure. These controls are target requirements, not verified integration evidence.
+
 **SELECTED:** Define the security boundaries and threat-driven acceptance obligations for the DX-OS Gateway logical seam, without changing Identity, Workflow or any public Core API. This is a security design document, **not** a claim that all security controls have been deployed.
 
 Pinned commit: `0f0c3ba0c3eecda0a5c4a798a3cc14b808351bed`.
