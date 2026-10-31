@@ -22,6 +22,13 @@
 - Candidate script patch uses `Start-Process` with separate stderr/stdout files, validates PNG existence and size, and avoids treating Chromium diagnostic stderr as a capture failure. **This fix is committed but has not yet been executed on the operator machine.**
 - Follow-up: operator runs `git pull --ff-only`, reruns the script, reviews `olp-report-evidence/manifest.json`, checks PNGs visually, and separately starts the opt-in local Backend if a Swagger screenshot is required.
 
+## Visual review of screenshots — 2026-10-31
+
+- The operator supplied `01-documentation-desktop.png` and `02-documentation-narrow-viewport.png`. Desktop image is readable and shows the title, navigation, MVP/Draft status, overview and scope warning.
+- The generated 390px-wide image **clips the right side** of the H1, descriptive text, and navigation. Do **not** use it as proof the website is responsive. This may be a Chromium headless `--window-size` rendering/physical screenshot mismatch (Chromium can maintain a minimum internal window width); a real responsive browser viewport must be checked before attributing the clipping to CSS.
+- **Manual actual-viewport verification:** Open the public site in Edge/Chrome, press F12, toggle the device toolbar (Ctrl+Shift+M), set width = 390 and height = 844 at 100% zoom, reload, check the title wraps and there is no horizontal viewport overflow, then use the DevTools menu **Capture screenshot**. Save the corrected image as `02-documentation-mobile-verified.png`; do not rely on the original headless crop.
+- If horizontal scrolling or clipped text reproduces inside this actual 390px CSS viewport, treat it as a genuine responsive defect and fix the stylesheet before lecturer submission; otherwise treat the screenshot generator as the issue.
+
 ## Not verified / blockers
 
 1. **GitHub Pages deploy & external HTTP 200: NOT VERIFIED.** Expected URL: https://lexuanbao258-collab.github.io/dxos-open-core/ . Open Repository → Settings → Pages; check Source = Deploy from a branch, Branch = gh-pages, Folder = /(root), then check deployment status, public HTTP 200 and asset loading.
