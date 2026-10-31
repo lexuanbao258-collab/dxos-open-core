@@ -1,45 +1,38 @@
-﻿# DX-OS Open-Core — Documentation
+# DX-OS Open-Core — Documentation Portal
 
-Status: DOCUMENTATION RESTRUCTURE IN PROGRESS
+> Status: RESTRUCTURE IN PROGRESS; navigation inventory of tracked `main` as of 2026-10-31. Document lifecycle and canonical identity require approved review/Document Register; folder presence does not establish acceptance.
 
-## Documentation Structure
+## Start here
 
-| Section | Purpose |
-|---|---|
-| 00-project | Project context, scope and product vision |
-| 01-architecture | System architecture and dependency rules |
-| 02-core | Identity, Workflow, Data and API Gateway capabilities |
-| 03-applications | IT Helpdesk and Facility applications |
-| 04-integration | Cross-module and full-stack integration |
-| 05-testing | Test strategy, specifications and acceptance |
-| 06-deployment | Installation, configuration and operations |
-| 07-open-source | Licensing, attribution and release readiness |
-| 08-decisions | Architecture Decision Records |
-| 09-evidence | Verification evidence |
-| 10-reviews | Independent reviews and findings |
-| 11-poc | Proof-of-concept documents |
+- [Project overview](00-project/project-overview.md)
+- [Problem statement](00-project/problem-statement.md)
+- [Product vision](00-project/product-vision.md)
+- [Scope and MVP](00-project/scope-and-mvp.md)
+- [System architecture](01-architecture/system-architecture.md)
+- [Core/Application boundary](01-architecture/core-application-boundary.md)
+- [Dependency rules](01-architecture/dependency-rules.md)
+- [Repository layout and ownership](01-architecture/repository-layout-and-ownership.md)
+- [Deployment prerequisites](06-deployment/prerequisites.md)
 
-## Existing Canonical Documentation
+## Tracked Core capability architecture
 
-The following existing directories remain authoritative
-during the migration:
+- [Identity](02-core/identity/identity-architecture.md)
+- [Workflow](02-core/workflow/workflow-architecture.md)
+- [Data](02-core/data/data-architecture.md)
+- [Storage adapters](02-core/data/storage-adapters.md)
+- [Gateway](02-core/gateway/gateway-architecture.md)
 
-- [Architecture](architecture/README.md)
-- [Core Contracts](contracts/README.md)
-- [Evidence](evidence/README.md)
-- [Proof of Concept](poc/README.md)
+## Application and downstream documentation
 
-## Migration Rules
+- `03-applications/{helpdesk,facility}/`: placeholders on main; draft business documentation in PR #76/#82 and Issue #53.
+- `04-integration/`, `05-testing/`, `07-open-source/`, `09-evidence/`, `10-reviews/`, `11-poc/`: placeholders on current main; do not infer tested acceptance.
+- [ADR-007 Data Storage](08-decisions/ADR-007-data-storage.md): historical/proposed status determined by the document itself, not this index.
+- Supporting PR chain: [#82](https://github.com/lexuanbao258-collab/dxos-open-core/pull/82) → [#83](https://github.com/lexuanbao258-collab/dxos-open-core/pull/83) → [#84](https://github.com/lexuanbao258-collab/dxos-open-core/pull/84). Original import [#78](https://github.com/lexuanbao258-collab/dxos-open-core/pull/78) overlaps #82; Application docs [#76](https://github.com/lexuanbao258-collab/dxos-open-core/pull/76) overlap. No duplicate PR was deleted or silently merged.
 
-1. Do not delete or rewrite historical evidence.
-2. Do not move SQL fixtures referenced by Gradle or tests.
-3. Do not change public contracts without approval.
-4. Preserve existing Issue and PR traceability.
-5. Architectural proposals are not implemented features.
-6. Acceptance requires tests on a pinned commit.
+## Migration safeguards
 
-## Current State
-
-The numbered documentation directories are being prepared.
-Existing canonical documents remain at their original paths
-until a reviewed migration explicitly replaces them.
+1. Preserve historic content and source SHA pins; do not silently change a document ID or approved decision.
+2. Do not move SQL fixtures referenced by test code or rewrite applied Flyway V1–V4.
+3. For duplicates, first compare exact contents and file links, then select canonical/supplementary roles through an owner decision.
+4. No drafted architecture, diagram, tests or source commentary proves deployed runtime.
+5. Review links and selected integration SHA after any accepted documentation merge.
