@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="vi" data-root="../" data-page="api"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="DX-OS IT Helpdesk MVP API Reference: 9 HTTP endpoints trong một OpenAPI source-derived draft, render bởi Scalar."><title>API Reference · DX-OS Developer Portal</title><link rel="stylesheet" href="../assets/site.css"><script defer src="../assets/site.js"></script></head>
+<body><div id="site-header"></div>
+<main class="ref-page"><p class="eyebrow" style="margin:8px 0 12px">REFERENCE / IT HELPDESK MVP</p><h1 style="font-size:clamp(26px,3vw,39px);margin:4px 0 12px">API Reference</h1>
+<div class="ref-banner"><strong>● Contract preview</strong><span>9 HTTP operations · OpenAPI 3.1 source-derived draft · Không có public API server</span><span style="margin-left:auto"><a href="./openapi.source-draft.json">Xem JSON bản thảo ↗</a></span></div>
+<div class="callout warn"><strong>Không phải hợp đồng export chính thức</strong>Bản OpenAPI phía dưới được biên soạn từ controller/DTO ở PR #79 để thiết kế giao diện. Chưa được thay thế bằng snapshot export thực tế từ Springdoc và chưa có valid-JWT/ACL E2E. Các trường hợp 403/404/409 còn cần kiểm chứng. Chế độ gửi request và form nhập token đã được tắt; trang không kết nối Backend.</div>
+<div id="scalar-root"></div>
+<div id="ref-fallback" class="ref-fallback"><h2>Danh sách API</h2><p class="section-lead">Trình hiển thị Scalar cần tải thư viện từ CDN. Nếu không thấy giao diện tương tác tài liệu, bạn vẫn có thể xem 9 endpoint dưới đây và <a href="./openapi.source-draft.json">tệp OpenAPI JSON bản thảo</a>.</p><ul>
+<li><span class="method">GET</span> <code>/api/v1/mvp/requests</code> — Danh sách</li>
+<li><span class="method post">POST</span> <code>/api/v1/mvp/requests</code> — Tạo yêu cầu</li>
+<li><span class="method">GET</span> <code>/api/v1/mvp/requests/{id}</code> — Chi tiết</li>
+<li><span class="method">GET</span> <code>/api/v1/mvp/requests/{id}/history</code> — Lịch sử</li>
+<li><span class="method post">POST</span> <code>/api/v1/mvp/requests/{id}/triage</code> — Tiếp nhận</li>
+<li><span class="method post">POST</span> <code>/api/v1/mvp/requests/{id}/assign</code> — Phân công</li>
+<li><span class="method post">POST</span> <code>/api/v1/mvp/requests/{id}/start</code> — Bắt đầu</li>
+<li><span class="method post">POST</span> <code>/api/v1/mvp/requests/{id}/resolve</code> — Xử lý xong</li>
+<li><span class="method post">POST</span> <code>/api/v1/mvp/requests/{id}/confirm</code> — Xác nhận</li></ul></div>
+<div class="meta-line"><a href="../guides/index.html">← Integration guide</a> · <a href="../architecture/index.html">Architecture</a> · <a href="https://github.com/scalar/scalar">Powered by open-source Scalar</a></div></main>
+<script type="module">
+(async()=>{
+  try{
+    const { createApiReference } = await import('https://cdn.jsdelivr.net/npm/@scalar/api-reference@1.69.2/esm.js');
+    createApiReference('#scalar-root',{
+      url:'./openapi.source-draft.json',
+      theme:'default',
+      layout:'modern',
+      hideTestRequestButton:true,
+      persistAuth:false,
+      withDefaultFonts:false,
+      telemetry:false,
+      showDeveloperTools:'never',
+      documentDownloadType:'json',
+      agent:{disabled:true}
+    });
+    document.getElementById('ref-fallback').hidden=true;
+  }catch(error){
+    document.getElementById('ref-fallback').insertAdjacentHTML('afterbegin','<p class="callout warn">Không tải được thư viện Scalar từ CDN; nội dung tĩnh bên dưới vẫn sẵn có.</p>');
+  }
+})();
+</script>
+</body></html>
