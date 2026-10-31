@@ -1,6 +1,6 @@
 # DX-OS Repository Layout and Ownership — Migration-Safe Proposal
 
-> Status: PROPOSED / NOT APPROVED. Documentation-only proposal; not a source refactor, security acceptance, or release gate.
+> Status: TEAM-SELECTED LAYOUT — 2026-10-31. Implementation migration and gate acceptance remain separate; not a source refactor or runtime acceptance.
 > Source inventory: `main@f2063e5b70545e378729e8547d1d2d9ce217d3c9` (2026-10-31).
 > Owners: Yến (Identity/Gateway); Bảo (Workflow/Data/backend integration); Ánh (Application/Frontend).
 > Independent review: another team member for each area; architecture/contract changes require affected owners.
@@ -36,7 +36,7 @@ dxos-open-core/
 - PR #77 proposes 75 placeholder `.gitkeep` paths, including `portal/frontend/` and `portal/bff/`. They are **not** a verified modular migration or permission to move provider adapters into `core`.
 - The generic Workflow HTTP controller is not production-registered at this baseline. Do not enable it as a side effect of layout work.
 
-## 3. Preferred MVP tree (target where explicitly labeled)
+## 3. Selected logical layout (target where explicitly labeled)
 
 ```text
 dxos-open-core/
@@ -53,8 +53,9 @@ dxos-open-core/
 │       │   │   └── data/                   # ObjectStoragePort and values
 │       │   ├── application/
 │       │   │   ├── identity/               # CurrentPrincipal port
-│       │   │   ├── authorization/
-│       │   │   └── helpdesk/               # target; migration decision needed
+│       │   │   ├── authorization/          # shared orchestration/policy ports
+│       │   │   ├── helpdesk/               # business capability; TARGET migration
+│       │   │   └── facility/               # second application; TARGET only
 │       │   ├── gateway/                    # HTTP mapping/trust boundary
 │       │   ├── infrastructure/             # provider adapters
 │       │   │   ├── identity/
@@ -87,7 +88,7 @@ dxos-open-core/
 └── scripts/
 ```
 
-The preferred `frontend/` and `portal-bff/` naming is an MVP integration proposal based on existing PR paths. A different final naming scheme requires an approved migration ADR and coordinated updates; do not create duplicate runnable applications.
+The selected MVP path naming is `frontend/` and `portal-bff/` because PRs #51/#71 and #70 use those paths; consolidate under `portal/` only through a separate approved migration if desired. A different final naming scheme requires an approved migration ADR and coordinated updates; do not create duplicate runnable applications.
 
 ## 4. Module ownership and import rules
 
@@ -97,7 +98,7 @@ The preferred `frontend/` and `portal-bff/` naming is an MVP integration proposa
 | `gateway/` and HTTP security boundary | Yến | Bảo Backend / Ánh Portal | Never trust caller headers or replace Application resource ACL with edge-only checks. |
 | `core/workflow` and Workflow persistence semantics | Bảo | Yến / Ánh | Application must consume reviewed contracts; Flowable is a proposed adapter, not the Core runtime definition. |
 | `core/data` and `infrastructure/{storage,persistence}` | Bảo | Ánh (PR #34 handoff), Yến | ObjectStoragePort is provider-neutral; application business data ownership is distinct. |
-| `request/`, future Helpdesk Application and Facility design | Ánh business owner, Bảo Backend implementer | Yến security | Domain rules and resource eligibility belong to Application; preserve current code until migration acceptance. |
+| `application/helpdesk/`, `application/facility/`, observed `request/` | Ánh business owner, Bảo Backend implementer | Yến security | Domain rules and resource eligibility belong to Application; preserve current `request/` until an approved bounded migration. No separate top-level Java `modules/` package is selected. |
 | `frontend/` | Ánh | Yến session, Bảo API | No direct database, Keycloak admin, MinIO SDK or unregistered Workflow HTTP dependency. |
 | `portal-bff/` | Yến security, Ánh consumer integration | Bảo Backend | Server-side OAuth session, CSRF and trusted token handoff; verify real E2E separately. |
 | `infra/`, reproducible release scripts | Bảo integration lead | Yến / Ánh | Private local credentials, no destructive shared database operations. |
@@ -119,13 +120,23 @@ Provider-specific adapters belong under `infrastructure/` (or an explicitly revi
 
 - [ ] Confirm current vs target paths with the reviewed Git tree.
 - [ ] Architecture owners approve the provider-neutral Core vs infrastructure split.
-- [ ] Ánh and Yến approve the single `frontend/` + `portal-bff/` convention (or document an alternative).
+- [x] Team layout direction selects Application children `application/helpdesk/` and `application/facility/` rather than `modules/`.
+- [ ] Confirm `frontend/` + `portal-bff/` as the effective integration paths when their PRs are brought into the baseline.
 - [ ] Bảo confirms no impact on `request/`, build graph or Flyway V1–V4.
 - [ ] Review PR #77: accept only useful placeholders, or supersede its unused scaffold with recorded rationale.
 - [ ] Agree how docs canonical ownership and Document Register relate to #82 → #83 → #84.
 - [ ] Run link/lint checks on the final documentation PR.
 - [ ] Record independent PASS / CONDITIONAL / BLOCKED at exact reviewed SHA.
 
-## 7. Deferred / not authorized here
+## 7. Clear capability taxonomy
+
+- `core/identity`: stable principal/authority value contracts, not an authentication-server implementation.
+- `application/identity`: trusted-principal consumer port (`CurrentPrincipal`) rather than a duplicate identity provider.
+- `application/authorization`: reusable authorization orchestration at application boundary; ticket-specific resource rules belong to `application/helpdesk`.
+- `application/helpdesk`: owns ticket model, rules, use cases and application-specific ports. `application/facility` is a candidate second consumer of unchanged Core contracts.
+- `infrastructure/*`: concrete OIDC, PostgreSQL, object storage and Workflow adapters; do not manufacture vendor packages before implementation.
+- `gateway`: HTTP/security boundary; APISIX remains a proposed edge adapter and is not a prerequisite to local MVP.
+
+## 8. Deferred / not authorized here
 
 No code moves, mass file deletion, migration rewrite, new Java modules, opening Workflow HTTP, APISIX/Flowable runtime claims, provider switches, auto-merge or release approval. A successful documentation review confirms navigation guidance only, not architectural enforcement or runtime correctness.
