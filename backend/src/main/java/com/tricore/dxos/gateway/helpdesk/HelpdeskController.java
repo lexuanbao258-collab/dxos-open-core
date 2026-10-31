@@ -25,28 +25,35 @@ import java.util.UUID;
 @ConditionalOnProperty(name = "dxos.helpdesk.enabled", havingValue = "true")
 @RequestMapping("/api/v1/mvp/requests")
 public class HelpdeskController {
+    // Hibernate Validator 8 NotBlank uses String.trim(), not Unicode isBlank().
+    private static final String NON_BLANK = "[^\\u0000-\\u0020]";
     private final HelpdeskService service;
     public HelpdeskController(HelpdeskService service) { this.service = service; }
 
-    public record Create(@Schema(example = "Máy tính không kết nối Internet") @NotBlank @Size(max = 200) String title,
-                         @Schema(description = "Mô tả sự cố") @NotBlank @Size(max = 4000) String description,
+    @Schema(additionalProperties = Schema.AdditionalPropertiesValue.FALSE)
+    public record Create(@Schema(example = "Máy tính không kết nối Internet", minLength = 1, pattern = NON_BLANK,
+                                 description = "Không rỗng sau String.trim(); tối đa 200 UTF-16 code units") @NotBlank @Size(max = 200) String title,
+                         @Schema(description = "Mô tả sự cố; không rỗng sau String.trim(); tối đa 4000 UTF-16 code units", minLength = 1, pattern = NON_BLANK) @NotBlank @Size(max = 4000) String description,
                          @Schema(allowableValues = "IT_HELPDESK") @NotNull @Pattern(regexp = "IT_HELPDESK") String requestType) {
         @JsonAnySetter public void unknown(String field, Object value) { throw new IllegalArgumentException("Unknown field"); }
     }
-    public record Version(@Schema(description = "Phiên bản Workflow hiện tại phía client; sai phiên bản sẽ bị từ chối", example = "0")
+    @Schema(additionalProperties = Schema.AdditionalPropertiesValue.FALSE)
+    public record Version(@Schema(description = "Phiên bản Workflow hiện tại phía client; sai phiên bản sẽ bị từ chối", example = "0", maximum = "9223372036854775807")
                           @NotNull @PositiveOrZero
                           @JsonDeserialize(using = WorkflowVersionDeserializer.class) Long expectedVersion) {
         @JsonAnySetter public void unknown(String field, Object value) { throw new IllegalArgumentException("Unknown field"); }
     }
-    public record Assign(@Schema(description = "Canonical ID của kỹ thuật viên đủ điều kiện")
+    @Schema(additionalProperties = Schema.AdditionalPropertiesValue.FALSE)
+    public record Assign(@Schema(description = "Canonical ID của kỹ thuật viên đủ điều kiện; không rỗng sau String.trim(); tối đa 1024 UTF-16 code units", minLength = 1, pattern = NON_BLANK)
                          @NotBlank @Size(max = 1024) String assigneeId,
-                         @Schema(description = "Phiên bản phân công, tách biệt với Workflow version", example = "0")
+                         @Schema(description = "Phiên bản phân công, tách biệt với Workflow version", example = "0", maximum = "9223372036854775807")
                          @NotNull @PositiveOrZero @JsonDeserialize(using = WorkflowVersionDeserializer.class) Long expectedAssignmentVersion) {
         @JsonAnySetter public void unknown(String field, Object value) { throw new IllegalArgumentException("Unknown field"); }
     }
-    public record Resolve(@Schema(description = "Phiên bản Workflow hiện tại", example = "2")
+    @Schema(additionalProperties = Schema.AdditionalPropertiesValue.FALSE)
+    public record Resolve(@Schema(description = "Phiên bản Workflow hiện tại", example = "2", maximum = "9223372036854775807")
                           @NotNull @PositiveOrZero @JsonDeserialize(using = WorkflowVersionDeserializer.class) Long expectedVersion,
-                          @Schema(description = "Kết quả xử lý của kỹ thuật viên")
+                          @Schema(description = "Kết quả xử lý của kỹ thuật viên; không rỗng sau String.trim(); tối đa 4000 UTF-16 code units", minLength = 1, pattern = NON_BLANK)
                           @NotBlank @Size(max = 4000) String resolution) {
         @JsonAnySetter public void unknown(String field, Object value) { throw new IllegalArgumentException("Unknown field"); }
     }
