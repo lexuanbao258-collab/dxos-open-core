@@ -1,0 +1,47 @@
+name: Helpdesk API docs and Java contract
+
+on:
+  pull_request:
+    branches:
+      - feature/issue53-java-helpdesk-mvp-20261028
+    paths:
+      - 'backend/**'
+      - 'scripts/check-helpdesk-openapi-doc-routes.py'
+      - 'scripts/test_helpdesk_openapi_routes.py'
+      - 'scripts/export-helpdesk-openapi-local.ps1'
+      - '.github/workflows/helpdesk-openapi-docs.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  source-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Route-check negative test suite
+        run: python -m unittest discover -s scripts -p 'test_helpdesk_openapi_routes.py' -v
+      - name: Compare Java controller routes with gh-pages source-draft
+        shell: bash
+        run: |
+          git fetch --no-tags origin gh-pages
+          git show FETCH_HEAD:preview/api/openapi.source-draft.json > "${RUNNER_TEMP}/docs-openapi.json"
+          python scripts/check-helpdesk-openapi-doc-routes.py --spec "${RUNNER_TEMP}/docs-openapi.json"
+      - name: Full Java build and JUnit suite
+        working-directory: backend
+        run: ./gradlew --no-daemon test build
+      - name: Evidence limits
+        run: |
+          echo "This checks static method-to-path drift + full Gradle build."
+          echo "NOT verified: runtime-generated Springdoc JSON equivalence, valid JWT, tenant/ACL E2E, 403/404/409."
