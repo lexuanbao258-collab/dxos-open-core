@@ -48,7 +48,7 @@ class WorkflowSecurityDefinerReviewLauncherTest {
     }
 
     @Test void privateModeUsesEnvironmentAndNeverPrintsBodies() throws Exception {
-        Path metadata = Files.writeString(temporary.resolve("shareable-metadata.json"), "{}");
+        Path metadata = Files.writeString(temporary.toRealPath().resolve("shareable-metadata.json"), "{}");
         String output = launch("@echo off\r\necho fixture-private-body 1>&2\r\n"
                 + "echo fixture-private-body > \"%WORKFLOW_DEFINER_REVIEW_DIR%\\private-function-review.json\"\r\n"
                 + "echo %WORKFLOW_DEFINER_METADATA_FILE% > baseline-env.txt\r\n"
@@ -81,6 +81,8 @@ class WorkflowSecurityDefinerReviewLauncherTest {
                 "PGSSLROOTCERT", "fixture.pem", "LOCALAPPDATA", temporary.resolve("local-data").toString(),
                 "WORKFLOW_DEFINER_METADATA_FILE", "inherited-private-mode"));
         process.environment().remove("WORKFLOW_EVENT_GUARD_LOCAL_DISPOSABLE");
+        // Windows PowerShell must not inherit PowerShell 7's incompatible core modules.
+        process.environment().remove("PSModulePath");
         if (invalidKey != null) {
             if (invalidKey.equals("DB_PASSWORD")) process.environment().remove(invalidKey);
             else process.environment().put(invalidKey, "false");
@@ -90,7 +92,7 @@ class WorkflowSecurityDefinerReviewLauncherTest {
             running.destroyForcibly();
             throw new AssertionError("Launcher timed out");
         }
-        assertThat(running.exitValue()).isEqualTo(expectedExit);
+        assertThat(running.exitValue()).withFailMessage(Files.readString(output)).isEqualTo(expectedExit);
         return Files.readString(output);
     }
 }

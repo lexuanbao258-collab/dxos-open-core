@@ -1,7 +1,7 @@
-name: Verify PR80 Windows ACL fixture candidate
+name: Verify PR93 Windows launcher candidate
 on:
   push:
-    branches: [fix/pr80-windows-acl-test-fixture-20261031]
+    branches: [fix/pr80-windows-acl-test-fixture-20261031, fix/pr93-windows-launchers-20261101]
 permissions:
   contents: read
 jobs:
@@ -18,16 +18,30 @@ jobs:
         with:
           persist-credentials: false
           fetch-depth: 0
+          ref: ${{ github.sha }}
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '21'
       - name: Confirm exact candidate + SQL integrity
         shell: pwsh
+        env:
+          EXPECTED_CANDIDATE_SHA: ${{ github.sha }}
         run: |
           git merge-base --is-ancestor 16d1f00493ec6b8eaeb5fac466a48c7f0469ed1e HEAD
           if ($LASTEXITCODE -ne 0) { throw "PR80 ancestor missing" }
-          Write-Host "CANDIDATE_SHA=$(git rev-parse HEAD)"
+          $candidate = git rev-parse HEAD
+          if ($candidate -ne $env:EXPECTED_CANDIDATE_SHA) { throw 'Tested commit does not match workflow SHA' }
+          New-Item -ItemType Directory -Path .ci-evidence -Force | Out-Null
+          @{
+            candidate_sha = $candidate
+            workflow_sha = $env:EXPECTED_CANDIDATE_SHA
+            run_id = '${{ github.run_id }}'
+            run_attempt = '${{ github.run_attempt }}'
+          } | ConvertTo-Json | Set-Content .ci-evidence/candidate.json
+          Write-Host "CANDIDATE_SHA=$candidate"
+          $manifest = (Get-FileHash backend/src/main/resources/workflow-event-trigger-manifest.json -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($manifest -ne 'd5de8c9deb62590653f2fb19d184c8ad9298d3a5386c98cf2b4b50eefc4a3237') { throw 'Reviewed manifest byte mismatch' }
           $a = (Get-FileHash docs/evidence/issue-25-runtime-privilege-review.sql -Algorithm SHA256).Hash.ToLowerInvariant()
           $b = (Get-FileHash docs/evidence/issue-25-security-definer-review.sql -Algorithm SHA256).Hash.ToLowerInvariant()
           if ($a -ne '4cc070ba08d481b915c7d52ce04a5e26478c3a878c5dc181f517bf04352185a9') { throw 'Runtime SQL byte mismatch' }
@@ -39,15 +53,19 @@ jobs:
         shell: pwsh
         working-directory: backend
         run: |
-          .\gradlew.bat test --tests "*WorkflowRuntimePrivilegeAuditTest" --tests "*WorkflowSecurityDefinerReviewTest" --no-daemon --rerun-tasks --console=plain
-          if ($LASTEXITCODE -ne 0) { throw "FOCUSED_TESTS_FAILED" }
+          .\gradlew.bat test --tests "*WorkflowApprovedMigrationTest" --tests "*WorkflowApprovedSmokeLauncherTest" --tests "*WorkflowSecurityDefinerReviewLauncherTest" --tests "*WorkflowRuntimePrivilegeAuditTest" --tests "*WorkflowSecurityDefinerReviewTest" --no-daemon --rerun-tasks --console=plain
+          $testExit = $LASTEXITCODE
+          Copy-Item build/test-results/test ../.ci-evidence/focused -Recurse
+          if ($testExit -ne 0) { throw "FOCUSED_TESTS_FAILED" }
           Write-Host "FOCUSED_TESTS_PASS"
       - name: Full clean regression
         shell: pwsh
         working-directory: backend
         run: |
           .\gradlew.bat clean test --no-daemon --rerun-tasks --console=plain
-          if ($LASTEXITCODE -ne 0) { throw "CLEAN_TEST_FAILED" }
+          $testExit = $LASTEXITCODE
+          Copy-Item build/test-results/test ../.ci-evidence/full -Recurse
+          if ($testExit -ne 0) { throw "CLEAN_TEST_FAILED" }
           Write-Host "CLEAN_TEST_PASS"
       - name: Gradle build
         shell: pwsh
@@ -84,6 +102,9 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: pr80-windows-fixture-candidate-junit
-          path: backend/build/test-results/test/TEST-*.xml
+          name: pr93-windows-${{ github.sha }}-${{ github.run_attempt }}
+          path: |
+            .ci-evidence/candidate.json
+            .ci-evidence/focused/TEST-*.xml
+            .ci-evidence/full/TEST-*.xml
           if-no-files-found: warn

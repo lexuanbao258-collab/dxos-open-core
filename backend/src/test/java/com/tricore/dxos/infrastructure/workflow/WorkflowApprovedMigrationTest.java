@@ -48,6 +48,14 @@ class WorkflowApprovedMigrationTest {
     @Test void bundleSidecarsAreRejectedBeforeConnection() throws Exception {
         Files.writeString(bundle.resolve("V4__seed_workflow_definitions.sql.conf"),"executeInTransaction=false");stopped();
     }
+    @Test void packagedManifestRetainsReviewedBytes() throws Exception {
+        try (var stream = WorkflowApprovedMigration.class.getResourceAsStream("/workflow-event-trigger-manifest.json")) {
+            assertThat(stream).isNotNull();
+            assertThat(HexFormat.of().formatHex(java.security.MessageDigest.getInstance("SHA-256")
+                    .digest(stream.readAllBytes()))).isEqualTo(WorkflowApprovedMigration.MANIFEST_SHA);
+        }
+        WorkflowApprovedMigration.bundle(bundle);
+    }
     @Test void driverErrorsCannotLeakSecretsOrClaimAWrite() {
         var result=WorkflowApprovedMigration.run(env,bundle,(u,p)->{throw new java.sql.SQLException("password=private-unit-password jdbc:postgresql://private-host","08006");},
                 mock(WorkflowEventTriggerGuard.class),f->{throw new AssertionError("No migration");});
