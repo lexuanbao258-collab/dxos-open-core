@@ -61,16 +61,134 @@ def resolve(document, obj):
         obj = target
     raise ValueError("Maximum $ref depth exceeded")
 
+def media_schema(content, label):
+    """Select JSON (or Springdoc's */*) without silently skipping the schema."""
+    require(isinstance(content, dict) and content,
+            f"Missing response/request content: {label}")
+    candidates = ["application/json", "application/problem+json", "*/*"]
+    candidates += [k for k in content if k.endswith("+json") and k not in candidates]
+    found = next((k for k in candidates if k in content), None)
+    require(found is not None,
+            f"No JSON-compatible content type: {label}, available={sorted(content)}")
+    media = content[found]
+    require(isinstance(media, dict) and media.get("schema"),
+            f"No schema under {found}: {label}")
+    return media["schema"]
+
+
 def schema_for(document, operation, source):
-    holder = operation.get(source, {})
     if source == "requestBody":
-        media = resolve(document, holder).get("content", {}).get("application/json", {})
+        holder = resolve(document, operation.get("requestBody", {}))
+        schema = media_schema(holder.get("content", {}), "requestBody")
     else:
         codes = operation.get("responses", {})
         success = next((c for c in ("200", "201", "202") if c in codes), None)
-        require(success is not None, "Missing success response schema")
-        media = resolve(document, codes[success]).get("content", {}).get("application/json", {})
-    return resolve(document, media.get("schema", {}))
+        require(success is not None, "Missing success response")
+        response = resolve(document, codes[success])
+        schema = media_schema(response.get("content", {}), f"HTTP {success}")
+    result = resolve(document, schema)
+    require(isinstance(result, dict) and result,
+            "Response/request JSON schema resolves to empty/non-object")
+    return result
+
+
+def normalized_schema(document, obj, depth=0, references=None):
+    """Shape-focused deep comparison; intentionally not a full OpenAPI semantic proof."""
+    require(depth <= 20, "Schema nesting exceeds 20 levels")
+    if references is None:
+        references = frozenset()
+    if not isinstance(obj, dict):
+        return obj
+    if "$ref" in obj:
+        ref = obj["$ref"]
+        require(ref not in references, f"Recursive schema unsupported: {ref}")
+        return normalized_schema(document, resolve(document, obj), depth + 1,
+                                 references | {ref})
+    keys = ("type", "nullable", "format", "enum", "const", "minLength", "maxLength",
+            "pattern", "minimum", "maximum", "minItems", "maxItems",
+            "additionalProperties", "required", "readOnly", "writeOnly")
+    result = {}
+    for k in keys:
+        if k in obj:
+            value = obj[k]
+            if k == "type" and isinstance(value, list):
+                value = sorted(value)
+            elif k in ("enum", "required") and isinstance(value, list):
+                value = sorted(value, key=str)
+            elif k == "additionalProperties" and isinstance(value, dict):
+                value = normalized_schema(document, value, depth + 1, references)
+            result[k] = value
+    for k in ("properties", "patternProperties"):
+        if k in obj:
+            require(isinstance(obj[k], dict), f"Invalid {k} in schema")
+            result[k] = {name: normalized_schema(document, v, depth + 1, references)
+                         for name, v in sorted(obj[k].items())}
+    if "items" in obj:
+        result["items"] = normalized_schema(document, obj["items"], depth + 1,
+                                             references)
+    for k in ("oneOf", "anyOf", "allOf"):
+        if k in obj:
+            result[k] = [normalized_schema(document, v, depth + 1, references)
+                         for v in obj[k]]
+    return result
+
+
+def flatten_diff(before, after, prefix):
+    """Report every missing or different constraint; never treat {} as proof."""
+    if isinstance(before, dict) and isinstance(after, dict):
+        results = []
+        for key in sorted(set(before) | set(after)):
+            path = f"{prefix}.{key}"
+            if key not in before:
+                results.append(f"{path}: only in runtime ({str(after[key])[:90]})")
+            elif key not in after:
+                results.append(f"{path}: only in draft ({str(before[key])[:90]})")
+            else:
+                results += flatten_diff(before[key], after[key], path)
+        return results
+    if before != after:
+        return [f"{prefix}: draft={str(before)[:120]} runtime={str(after)[:120]}"]
+    return []
+
+
+def compare_runtime(draft, runtime):
+    """Fail closed on route, status, security, parameter and deep schema drift.
+
+    Comparison is structural and still needs a human for example correctness,
+    business authorization, charset validity, and response semantics.
+    """
+    dops, rops = operations(draft), operations(runtime)
+    issues = []
+    for key in sorted(set(dops) | set(rops)):
+        if key not in dops:
+            issues.append(f"{key}: undocumented runtime endpoint")
+            continue
+        if key not in rops:
+            issues.append(f"{key}: draft endpoint absent from runtime")
+            continue
+        d, r = dops[key], rops[key]
+        prefix = f"{key[0].upper()} {key[1]}"
+        dstatus, rstatus = set(d.get("responses", {})), set(r.get("responses", {}))
+        if dstatus != rstatus:
+            issues.append(f"{prefix}.HTTP-status: draft={sorted(dstatus)} runtime={sorted(rstatus)}")
+        dsecurity = d.get("security", draft.get("security", []))
+        rsecurity = r.get("security", runtime.get("security", []))
+        if dsecurity != rsecurity:
+            issues.append(f"{prefix}.security: differs")
+        def params(op):
+            return sorted(op.get("parameters", []),
+                          key=lambda p: (p.get("name", ""), p.get("in", "")))
+        dparam, rparam = params(d), params(r)
+        if dparam != rparam:
+            issues.append(f"{prefix}.parameters: differs (inspect required/type/format)")
+        for src in (("requestBody", "response") if key[0] == "post" else ("response",)):
+            try:
+                ds = normalized_schema(draft, schema_for(draft, d, src))
+                rs = normalized_schema(runtime, schema_for(runtime, r, src))
+                issues.extend(flatten_diff(ds, rs, f"{prefix}.{src}"))
+            except (ValueError, KeyError, TypeError) as exc:
+                issues.append(f"{prefix}.{src}: could not compare schema: {exc}")
+    return issues
 
 def required_schema(document, operation, source):
     root = schema_for(document, operation, source)
@@ -102,6 +220,9 @@ def check_document(document, is_draft=True):
         expected_status = "201" if (method, path) == ("post", "/api/v1/mvp/requests") else "200"
         require(expected_status in operation.get("responses", {}),
                 f"Missing expected HTTP {expected_status}: {method} {path}")
+        # Check every documented success response, including array schemas.
+        # A missing JSON schema is not allowed to pass with empty properties.
+        schema_for(document, operation, "response")
         if method == "post":
             require(operation.get("requestBody", {}).get("required", True) is not False,
                     f"Optional request body: {method} {path}")
@@ -239,26 +360,14 @@ def main():
         print("BREAKING_CHANGE_CHECK=PASS (no removals/new required fields within checked schema subset)")
     if args.runtime_json:
         runtime = load(args.runtime_json)
-        actual = operations(runtime)
-        require(set(actual) == EXPECTED,
-                "Runtime route mismatch (diff endpoints before publishing)")
-        issues = []
-        for key in EXPECTED:
-            d, r = operations(spec)[key], actual[key]
-            for source in ("requestBody",):
-                if key[0] == "get":
-                    continue
-                draft_fields = set(props(spec, d, source))
-                runtime_fields = set(props(runtime, r, source))
-                if draft_fields != runtime_fields:
-                    issues.append(f"{key}: request fields draft={sorted(draft_fields)} runtime={sorted(runtime_fields)}")
-            draft_response_fields = set(props(spec, d, "response"))
-            runtime_response_fields = set(props(runtime, r, "response"))
-            if draft_response_fields and runtime_response_fields and draft_response_fields != runtime_response_fields:
-                issues.append(f"{key}: response fields draft={sorted(draft_response_fields)} runtime={sorted(runtime_response_fields)}")
-        require(not issues, "RUNTIME_DRIFT=FAIL:\\n" + "\\n".join(issues))
-        print("RUNTIME_COMPARISON=PASS (routes/request fields and resolved response fields where available)")
-        print("WARNING: This is not an exhaustive schema/behavior comparison or authenticated E2E.")
+        require(set(operations(runtime)) == EXPECTED,
+                "Runtime route inventory differs from the nine expected operations")
+        issues = compare_runtime(spec, runtime)
+        require(not issues,
+                "RUNTIME_DRIFT=FAIL (" + str(len(issues)) +
+                " differences):\\n" + "\\n".join(issues[:120]))
+        print("RUNTIME_COMPARISON=PASS (structural operations, parameters, statuses, schemas)")
+        print("WARNING: Does not prove business policy, UTF-8 correctness, E2E or production safety.")
     else:
         print("RUNTIME_COMPARISON=NOT_RUN (requires real exported springdoc JSON)")
     print("HTTP_PLAYGROUND=DISABLED_BY_POLICY (not counted as interactive API test)")
