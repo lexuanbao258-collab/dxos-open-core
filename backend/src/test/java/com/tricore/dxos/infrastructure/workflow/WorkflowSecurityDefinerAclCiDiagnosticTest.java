@@ -61,4 +61,30 @@ class WorkflowSecurityDefinerAclCiDiagnosticTest {
             System.out.println("DIAG_VERIFY_DIRECTORY=FAIL:" + ex.getClass().getSimpleName());
         }
     }
+    @Test
+    void verifyCanonicalRootAndRemoveUnexpectedAllowsInTemporaryFixture() throws Exception {
+        // Changes only a disposable JUnit directory, never the production security gate.
+        Path dir = WorkflowSecurityDefinerReviewTest.protectedDirectory(temporary.toRealPath());
+        var acl = Files.getFileAttributeView(dir, AclFileAttributeView.class, LinkOption.NOFOLLOW_LINKS);
+        var owner = acl.getOwner();
+        var restricted = acl.getAcl().stream()
+                .filter(entry -> entry.type() != AclEntryType.ALLOW
+                        || entry.principal().equals(owner)
+                        || entry.principal().getName().equalsIgnoreCase("NT AUTHORITY\\SYSTEM"))
+                .toList();
+        acl.setAcl(restricted);
+        boolean same = dir.toRealPath().equals(dir.normalize());
+        long unexpectedAllow = acl.getAcl().stream().filter(entry -> entry.type() == AclEntryType.ALLOW
+                && !entry.principal().equals(owner)
+                && !entry.principal().getName().equalsIgnoreCase("NT AUTHORITY\\SYSTEM")).count();
+        System.out.println("FIX_DIAG_REAL_EQUALS_NORMALIZED=" + same);
+        System.out.println("FIX_DIAG_OTHER_ALLOWS=" + unexpectedAllow);
+        try {
+            WorkflowEventTriggerReview.verifyDirectory(dir);
+            System.out.println("FIX_DIAG_VERIFY_DIRECTORY=PASS");
+        } catch (Exception ex) {
+            System.out.println("FIX_DIAG_VERIFY_DIRECTORY=FAIL:" + ex.getClass().getSimpleName());
+        }
+    }
+
 }
