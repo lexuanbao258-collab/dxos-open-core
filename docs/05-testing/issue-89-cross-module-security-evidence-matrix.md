@@ -45,9 +45,9 @@ baseline.
 | E89-002 | Full backend Gradle test at PR #94 SHA | 835 total: 717 PASS, 118 SKIP, 0 FAIL, 0 ERROR; 57 XML files | VERIFIED — with skips |
 | E89-003 | Frontend BFF focused security tests at PR #98 SHA | 331 PASS | VERIFIED — separate source/test |
 | E89-004 | Frontend BFF serial regression at PR #98 SHA | 687 PASS | VERIFIED — serial mode only |
+| E89-005 | [G3H-07 fresh Identity/Gateway/Authorization evidence](issue-89-g3h-07-fresh-security-test-evidence.md), PR #94 SHA | 83 PASS across 6 suites, 0 FAIL, 0 ERROR, 0 SKIP; 3 fresh offline runs | VERIFIED — targeted test execution only; integrated acceptance NOT VERIFIED |
 
-The 83 focused backend cases are not added to the 717 full-regression
-passes; they are separate runs with overlapping coverage.
+The E89-001 and E89-005 runs each reported 83 PASS but cover different targeted class sets. Neither total is added to the 717 full-regression passes; runs may overlap in coverage and do not constitute integrated acceptance.
 
 An earlier parallel frontend run experienced two timeouts. Serial PASS
 does not establish parallel execution stability.
