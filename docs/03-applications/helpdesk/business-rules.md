@@ -166,3 +166,107 @@ This document is ready for review when:
 
 1. Business actors and responsibilities are clearly separated.
 2. Workflow transitions and Application assignment
+## 11. Helpdesk Business Action & Transition Matrix
+
+**Status:** DRAFT / APPLICATION OWNER REVIEW / FINAL SECURITY APPROVAL PENDING  
+**Owner:** Ánh — Application & Frontend  
+**Related:** Issue #53, PR #74, PR #70, PR #71, PR #76
+
+### 11.1. Candidate Workflow
+
+`SUBMITTED → TRIAGED → IN_PROGRESS → RESOLVED → CONFIRMED`
+
+- `assign` is an Application business command, not a Workflow transition.
+- `CONFIRMED` is the terminal state of the current Helpdesk MVP candidate.
+- `CLOSED`, rejection, reopen and rework remain outside the current approved implementation scope.
+
+### 11.2. Actor – Action – Transition Matrix
+
+Backend API base path: `/api/v1/mvp/requests`
+
+| Actor | Action | Precondition | API | Workflow outcome |
+|---|---|---|---|---|
+| Requester | Create | Verified eligible requester; valid title and description; required create permissions | `POST /` | New `SUBMITTED` request, version 0 |
+| Authorized user | List | Verified identity and resource visibility | `GET /` | No state change |
+| Authorized user | View detail | Resource and tenant visibility | `GET /{id}` | No state change |
+| IT Coordinator | Triage | `SUBMITTED`; coordinator eligibility; valid `expectedVersion` | `POST /{id}/triage` | `TRIAGED`; version +1 |
+| IT Coordinator | Assign | `TRIAGED`; eligible technician; valid `expectedAssignmentVersion` | `POST /{id}/assign` | Assignment changes; Workflow state/version unchanged |
+| Assigned Technician | Start work | `TRIAGED`; current eligible assignee; valid `expectedVersion` | `POST /{id}/start` | `IN_PROGRESS`; version +1 |
+| Assigned Technician | Resolve | `IN_PROGRESS`; current eligible assignee; valid version; nonblank resolution | `POST /{id}/resolve` | `RESOLVED`; version +1 |
+| Original Requester | Confirm | `RESOLVED`; requester eligibility; valid version | `POST /{id}/confirm` | `CONFIRMED`; version +1 |
+| Authorized user | View history | Verified identity and approved history visibility | `GET /{id}/history` | No state change |
+
+### 11.3. Authorization Requirements
+
+For each protected operation, the Backend must verify:
+
+1. A trusted authenticated principal.
+2. The exact required operation authority.
+3. Tenant and resource visibility.
+4. Resource-level action permission.
+5. Business eligibility, including current assignment when applicable.
+6. The applicable Workflow or assignment version for mutations.
+
+UI button visibility and demo roles do not grant authorization.
+
+**OPEN:** Exact authority strings, final actor eligibility, field visibility and history-event disclosure require Yến's security review and Backend contract confirmation.
+
+### 11.4. API Request Fields
+
+| Operation | Required request fields |
+|---|---|
+| Create | `title`, `description`, `requestType: "IT_HELPDESK"` |
+| Triage | `expectedVersion` |
+| Assign | `assigneeId`, `expectedAssignmentVersion` |
+| Start | `expectedVersion` |
+| Resolve | `expectedVersion`, `resolution` |
+| Confirm | `expectedVersion` |
+
+The Backend derives requester identity. The browser must not supply trusted principal or authority information.
+
+### 11.5. Error Contract and UI Feedback
+
+| Condition | Expected Backend behavior | Required Portal feedback |
+|---|---|---|
+| Invalid data | Validation rejection, typically 400 | Show the field error; do not claim success |
+| Missing/invalid authentication | 401 | Show session expiration or login requirement |
+| Visible resource, forbidden action | 403 | Show a permission-denied message |
+| Hidden, cross-tenant or nonexistent request | Protected 404 | Show a generic unavailable/not-found message |
+| Stale Workflow or assignment version | 409 | Explain the conflict and request a fresh read |
+| Network failure / unknown write outcome | Preserve uncertainty | Do not automatically retry the write or display false success |
+| Unsupported transition | Reject with no successful mutation | Do not expose the operation as an available LIVE action |
+
+### 11.6. Workflow and History Invariants
+
+- Workflow Core owns authoritative state, version and committed transition history.
+- Application owns Helpdesk business information, assignment and resolution.
+- Assignment increments the independent assignment version, not the Workflow version.
+- The uninterrupted candidate path reaches Workflow version 4 after four transitions.
+- Only successful transitions produce their corresponding successful Workflow history records.
+- Assignment must not be fabricated as a fifth Workflow transition.
+- A denied or conflicting operation must not create successful transition history.
+- `allowedActions` is computed by the Backend and must be revalidated when an action is executed.
+
+### 11.7. OPEN Business Decisions
+
+The following require explicit review before extending the MVP:
+
+1. Wrong-scope rejection and reasons.
+2. Requester disagreement and rework.
+3. Escalation of unresolved incidents.
+4. Whether a future `CLOSED` action is required.
+5. Final field-level and history-event visibility.
+6. Approved reconciliation after uncertain commit outcomes.
+7. Facility-specific assignment and acceptance rules.
+
+### 11.8. Review and Acceptance
+
+**Bảo — Backend/Workflow:** Confirm API/DTO compatibility, transaction semantics, versioning and Backend enforcement.
+
+**Yến — Identity/Gateway:** Confirm exact authorities, trusted-principal boundaries, tenant/resource policy and security error behavior.
+
+**Ánh — Application:** Confirm actor eligibility, business transition mapping, required facts and frontend feedback.
+
+**Disposition: DRAFT — REVIEW REQUIRED.**
+
+This matrix does not authorize LIVE deployment, merge, or final end-to-end acceptance.
