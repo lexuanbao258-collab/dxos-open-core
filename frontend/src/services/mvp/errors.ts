@@ -1,3 +1,5 @@
+import { isPredispatchFailure } from "./http/predispatch";
+
 /** Internal error categories, not an assumed Backend error envelope. */
 export type MvpErrorCode =
   | "UNAUTHENTICATED"
@@ -25,6 +27,27 @@ export class MvpApplicationError extends Error {
   ) {
     super(messages[code], options);
     this.name = "MvpApplicationError";
+  }
+}
+
+/**
+ * Local session lifecycle evidence, never an inferred HTTP authentication result.
+ * Only the transport's own session checks may attach a fetch phase. "after-fetch"
+ * means fetch was invoked, even if it rejected; it does not prove server receipt.
+ */
+export class MvpSessionError extends Error {
+  constructor(
+    readonly code: "SESSION_REQUIRED" | "STALE_SESSION",
+    readonly phase: "before-fetch" | "after-fetch",
+    options?: ErrorOptions,
+  ) {
+    super(
+      code === "SESSION_REQUIRED"
+        ? "SESSION_REQUIRED: Cần phiên đã xác thực trước khi gửi yêu cầu."
+        : "STALE_SESSION: Yêu cầu thuộc phiên cũ; không dùng kết quả cho phiên hiện tại.",
+      options,
+    );
+    this.name = "MvpSessionError";
   }
 }
 
@@ -66,6 +89,9 @@ export async function executeWriteOnce<T>(write: () => Promise<T>): Promise<T> {
   try {
     return await write();
   } catch (error) {
+    if (isPredispatchFailure(error)) throw error;
+    if (error instanceof MvpSessionError && error.phase === "before-fetch")
+      throw error;
     if (error instanceof MvpApplicationError) {
       if (error.code !== "NETWORK_FAILURE") throw error;
     }

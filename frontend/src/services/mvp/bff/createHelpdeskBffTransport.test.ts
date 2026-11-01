@@ -362,7 +362,7 @@ describe("A05 BFF transport", () => {
       const reply = new Response("unused", { status });
       vi.spyOn(reply, "text").mockRejectedValue(new TypeError("stream lost"));
       f.fetchBff.mockResolvedValue(reply);
-      await expect(f.transport(get)).resolves.toEqual({
+      await expect(f.transport(get)).resolves.toMatchObject({
         status,
         body: undefined,
       });
@@ -375,7 +375,7 @@ describe("A05 BFF transport", () => {
     async (body) => {
       const f = await fixture();
       f.fetchBff.mockResolvedValue(new Response(body, { status: 201 }));
-      await expect(f.transport(post)).resolves.toEqual({
+      await expect(f.transport(post)).resolves.toMatchObject({
         status: 201,
         body: undefined,
       });

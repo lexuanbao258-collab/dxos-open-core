@@ -1,9 +1,11 @@
+import { MvpSessionError } from "../errors";
 import { HelpdeskClientError } from "../http/errors";
+import { predispatchFailure } from "../http/predispatch";
 import type {
   HelpdeskHttpRequest,
   HelpdeskHttpTransport,
 } from "../http/transport";
-import type { BffSessionClient } from "./BffSessionClient";
+import { BffSessionError, type BffSessionClient } from "./BffSessionClient";
 import { bffRequestOptions, readBffJson, type BffFetch } from "./http";
 
 const BASE = "/api/v1/mvp/requests";
@@ -17,6 +19,19 @@ const WRITE = new RegExp(
 
 function invalid(): never {
   throw new HelpdeskClientError("INVALID_INPUT");
+}
+
+function checkSession<T>(phase: MvpSessionError["phase"], check: () => T): T {
+  try {
+    return check();
+  } catch (cause) {
+    if (
+      cause instanceof BffSessionError &&
+      (cause.code === "SESSION_REQUIRED" || cause.code === "STALE_SESSION")
+    )
+      throw new MvpSessionError(cause.code, phase, { cause });
+    throw cause;
+  }
 }
 
 /** Validate the original string; URL normalization must not admit extra routes. */
@@ -54,35 +69,61 @@ export function createHelpdeskBffTransport(
   session: BffSessionClient,
   fetchBff: BffFetch,
 ): HelpdeskHttpTransport {
-  const scope = session.capture();
+  const scope = checkSession("before-fetch", () => session.capture());
   return async (request) => {
-    const path = bffPath(request);
-    const write = request.method === "POST";
-    if (
-      write
-        ? request.body === null ||
-          typeof request.body !== "object" ||
-          Array.isArray(request.body)
-        : request.body !== undefined
-    )
-      return invalid();
-    const body = write ? JSON.stringify(request.body) : undefined;
-    scope.assertActive();
+    let path: string;
+    let body: string | undefined;
+    let write: boolean;
+    try {
+      path = bffPath(request);
+      write = request.method === "POST";
+      if (
+        write
+          ? request.body === null ||
+            typeof request.body !== "object" ||
+            Array.isArray(request.body)
+          : request.body !== undefined
+      )
+        return invalid();
+      body = write ? JSON.stringify(request.body) : undefined;
+      if (write && body === undefined) return invalid();
+    } catch (cause) {
+      // Keep INVALID_INPUT/native serialization errors intact. This block has
+      // not invoked fetch; matching error names/codes alone are not evidence.
+      throw predispatchFailure(cause);
+    }
+    checkSession("before-fetch", scope.assertActive);
     // Rebuild the headers. Caller-supplied identity, authority and OAuth headers
     // (including runtime properties outside the TS interface) are never copied.
     const headers: Record<string, string> = { Accept: "application/json" };
     if (write) {
       headers["Content-Type"] = "application/json";
-      headers["X-CSRF-TOKEN"] = scope.getCsrfToken();
+      headers["X-CSRF-TOKEN"] = checkSession(
+        "before-fetch",
+        scope.getCsrfToken,
+      );
     }
-    const response = await fetchBff(path, {
-      ...bffRequestOptions(request.method),
-      headers,
-      ...(write ? { body } : {}),
-    });
+    let response: Response;
+    try {
+      response = await fetchBff(path, {
+        ...bffRequestOptions(request.method),
+        headers,
+        ...(write ? { body } : {}),
+      });
+    } catch (cause) {
+      // Only our own scope check is lifecycle evidence. Never trust a code/name
+      // from fetch as proof that a POST was blocked before dispatch.
+      checkSession("after-fetch", scope.assertActive);
+      throw new Error("BFF fetch failed", { cause });
+    }
     const decoded = await readBffJson(response);
-    scope.assertActive();
-    if (response.status === 401) scope.invalidate();
-    return { status: response.status, body: decoded };
+    checkSession("after-fetch", scope.assertActive);
+    const assertCurrent =
+      response.status === 401 ? scope.invalidate() : scope.assertActive;
+    return {
+      status: response.status,
+      body: decoded,
+      assertSessionCurrent: () => checkSession("after-fetch", assertCurrent),
+    };
   };
 }

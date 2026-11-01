@@ -19,7 +19,8 @@ export class BffSessionError extends Error {
 export interface BffSessionScope {
   assertActive(): void;
   getCsrfToken(): string;
-  invalidate(): void;
+  /** Retire only this generation; the returned guard expires on its successor. */
+  invalidate(): () => void;
 }
 
 function decodeSession(body: unknown): string | null {
@@ -99,7 +100,13 @@ export class BffSessionClient {
         return this.csrfToken!;
       },
       invalidate: () => {
-        if (generation === this.generation) this.invalidate();
+        if (generation !== this.generation) return assertActive;
+        this.invalidate();
+        const retiredGeneration = this.generation;
+        return () => {
+          if (retiredGeneration !== this.generation)
+            throw new BffSessionError("STALE_SESSION");
+        };
       },
     });
   }

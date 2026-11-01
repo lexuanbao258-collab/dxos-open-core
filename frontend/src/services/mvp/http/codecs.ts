@@ -1,4 +1,5 @@
 import { HelpdeskClientError } from "./errors";
+import { predispatchFailure } from "./predispatch";
 import type {
   HelpdeskHistoryEntry,
   HelpdeskPage,
@@ -9,7 +10,7 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export function validateId(id: string): string {
   if (typeof id !== "string" || !UUID.test(id)) {
-    throw new HelpdeskClientError("INVALID_INPUT");
+    throw predispatchFailure(new HelpdeskClientError("INVALID_INPUT"));
   }
   return id;
 }
@@ -17,7 +18,7 @@ export function validateId(id: string): string {
 /** Java Long accepts a wider range; reject unsafe JS numbers, never round/coerce. */
 export function validateVersion(version: number): number {
   if (!Number.isSafeInteger(version) || version < 0) {
-    throw new HelpdeskClientError("INVALID_INPUT");
+    throw predispatchFailure(new HelpdeskClientError("INVALID_INPUT"));
   }
   return version;
 }
@@ -28,7 +29,7 @@ export function validateText(text: string, max: number): string {
     text.trim().length === 0 ||
     text.length > max
   ) {
-    throw new HelpdeskClientError("INVALID_INPUT");
+    throw predispatchFailure(new HelpdeskClientError("INVALID_INPUT"));
   }
   return text;
 }
