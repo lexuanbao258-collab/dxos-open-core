@@ -12,6 +12,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.ServletRequestBindingException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.method.annotation.HandlerMethodValidationException;
 
 import java.util.Map;
@@ -20,7 +21,7 @@ import java.util.TreeMap;
 @RestControllerAdvice(assignableTypes = {WorkflowController.class, HelpdeskController.class})
 public class WorkflowExceptionHandler {
     @ExceptionHandler(WorkflowException.class)
-    public ResponseEntity<ApiError> workflow(WorkflowException exception) {
+    public ResponseEntity<ApiError> workflow(WorkflowException exception, HandlerMethod handler) {
         WorkflowErrorCode code = exception.code();
         int status = switch (code) {
             case INSTANCE_ALREADY_EXISTS, VERSION_CONFLICT, TRANSITION_NOT_ALLOWED, INSTANCE_COMPLETED -> 409;
@@ -28,10 +29,14 @@ public class WorkflowExceptionHandler {
             case INVALID_TRANSITION -> 422;
             case OPERATION_FAILURE, COMMIT_OUTCOME_UNKNOWN -> 500;
         };
+        if (status == 404 && HelpdeskController.class.isAssignableFrom(handler.getBeanType())) {
+            return error(404, "NOT_FOUND", "Workflow resource not found", Map.of());
+        }
         String message = switch (code) {
             case INSTANCE_ALREADY_EXISTS -> "Workflow instance already exists";
             case VERSION_CONFLICT -> "Workflow version conflict";
-            case DEFINITION_NOT_FOUND, INSTANCE_NOT_FOUND -> "Workflow resource not found";
+            case DEFINITION_NOT_FOUND -> "Workflow definition version not found";
+            case INSTANCE_NOT_FOUND -> "Workflow instance not found";
             case INVALID_TRANSITION -> "Unknown workflow transition";
             case TRANSITION_NOT_ALLOWED -> "Workflow operation is not allowed in the current state";
             case INSTANCE_COMPLETED -> "Workflow instance is completed";
@@ -39,13 +44,15 @@ public class WorkflowExceptionHandler {
             case COMMIT_OUTCOME_UNKNOWN ->
                     "Commit outcome is unknown; the write may have committed. Reconcile authoritative instance/history; do not automatically retry";
         };
-        return error(status, status == 404 ? "NOT_FOUND" : code.name(), message, Map.of());
+        return error(status, code.name(), message, Map.of());
     }
 
     @ExceptionHandler(WorkflowAccessException.class)
-    public ResponseEntity<ApiError> authorization(WorkflowAccessException exception) {
+    public ResponseEntity<ApiError> authorization(WorkflowAccessException exception, HandlerMethod handler) {
         return switch (exception.decision()) {
-            case HIDDEN -> error(404, "NOT_FOUND", "Workflow resource not found", Map.of());
+            case HIDDEN -> HelpdeskController.class.isAssignableFrom(handler.getBeanType())
+                    ? error(404, "NOT_FOUND", "Workflow resource not found", Map.of())
+                    : error(404, "INSTANCE_NOT_FOUND", "Workflow instance not found", Map.of());
             case FORBIDDEN -> error(403, "FORBIDDEN", "Workflow operation is not permitted", Map.of());
             // ALLOWED must never be thrown as a failure; fail closed if it is.
             case UNAVAILABLE, ALLOWED -> error(503, "AUTHORIZATION_UNAVAILABLE",

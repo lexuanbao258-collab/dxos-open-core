@@ -29,6 +29,7 @@ import org.springframework.mock.web.MockServletContext;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.test.web.servlet.*;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
+import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.support.AnnotationConfigWebApplicationContext;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
@@ -282,17 +283,31 @@ class HelpdeskHttpPostgresTest {
         JsonNode expected=json.readTree("""
                 {"status":404,"code":"NOT_FOUND","message":"Workflow resource not found","errors":{}}
                 """);
-        for(String suffix:List.of("","/history")) {
-            var hiddenResponse=expect(get(API+"/"+hidden+suffix),"employee2",404).andReturn().getResponse();
-            var missingResponse=expect(get(API+"/"+nonexistent+suffix),"employee2",404).andReturn().getResponse();
+        for(String suffix:List.of("","/history","/triage","/assign","/start","/resolve","/confirm")) {
+            var hiddenResponse=expect(hiddenOrMissingRequest(hidden,suffix),"employee2",404).andReturn().getResponse();
+            assertThat(snapshot()).isEqualTo(before);
+            var missingResponse=expect(hiddenOrMissingRequest(nonexistent.toString(),suffix),"employee2",404).andReturn().getResponse();
+            assertThat(snapshot()).isEqualTo(before);
             JsonNode hiddenBody=json.readTree(hiddenResponse.getContentAsString());
             JsonNode missingBody=json.readTree(missingResponse.getContentAsString());
             assertThat(hiddenBody).isEqualTo(missingBody).isEqualTo(expected);
+            assertThat(hiddenResponse.getContentType()).isEqualTo(MediaType.APPLICATION_JSON_VALUE);
             assertThat(hiddenResponse.getContentType()).isEqualTo(missingResponse.getContentType());
+            assertThat(hiddenResponse.getContentAsByteArray()).isEqualTo(missingResponse.getContentAsByteArray());
             assertThat(hiddenResponse.getContentAsString()).doesNotContain(hidden,actors.get("employee"),
                     created.path("workflowInstanceId").asText(),"Software issue","Please repair");
         }
         assertThat(snapshot()).isEqualTo(before);
+    }
+
+    private MockHttpServletRequestBuilder hiddenOrMissingRequest(String id,String suffix) {
+        if(suffix.isEmpty() || suffix.equals("/history")) return get(API+"/"+id+suffix);
+        String body=switch(suffix) {
+            case "/assign" -> "{\"assigneeId\":\""+actors.get("worker")+"\",\"expectedAssignmentVersion\":0}";
+            case "/resolve" -> "{\"expectedVersion\":0,\"resolution\":\"must not persist\"}";
+            default -> "{\"expectedVersion\":0}";
+        };
+        return post(API+"/"+id+suffix).contentType(MediaType.APPLICATION_JSON).content(body);
     }
 
     @Test void visibleWithoutExactTechnicalAuthorityIsForbidden() throws Exception {

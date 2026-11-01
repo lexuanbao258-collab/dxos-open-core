@@ -27,6 +27,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -199,11 +200,31 @@ class WorkflowControllerTest {
         mvc.perform(post(BASE).contentType(MediaType.APPLICATION_JSON).content(CREATE))
                 .andExpect(status().is(STATUSES.get(code)))
                 .andExpect(jsonPath("$.status").value(STATUSES.get(code)))
-                .andExpect(jsonPath("$.code").value(code == WorkflowErrorCode.INSTANCE_NOT_FOUND
-                        || code == WorkflowErrorCode.DEFINITION_NOT_FOUND ? "NOT_FOUND" : code.name()))
+                .andExpect(jsonPath("$.code").value(code.name()))
                 .andExpect(jsonPath("$.errors").isEmpty())
                 .andExpect(jsonPath("$.stackTrace").doesNotExist())
                 .andExpect(jsonPath("$.cause").doesNotExist());
+        verify(runtime).createInstance("instance-1", "publication", 7, RESOURCE);
+        verifyNoMoreInteractions(runtime);
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+            "DEFINITION_NOT_FOUND, Workflow definition version not found",
+            "INSTANCE_NOT_FOUND, Workflow instance not found"
+    })
+    void preservesGenericNotFoundContract(WorkflowErrorCode code, String message) throws Exception {
+        when(runtime.createInstance(any(), any(), anyLong(), any())).thenThrow(new WorkflowException(code));
+
+        var response = mvc.perform(post(BASE).contentType(MediaType.APPLICATION_JSON).content(CREATE))
+                .andExpect(status().isNotFound())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.status").value(404))
+                .andExpect(jsonPath("$.code").value(code.name()))
+                .andExpect(jsonPath("$.message").value(message))
+                .andReturn().getResponse();
+        assertThat(objectMapper.readTree(response.getContentAsString())).isEqualTo(objectMapper.readTree(
+                "{\"status\":404,\"code\":\"" + code.name() + "\",\"message\":\"" + message + "\",\"errors\":{}}"));
         verify(runtime).createInstance("instance-1", "publication", 7, RESOURCE);
         verifyNoMoreInteractions(runtime);
     }
@@ -228,7 +249,7 @@ class WorkflowControllerTest {
 
     static Stream<Arguments> accessDenials() {
         return Stream.of(
-                Arguments.of(WorkflowAccessDecision.HIDDEN, 404, "NOT_FOUND"),
+                Arguments.of(WorkflowAccessDecision.HIDDEN, 404, "INSTANCE_NOT_FOUND"),
                 Arguments.of(WorkflowAccessDecision.FORBIDDEN, 403, "FORBIDDEN"),
                 Arguments.of(WorkflowAccessDecision.UNAVAILABLE, 503, "AUTHORIZATION_UNAVAILABLE"),
                 Arguments.of(WorkflowAccessDecision.ALLOWED, 503, "AUTHORIZATION_UNAVAILABLE"));
@@ -238,16 +259,24 @@ class WorkflowControllerTest {
     void hiddenAclAndMissingInstanceHaveIndistinguishableBodies() throws Exception {
         when(runtime.loadInstance("instance-1"))
                 .thenThrow(new WorkflowAccessException(WorkflowAccessDecision.HIDDEN));
-        String hiddenBody = mvc.perform(get(BASE + "/instance-1"))
+        var hidden = mvc.perform(get(BASE + "/instance-1"))
                 .andExpect(status().isNotFound())
-                .andReturn().getResponse().getContentAsString();
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.code").value("INSTANCE_NOT_FOUND"))
+                .andExpect(jsonPath("$.message").value("Workflow instance not found"))
+                .andReturn().getResponse();
+        verify(runtime).loadInstance("instance-1");
+        verifyNoMoreInteractions(runtime);
 
         reset(runtime);
         when(runtime.loadInstance("instance-1"))
                 .thenThrow(new WorkflowException(WorkflowErrorCode.INSTANCE_NOT_FOUND));
         mvc.perform(get(BASE + "/instance-1"))
                 .andExpect(status().isNotFound())
-                .andExpect(content().string(hiddenBody));
+                .andExpect(content().contentType(hidden.getContentType()))
+                .andExpect(content().bytes(hidden.getContentAsByteArray()));
+        verify(runtime).loadInstance("instance-1");
+        verifyNoMoreInteractions(runtime);
     }
 
     @Test
