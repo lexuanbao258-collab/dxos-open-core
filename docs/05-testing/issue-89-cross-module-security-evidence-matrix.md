@@ -181,3 +181,67 @@ finding IDs and exact reviewed SHA.
 - No production acceptance, merge or LIVE activation is authorized.
 
 **Overall Issue #89 disposition: CONDITIONAL — DOCUMENTATION DRAFT.**
+
+## 10. Request Legacy Security Findings — PR #94 Source Audit
+
+### 10.1 Evidence scope
+
+- Source baseline: PR #94 at `2b8b29070b9fc51230e008a0ae70f8acefe5994f`.
+- Review method: read-only source, JUnit XML and assertion inspection.
+- Scope: legacy `com.tricore.dxos.request` prototype and its Spring Security boundary.
+- These findings do not establish runtime exploitation, external deployment exposure or production acceptance.
+- Existing BL03-T01–T12 verdicts in Section 6 remain unchanged.
+- Findings are review candidates, not independent reviewer approvals.
+
+### 10.2 Findings register
+
+| ID | Related case | Source evidence | Observed discrepancy | Status | Review owner |
+| --- | --- | --- | --- | --- | --- |
+| F89-01 | T05 | `request/service/RequestService.java:28-35` | `list()` calls `repository.findAll()` without observed caller or tenant scoping | SOURCE_VERIFIED; exposure unverified | Application |
+| F89-02 | T07 | `request/controller/RequestWorkflowController.java:43-45`; `request/service/RequestWorkflowService.java:52-57` | `confirm(UUID id)` has no observed requester-specific eligibility check | SOURCE_VERIFIED; contract review pending | Application |
+| F89-03 | T04 | `request/service/RequestWorkflowService.java:68-76` | History retrieval uses request ID without observed resource ACL enforcement | SOURCE_VERIFIED; HTTP ACL not verified | Application |
+| F89-04 | T06 | `request/dto/RequestResponse.java:9-16` | Static DTO mapping; no observed caller-dependent classified projection | POLICY_PENDING | Application |
+| F89-05 | T08 | `request/service/RequestWorkflowService.java:28-83` | Transactional writes are present, but no eligibility/revocation check at the guarded write boundary was observed | CONTRACT_PENDING; race evidence missing | Application / Workflow-Data |
+| F89-06 | T11 | `request/dto/RequestHistoryResponse.java:9-14`; `request/service/RequestWorkflowService.java:68-72` | Static timeline mapping; event-level visibility policy not observed | POLICY_PENDING | Application |
+| F89-07 | Exposure mode | `DxosApplication.java:6`; `request/controller/RequestController.java:19-20`; `request/controller/RequestWorkflowController.java:19-20`; `infrastructure/identity/security/SecurityConfig.java:42-45` | Default component scan includes unconditionally annotated legacy Request controllers, while GW-ADR-06 specifies legacy default OFF | DESIGN_IMPLEMENTATION_GAP; runtime not verified | Application / Architecture |
+
+Paths above are relative to `backend/src/main/java/com/tricore/dxos/` unless otherwise specified.
+
+### 10.3 Positive evidence and limits
+
+- Spring Security uses authenticated access for non-health requests. JWT verification is not equivalent to resource authorization.
+- Request controller and service tests demonstrate functional DTO, lifecycle and history behavior.
+- `RequestWorkflowTransactionTest` verifies mocked transaction ordering and rollback behavior, not revocation-at-commit.
+- Core Workflow policy and persistence tests must not be presented as integrated legacy Request security acceptance.
+- Real Keycloak, real PostgreSQL concurrency and combined Request/Portal E2E remain unverified in this audit.
+
+### 10.4 Architecture decision references
+
+- `docs/02-core/gateway/gateway-architecture.md:88-118`: GW-ADR-04 through GW-ADR-06.
+- `docs/02-core/workflow/workflow-architecture.md:229-250`: verification policy, risk register and review gates.
+- `docs/01-architecture/dependency-rules.md:40-59`: legacy Request classification and EXISTING/TARGET/EXCEPTION/BLOCKER distinction.
+
+GW-ADR-06 lists default and demo modes with legacy Request OFF. The mode table is a proposed exposure design, not proof of implementation. A route missing from `RequestMapping` is distinct from a resource-hidden 404.
+
+### 10.5 Required independent acceptance evidence
+
+| Finding | Required next evidence |
+| --- | --- |
+| F89-01 | Tenant/resource-scoped listing contract, negative tests, counts and pagination checks |
+| F89-02 | Approved requester/actor policy, wrong-actor denial and no-mutation assertions |
+| F89-03 | Authorized history read, hidden/missing parity and no protected-data disclosure |
+| F89-04 | Approved D1/D2/D3 field classification and sanitized list/detail projections |
+| F89-05 | Ratified revocation/eligibility contract and transactional race/fault evidence |
+| F89-06 | Approved event visibility policy and protected timeline negative E2E |
+| F89-07 | Default/demo/legacy-test `RequestMapping` registry checks and conflict-mode startup validation |
+
+Each reviewer must record the exact reviewed SHA and a PASS, CONDITIONAL or BLOCKED decision with evidence. The matrix author cannot independently approve these findings.
+
+### 10.6 Disposition
+
+- Source review completed for the stated PR #94 baseline.
+- Runtime and external exposure: NOT VERIFIED.
+- Contract/policy gaps: unresolved.
+- HD-01 P0-01/P0-04: unchanged and BLOCKED.
+- PR #100: documentation-only Draft; no production code changes or merge authorization.
+- Overall Issue #89 disposition remains CONDITIONAL — DOCUMENTATION DRAFT.
