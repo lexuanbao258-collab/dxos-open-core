@@ -7,8 +7,17 @@ import com.tricore.dxos.architecture.canary.infrastructure.ForbiddenAdapterCanar
  */
 public final class ForbiddenCoreCanary {
     private final ForbiddenAdapterCanary forbiddenDependency;
+    private java.sql.Connection forbiddenJdbc;
+    private javax.crypto.Cipher jdkOutsideApprovedJavaPackages;
+    private jakarta.validation.Valid forbiddenJakarta;
+    private org.slf4j.Logger forbiddenExternalLibrary;
 
     public ForbiddenCoreCanary(ForbiddenAdapterCanary forbiddenDependency) {
         this.forbiddenDependency = forbiddenDependency;
+    }
+
+    public static final class AllowedCoreCanary {
+        private final java.util.List<AllowedCoreCanary> peers = java.util.List.of();
+        private final java.time.Instant createdAt = java.time.Instant.EPOCH;
     }
 }
