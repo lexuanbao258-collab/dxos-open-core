@@ -18,7 +18,7 @@ $metadataFormat = '{{.Id}} {{.Name}} {{.State.StartedAt}} {{.State.Status}} {{.R
 $before = @(Invoke-NegativeDocker (@('inspect','--format',$metadataFormat) + $existingIds))
 if (@(Invoke-NegativeDocker @('ps','-a','--format','{{.Names}}')) -contains $container -or
     @(Invoke-NegativeDocker @('volume','ls','--format','{{.Name}}')) -contains $volume -or
-    @(Invoke-NegativeDocker @('ps','-a','--filter','publish=55439','--format','{{.ID}}')).Count -gt 0 -or
+    @(Invoke-NegativeDocker @('ps','--filter','publish=55439','--format','{{.ID}}')).Count -gt 0 -or
     @(Get-NetTCPConnection -State Listen | Where-Object LocalPort -eq 55439).Count -gt 0 -or
     (Test-Path -LiteralPath $evidence)) { throw 'Fixture name, volume, port or evidence path already exists; nothing changed' }
 $null = Invoke-NegativeDocker @('image','inspect',$image,'--format','{{.Id}}')

@@ -176,6 +176,43 @@ for (const kind of ["it", "facility"]) {
       ).toBeVisible();
     }
     await expect(page.locator(".timeline li")).toHaveCount(4);
+    if (kind === "it") {
+      await expect(
+        page
+          .locator("main")
+          .getByText("Chờ nhân viên xác nhận", { exact: true }),
+      ).toHaveCount(2);
+      await expect(
+        page.getByRole("button", { name: "Xác nhận hoàn thành", exact: true }),
+      ).toHaveCount(0);
+      await openNav(page, "Trạng thái phiên");
+      await page.getByRole("radio", { name: /Nhân viên/ }).check();
+      await page
+        .getByRole("button", { name: "Tiếp tục với vai trò đã chọn" })
+        .click();
+      await openNav(page, "Yêu cầu của tôi");
+      await page
+        .getByRole("link", { name: /DX-1049.*Cài đặt công cụ/ })
+        .click();
+      await page
+        .getByRole("button", { name: "Xác nhận hoàn thành", exact: true })
+        .click();
+      await page
+        .getByRole("textbox", { name: "Ghi chú xử lý" })
+        .fill("Người gửi đã kiểm tra kết quả demo.");
+      await page
+        .getByRole("dialog")
+        .getByRole("button", { name: "Xác nhận hoàn thành", exact: true })
+        .click();
+      await expect(page.getByRole("dialog")).toHaveCount(0);
+      await expect(page.locator(".timeline li")).toHaveCount(5);
+      await expect(
+        page.getByText(
+          "Người gửi đã xác nhận hoàn thành. Không có thao tác tiếp theo trong kịch bản mock.",
+        ),
+      ).toBeVisible();
+      return;
+    }
     await expect(
       page.getByText("Yêu cầu đã kết thúc. Không còn thao tác xử lý."),
     ).toBeVisible();
