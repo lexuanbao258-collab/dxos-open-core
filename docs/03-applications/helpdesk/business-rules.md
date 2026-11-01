@@ -165,7 +165,14 @@ No mock action should be described as proof of real authentication, authorizatio
 This document is ready for review when:
 
 1. Business actors and responsibilities are clearly separated.
-2. Workflow transitions and Application assignment
+**2. Workflow transitions and Application assignment rules are clearly distinguished.
+3. The proposed Workflow states and business actions are consistent with the reviewed MVP candidate.
+4. Verified identity, resource authorization and negative error scenarios are explicitly documented.
+5. Workflow versioning, assignment concurrency and uncertain commit outcomes are addressed.
+6. Unsupported transitions and unresolved business decisions remain explicitly OPEN or DEFERRED.
+7. Bảo confirms Backend/API compatibility and transaction semantics.
+8. Yến reviews the security, authority and resource-visibility requirements.
+9. Runtime and E2E acceptance require separate test evidence at an exact integration SHA.**
 ## 11. Helpdesk Business Action & Transition Matrix
 
 **Status:** DRAFT / APPLICATION OWNER REVIEW / FINAL SECURITY APPROVAL PENDING  
