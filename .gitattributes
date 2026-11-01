@@ -1,2 +1,4 @@
 # Preserve the reviewed bytes required by WorkflowApprovedMigration.MANIFEST_SHA.
 backend/src/main/resources/workflow-event-trigger-manifest.json text eol=crlf
+# Preserve the reviewed bytes of the Issue #25 event-trigger SQL fixture.
+docs/evidence/issue-25-event-trigger-catalog-review.sql text eol=crlf
