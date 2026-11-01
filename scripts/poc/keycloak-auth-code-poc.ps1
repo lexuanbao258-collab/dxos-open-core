@@ -6,6 +6,10 @@ param(
 
 $ErrorActionPreference = "Stop"
 
+if ($RunGatewayIntegrationOnly -and $WrongVerifier) {
+    throw "Incompatible switches: Gateway integration and WrongVerifier"
+}
+
 if ($RunGatewayIntegrationOnly -and [string]::IsNullOrWhiteSpace($env:OIDC_TEST_EXPECTED_SUBJECT)) {
     throw "OIDC_TEST_EXPECTED_SUBJECT is required for -RunGatewayIntegrationOnly"
 }

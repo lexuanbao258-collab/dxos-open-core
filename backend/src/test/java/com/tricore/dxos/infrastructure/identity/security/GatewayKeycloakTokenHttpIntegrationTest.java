@@ -63,16 +63,17 @@ class GatewayKeycloakTokenHttpIntegrationTest {
         assertThat(probe.caller.subjectId()).startsWith("oidc:").doesNotContain("=");
 
         boolean d2aEvidence = "true".equals(System.getenv("OIDC_TEST_D2A_EVIDENCE"));
-        String expectedSubject = expectedSubject();
         if (d2aEvidence) {
-            assertThat(expectedSubject).as("D2-A expected subject is required").isNotNull();
-        }
-        if (expectedSubject != null) {
-            assertThat(probe.caller.subjectId().equals(expectedCanonicalSubjectId(expectedSubject)))
-                    .as("Canonical subject matches independently supplied expected subject")
-                    .isTrue();
-        }
+            String expectedSubject = expectedSubject();
 
+            assertThat(expectedSubject)
+                    .as("D2-A expected subject is required")
+                    .isNotNull();
+
+            assertThat(probe.caller.subjectId())
+                    .as("Canonical subject matches independently supplied expected subject")
+                    .isEqualTo(expectedCanonicalSubjectId(expectedSubject));
+        }
         var mappedAuthorities = probe.caller.authorities().stream().map(a -> a.value()).toList();
         if (d2aEvidence) {
             assertThat(mappedAuthorities).containsExactly("workflow:read");
