@@ -1,0 +1,2 @@
+# Preserve the reviewed bytes required by WorkflowApprovedMigration.MANIFEST_SHA.
+backend/src/main/resources/workflow-event-trigger-manifest.json text eol=crlf

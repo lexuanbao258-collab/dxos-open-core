@@ -1,5 +1,6 @@
 package com.tricore.dxos.infrastructure.workflow;
 
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -40,9 +41,10 @@ class WorkflowApprovedSmokeLauncherTest {
         String source = Files.readString(Path.of("../scripts/workflow-approved-smoke.ps1"));
         assertThat(source.split("    Assert-WarpIpv6\\r?\\n", -1)).hasSize(2);
         // Only this disposable launcher fixture replaces network and interactive input.
-        source = source.replaceAll("    Assert-WarpIpv6\\r?\\n", "    # fixture network check\\n")
+        source = source.replaceAll("    Assert-WarpIpv6\\r?\\n", "    # fixture network check\n")
                 .replace("Read-Host 'Supabase postgres password (hidden)' -AsSecureString",
                         "ConvertTo-SecureString 'private-unit-password' -AsPlainText -Force");
+        assertThat(source).contains("    # fixture network check\n    $phase = 'secure_password_input'");
         Files.writeString(scripts.resolve("workflow-approved-smoke.ps1"), source);
         var ca = Files.writeString(temporary.resolve("ca.pem"), "fixture only");
         String zero = "0".repeat(64), one = "1".repeat(64);
@@ -101,8 +103,24 @@ class WorkflowApprovedSmokeLauncherTest {
         assertThat(Files.exists(backend.resolve("smoke-started"))).isEqualTo(!status.equals("NOT_EXECUTED") && !fault.equals("audit-only"));
     }
 
+    @Test void unusableWarpStopsBeforePasswordOrChild() throws Exception {
+        Path bin = Files.createDirectory(temporary.resolve("bin"));
+        Files.writeString(bin.resolve("warp-cli.exe"), "Invalid executable fixture");
+        Path ca = Files.writeString(temporary.resolve("ca.pem"), "fixture only");
+        var builder = new ProcessBuilder("powershell.exe", "-NoProfile", "-NonInteractive", "-File",
+                Path.of("../scripts/workflow-approved-smoke.ps1").toAbsolutePath().normalize().toString(),
+                "-ExecuteApprovedSmoke", "-CaCertificate", ca.toString(), "-JavaHome", System.getProperty("java.home"))
+                .redirectErrorStream(true);
+        clear(builder);
+        builder.environment().put("Path", bin + ";" + builder.environment().get("Path"));
+        assertThat(child(builder, 1)).contains("CLOUD_SMOKE_EXECUTION=NOT_EXECUTED", "SMOKE_PHASE=warp_ipv6_precheck",
+                "PRECHECK=NOT_RUN", "FRESH_JVM_PERSISTENCE=NOT_RUN").doesNotContain("password (hidden)", "Gradle");
+    }
+
     private static void clear(ProcessBuilder builder) {
         builder.environment().keySet().removeIf(k -> k.startsWith("DB_") || k.startsWith("WORKFLOW_") || k.equals("WF25_DISPOSABLE_TEST"));
+        // Windows PowerShell must not inherit PowerShell 7's incompatible core modules.
+        builder.environment().remove("PSModulePath");
     }
 
     private static String child(ProcessBuilder builder, int expectedExit) throws Exception {
