@@ -177,7 +177,11 @@ for (const kind of ["it", "facility"]) {
     }
     await expect(page.locator(".timeline li")).toHaveCount(4);
     await expect(
-      page.getByText("Yêu cầu đã kết thúc. Không còn thao tác xử lý."),
+      page.getByText(
+        kind === "it"
+          ? "IT đã xử lý và thông báo kết quả. Yêu cầu đang chờ người gửi xác nhận hoàn thành."
+          : "Yêu cầu đã kết thúc. Không còn thao tác xử lý.",
+      ),
     ).toBeVisible();
   });
 }
