@@ -69,6 +69,8 @@ class WorkflowApprovedMigrationTest {
         result.report(new PrintStream(output));
         assertThat(output.toString()).doesNotContain("private-unit-password","private-host","jdbc:postgresql:");
     }
+    @org.junit.jupiter.api.condition.EnabledOnOs(value = org.junit.jupiter.api.condition.OS.WINDOWS,
+            disabledReason = "Launches Windows PowerShell (powershell.exe) launcher scripts")
     @ParameterizedTest @ValueSource(strings={"no-opt-in","wrong-host","wrong-ca","local-flag"})
     void launcherFailsBeforePasswordPromptOrGradle(String fault) throws Exception {
         var args=new ArrayList<>(List.of("powershell.exe","-NoProfile","-NonInteractive","-File",
@@ -84,6 +86,8 @@ class WorkflowApprovedMigrationTest {
         assertThat(output).contains("FLYWAY_EXECUTION=NOT_EXECUTED","MIGRATION_PHASE=launcher_validation")
                 .doesNotContain("password (hidden)","private-unit-password","Gradle");
     }
+    @org.junit.jupiter.api.condition.EnabledOnOs(value = org.junit.jupiter.api.condition.OS.WINDOWS,
+            disabledReason = "Launches Windows PowerShell (powershell.exe) launcher scripts")
     @ParameterizedTest @ValueSource(strings={"missing","partial","secret-output","success"})
     void launcherHandoffAndFilteringAreFailClosed(String fault) throws Exception {
         var scripts=Files.createDirectory(temporary.resolve("scripts"));

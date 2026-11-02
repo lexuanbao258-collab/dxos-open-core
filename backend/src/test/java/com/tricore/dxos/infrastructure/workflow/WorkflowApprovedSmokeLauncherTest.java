@@ -13,6 +13,8 @@ import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+@org.junit.jupiter.api.condition.EnabledOnOs(value = org.junit.jupiter.api.condition.OS.WINDOWS,
+        disabledReason = "Launches Windows PowerShell (powershell.exe) launcher scripts")
 class WorkflowApprovedSmokeLauncherTest {
     @TempDir Path temporary;
 

@@ -20,6 +20,11 @@ phiên bản theo [Semantic Versioning](https://semver.org/lang/vi/).
 
 - `backend/gradlew` có quyền thực thi để chạy được trên Linux và macOS.
 
+### Fixed
+
+- Backend build và test chạy được trên Linux: khôi phục 3 file SQL trong `docs/evidence/` mà test cần,
+  mã băm manifest tính theo file LF trong Git, test gọi `powershell.exe` chỉ chạy trên Windows.
+
 ### Removed
 
 - Workflow riêng cho Issue 23; các test đó chạy trong CI chung.
