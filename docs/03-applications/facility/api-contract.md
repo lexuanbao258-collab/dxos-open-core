@@ -2,7 +2,7 @@
 
 > **Status:** DRAFT / POLICY OPEN / LIVE_BLOCKED
 > **Owner:** Application (Ánh); independent reviewer and approval pending
-> **References:** Issue #53, PR #60, PR #76, PR #78; [requirements](requirements.md), [use cases](use-cases.md), [business rules](business-rules.md)
+> **References:** Issue #53, PR #60, PR #68, PR #76, PR #78; [requirements and current rules](requirements.md), [use cases](use-cases.md), [open decisions](../business-decisions.md)
 
 ## Purpose and scope
 
@@ -44,5 +44,7 @@ Define proposed HTTP consumer requirements for Facility Maintenance without asse
 ## Open contract decisions
 
 No Facility route path, request DTO, response schema, state transition key, assignment version, acceptance/closure actor, rejection or rework path is ratified by this draft. Record these in Issue #53 / approved ADRs before implementation.
+
+The [A02 source reconciliation](../business-contract-review.md) distinguishes approved product direction (IT first, limited second-definition reuse) from detailed Facility policies and full journey acceptance. No absent `facility/business-rules.md` or unmerged #78 branch file is treated as a dependency or approved contract.
 
 **Disposition:** CANDIDATE DESIGN ONLY. No LIVE claim, production endpoint registration or E2E approval.

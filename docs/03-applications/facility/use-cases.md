@@ -36,6 +36,23 @@ All use cases below describe the proposed business design and require review bef
 
 Business roles do not automatically grant authorization. Protected operations require verified identity and appropriate resource/action permissions.
 
+System Administrator is a separate configuration responsibility with no automatic Facility request/history or acceptance authority. A technician cannot self-certify acceptance solely because they repaired the issue; any delegation must be explicit and reviewed. Identity/Gateway and Workflow Core are supporting services, not human business approvers.
+
+## Candidate preconditions, facts and postconditions
+
+All rows are **PROPOSED / POLICY OPEN**, use verified actors and actual tenant/resource permissions, and require an approved definition/version/concurrency contract before implementation. No URL, wire DTO or executable transition key is assigned here. Original GP-FAC-01 / D-04 / OD-03 / acceptance IDs remain at [PR #68's exact tree](https://github.com/lexuanbao258-collab/dxos-open-core/tree/c31b6509a6e27e24c0305582a79562a480454594/docs/application/01-problem-analysis).
+
+| Use case | Preconditions and candidate required facts | Successful postcondition / failed-path boundary |
+| --- | --- | --- |
+| UC-FAC-01 — Submit | Eligible requester; approved exact create binding; meaningful title, description and physical location; identity server-derived | One linked business request and Workflow instance, authorized response; no assumed attachment requirement. Invalid/denied writes create no successful record; unknown acknowledgement stays UNKNOWN. |
+| UC-FAC-02 — Intake | Coordinator delegated for actual visible request; submitted state; review scope/location/completeness; expected Workflow version once defined | Approved intake only if eligible; wrong scope/missing facts cannot be silently accepted. Reasoned rejection still needs a contract, not a fabricated state. |
+| UC-FAC-03 — Assign | Accepted request; authorized coordinator; current active tenant technician; version/assignment semantics OPEN | Assignment and any approved Workflow state coordinate consistently. Former assignee loses technician-only authority; unrelated independent rights follow policy. |
+| UC-FAC-04 — Repair | Current eligible authorized assignee; approved start state; current version; actual result and required work facts | Recorded repair outcome can reach awaiting acceptance under approved definition; work result alone is not acceptance. Incomplete/failed repair never implies success. |
+| UC-FAC-05 — Acceptance | Awaiting acceptance; recorded repair facts; explicitly delegated evaluator; approved evidence and expected version | Decision recorded consistently; accepted result closes only if explicitly approved combined/separate closure contract permits it. Failed acceptance does not close fulfilled; BL-02 no-further-repair remains unresolved. |
+| Read progress/history | Verified read principal; actual resource permission and approved field/event policy | No mutation; authorized location/work facts only; no invented actor/audit events. History visibility is a separate business gate. |
+
+Unauthorized, hidden, conflicting, revoked or uncertain operations require the safe outcomes in the [candidate API requirements](api-contract.md). Final 401/403/404/409/503/error-body and no-write tests depend on a ratified Facility API. The [decision register](../business-decisions.md) owns unresolved proposals; the matrix does not approve them.
+
 ## 4. UC-FAC-01 — Submit a Facility Request
 
 **Primary actor:** Requester

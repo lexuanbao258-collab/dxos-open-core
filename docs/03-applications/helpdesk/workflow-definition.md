@@ -11,6 +11,8 @@ The IT Helpdesk Application interprets business actions and verifies actor eligi
 
 The Backend candidate binds new IT Helpdesk instances to `it-helpdesk@1`. Verify the deployed definition and source revision before calling that binding active.
 
+[Ánh's A02 acknowledgement](https://github.com/lexuanbao258-collab/dxos-open-core/issues/53#issuecomment-6551136261) retains this five-state scope conditionally. The [API contract](api-contract.md) pins inspected #95 source; #97 is only a separate error-compatibility proposal. Neither a configured definition nor this diagram establishes independent execution or final Business Contract ratification. Workflow Core remains provider-neutral; IT eligibility and assignment policy belong to Application.
+
 ## Candidate lifecycle
 
 ```mermaid
@@ -28,7 +30,7 @@ stateDiagram-v2
 | --- | --- | --- | --- |
 | Create | New → `SUBMITTED` | Verified eligible requester and explicit create grant | Backend creates business fact and pinned Workflow instance; initial version 0 |
 | Triage | `SUBMITTED` → `TRIAGED` | Authorized coordinator | Workflow `triage`; `expectedVersion` |
-| Assign | No Workflow state change | Authorized coordinator; eligible current worker | **Application command** `assign`; `expectedAssignmentVersion` |
+| Assign | `TRIAGED` unchanged | Authorized coordinator; target active eligible worker | **Application command** `assign`; `expectedAssignmentVersion`; assignment version +1 |
 | Start | `TRIAGED` → `IN_PROGRESS` | Current eligible authorized assignee | HTTP `start` maps to Workflow `start_work`; `expectedVersion` |
 | Resolve | `IN_PROGRESS` → `RESOLVED` | Current eligible authorized assignee | Nonblank resolution and `expectedVersion` |
 | Confirm | `RESOLVED` → `CONFIRMED` | Authorized original requester | Workflow `confirm`; `expectedVersion` |
@@ -57,5 +59,7 @@ The nine-route candidate uses `/api/v1/mvp/requests` for create/list/detail, tri
 - Version-concurrency tests and `COMMIT_OUTCOME_UNKNOWN` reconciliation.
 - Independent Portal → BFF → Backend → PostgreSQL E2E with verified Keycloak and negative 401/403/404/409 paths.
 - Final document owner, independent reviewer, accepted definition SHA and approved API contract.
+
+Use the [decision register](../business-decisions.md) for source-backed proposals and owners; it does not add any transition. Original analysis proposing closure/rejection remains historical context, not the executable scope here.
 
 **Decision:** DRAFT / REVIEW REQUIRED. This document does not grant runtime or merge acceptance.

@@ -5,6 +5,8 @@
 **Project:** DX-OS Open-Core<br>
 **Related:** Issue #39, Issue #53, PR #60, PR #71, PR #73
 
+**Source and scope:** [Original ISP-BA analysis, PR #68](https://github.com/lexuanbao258-collab/dxos-open-core/tree/c31b6509a6e27e24c0305582a79562a480454594/docs/application/01-problem-analysis); [Bảo's product scope direction](https://github.com/lexuanbao258-collab/dxos-open-core/issues/53#issuecomment-6386250475). The [A02 reconciliation](../business-contract-review.md) preserves provenance and distinguishes that scope direction from unapproved detailed rules.
+
 ## 1. Purpose
 
 The Facility Maintenance application is intended to support the submission, coordination, tracking, and acceptance of internal facility repair requests.
@@ -22,6 +24,15 @@ The full Facility Maintenance business journey is **DEFERRED** from the first IT
 The existing Portal may demonstrate Facility requests using mock data. This does not demonstrate an approved Facility Backend API or production Workflow execution.
 
 This document describes proposed requirements for future review and reuse validation.
+
+| Scope item | Evidence-backed disposition | Approval boundary |
+| --- | --- | --- |
+| Prioritize Helpdesk; use a distinct second definition to demonstrate unchanged Core reuse | Product direction aligned in the linked owner comment | Exact Facility reuse definition, actor/facts, HTTP scope and executed acceptance still OPEN |
+| Full Facility submit-to-closure journey in the first MVP | DEFERRED under that product direction | Does not erase the broader proposed MUSTs in original ISP-BA-05/06/07; preserve the scope change explicitly |
+| Facility screens and synthetic requests | MOCK / DEVELOPMENT demonstration only | No Backend, actual repair, persisted workflow or E2E acceptance |
+| Exact lifecycle, assignment state, acceptance actor/evidence, reject/rework/close, HTTP DTOs | CANDIDATE / POLICY OPEN | No final detailed Facility Business Contract ratification found in the inspected sources |
+
+Facility physical-location and repair/acceptance facts differ from IT software support and original-requester confirmation. Do not send Facility through `requestType=IT_HELPDESK`, reuse IT action semantics or declare Facility LIVE because the same Core can support definitions.
 
 ## 3. Stakeholders and Actors
 
@@ -52,6 +63,8 @@ Business roles do not automatically grant access. Backend operations require ver
 
 These requirements are documentation proposals, not proof of completed LIVE implementation.
 
+Requirements map to UC-FAC-01 (FR-01/02), UC-FAC-02 (FR-05), UC-FAC-03 (FR-06), UC-FAC-04 (FR-07), UC-FAC-05 (FR-08), and protected reads/history (FR-03/04). FR-09/10 apply across every candidate command; [use-case guards](use-cases.md#candidate-preconditions-facts-and-postconditions) and the [acceptance plan](acceptance-tests.md) define observable expectations without claiming execution.
+
 ## 5. Proposed Facility Workflow
 
 The earlier Facility business candidate describes:
@@ -76,6 +89,8 @@ A Facility request may require:
 - Repair information and outcome.
 - Authorized acceptance result, when the policy is defined.
 
+Proposed minimum intake facts are a meaningful title, description and physical location; exact lengths, location taxonomy and DTO names are OPEN. Technician identity is derived/validated server-side; a reported outcome must distinguish successful repair from incomplete/failed work. Acceptance needs a separately authorized decision and applicable rationale/evidence. These are conceptual validation requirements, not additional fields on the IT DTO.
+
 Photos or documents may be useful supporting evidence, but protected attachment APIs are currently BLOCKED.
 
 A photo must not be treated as mandatory for the initial request unless an approved contract establishes that requirement.
@@ -97,6 +112,8 @@ A photo must not be treated as mandatory for the initial request unless an appro
 - Present authorized request data to users.
 
 Facility-specific business rules must not be hardcoded into reusable Core modules.
+
+Use the same provider-neutral Core contracts and algorithms, changing only approved definitions, Application policy/facts and provider adapters as needed. Facility reuse acceptance must demonstrate unchanged Core behavior with a genuinely distinct definition; a copied Helpdesk label or mock screen is insufficient.
 
 ## 8. Security and Authorization
 
@@ -166,6 +183,8 @@ The following require Owner, Application, and Identity/Security review:
 - Assignment and authorization policy.
 - Facility HTTP API and response models.
 - Scope and timing of the complete Facility release.
+
+BD-06/07 in the [decision register](../business-decisions.md) record proposals, impacts, owners and OPEN status; BD-01/02/04/05 cover wrong scope, failure handling, visibility and unknown outcomes. Original BL-02 / AT-MVP-12 (cannot repair further) stays blocked until a terminal policy or explicit exclusion is approved; it must not be reported as fulfilled maintenance.
 
 ## 13. References
 

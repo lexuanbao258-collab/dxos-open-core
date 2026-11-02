@@ -46,6 +46,24 @@ For every eventual execution, capture exact Git commit SHAs for Portal, BFF and 
 
 The author-reported PR #71 snapshot describes **356/356 unit tests and 7/7 Chromium tests** using fake or MOCK paths. This is **author-reported candidate evidence**, not independent LIVE E2E acceptance. A later Issue #39 responsive UI handoff reports a separate local snapshot (365/365 unit, 26/26 browser); do not mix these numbers or imply that uncommitted work passed at the PR head.
 
+Separately, [independent PR #98 security evidence](../business-contract-review.md#separate-independent-evidence--pr-98-phase-2a) at `25f73d10b51556b446af12e636b9e19cd53ad030` records 331/331 focused PASS and 687/687 single-worker PASS; the initial default-parallel two timeouts remain unresolved. This is Phase 2A frontend source/test evidence only; Phase 2B/LIVE remain BLOCKED and the acceptance designs below remain NOT RUN.
+
+## Additional contract cases for independent execution
+
+| ID | Scenario and required assertion | Status |
+| --- | --- | --- |
+| IT-CON-01 | System Administrator without separately delegated grants/eligibility cannot list/read/history/assign/confirm; multi-role actor still satisfies each predicate independently | NOT RUN |
+| IT-CON-02 | Create 201 + Location; other eight routes 200 on permitted success; exact DTO shapes, nulls/omissions, unknown fields and non-integer versions; no extra mock fields | NOT RUN |
+| IT-CON-03 | Unauthorized worker/requester cannot receive eligible directory; authorized coordinator sees detail-only options in TRIAGED; no invented names or audit events | POLICY OPEN / NOT RUN |
+| IT-CON-04 | Two commands triage then assign: failed assignment does not fabricate rollback of committed triage; reassignment in IN_PROGRESS denied | NOT RUN |
+| IT-CON-05 | Committed, uncommitted and still-ambiguous outcomes; assignment has no transition receipt; lost create without ID; no mutation replay and no false result attribution | BD-05 OPEN / NOT RUN |
+| IT-CON-06 | Generic missing codes/messages preserved; Helpdesk hidden/missing parity on detail/history and five resource POSTs including JSON shape/content type/bytes and unchanged facts/state/history | CONTRACT CONDITIONAL / NOT RUN — local-isolated acceptance design |
+| IT-CON-07 | Flag absent/false/true route inventory in isolated local scope; legacy consumer compatibility and no alternate-namespace bypass | OWNER CONFIRMATION PENDING / NOT RUN — local-isolated acceptance design |
+| IT-CON-08 | Exact read/transition authority, tenant/ACL/assignment revoke races, concurrent same-version Workflow actions, policy unavailable/timeout and rollback | NOT RUN |
+| HD01-P1 | Negative test design: submit CREATE with otherwise valid prerequisites, missing exact client-scoped `workflow:create`, and a hidden definition binding. Require rejection before any protected definition/binding lookup; capture authorization/lookup ordering and assert zero protected lookup calls and zero unauthorized business, grant, Workflow state/version or history writes using before/after persistence snapshots. | NOT RUN / BLOCKED |
+
+The [API contract](api-contract.md) records #95's source pin and the latest conditional SEC-97-01 operation decisions; current #97 implementation is NOT ACCEPTED. IT-CON-06/07 Generic/flag coverage is **NOT RUN local-isolated acceptance design** for the disposable candidate only, with no shared/staging/production exposure authorization. These cases are test designs, not execution claims. Existing local counts in PR #71/#95/#97 descriptions are not imported as official test results; source assertions, reported execution and independent acceptance must stay separate. Historical evidence remains at its original source; see [A02 reconciliation](../business-contract-review.md).
+
 ## Exit criteria for independent acceptance
 
 - Business/API contract and responsible reviewers ratified; open wrong-scope/confirmation policies resolved or explicitly excluded.

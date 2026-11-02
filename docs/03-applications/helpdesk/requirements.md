@@ -5,6 +5,8 @@
 **Project:** DX-OS Open-Core<br>
 **Related:** Issue #39, Issue #53, PR #60, PR #63, PR #71
 
+**Current scope evidence:** [Ánh's A02 review](https://github.com/lexuanbao258-collab/dxos-open-core/issues/53#issuecomment-6551136261). This conditional acknowledgement does not approve final business policies or runtime use. [Source reconciliation](../business-contract-review.md) pins the newer #74/#95 candidates and separate #97 compatibility proposal.
+
 ## 1. Purpose
 
 The IT Helpdesk application enables employees to submit internal IT support requests, track their progress, and confirm the results of technical support.
@@ -40,6 +42,8 @@ The initial integration candidate stops at `CONFIRMED`. Production `CLOSED` beha
 | System Administrator | Manages infrastructure and configuration under separately approved policies |
 
 Business roles do not automatically grant API permissions. Backend access requires verified identity, appropriate authority, and resource-level authorization.
+
+System Administrator has no automatic ticket, directory or history access. Current membership, provisioned actor eligibility, original requester, current assignee and ACL ownership must be resolved from authoritative sources for each action. The complete [actor/action/resource/visibility contract](business-rules.md) defines the candidate predicates; final field/history policy remains OPEN.
 
 ## 4. Functional Requirements
 
@@ -87,7 +91,11 @@ The Application owns request information, business validation, assignment, and r
 
 **Portal UI:** The current demonstration uses `MockRequestService` and synthetic data. It is not evidence of real authentication or Backend authorization.
 
+Separate HTTP consumer candidates do not establish accepted LIVE composition.
+
 **Backend:** PR #63 contains a Helpdesk integration candidate. Its existence and focused test evidence do not constitute approval for production LIVE use.
+
+PR #63 is historical lineage; #74 and #95 are newer review candidates. The [API contract](api-contract.md) records #95's exact inspected source and #97's unresolved compatibility correction. No candidate is approved for production LIVE use by this document.
 
 **Identity/BFF:** Real browser SSO, session integration, and relevant security gates remain subject to verification.
 
@@ -105,6 +113,8 @@ The following require explicit Owner, Application, and Security review:
 - Recovery behavior for uncertain writes and partial failures.
 
 These items must not be silently treated as implemented or approved.
+
+The [decision register](../business-decisions.md) records each problem, evidence-backed proposal, impact, deciding owners and OPEN status. In particular, wrong-scope rejection is a proposed MUST in the original analysis and remains an unresolved mismatch with this narrower nine-route candidate; absence of an API is not an approved business exclusion.
 
 ## 9. Acceptance Criteria
 

@@ -22,6 +22,8 @@ stateDiagram-v2
 
 `SUBMITTED → ACCEPTED → ASSIGNED → IN_REPAIR → AWAITING_ACCEPTANCE → CLOSED` is an **unratified reference**. No exact transition keys, HTTP endpoints, roles, states or definition version are approved by this document.
 
+This reference comes from the preserved [Issue #53 original proposal](https://github.com/lexuanbao258-collab/dxos-open-core/issues/53) and [ISP-BA analysis](https://github.com/lexuanbao258-collab/dxos-open-core/tree/c31b6509a6e27e24c0305582a79562a480454594/docs/application/01-problem-analysis). It does not extend the agreed Helpdesk workflow. Facility `ASSIGNED` remains a state proposal; IT assignment remains a separate Application command. Facility acceptance is not automatically IT requester confirmation.
+
 ## Responsibility and transition questions
 
 | Candidate operation | Business rule | Decision pending |
@@ -33,6 +35,8 @@ stateDiagram-v2
 | Report outcome | Authorized assignee records verified repair result | Incomplete/failed outcome; required evidence |
 | Accept | Designated authorized actor reviews repair | Requester versus independent inspector, reject/rework |
 | Close | Formal closure after acceptance | Whether closure separate or automatically implied — **must not assume** |
+
+The [candidate use-case guards](use-cases.md#candidate-preconditions-facts-and-postconditions) supply required facts and failure boundaries. Each future transition needs an authorized actor, source state, expected Workflow version, required facts and consistent postcondition. Assignment version and any compound acceptance/closure transaction remain OPEN. Do not add reject/rework/failure-terminal arrows merely to complete this diagram; BD-01/06/07 in the [decision register](../business-decisions.md) require explicit decisions.
 
 ## Core / Application boundary
 
@@ -48,6 +52,8 @@ Workflow Core alone owns current state, transition mechanics, pinned definition 
 
 ## Verification plan and gate
 
-Before treating Facility as LIVE, approve requirements, use cases, business rules, definition ID/version and actor matrix; implement Backend/BFF APIs; execute real Keycloak, HTTP, PostgreSQL and MinIO tests; record exact SHA and independent review.
+The narrower reuse gate must select an approved distinct definition, bounded actor/facts/commands, negative/version/history cases and exact source SHA, then independently demonstrate the same provider-neutral Core algorithm. This gate does not approve the full Facility journey.
+
+Before treating full Facility as LIVE, approve requirements, use cases, business rules, definition ID/version and actor matrix; implement reviewed Backend/BFF APIs; execute real Keycloak, HTTP and PostgreSQL tests; record exact SHA and independent review. Add real object-storage/MinIO tests if attachments enter the approved scope; the current candidate does not make them a mandatory intake prerequisite.
 
 **Disposition:** DRAFT ONLY; no approved Facility workflow or production closure behavior.

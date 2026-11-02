@@ -2,7 +2,7 @@
 
 **Status:** DRAFT — IMPLEMENTED CANDIDATE / LIVE_BLOCKED<br>
 **Owner:** Application Team — Ánh<br>
-**Source baseline:** PR #63 Backend candidate, commit `e12d105c89400a5fd69dd6cc1fca670ff1f04f51`
+**Inspected source:** [PR #95 HelpdeskService](https://github.com/lexuanbao258-collab/dxos-open-core/blob/fe55347908eed6a351ca9724be899138f7683081/backend/src/main/java/com/tricore/dxos/infrastructure/workflow/HelpdeskService.java), commit `fe55347908eed6a351ca9724be899138f7683081`; PR #63 is historical lineage, not the selected LIVE baseline. See [A02 reconciliation](../business-contract-review.md).
 
 ## 1. Purpose
 
@@ -50,6 +50,8 @@ This diagram is conceptual; arrows do not necessarily represent physical SQL for
 ### 4.1 Helpdesk Request
 
 The PR #63 candidate defines `helpdesk_requests`.
+
+The inspected #95 source retains this table. This is a description of existing source facts, not a new schema or migration proposal.
 
 | Field | Purpose |
 |---|---|
@@ -114,6 +116,8 @@ These structures are not equivalent to business roles.
 An original requester, coordinator or assigned worker still requires the applicable verified authority and resource/action permissions.
 
 The final authorization and visibility policies remain subject to review.
+
+The [actor and disclosure matrix](business-rules.md#resource-field-and-history-visibility) and [wire DTO inventory](api-contract.md#response-dto-inventory) distinguish stored facts from returned fields. Requester, assignee and resource owner are independent identities; a nullable assignee/resolution is not an invented person/outcome. Workflow versions, assignment versions and optional detail labels have distinct meanings. Minimal history has no assignment audit or actor attribution; those business requirements remain BD-04 OPEN rather than inferred schema fields.
 
 ## 7. Data Consistency
 

@@ -4,6 +4,8 @@
 > **Owner:** Application (Ánh); reviewer to confirm
 > **Related:** Issue #53, PR #60, PR #76, PR #78
 
+**Provenance:** [ISP-BA-04/05/06 at PR #68](https://github.com/lexuanbao258-collab/dxos-open-core/tree/c31b6509a6e27e24c0305582a79562a480454594/docs/application/01-problem-analysis) supply repair, location, delegation and acceptance concepts. [Requirements](requirements.md) and [use-case guards](use-cases.md#candidate-preconditions-facts-and-postconditions) interpret them for review; no #78 branch file is required to read this model.
+
 ## Purpose
 
 Specify conceptual business-data ownership for Facility Maintenance, separated from generic Workflow Core persistence. This is **not** a verified SQL schema or database migration.
@@ -22,6 +24,18 @@ Specify conceptual business-data ownership for Facility Maintenance, separated f
 | Object Metadata | Versioned object keys and provider-neutral operations, if attachment contract approved | Data adapter and Application authorization jointly defined |
 
 No physical table names, foreign keys, unique constraints or data-retention durations are asserted without an approved migration and code evidence.
+
+## Candidate business facts and validation
+
+| Fact group | Proposed rule / distinction from Helpdesk | Pending decision |
+| --- | --- | --- |
+| Intake / location | Meaningful title, problem description and physical location; requester derived from verified identity | Wire names, lengths, location taxonomy and whether particular service kinds need extra facts |
+| Assignment | Persist current eligible technician separately from original requester and ACL owner | Independent assignment version versus coordinated `ASSIGNED` Workflow transition; reassignment states and grant lifecycle |
+| Repair result | Record actual work and successful/incomplete/failed outcome; never convert failure into fulfilled repair | Required evidence, notes, failure classification and version/transaction boundary |
+| Acceptance | Explicit evaluator identity, result and applicable rationale/evidence; repair actor is not automatically acceptance actor | Combined accept-and-close versus separate actions; delegation, failed acceptance and no-further-repair disposition |
+| Disclosure / history | Location and work details follow actual resource/field policy; Core transition history is not a complete business audit | Field/event classification, actor/assignment/acceptance audit schema and visibility; no new fields assumed on Helpdesk HistoryView |
+
+Workflow still owns definition binding/state/version/history through provider-neutral Core contracts. This conceptual model chooses no PostgreSQL type, migration, index, retention policy or new Core port. Any attachment references depend on a separately authorized object-storage contract; SQL and object storage do not become one atomic transaction.
 
 ## Conceptual relationships
 

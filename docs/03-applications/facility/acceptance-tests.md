@@ -36,6 +36,10 @@ All rows start `NOT RUN` or `POLICY OPEN`; never convert a row to PASS without e
 | FAC-NEG-08 | Uncertain SQL/storage write | No blind retry, false success or orphan evidence reference | NOT RUN |
 | FAC-NEG-09 | Unauthorized access to location/notes/evidence | Backend enforces final field-level visibility | POLICY OPEN |
 | FAC-NEG-10 | Browser logout/session expiry/invalid CSRF | Safe BFF state change and protected request denial | NOT RUN |
+| FAC-NEG-11 | Administrator without delegated business access; technician attempts acceptance solely as repairer | No implicit resource/acceptance rights; evaluate approved delegation independently | POLICY OPEN |
+| FAC-NEG-12 | Facility data submitted to Helpdesk `IT_HELPDESK` contract | Do not claim a Facility request or reuse proof from an IT-only payload/definition | NOT RUN |
+
+BD-06/07 in the [decision register](../business-decisions.md) identify the deciding owners and proposals. Product direction permits a limited reuse demonstration and defers the full journey; it does not settle the acceptance actor, assignment state/version or rejection/rework policy. Preserve original BL-02 / AT-MVP-12 as BLOCKED pending explicit policy/exclusion. Do not import AI/Codex checks or author-reported suite counts as official Facility test results.
 
 ## Exit criteria
 

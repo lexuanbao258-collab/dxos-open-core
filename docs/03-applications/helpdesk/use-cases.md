@@ -19,10 +19,13 @@ The current Portal demonstration uses mock data. The Backend integration candida
 | Requester | Submits an IT issue, tracks progress, confirms resolution |
 | IT Coordinator | Triages requests and assigns eligible IT technicians |
 | Assigned Technician | Starts work and records the resolution |
+| System Administrator | Configuration under separate policy; no automatic business operation or ticket/history access |
 | Identity/Gateway | Verifies authentication and enforces applicable access boundaries |
 | Workflow Core | Maintains workflow state, version and transition history |
 
 All business actions additionally require verified identity and server-side resource/action authorization.
+
+The [business actor matrix](business-rules.md) is authoritative for this candidate's action predicates and proposed visibility rules; [API inventory](api-contract.md) supplies exact inputs/outputs. [A02 reconciliation](../business-contract-review.md) preserves original GP-IT-01 and ISP-BA IDs without copying the broader original analysis.
 
 ## 3. UC-IT-01 — Submit an IT Support Request
 
@@ -45,6 +48,8 @@ All business actions additionally require verified identity and server-side reso
 
 **Expected result:** A request exists in the `SUBMITTED` state in the Backend candidate.
 
+**Candidate response details:** A confirmed successful create returns 201 RequestView with server-derived requester and identifiers, `SUBMITTED`, Workflow version 0 and assignment version 0. Creation is not a transition-history event. If the response is lost, do not infer this postcondition.
+
 **Exceptions:**
 
 - Invalid input: reject submission without creating a request.
@@ -54,6 +59,8 @@ All business actions additionally require verified identity and server-side reso
 ## 4. UC-IT-02 — Triage and Assign
 
 **Primary actor:** IT Coordinator
+
+**Preconditions:** Visible/readable request in `SUBMITTED`; current coordinator eligibility and read/transition permissions. Load current Workflow and assignment versions. Assignment itself is allowed only in `TRIAGED` and requires an active eligible tenant technician.
 
 **Main flow:**
 
@@ -66,13 +73,19 @@ All business actions additionally require verified identity and server-side reso
 
 **Expected result:** The request is triaged and assigned to an eligible technician.
 
+**Command boundaries:** Triage commits `TRIAGED` and Workflow version +1; assign commits assignment version +1 without changing Workflow version/history. These are two HTTP commands: successful triage followed by failed/conflicting assignment leaves a triaged, potentially unassigned request, not an implicitly rolled-back triage. Reread before an explicit new assignment attempt.
+
 **Important boundary:** `triage` is a Workflow transition. `assign` is a separate Application operation and must not be presented as another Workflow transition.
 
 Wrong-scope rejection remains a proposed business requirement without an approved implementation in this first candidate.
 
+Do not use triage or resolution to simulate a reasoned wrong-scope rejection. Scope exclusion/rejection policy remains BD-01 OPEN. Stale assignment version produces 409; reassigning after `IN_PROGRESS` is unsupported in this candidate.
+
 ## 5. UC-IT-03 — Perform Technical Work
 
 **Primary actor:** Assigned Technician
+
+**Preconditions:** `TRIAGED`, persisted current assignee equals verified actor, active worker eligibility and read/transition permissions. Start uses current `expectedVersion`; resolve is a separate command in `IN_PROGRESS` with fresh version and nonblank resolution.
 
 **Main flow:**
 
@@ -92,9 +105,13 @@ Wrong-scope rejection remains a proposed business requirement without an approve
 - Invalid or stale versions are rejected without silently overwriting current state.
 - An unresolved incident must not be reported as successfully resolved.
 
+**Postconditions:** Start and resolve each increment Workflow version and append one committed transition record; assignment version is unchanged. Resolution and its Workflow transition must commit consistently. An unfinished repair stays in its last committed state while BD-02 handling is decided; no successful result or escalation event is invented.
+
 ## 6. UC-IT-04 — Confirm Resolution
 
 **Primary actor:** Original Requester
+
+**Preconditions:** Visible/readable `RESOLVED` request with recorded resolution; verified actor equals persisted original requester, still has submitter eligibility and read/transition permissions; current `expectedVersion`. Administrator, coordinator or technician status does not substitute for the original requester predicate.
 
 **Main flow:**
 
@@ -109,6 +126,8 @@ Wrong-scope rejection remains a proposed business requirement without an approve
 `CONFIRMED` is the endpoint of the first MVP candidate. It must not be represented as the production `CLOSED` state.
 
 Disagreement, rework and a future closure action remain subject to separate business decisions.
+
+If the requester disagrees or does not respond, there is no confirm command and the candidate remains `RESOLVED`; no timer, forced confirmation, reopen or close is implied. BD-02/03 require an approved handling/exclusion decision.
 
 ## 7. Proposed IT Workflow Summary
 
@@ -137,6 +156,20 @@ The acceptance plan must cover:
 - Unsupported rejection, rework or closure actions.
 
 These cases require separate Backend/security evidence. Portal mock behavior alone is not proof of LIVE authorization.
+
+## Additional use case — UC-IT-05 — Read Progress and History
+
+**Primary actor:** An explicitly authorized reader; business role alone is insufficient.
+
+**Preconditions:** Verified identity, active scope, exact read authority and request-level permission; final history/field policy remains OPEN.
+
+1. List using the candidate cursor/limit contract; Backend returns only permitted records.
+2. Open a permitted detail, display current state, both versions and authorized facts; use server `allowedActions` as a UI hint.
+3. Fetch authorized minimal transition history and show its committed order. Do not invent actor, creation or assignment events.
+
+**Postconditions:** No mutation; no protected existence/field/event disclosure. Optional detail names/directory are not guaranteed on list or command responses. Hidden/missing ID yields generic 404, visible forbidden read yields 403, and invalid session yields 401. A stale view never authorizes a later write.
+
+**Unknown outcome across all use cases:** Preserve UNKNOWN after lost acknowledgements; newly authorized reads may help but are not always attributable receipts. Lost create without ID and assignment without audit need BD-05 recovery, not blind resubmission.
 
 ## 9. Acceptance Criteria
 
