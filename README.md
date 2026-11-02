@@ -209,15 +209,15 @@ A `PASS` claim should identify its commit, environment, command, result, and lim
 
 ## Contributing and Development Workflow
 
-TRICORE uses Issues and pull requests to define scope, review contracts, and attach reproducible evidence:
+The full workflow is in [CONTRIBUTING.md](CONTRIBUTING.md). In short:
 
-1. Record acceptance criteria, exclusions, and ownership in an Issue.
-2. Work on a short-lived branch from the appropriate baseline.
-3. Include tests and explain assumptions or unverified behavior.
-4. Attach relevant command output and limitations to the PR.
-5. Obtain review before merging.
+1. Every task has an Issue with one assignee, a release milestone and an `area:*` label.
+2. Branch from `main` as `<type>/<area>-<description>`; keep it under three days.
+3. Open a pull request into `main` (at most 400 changed lines) with a Conventional Commits title and `Closes #N`.
+4. CI (`backend`, `frontend`, `repo-hygiene`) must pass and one other member must approve.
+5. Changes land on `main` by squash merge only; nobody pushes to `main` directly.
 
-Migration, provider, security-policy, and licensing changes require the appropriate specialist review. A merge alone is not end-to-end verification.
+User-visible changes are recorded in [CHANGELOG.md](CHANGELOG.md).
 
 ## Team
 

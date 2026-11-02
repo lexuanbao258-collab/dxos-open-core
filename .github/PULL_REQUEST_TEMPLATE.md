@@ -1,35 +1,25 @@
-## Related Issue / Objective
+<!--
+SPDX-FileCopyrightText: 2026 TRICORE contributors
+SPDX-License-Identifier: Apache-2.0
 
-Refs #
+Tiêu đề PR: <loại>(<phần>): <mô tả>   ví dụ: feat(workflow): add outbox event
+Mô tả không quá 150 chữ. Bằng chứng kiểm thử là kết quả CI trên PR này.
+-->
 
-## Ownership and baseline
-- Owner:
-- Independent reviewer:
-- Workstream:
-- Base branch and exact SHA:
-- Head SHA:
-- Dependencies / stacked PRs:
+Closes #
 
-## Scope
-**IN:**
+## Thay đổi
 
-**OUT:**
+-
 
-## Architecture / contract impacts
-- Core / Application / Infrastructure boundaries:
-- HTTP / Java contracts:
-- Database migration and persistence safety:
+## Cách kiểm
 
-## Test evidence
-- [ ] Build and affected unit tests
-- [ ] Security / negative tests where applicable
-- [ ] Integration tests where applicable
-- [ ] Skipped tests and unavailable providers documented
-- Commands, exact SHA, logs:
+<!-- Lệnh hoặc các bước; ảnh/clip nếu có giao diện. -->
 
-## Independent review and merge gate
-- [ ] No unresolved P0/P1 or documented approved disposition
-- [ ] Reviewer verdict (PASS / CONDITIONAL / BLOCKED) at exact SHA
-- [ ] Base/head, overlap and downstream integration verified
+## Checklist
 
-> A checklist is not proof of execution. Do not claim E2E or release acceptance without evidence.
+- [ ] Base là `main`, không quá 400 dòng thay đổi
+- [ ] Có test cho logic mới
+- [ ] File mới có SPDX header
+- [ ] Đã thêm dòng vào `CHANGELOG.md` (mục Unreleased) nếu người dùng thấy được thay đổi
+- [ ] Không có bí mật, token, dữ liệu thật

@@ -1,1 +1,7 @@
-blank_issues_enabled: true
+# SPDX-FileCopyrightText: 2026 TRICORE contributors
+# SPDX-License-Identifier: Apache-2.0
+blank_issues_enabled: false
+contact_links:
+  - name: Quy ước làm việc của nhóm
+    url: https://github.com/lexuanbao258-collab/dxos-open-core/blob/main/CONTRIBUTING.md
+    about: Đọc trước khi mở issue hoặc PR.

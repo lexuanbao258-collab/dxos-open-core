@@ -1,0 +1,10 @@
+# SPDX-FileCopyrightText: 2026 TRICORE contributors
+# SPDX-License-Identifier: Apache-2.0
+#
+# Người được GitHub tự gắn làm reviewer. Dòng sau ghi đè dòng trước.
+*                 @phanyen06ym-ien
+/backend/         @lexuanbao258-collab @phanyen06ym-ien
+/portal-bff/      @phanyen06ym-ien @lexuanbao258-collab
+/frontend/        @ngang02012007-crypto @phanyen06ym-ien
+/infra/           @phanyen06ym-ien @lexuanbao258-collab
+/.github/         @phanyen06ym-ien @lexuanbao258-collab

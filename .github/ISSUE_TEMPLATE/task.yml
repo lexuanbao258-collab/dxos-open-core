@@ -1,0 +1,32 @@
+# SPDX-FileCopyrightText: 2026 TRICORE contributors
+# SPDX-License-Identifier: Apache-2.0
+name: Việc cần làm
+description: Một việc có người nhận, có hạn, làm xong trong tối đa 3 ngày.
+labels: []
+body:
+  - type: textarea
+    id: goal
+    attributes:
+      label: Mục tiêu
+      description: Một câu — xong thì người dùng hoặc giám khảo thấy gì.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Tiêu chí nghiệm thu
+      description: Tối đa 5 mục, mỗi mục kiểm được.
+      value: |
+        - [ ]
+    validations:
+      required: true
+  - type: textarea
+    id: out-of-scope
+    attributes:
+      label: Ngoài phạm vi
+      description: Những gì issue này không làm.
+  - type: input
+    id: links
+    attributes:
+      label: Liên quan
+      description: Link tài liệu, ADR hoặc issue khác (thiết kế dài để ở docs/, không viết trong issue).
