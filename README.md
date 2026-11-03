@@ -62,7 +62,7 @@ See the [architecture baseline](docs/architecture/README.md) and [Core contracts
 
 - **Identity / SSO:** OIDC trust and authority contracts, with verified security regressions. Portal BFF has PKCE/session/CSRF implementation; live three-principal Keycloak/browser acceptance remains outstanding.
 - **API Gateway:** Spring Boot business API boundary, verified principal checks, exact Workflow authorization and scoped error contracts. APISIX is a selected target, not a verified deployed runtime.
-- **Workflow:** Provider-neutral definitions, instances, transition/version/history contracts, and PostgreSQL-backed Helpdesk integration. Flowable BPMN is a selected target, not a verified adapter in this release.
+- **Workflow:** Provider-neutral definitions, instances, transition/version/history contracts, and PostgreSQL-backed Helpdesk integration. Workflow Core is an in-house state machine; no external BPMN engine is used.
 - **Data Management:** PostgreSQL 17 Helpdesk/Workflow persistence and negative transaction checks. MinIO/object-storage provider integration is not a completed v0.1.0 capability.
 
 ## Implementation Status
@@ -76,7 +76,7 @@ This table summarizes the **v0.1.0 source and tested scope** after PR #103 on `m
 | Portal BFF | OIDC PKCE, server-side session, CSRF and Helpdesk API client | Live browser full-stack acceptance pending |
 | React Portal | Standalone MOCK UI and `integration-local` build mode | MOCK is not proof of connected LIVE runtime |
 | Workflow / Data | Core contracts, PostgreSQL 17-backed Helpdesk/Workflow tests and ArchUnit rules | Deferred provider, privilege and audit checks remain |
-| Reuse / Storage | Core reuse contracts, Facility UI demonstration | Facility E2E, MinIO and Flowable adapter not accepted |
+| Reuse / Storage | Core reuse contracts, Facility UI demonstration | Facility E2E and MinIO adapter not accepted |
 
 ### Historical test checkpoint
 
@@ -94,7 +94,7 @@ On **October 7, 2026**, at commit **`2b51a41`**, documentation recorded **29 Wor
 | Frontend | React 19, TypeScript, Vite; MOCK and integration-local builds |
 | Deployment | Requires commit-specific operational and acceptance evidence |
 
-Keycloak is the selected OIDC provider target; APISIX, MinIO and Flowable remain selected technology targets unless their exact runtime and adapter acceptance are independently evidenced.
+Keycloak is the selected OIDC provider; APISIX (gateway), MinIO (object storage) and Node-RED (event automation) are planned for v0.2.0–v0.4.0.
 
 ## Run v0.1.0
 
@@ -120,7 +120,7 @@ The frontend also supplies an `integration-local` build mode (`npm.cmd run build
 
 - The MOCK Portal is a demonstration, not a live application or security acceptance.
 - The full Keycloak/PKCE browser login, three-persona Helpdesk E2E flow and clean-install release acceptance require R12 evidence.
-- Facility workflow runtime reuse, Flowable BPMN, APISIX edge runtime, MinIO storage and production deployment are not claimed as completed v0.1.0 features.
+- Facility workflow runtime reuse, APISIX edge runtime, MinIO storage and production deployment are not claimed as completed v0.1.0 features.
 - Focused PostgreSQL 17 R10 passed with two documented skips; deferred database/provider audits and third-party SPDX/license review are tracked separately.
 
 ## Getting Started
