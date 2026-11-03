@@ -3,142 +3,101 @@ SPDX-FileCopyrightText: 2026 TRICORE contributors
 SPDX-License-Identifier: Apache-2.0
 -->
 
-# Đóng góp cho DX-OS Open-Core
+# Contributing to DX-OS Open Core
 
-Tài liệu này là quy ước làm việc chung của nhóm TRICORE. Một nguyên tắc gốc:
-**chỉ những gì đã merge vào `main` mới được tính là xong.**
+Only work merged into `main` is considered complete.
 
-## Vai trò
+## Ownership and review
 
-| Vai trò | Người | GitHub |
+| Responsibility | Person | GitHub |
 | --- | --- | --- |
-| Tích hợp, sửa Core, phát hành; người bấm merge | Yến | @phanyen06ym-ien |
-| Review và test chính của Core; quản trị repo | Bảo | @lexuanbao258-collab |
-| Application IT Helpdesk, web, truyền thông; review phần Core gắn với Helpdesk | Ánh | @ngang02012007-crypto |
+| Core integration, release coordination, and merge coordination | Yến | @phanyen06ym-ien |
+| Primary Core testing and review; repository administration | Bảo | @lexuanbao258-collab |
+| IT Helpdesk application and related Core review | Ánh | @ngang02012007-crypto |
 
-| PR chạm vào | Reviewer bắt buộc |
+Development ownership identifies who implements a component. CODEOWNERS requests review for matching files; it does not restrict who may contribute. Independent review requires approval from a person other than the PR author. Manual co-review requires approvals from all named reviewers and is not fully enforced by GitHub CODEOWNERS or branch protection: GitHub may accept one approval from a rule listing multiple owners.
+
+| Changes | Review policy |
 | --- | --- |
-| Core: `backend/` (identity, workflow, data, gateway), `portal-bff/`, `infra/` | Bảo |
-| Phần Core gắn với Helpdesk: `gateway/helpdesk`, `application/helpdesk`, `Helpdesk*`, `db/helpdesk`, API của BFF | Bảo **và** Ánh |
-| Application: `frontend/` | Yến |
-| Test do Bảo viết | Yến |
+| Backend Core, infrastructure, and repository governance | Bảo, with Yến as an independent fallback |
+| Portal BFF | Bảo and Ánh as code owners; apply Helpdesk co-review when its API is affected |
+| Frontend | Yến and Ánh as code owners |
+| Helpdesk-related Core paths and BFF API | Both Bảo and Ánh must review and approve |
+| Tests authored by Bảo | Yến provides independent review |
 
-- Yến bấm merge mọi PR sau khi đủ approve; không ai tự merge PR của mình khi chưa có approve.
-- Giờ review cố định: 12:00–12:30 và 21:00–21:30. Merge train: 21:00 thứ Ba và thứ Sáu.
+Authors cannot approve their own PRs. If Bảo or Ánh authors a Helpdesk-related Core PR, document the conflict in the PR and obtain an independent-review exception or alternative reviewer decision before merge; self-approval never counts. Yến coordinates merges after all applicable approvals and checks, subject to repository permissions and the agreed process. Review and merge responsibilities are distinct.
 
-## Luồng làm việc
+Regular review windows are 12:00–12:30 and 21:00–21:30. Merge trains run at 21:00 on Tuesdays and Fridays.
 
+## Workflow
+
+```text
+Ready issue → branch from main → PR to main → CI → independent approval → squash merge → release
 ```
-Issue sẵn sàng → nhánh từ main → PR vào main → CI xanh → 1 approve → squash merge → release
-```
 
-1. **Issue**: mỗi việc trên 2 giờ có một issue, đúng 1 người nhận, 1 milestone, label `area:*`.
-2. **Nhánh**: tạo từ `main` mới nhất, tên `<loại>/<phần>-<mô-tả>`, sống tối đa 3 ngày.
-3. **PR**: base luôn là `main`, tối đa 400 dòng, ghi `Closes #N`.
-4. **CI** phải xanh. **1 approve** của người không phải tác giả.
-5. **Merge**: chỉ squash. Tiêu đề PR trở thành commit trên `main`.
+1. Give work taking over two hours one issue, one assignee, one milestone, and an `area:*` label.
+2. Branch from current `main` with a `<type>/<area>-<description>` name. Keep branches open no longer than three days where practical.
+3. Target `main`. Link the issue with `Closes #N`. Keep PRs near the 400-line guideline.
+4. Require passing applicable CI and at least one independent approval. Apply additional manual co-review rules above.
+5. Squash merge. The PR title becomes the commit title on `main`.
 
-Không push thẳng lên `main` hay `gh-pages`. Không tạo nhánh `review/*`, `candidate/*`, `diagnostic/*`.
+Do not push directly to `main` or `gh-pages`. Do not create `review/*`, `candidate/*`, or `diagnostic/*` branches.
 
-## Lệnh hằng ngày
+## Daily commands
 
 ```bash
-# 1. Bắt đầu một việc
+# Start a task.
 git switch main
 git pull --ff-only
 git switch -c feat/workflow-outbox-event
 
-# 2. Làm việc, commit nhỏ, commit thường xuyên
+# Commit focused changes.
 git add -p
 git commit -m "feat(workflow): write outbox event in transition transaction"
 
-# 3. Cập nhật với main khi main có thay đổi mới
+# Integrate changes from main.
 git fetch origin
-git merge origin/main          # hoặc bấm "Update branch" trên trang PR
+git merge origin/main
 
-# 4. Đẩy lên và mở PR
+# Push and open the PR.
 git push -u origin HEAD
 gh pr create --base main --fill --assignee @me
 
-# 5. Sau khi PR đã merge
+# After merge, remove the local topic branch.
 git switch main
 git pull --ff-only
 git branch -d feat/workflow-outbox-event
 ```
 
-Nếu lỡ commit vào `main` ở máy mình: `git switch -c feat/ten-viec` rồi
-`git switch main && git reset --hard origin/main` (chỉ làm khi chưa push).
+If a commit is accidentally made on local `main`, preserve it on a topic branch and inspect the working tree before restoring `main`. Never discard uncommitted work.
 
-## Đặt tên
+## Naming and PRs
 
-**Nhánh**: `<loại>/<phần>-<mô-tả>`, ví dụ `feat/gateway-apisix`, `fix/portal-flaky-test`,
-`docs/site-integration-guide`.
+Use [Conventional Commits](https://www.conventionalcommits.org/) for commits and PR titles: `<type>(<area>): <short lowercase description>`. Allowed types are `feat`, `fix`, `docs`, `test`, `refactor`, `chore`, `ci`, and `build`. Common areas are `identity`, `gateway`, `bff`, `workflow`, `data`, `helpdesk`, `facility`, `portal`, `site`, `infra`, `docs`, and `repo`.
 
-**Commit và tiêu đề PR**: [Conventional Commits](https://www.conventionalcommits.org/).
+Use the PR template and describe verification. Aim for at most 150 words in the description. A draft should normally be ready within 48 hours. Avoid stacked PRs; if a dependency is necessary, write `Depends on #N` and wait for that PR to merge.
 
-```
-<loại>(<phần>): <mô tả ngắn, viết thường, không chấm cuối>
-```
-
-- Loại: `feat`, `fix`, `docs`, `test`, `refactor`, `chore`, `ci`, `build`.
-- Phần: `identity`, `gateway`, `bff`, `workflow`, `data`, `helpdesk`, `facility`,
-  `portal`, `site`, `infra`, `docs`, `repo`.
-
-CI kiểm tiêu đề PR theo định dạng này.
-
-## Pull request
-
-- Tối đa 400 dòng thay đổi (không tính lockfile, file sinh tự động). Lớn hơn thì tách.
-- Mô tả theo mẫu, không quá 150 chữ. Bằng chứng kiểm thử là kết quả CI trên chính PR.
-- Draft tối đa 48 giờ.
-- Không xếp chồng PR. Nếu buộc phải phụ thuộc, ghi `Depends on #N` và chờ PR kia merge.
+The 400-line PR guideline currently warns but does not block CI. The REUSE licensing job is also advisory until its separate enforcement work is agreed.
 
 ## Review
 
-- Kết luận chỉ có **Approve** hoặc **Request changes**.
-- Góp ý gắn vào dòng code, tối đa 10 góp ý mỗi lượt.
-  Ghi `[chặn]` cho điều bắt buộc sửa, `[nhỏ]` cho góp ý tuỳ chọn.
-- Ý kiến tổng quát tối đa 5 dòng. Phân tích dài viết vào ADR hoặc issue mới.
-- Việc ngoài phạm vi PR thì mở issue mới, không chặn PR hiện tại.
+Conclude reviews with **Approve** or **Request changes**. Attach focused comments to code lines, up to ten per round. Mark blocking comments `[blocking]` and optional suggestions `[minor]`. Keep general summaries short; put longer design analysis in an ADR or issue. Track out-of-scope work in a separate issue.
 
-## Issue, label, milestone
+## Issues, milestones, and completion
 
-| Label | Dùng khi |
-| --- | --- |
-| `area:identity`, `area:gateway`, `area:workflow`, `area:data` | Việc thuộc một Core |
-| `area:portal`, `area:site`, `area:infra`, `area:comms` | Ứng dụng, web, hạ tầng, truyền thông |
-| `prio:p0` | Chặn release gần nhất |
+Use `area:identity`, `area:gateway`, `area:workflow`, and `area:data` for Core work; `area:portal`, `area:site`, `area:infra`, and `area:comms` for applications and supporting work. `prio:p0` blocks the next release. Release milestones are `v0.1.0` (November 4), `v0.2.0` (November 15), `v0.3.0` (November 22), `v0.4.0` (November 29), and `v1.0.0` (December 5). Project board columns track status; status labels are unnecessary.
 
-Milestone theo release: `v0.1.0` (04/11), `v0.2.0` (15/11), `v0.3.0` (22/11), `v0.4.0` (29/11), `v1.0.0` (05/12).
-Trạng thái không dùng label; trạng thái là cột trên bảng GitHub Project.
+A task is done when its PR is merged into `main`, applicable CI passes, issue acceptance criteria are met, new logic has tests, new files have SPDX headers, user-visible changes appear in `CHANGELOG.md`, and README or API documentation reflects changed external behavior.
 
-## Định nghĩa "Xong"
-
-- [ ] PR đã merge vào `main`, CI xanh.
-- [ ] Đạt hết tiêu chí nghiệm thu của issue.
-- [ ] Có test cho logic mới.
-- [ ] File mới có SPDX header.
-- [ ] `CHANGELOG.md` có dòng mô tả nếu người dùng thấy được thay đổi.
-- [ ] README, tài liệu API đã khớp nếu thay đổi hành vi bên ngoài.
-
-## Giấy phép trong từng file
-
-Mỗi file mã nguồn mới mở đầu bằng:
+New source files begin with:
 
 ```java
 // SPDX-FileCopyrightText: 2026 TRICORE contributors
 // SPDX-License-Identifier: Apache-2.0
 ```
 
-SQL dùng `--`, YAML và shell dùng `#`, Markdown dùng `<!-- -->`.
+Use `--` for SQL, `#` for YAML and shell, and `<!-- -->` for Markdown.
 
-## Báo cáo
+Each person posts a three-line daily update at 22:00: completed work, next work, and blockers. Yến opens the weekly Sunday report issue with verifiable links.
 
-- Hằng ngày 22:00, mỗi người 3 dòng trong nhóm chat: **Xong** · **Mai** · **Kẹt**.
-- Tối Chủ Nhật, Yến mở issue `Báo cáo tuần N` gửi thầy hướng dẫn. Chỉ ghi việc có link kiểm được.
-
-## Bảo mật
-
-Không commit bí mật, token, mật khẩu hay dữ liệu người dùng thật. Biến môi trường khai báo
-trong `.env.example` với giá trị giả; `.env` thật không bao giờ commit. Câu trả lời khảo sát
-gốc và ảnh chưa xin phép không đưa lên repo.
+Never commit secrets, tokens, passwords, or real user data. Use placeholder values in `.env.example`; never commit a real `.env`, raw survey responses, or images without permission.
