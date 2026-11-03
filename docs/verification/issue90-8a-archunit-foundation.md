@@ -1,7 +1,12 @@
+<!--
+SPDX-FileCopyrightText: 2026 TRICORE contributors
+SPDX-License-Identifier: Apache-2.0
+-->
+
 # Issue #90 — PR 8A: ArchUnit foundation
 
 **Status:** implementation candidate for independent review; not architecture acceptance.
-**Base:** `main@2a94a46579c4d3d9999b0da831d9c3bb505cc3e2`. **Related:** Issue #90 Step 5/8; Issue #87 selected review candidate is PR #95, not this branch.
+**Base:** `main@af21ae5ff59d8eb9b3c0fef0bc8a78295aeb588d`. **Related:** Issue #90 Step 5/8; Issue #87 selected review candidate is PR #95, not this branch.
 **Owner:** Bảo. **Independent reviewer:** Yến; Ánh reviews subsequent Application/Gateway seam rules.
 
 ## Scope
