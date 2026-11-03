@@ -11,6 +11,7 @@ import com.tricore.dxos.infrastructure.workflow.HelpdeskService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
@@ -21,6 +22,11 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 class HelpdeskErrorContractTest {
+    @RestController
+    static class GenericController extends WorkflowController {
+        GenericController(WorkflowRuntime runtime) { super(runtime); }
+    }
+
     private static final UUID ID = UUID.fromString("f3bf54b7-fdab-4b45-85dd-94cbd8587a9d");
 
     @ParameterizedTest
@@ -28,7 +34,7 @@ class HelpdeskErrorContractTest {
     void genericKeepsItsBaselineContractWhileHelpdeskHidesMissingDetails(WorkflowErrorCode code) throws Exception {
         WorkflowRuntime runtime = mock(WorkflowRuntime.class);
         HelpdeskService service = mock(HelpdeskService.class);
-        MockMvc generic = MockMvcBuilders.standaloneSetup(new WorkflowController(runtime))
+        MockMvc generic = MockMvcBuilders.standaloneSetup(new GenericController(runtime))
                 .setControllerAdvice(new WorkflowExceptionHandler()).build();
         MockMvc helpdesk = MockMvcBuilders.standaloneSetup(new HelpdeskController(service))
                 .setControllerAdvice(new HelpdeskExceptionHandler()).build();
