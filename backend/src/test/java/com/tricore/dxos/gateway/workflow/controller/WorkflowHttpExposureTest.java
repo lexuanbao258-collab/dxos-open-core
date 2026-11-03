@@ -8,6 +8,7 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpMethod;
@@ -25,6 +26,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 /** Tests disabled production registration, not OIDC verification or an actual security filter chain. */
 @WebMvcTest
+@AutoConfigureMockMvc(addFilters = false)
 class WorkflowHttpExposureTest {
     private static final String BASE = "/api/v1/workflow-instances";
     @Autowired private MockMvc mvc;

@@ -1,0 +1,32 @@
+# SPDX-FileCopyrightText: 2026 TRICORE contributors
+# SPDX-License-Identifier: Apache-2.0
+name: Task
+description: A task with an assignee and deadline, normally completed within three days.
+labels: []
+body:
+  - type: textarea
+    id: goal
+    attributes:
+      label: Goal
+      description: State what a user or reviewer will observe when this is complete.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: Up to five verifiable items.
+      value: |
+        - [ ]
+    validations:
+      required: true
+  - type: textarea
+    id: out-of-scope
+    attributes:
+      label: Out of scope
+      description: State what this issue will not cover.
+  - type: input
+    id: links
+    attributes:
+      label: Related links
+      description: Link documents, ADRs, or other issues; keep long designs in docs/.

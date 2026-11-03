@@ -1,0 +1,19 @@
+# SPDX-FileCopyrightText: 2026 TRICORE contributors
+# SPDX-License-Identifier: Apache-2.0
+# The last matching rule applies. Additional mandatory reviews are in CONTRIBUTING.md.
+* @phanyen06ym-ien @lexuanbao258-collab
+/backend/ @lexuanbao258-collab @phanyen06ym-ien
+/portal-bff/ @lexuanbao258-collab @ngang02012007-crypto
+/infra/ @lexuanbao258-collab @phanyen06ym-ien
+/frontend/ @phanyen06ym-ien @ngang02012007-crypto
+/.github/ @phanyen06ym-ien @lexuanbao258-collab
+/CONTRIBUTING.md @phanyen06ym-ien @lexuanbao258-collab
+/scripts/setup-github.sh @phanyen06ym-ien @lexuanbao258-collab
+/scripts/git-cleanup-report.sh @phanyen06ym-ien @lexuanbao258-collab
+# Helpdesk Core requires manual approval from Bảo and Ánh, subject to authorship.
+/backend/src/main/java/com/tricore/dxos/gateway/helpdesk/ @lexuanbao258-collab @ngang02012007-crypto
+/backend/src/main/java/com/tricore/dxos/application/helpdesk/ @lexuanbao258-collab @ngang02012007-crypto
+/backend/src/main/java/com/tricore/dxos/infrastructure/workflow/Helpdesk* @lexuanbao258-collab @ngang02012007-crypto
+/backend/src/main/resources/db/helpdesk/ @lexuanbao258-collab @ngang02012007-crypto
+/backend/src/test/java/com/tricore/dxos/gateway/helpdesk/ @lexuanbao258-collab @ngang02012007-crypto
+/backend/src/test/java/com/tricore/dxos/application/helpdesk/ @lexuanbao258-collab @ngang02012007-crypto

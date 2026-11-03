@@ -69,6 +69,8 @@ class WorkflowSchemaBootstrapTest {
                 .doesNotContain("never-print-this-password", "private-host", "jdbc:postgresql:");
     }
 
+    @org.junit.jupiter.api.condition.EnabledOnOs(value = org.junit.jupiter.api.condition.OS.WINDOWS,
+            disabledReason = "Launches Windows PowerShell (powershell.exe) launcher scripts")
     @ParameterizedTest @ValueSource(strings={"no-opt-in","wrong-host","missing-ca"})
     void powershellLauncherRejectsBeforePromptOrGradle(String failure) throws Exception {
         var args = new ArrayList<>(List.of("powershell.exe","-NoProfile","-NonInteractive","-File",
@@ -89,6 +91,8 @@ class WorkflowSchemaBootstrapTest {
         } finally { if (process.isAlive()) process.destroyForcibly(); }
     }
 
+    @org.junit.jupiter.api.condition.EnabledOnOs(value = org.junit.jupiter.api.condition.OS.WINDOWS,
+            disabledReason = "Launches Windows PowerShell (powershell.exe) launcher scripts")
     @Test void missingChildReportIsUnknownRatherThanClaimingNoSchemaWrite() throws Exception {
         Path scripts=Files.createDirectory(temporary.resolve("scripts"));
         Path backend=Files.createDirectory(temporary.resolve("backend"));
