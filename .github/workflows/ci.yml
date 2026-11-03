@@ -1,8 +1,8 @@
 # SPDX-FileCopyrightText: 2026 TRICORE contributors
 # SPDX-License-Identifier: Apache-2.0
 #
-# CI chung duy nhất của repo. Ba job dưới đây là "required status checks"
-# trong branch protection của main: backend, frontend, repo-hygiene.
+# CI chung duy nhất của repo. Bốn job dưới đây là "required status checks"
+# trong branch protection của main: backend, portal-bff, frontend, repo-hygiene.
 name: CI
 
 on:
@@ -42,6 +42,30 @@ jobs:
           name: backend-test-reports
           path: backend/build/reports/tests/
           retention-days: 7
+
+  portal-bff:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Detect portal-bff
+        id: detect
+        run: |
+          if [ -f portal-bff/build.gradle ]; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::portal-bff/ is not on this branch yet; nothing to build."
+          fi
+      - uses: actions/setup-java@v4
+        if: steps.detect.outputs.present == 'true'
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: gradle
+      - name: Build and test (uses the backend Gradle wrapper)
+        if: steps.detect.outputs.present == 'true'
+        run: ./backend/gradlew -p portal-bff build --no-daemon --stacktrace
 
   frontend:
     runs-on: ubuntu-24.04

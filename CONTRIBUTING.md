@@ -12,12 +12,18 @@ Tài liệu này là quy ước làm việc chung của nhóm TRICORE. Một ngu
 
 | Vai trò | Người | GitHub |
 | --- | --- | --- |
-| Điều phối, reviewer chính, người bấm merge | Yến | @phanyen06ym-ien |
-| Owner Workflow & Data, quản trị repo | Bảo | @lexuanbao258-collab |
-| Owner Application, web, truyền thông | Ánh | @ngang02012007-crypto |
+| Tích hợp, sửa Core, phát hành; người bấm merge | Yến | @phanyen06ym-ien |
+| Review và test chính của Core; quản trị repo | Bảo | @lexuanbao258-collab |
+| Application IT Helpdesk, web, truyền thông; review phần Core gắn với Helpdesk | Ánh | @ngang02012007-crypto |
 
-- PR của Bảo và Ánh: Yến review và merge.
-- PR của Yến: Bảo approve, sau đó Yến merge. Không ai tự merge PR của mình khi chưa có approve.
+| PR chạm vào | Reviewer bắt buộc |
+| --- | --- |
+| Core: `backend/` (identity, workflow, data, gateway), `portal-bff/`, `infra/` | Bảo |
+| Phần Core gắn với Helpdesk: `gateway/helpdesk`, `application/helpdesk`, `Helpdesk*`, `db/helpdesk`, API của BFF | Bảo **và** Ánh |
+| Application: `frontend/` | Yến |
+| Test do Bảo viết | Yến |
+
+- Yến bấm merge mọi PR sau khi đủ approve; không ai tự merge PR của mình khi chưa có approve.
 - Giờ review cố định: 12:00–12:30 và 21:00–21:30. Merge train: 21:00 thứ Ba và thứ Sáu.
 
 ## Luồng làm việc
@@ -103,7 +109,7 @@ CI kiểm tiêu đề PR theo định dạng này.
 | `area:portal`, `area:site`, `area:infra`, `area:comms` | Ứng dụng, web, hạ tầng, truyền thông |
 | `prio:p0` | Chặn release gần nhất |
 
-Milestone theo release: `v0.1.0` (15/11), `v0.2.0` (22/11), `v0.3.0` (29/11), `v1.0.0` (05/12).
+Milestone theo release: `v0.1.0` (04/11), `v0.2.0` (15/11), `v0.3.0` (22/11), `v0.4.0` (29/11), `v1.0.0` (05/12).
 Trạng thái không dùng label; trạng thái là cột trên bảng GitHub Project.
 
 ## Định nghĩa "Xong"

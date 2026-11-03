@@ -2,9 +2,16 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 # Người được GitHub tự gắn làm reviewer. Dòng sau ghi đè dòng trước.
-*                 @phanyen06ym-ien
-/backend/         @lexuanbao258-collab @phanyen06ym-ien
-/portal-bff/      @phanyen06ym-ien @lexuanbao258-collab
-/frontend/        @ngang02012007-crypto @phanyen06ym-ien
-/infra/           @phanyen06ym-ien @lexuanbao258-collab
-/.github/         @phanyen06ym-ien @lexuanbao258-collab
+# Yến: tích hợp và Core · Bảo: review và test chính của Core · Ánh: Application IT Helpdesk.
+*                                                        @phanyen06ym-ien
+/backend/                                                @lexuanbao258-collab
+/portal-bff/                                             @lexuanbao258-collab @ngang02012007-crypto
+/infra/                                                  @lexuanbao258-collab
+/.github/                                                @lexuanbao258-collab
+# Phần Core gắn chặt với IT Helpdesk: Ánh review cùng Bảo.
+/backend/src/main/java/com/tricore/dxos/gateway/helpdesk/        @lexuanbao258-collab @ngang02012007-crypto
+/backend/src/main/java/com/tricore/dxos/application/helpdesk/    @lexuanbao258-collab @ngang02012007-crypto
+/backend/src/main/java/com/tricore/dxos/infrastructure/workflow/Helpdesk*  @lexuanbao258-collab @ngang02012007-crypto
+/backend/src/main/resources/db/helpdesk/                         @lexuanbao258-collab @ngang02012007-crypto
+# Application: Ánh viết, Yến review khi tích hợp.
+/frontend/                                               @phanyen06ym-ien

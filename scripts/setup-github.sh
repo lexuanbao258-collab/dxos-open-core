@@ -73,9 +73,10 @@ milestone() {
     run gh api -X POST "repos/$REPO/milestones" -f title="$title" -f due_on="$due" -f description="$desc" --silent
   fi
 }
-milestone "v0.1.0" "2026-11-15T16:59:59Z" "Golden Path Helpdesk chạy trên một SHA, compose một lệnh"
-milestone "v0.2.0" "2026-11-22T16:59:59Z" "Pilot thật, APISIX, MinIO, Platform API"
-milestone "v0.3.0" "2026-11-29T16:59:59Z" "Facility qua API, outbox sang Node-RED, Metabase"
+milestone "v0.1.0" "2026-11-04T16:59:59Z" "Bản đầu tiên: Core + IT Helpdesk trên main, CI xanh, Apache-2.0"
+milestone "v0.2.0" "2026-11-15T16:59:59Z" "Compose một lệnh, APISIX, HTTPS, đăng nhập thật trên trình duyệt"
+milestone "v0.3.0" "2026-11-22T16:59:59Z" "Pilot thật, MinIO, Platform API"
+milestone "v0.4.0" "2026-11-29T16:59:59Z" "Facility qua API, outbox sang Node-RED, Metabase"
 milestone "v1.0.0" "2026-12-05T16:59:59Z" "Bản nộp thi OLP PMNM 2026"
 echo "Milestone cũ M1–M4: chuyển issue sang milestone mới rồi đóng bằng tay."
 
@@ -83,7 +84,7 @@ say "5/5 Branch protection cho main và gh-pages"
 # Repo cá nhân không hỗ trợ giới hạn ai được bấm merge; quy ước "Yến merge" được giữ bằng CONTRIBUTING.md.
 main_protection=$(cat <<'JSON'
 {
-  "required_status_checks": { "strict": true, "contexts": ["backend", "frontend", "repo-hygiene"] },
+  "required_status_checks": { "strict": true, "contexts": ["backend", "portal-bff", "frontend", "repo-hygiene"] },
   "enforce_admins": true,
   "required_pull_request_reviews": {
     "required_approving_review_count": 1,
