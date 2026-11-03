@@ -1,13 +1,13 @@
 # SPDX-FileCopyrightText: 2026 TRICORE contributors
 # SPDX-License-Identifier: Apache-2.0
-name: Báo lỗi
-description: Hệ thống chạy sai so với mong đợi.
+name: Bug report
+description: Report behavior that differs from what is expected.
 labels: []
 body:
   - type: textarea
     id: steps
     attributes:
-      label: Các bước tái hiện
+      label: Steps to reproduce
       value: |
         1.
         2.
@@ -16,18 +16,18 @@ body:
   - type: textarea
     id: expected
     attributes:
-      label: Kết quả mong đợi
+      label: Expected result
     validations:
       required: true
   - type: textarea
     id: actual
     attributes:
-      label: Kết quả thực tế
-      description: Kèm log hoặc ảnh. Không dán token, mật khẩu, dữ liệu người dùng thật.
+      label: Actual result
+      description: Include logs or screenshots, but no tokens, passwords, or real user data.
     validations:
       required: true
   - type: input
     id: version
     attributes:
-      label: Phiên bản hoặc commit
-      description: Ví dụ v0.1.0 hoặc SHA trên main.
+      label: Version or commit
+      description: For example, v0.1.0 or a SHA on main.

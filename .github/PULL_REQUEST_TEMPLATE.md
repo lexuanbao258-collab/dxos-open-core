@@ -2,24 +2,24 @@
 SPDX-FileCopyrightText: 2026 TRICORE contributors
 SPDX-License-Identifier: Apache-2.0
 
-Tiêu đề PR: <loại>(<phần>): <mô tả>   ví dụ: feat(workflow): add outbox event
-Mô tả không quá 150 chữ. Bằng chứng kiểm thử là kết quả CI trên PR này.
+PR title: <type>(<area>): <description>, for example: feat(workflow): add outbox event
+Keep the description near 150 words. Cite checks run on this PR.
 -->
 
 Closes #
 
-## Thay đổi
+## Changes
 
 -
 
-## Cách kiểm
+## Verification
 
-<!-- Lệnh hoặc các bước; ảnh/clip nếu có giao diện. -->
+<!-- Give commands or steps and their results; include screenshots for UI changes. -->
 
 ## Checklist
 
-- [ ] Base là `main`, không quá 400 dòng thay đổi
-- [ ] Có test cho logic mới
-- [ ] File mới có SPDX header
-- [ ] Đã thêm dòng vào `CHANGELOG.md` (mục Unreleased) nếu người dùng thấy được thay đổi
-- [ ] Không có bí mật, token, dữ liệu thật
+- [ ] Base is `main`; reviewed the 400-line PR guideline
+- [ ] New logic has tests
+- [ ] New files have SPDX headers
+- [ ] User-visible changes are in `CHANGELOG.md` under Unreleased
+- [ ] No secrets, tokens, or real user data

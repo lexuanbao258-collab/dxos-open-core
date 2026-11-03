@@ -2,12 +2,12 @@
 # SPDX-FileCopyrightText: 2026 TRICORE contributors
 # SPDX-License-Identifier: Apache-2.0
 #
-# Báo cáo những gì cần dọn trên repo. Chỉ ĐỌC, không xoá hay sửa gì.
-# Các lệnh dọn được in ra để người điều phối duyệt rồi tự chạy.
+# Report repository cleanup candidates. This script does not delete or modify them.
+# Commands are printed for the merge coordinator to inspect and run manually.
 #
 #   scripts/git-cleanup-report.sh
 #
-# Cần: git, GitHub CLI (gh) đã đăng nhập.
+# Requires git and an authenticated GitHub CLI (gh).
 set -euo pipefail
 
 REPO="${REPO:-lexuanbao258-collab/dxos-open-core}"
@@ -15,30 +15,30 @@ STALE_DAYS="${STALE_DAYS:-7}"
 
 git fetch --prune origin >/dev/null 2>&1
 
-echo "== 1. PR đang mở không nhắm vào main (cần đổi base về main hoặc đóng)"
+echo "== 1. Open PRs targeting neither main nor gh-pages"
 gh pr list --repo "$REPO" --state open --limit 200 \
   --json number,baseRefName,isDraft,title \
   --jq '.[] | select(.baseRefName != "main" and .baseRefName != "gh-pages")
         | "#\(.number)\tbase=\(.baseRefName)\tdraft=\(.isDraft)\t\(.title)"'
-echo "   Đổi base:  gh pr edit <số> --repo $REPO --base main"
+echo "   Change base: gh pr edit <number> --repo $REPO --base main"
 
 echo
-echo "== 2. PR draft mở quá 2 ngày"
+echo "== 2. Draft PRs open longer than two days"
 cutoff=$(date -u -d '2 days ago' +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || date -u -v-2d +%Y-%m-%dT%H:%M:%SZ)
 gh pr list --repo "$REPO" --state open --draft --limit 200 \
   --json number,createdAt,author,title \
   --jq ".[] | select(.createdAt < \"$cutoff\")
         | \"#\(.number)\t\(.createdAt[0:10])\t@\(.author.login)\t\(.title)\""
-echo "   Đóng kèm lý do:  gh pr close <số> --repo $REPO --comment \"Đóng theo CONTRIBUTING: draft quá 48 giờ. Mở lại khi cần.\""
+echo "   Close with a reason: gh pr close <number> --repo $REPO --comment \"Closing under CONTRIBUTING: draft exceeds 48 hours. Reopen when ready.\""
 
 echo
-echo "== 3. Nhánh đã merge vào main (xoá an toàn)"
+echo "== 3. Branches already merged into main"
 git branch -r --merged origin/main \
   | sed 's|^ *origin/||' | grep -v -E '^(HEAD|main|gh-pages)( |$)' || true
-echo "   Xoá:  git push origin --delete <tên-nhánh>"
+echo "   Delete after review: git push origin --delete <branch-name>"
 
 echo
-echo "== 4. Nhánh chưa merge, không có PR mở, không commit mới trong $STALE_DAYS ngày"
+echo "== 4. Unmerged branches without an open PR or a commit in $STALE_DAYS days"
 open_heads=$(gh pr list --repo "$REPO" --state open --limit 200 --json headRefName --jq '.[].headRefName')
 now=$(date +%s)
 git for-each-ref --format='%(refname:strip=3) %(committerdate:unix) %(committerdate:short)' refs/remotes/origin \
@@ -50,10 +50,10 @@ git for-each-ref --format='%(refname:strip=3) %(committerdate:unix) %(committerd
         printf '%s\tlast=%s\n' "$name" "$day"
       fi
     done
-echo "   Kiểm nội dung trước khi xoá:  git log origin/main..origin/<tên-nhánh> --oneline"
+echo "   Inspect before deletion: git log origin/main..origin/<branch-name> --oneline"
 
 echo
-echo "== 5. Issue đang mở thiếu người nhận hoặc milestone"
+echo "== 5. Open issues missing an assignee or milestone"
 gh issue list --repo "$REPO" --state open --limit 200 \
   --json number,assignees,milestone,title \
   --jq '.[] | select((.assignees | length) == 0 or .milestone == null)

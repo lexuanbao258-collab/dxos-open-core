@@ -1,21 +1,21 @@
 # SPDX-FileCopyrightText: 2026 TRICORE contributors
 # SPDX-License-Identifier: Apache-2.0
-name: Việc cần làm
-description: Một việc có người nhận, có hạn, làm xong trong tối đa 3 ngày.
+name: Task
+description: A task with an assignee and deadline, normally completed within three days.
 labels: []
 body:
   - type: textarea
     id: goal
     attributes:
-      label: Mục tiêu
-      description: Một câu — xong thì người dùng hoặc giám khảo thấy gì.
+      label: Goal
+      description: State what a user or reviewer will observe when this is complete.
     validations:
       required: true
   - type: textarea
     id: acceptance
     attributes:
-      label: Tiêu chí nghiệm thu
-      description: Tối đa 5 mục, mỗi mục kiểm được.
+      label: Acceptance criteria
+      description: Up to five verifiable items.
       value: |
         - [ ]
     validations:
@@ -23,10 +23,10 @@ body:
   - type: textarea
     id: out-of-scope
     attributes:
-      label: Ngoài phạm vi
-      description: Những gì issue này không làm.
+      label: Out of scope
+      description: State what this issue will not cover.
   - type: input
     id: links
     attributes:
-      label: Liên quan
-      description: Link tài liệu, ADR hoặc issue khác (thiết kế dài để ở docs/, không viết trong issue).
+      label: Related links
+      description: Link documents, ADRs, or other issues; keep long designs in docs/.
