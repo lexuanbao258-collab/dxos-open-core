@@ -121,7 +121,8 @@ class WorkflowHttpRuntimeTest {
     void creationOutcomesDoNotRetryOrClaimRollbackForUnknownCommit(WorkflowErrorCode code) throws Exception {
         failWrite(code);
         mvc.perform(post(BASE).contentType(MediaType.APPLICATION_JSON).content(createBody(DEFINITION.definitionId(), 7)))
-                .andExpect(status().isInternalServerError()).andExpect(jsonPath("$.code").value(code.name()))
+                .andExpect(status().is(code == WorkflowErrorCode.COMMIT_OUTCOME_UNKNOWN ? 503 : 500))
+                .andExpect(jsonPath("$.code").value(code.name()))
                 .andExpect(header().doesNotExist("Retry-After"));
         verify(persistence, times(1)).createInstance(any());
         if (code == WorkflowErrorCode.OPERATION_FAILURE) {
@@ -139,7 +140,8 @@ class WorkflowHttpRuntimeTest {
         WorkflowInstance initial = runtime.createInstance("instance-1", DEFINITION.definitionId(), 7, RESOURCE);
         failWrite(code);
         mvc.perform(post(BASE + "/instance-1/activate"))
-                .andExpect(status().isInternalServerError()).andExpect(jsonPath("$.code").value(code.name()));
+                .andExpect(status().is(code == WorkflowErrorCode.COMMIT_OUTCOME_UNKNOWN ? 503 : 500))
+                .andExpect(jsonPath("$.code").value(code.name()));
         verify(persistence, times(1)).commitActivation(any(), any());
         WorkflowInstance stored = runtime.loadInstance("instance-1");
         assertThat(stored.runtimeVersion()).isZero();
@@ -155,7 +157,8 @@ class WorkflowHttpRuntimeTest {
         failWrite(code);
         mvc.perform(post(BASE + "/instance-1/transitions").contentType(MediaType.APPLICATION_JSON).content(TRANSITION)
                         .requestAttr(WorkflowController.TRUSTED_ACTOR_ATTRIBUTE, ACTOR))
-                .andExpect(status().isInternalServerError()).andExpect(jsonPath("$.code").value(code.name()));
+                .andExpect(status().is(code == WorkflowErrorCode.COMMIT_OUTCOME_UNKNOWN ? 503 : 500))
+                .andExpect(jsonPath("$.code").value(code.name()));
         verify(persistence, times(1)).commitTransition(any());
         if (code == WorkflowErrorCode.OPERATION_FAILURE) {
             assertThat(runtime.loadInstance("instance-1")).isSameAs(active);
