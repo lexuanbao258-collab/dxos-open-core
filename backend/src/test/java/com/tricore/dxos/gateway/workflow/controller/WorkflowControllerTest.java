@@ -269,19 +269,23 @@ class WorkflowControllerTest {
     }
 
     @Test
-    void hiddenAclAndMissingInstanceHaveIndistinguishableBodies() throws Exception {
+    void genericHiddenAclAndMissingInstanceKeepTheirDistinctPublicCodes() throws Exception {
         when(runtime.loadInstance("instance-1"))
                 .thenThrow(new WorkflowAccessException(WorkflowAccessDecision.HIDDEN));
-        String hiddenBody = mvc.perform(get(BASE + "/instance-1"))
+        mvc.perform(get(BASE + "/instance-1"))
                 .andExpect(status().isNotFound())
-                .andReturn().getResponse().getContentAsString();
+                .andExpect(jsonPath("$.code").value("NOT_FOUND"))
+                .andExpect(jsonPath("$.message").value("Workflow resource not found"));
 
         reset(runtime);
         when(runtime.loadInstance("instance-1"))
                 .thenThrow(new WorkflowException(WorkflowErrorCode.INSTANCE_NOT_FOUND));
         mvc.perform(get(BASE + "/instance-1"))
                 .andExpect(status().isNotFound())
-                .andExpect(content().string(hiddenBody));
+                .andExpect(jsonPath("$.code").value("INSTANCE_NOT_FOUND"))
+                .andExpect(jsonPath("$.message").value("Workflow instance not found"));
+        verify(runtime, times(1)).loadInstance("instance-1");
+        verifyNoMoreInteractions(runtime);
     }
 
     @Test
