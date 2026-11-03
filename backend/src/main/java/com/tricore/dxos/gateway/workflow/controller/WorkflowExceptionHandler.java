@@ -26,7 +26,8 @@ public class WorkflowExceptionHandler {
             case INSTANCE_ALREADY_EXISTS, VERSION_CONFLICT, TRANSITION_NOT_ALLOWED, INSTANCE_COMPLETED -> 409;
             case DEFINITION_NOT_FOUND, INSTANCE_NOT_FOUND -> 404;
             case INVALID_TRANSITION -> 422;
-            case OPERATION_FAILURE, COMMIT_OUTCOME_UNKNOWN -> 500;
+            case OPERATION_FAILURE -> 500;
+            case COMMIT_OUTCOME_UNKNOWN -> 503;
         };
         String message = switch (code) {
             case INSTANCE_ALREADY_EXISTS -> "Workflow instance already exists";

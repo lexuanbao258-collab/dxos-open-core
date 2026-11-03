@@ -80,7 +80,7 @@ class WorkflowControllerTest {
             WorkflowErrorCode.TRANSITION_NOT_ALLOWED, 409,
             WorkflowErrorCode.INSTANCE_COMPLETED, 409,
             WorkflowErrorCode.OPERATION_FAILURE, 500,
-            WorkflowErrorCode.COMMIT_OUTCOME_UNKNOWN, 500);
+            WorkflowErrorCode.COMMIT_OUTCOME_UNKNOWN, 503);
 
     @MockitoBean
     private WorkflowRuntime runtime;
@@ -205,6 +205,21 @@ class WorkflowControllerTest {
                 .andExpect(jsonPath("$.stackTrace").doesNotExist())
                 .andExpect(jsonPath("$.cause").doesNotExist());
         verify(runtime).createInstance("instance-1", "publication", 7, RESOURCE);
+        verifyNoMoreInteractions(runtime);
+    }
+
+    @Test
+    void uncertainCommitUsesServiceUnavailableAndNeverTriggersAutomaticRetry() throws Exception {
+        when(runtime.createInstance(any(), any(), anyLong(), any()))
+                .thenThrow(new WorkflowException(WorkflowErrorCode.COMMIT_OUTCOME_UNKNOWN));
+
+        mvc.perform(post(BASE).contentType(MediaType.APPLICATION_JSON).content(CREATE))
+                .andExpect(status().isServiceUnavailable())
+                .andExpect(jsonPath("$.status").value(503))
+                .andExpect(jsonPath("$.code").value("COMMIT_OUTCOME_UNKNOWN"))
+                .andExpect(jsonPath("$.message").value(containsString("do not automatically retry")))
+                .andExpect(jsonPath("$.errors").isEmpty());
+        verify(runtime, times(1)).createInstance("instance-1", "publication", 7, RESOURCE);
         verifyNoMoreInteractions(runtime);
     }
 

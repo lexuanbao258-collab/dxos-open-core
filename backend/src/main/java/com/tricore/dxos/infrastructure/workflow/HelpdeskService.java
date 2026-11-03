@@ -57,6 +57,9 @@ public final class HelpdeskService {
             lockTenant(connection, true);
             requireMember(connection, actor.subjectId());
             if (!actorFacts(connection, actor.subjectId()).path("submitter").asBoolean()) throw forbidden();
+            // Deny missing exact technical authorities before protected definition/binding lookups.
+            if (!has(actor, WorkflowOperation.CREATE) || !has(actor, WorkflowOperation.ACTIVATE)
+                    || !has(actor, WorkflowOperation.READ)) throw forbidden();
             var resource = new ResourceReference("mvp_request", id.toString());
             var definition = persistence.loadDefinition(connection, "it-helpdesk", 1);
             var creation = new WorkflowAclSnapshotReader.ResourceAclSnapshot(resource, actor.subjectId(), tenant,

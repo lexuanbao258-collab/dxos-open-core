@@ -364,6 +364,43 @@ class HelpdeskHttpPostgresTest {
         } finally { try(var c=admin()) { sql(c,"UPDATE "+schema+".workflow_definition_bindings SET active=true WHERE tenant_id='tenant-a'"); } }
     }
 
+    @Test void createWithoutExactAuthorityDeniesBeforeProtectedLookupsAndNeverWrites() throws Exception {
+        var before = snapshot();
+        var protectedLookups = new AtomicInteger();
+        DataSource instrumented = new DelegatingDataSource(runtime) {
+            @Override public Connection getConnection() throws SQLException {
+                Connection actual = super.getConnection();
+                return (Connection) Proxy.newProxyInstance(getClass().getClassLoader(),
+                        new Class<?>[]{Connection.class}, (proxy, method, args) -> {
+                    if (method.getName().equals("prepareStatement") && args != null && args.length > 0
+                            && args[0] instanceof String sql
+                            && (sql.contains("workflow_definitions")
+                                || sql.contains("workflow_definition_bindings"))) {
+                        protectedLookups.incrementAndGet();
+                    }
+                    try { return method.invoke(actual, args); }
+                    catch (InvocationTargetException failure) { throw failure.getCause(); }
+                });
+            }
+        };
+        CurrentPrincipal limited = () -> new AuthenticatedPrincipal(actors.get("employee"), "employee",
+                Set.of(new Authority("workflow:activate"), new Authority("workflow:read")), true);
+        var service = new HelpdeskService(new PostgresWorkflowPersistence(instrumented, schema), limited,
+                schema, "tenant-a", Clock.systemUTC());
+        assertThatThrownBy(() -> service.create("Denied request", "No create authority"))
+                .isInstanceOfSatisfying(com.tricore.dxos.application.authorization.WorkflowAccessException.class,
+                        denied -> assertThat(denied.decision())
+                                .isEqualTo(com.tricore.dxos.application.authorization.WorkflowAccessDecision.FORBIDDEN));
+        assertThat(protectedLookups).hasValue(0);
+        assertThat(snapshot()).isEqualTo(before);
+
+        mvc.perform(post(API).header("Authorization",
+                        "Bearer " + token("employee", List.of("workflow:activate", "workflow:read"), key))
+                .contentType("application/json").content(createBody()))
+                .andExpect(status().isForbidden());
+        assertThat(snapshot()).isEqualTo(before);
+    }
+
     @Test void revokedMembershipHidesPreviouslyAssignedRequestAndRejectsMutation() throws Exception {
         String id=inProgress();
         try(var c=admin()) { sql(c,"UPDATE "+schema+".tenant_memberships SET active=false WHERE tenant_id='tenant-a' AND actor_id='"+actors.get("worker")+"'"); }
