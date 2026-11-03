@@ -163,7 +163,16 @@ class WorkflowSecurityDefinerReviewTest {
         Path directory = Files.createDirectory(root.resolve(UUID.randomUUID().toString()));
         if (System.getProperty("os.name").startsWith("Windows")) {
             String user = System.getenv("USERDOMAIN") + "\\" + System.getenv("USERNAME");
-            Files.setOwner(directory, directory.getFileSystem().getUserPrincipalLookupService().lookupPrincipalByName(user));
+            var expectedOwner = directory.getFileSystem()
+                    .getUserPrincipalLookupService()
+                    .lookupPrincipalByName(user);
+            var actualOwner = Files.getOwner(directory);
+
+            if (!actualOwner.equals(expectedOwner)) {
+                Files.setOwner(directory, expectedOwner);
+            }
+            assertThat(Files.getOwner(directory)).isEqualTo(expectedOwner);
+
             var process = new ProcessBuilder("icacls.exe", directory.toString(), "/inheritance:r", "/grant:r", user + ":(OI)(CI)F",
                     "/grant:r", "*S-1-5-18:(OI)(CI)F").redirectOutput(ProcessBuilder.Redirect.DISCARD)
                     .redirectError(ProcessBuilder.Redirect.DISCARD).start();
