@@ -50,7 +50,9 @@ jobs:
             postgres:17.11-alpine >/dev/null
           ready=0
           for i in $(seq 1 60); do
-            if docker exec "$container" pg_isready -U helpdesk_test -d helpdesk_disposable_test >/dev/null 2>&1; then ready=1; break; fi
+            # pg_isready can report healthy while initdb runs a temporary Unix-socket-only server.
+            # Require successful SQL over TCP in the final initialized database.
+            if docker exec "$container" sh -c 'PGPASSWORD="$POSTGRES_PASSWORD" psql -h 127.0.0.1 -X -At -v ON_ERROR_STOP=1 -U helpdesk_test -d helpdesk_disposable_test -c "SELECT 1"' >/dev/null 2>&1; then ready=1; break; fi
             sleep 1
           done
           test "$ready" -eq 1
