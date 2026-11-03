@@ -2,6 +2,8 @@ package com.tricore.dxos.gateway.workflow.controller;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.tricore.dxos.application.authorization.WorkflowAccessDecision;
+import com.tricore.dxos.application.authorization.WorkflowAccessException;
 import com.tricore.dxos.core.workflow.ActorReference;
 import com.tricore.dxos.core.workflow.ResourceReference;
 import com.tricore.dxos.core.workflow.TransitionCommand;
@@ -78,7 +80,7 @@ class WorkflowControllerTest {
             WorkflowErrorCode.TRANSITION_NOT_ALLOWED, 409,
             WorkflowErrorCode.INSTANCE_COMPLETED, 409,
             WorkflowErrorCode.OPERATION_FAILURE, 500,
-            WorkflowErrorCode.COMMIT_OUTCOME_UNKNOWN, 500);
+            WorkflowErrorCode.COMMIT_OUTCOME_UNKNOWN, 503);
 
     @MockitoBean
     private WorkflowRuntime runtime;
@@ -202,6 +204,87 @@ class WorkflowControllerTest {
                 .andExpect(jsonPath("$.stackTrace").doesNotExist())
                 .andExpect(jsonPath("$.cause").doesNotExist());
         verify(runtime).createInstance("instance-1", "publication", 7, RESOURCE);
+        verifyNoMoreInteractions(runtime);
+    }
+
+    @ParameterizedTest
+    @MethodSource("genericNotFoundContract")
+    void genericWorkflowRetainsDistinctNotFoundCodesAndMessages(WorkflowErrorCode code, String message) throws Exception {
+        when(runtime.createInstance(any(), any(), anyLong(), any())).thenThrow(new WorkflowException(code));
+
+        mvc.perform(post(BASE).contentType(MediaType.APPLICATION_JSON).content(CREATE))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.status").value(404))
+                .andExpect(jsonPath("$.code").value(code.name()))
+                .andExpect(jsonPath("$.message").value(message));
+        verify(runtime, times(1)).createInstance("instance-1", "publication", 7, RESOURCE);
+        verifyNoMoreInteractions(runtime);
+    }
+
+    static Stream<Arguments> genericNotFoundContract() {
+        return Stream.of(
+                Arguments.of(WorkflowErrorCode.DEFINITION_NOT_FOUND, "Workflow definition version not found"),
+                Arguments.of(WorkflowErrorCode.INSTANCE_NOT_FOUND, "Workflow instance not found"));
+    }
+
+    @Test
+    void uncertainCommitUsesServiceUnavailableAndNeverTriggersAutomaticRetry() throws Exception {
+        when(runtime.createInstance(any(), any(), anyLong(), any()))
+                .thenThrow(new WorkflowException(WorkflowErrorCode.COMMIT_OUTCOME_UNKNOWN));
+
+        mvc.perform(post(BASE).contentType(MediaType.APPLICATION_JSON).content(CREATE))
+                .andExpect(status().isServiceUnavailable())
+                .andExpect(jsonPath("$.status").value(503))
+                .andExpect(jsonPath("$.code").value("COMMIT_OUTCOME_UNKNOWN"))
+                .andExpect(jsonPath("$.message").value(containsString("do not automatically retry")))
+                .andExpect(jsonPath("$.errors").isEmpty());
+        verify(runtime, times(1)).createInstance("instance-1", "publication", 7, RESOURCE);
+        verifyNoMoreInteractions(runtime);
+    }
+
+    @ParameterizedTest
+    @MethodSource("accessDenials")
+    void mapsAclDecisionsToSafeHttpErrors(WorkflowAccessDecision decision, int expectedStatus,
+                                          String expectedCode) throws Exception {
+        when(runtime.loadInstance("instance-1")).thenThrow(new WorkflowAccessException(decision));
+
+        mvc.perform(get(BASE + "/instance-1"))
+                .andExpect(status().is(expectedStatus))
+                .andExpect(jsonPath("$.status").value(expectedStatus))
+                .andExpect(jsonPath("$.code").value(expectedCode))
+                .andExpect(jsonPath("$.errors").isEmpty())
+                .andExpect(jsonPath("$.stackTrace").doesNotExist())
+                .andExpect(jsonPath("$.cause").doesNotExist());
+
+        verify(runtime).loadInstance("instance-1");
+        verifyNoMoreInteractions(runtime);
+    }
+
+    static Stream<Arguments> accessDenials() {
+        return Stream.of(
+                Arguments.of(WorkflowAccessDecision.HIDDEN, 404, "NOT_FOUND"),
+                Arguments.of(WorkflowAccessDecision.FORBIDDEN, 403, "FORBIDDEN"),
+                Arguments.of(WorkflowAccessDecision.UNAVAILABLE, 503, "AUTHORIZATION_UNAVAILABLE"),
+                Arguments.of(WorkflowAccessDecision.ALLOWED, 503, "AUTHORIZATION_UNAVAILABLE"));
+    }
+
+    @Test
+    void genericHiddenAclAndMissingInstanceKeepTheirDistinctPublicCodes() throws Exception {
+        when(runtime.loadInstance("instance-1"))
+                .thenThrow(new WorkflowAccessException(WorkflowAccessDecision.HIDDEN));
+        mvc.perform(get(BASE + "/instance-1"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("NOT_FOUND"))
+                .andExpect(jsonPath("$.message").value("Workflow resource not found"));
+
+        reset(runtime);
+        when(runtime.loadInstance("instance-1"))
+                .thenThrow(new WorkflowException(WorkflowErrorCode.INSTANCE_NOT_FOUND));
+        mvc.perform(get(BASE + "/instance-1"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("INSTANCE_NOT_FOUND"))
+                .andExpect(jsonPath("$.message").value("Workflow instance not found"));
+        verify(runtime, times(1)).loadInstance("instance-1");
         verifyNoMoreInteractions(runtime);
     }
 

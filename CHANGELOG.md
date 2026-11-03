@@ -20,11 +20,18 @@ User-visible DX-OS Open Core changes are recorded here. The format follows
 ### Changed
 
 - `backend/gradlew` is executable on Linux and macOS.
+- The Helpdesk HTTP API uses a scoped HTTP 404 / `NOT_FOUND` response for
+  hidden or missing resources; the Generic Workflow HTTP API retains its
+  pre-existing distinct `DEFINITION_NOT_FOUND` / `INSTANCE_NOT_FOUND` public
+  codes and messages. Generic contract evolution is tracked in Issue #105.
 
 ### Fixed
 
 - Linux backend build and tests: restored three SQL evidence fixtures, pinned the
   manifest hash to Git LF bytes, and limited a PowerShell-specific test to Windows.
+- Helpdesk CREATE rejects missing exact technical authorities before protected
+  definition/binding lookups; uncertain Workflow commits return HTTP 503 with
+  `COMMIT_OUTCOME_UNKNOWN` and must not be retried automatically.
 
 ### Removed
 
