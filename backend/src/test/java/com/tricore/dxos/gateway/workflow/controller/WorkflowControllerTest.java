@@ -199,13 +199,32 @@ class WorkflowControllerTest {
         mvc.perform(post(BASE).contentType(MediaType.APPLICATION_JSON).content(CREATE))
                 .andExpect(status().is(STATUSES.get(code)))
                 .andExpect(jsonPath("$.status").value(STATUSES.get(code)))
-                .andExpect(jsonPath("$.code").value(code == WorkflowErrorCode.INSTANCE_NOT_FOUND
-                        || code == WorkflowErrorCode.DEFINITION_NOT_FOUND ? "NOT_FOUND" : code.name()))
+                .andExpect(jsonPath("$.code").value(code.name()))
                 .andExpect(jsonPath("$.errors").isEmpty())
                 .andExpect(jsonPath("$.stackTrace").doesNotExist())
                 .andExpect(jsonPath("$.cause").doesNotExist());
         verify(runtime).createInstance("instance-1", "publication", 7, RESOURCE);
         verifyNoMoreInteractions(runtime);
+    }
+
+    @ParameterizedTest
+    @MethodSource("genericNotFoundContract")
+    void genericWorkflowRetainsDistinctNotFoundCodesAndMessages(WorkflowErrorCode code, String message) throws Exception {
+        when(runtime.createInstance(any(), any(), anyLong(), any())).thenThrow(new WorkflowException(code));
+
+        mvc.perform(post(BASE).contentType(MediaType.APPLICATION_JSON).content(CREATE))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.status").value(404))
+                .andExpect(jsonPath("$.code").value(code.name()))
+                .andExpect(jsonPath("$.message").value(message));
+        verify(runtime, times(1)).createInstance("instance-1", "publication", 7, RESOURCE);
+        verifyNoMoreInteractions(runtime);
+    }
+
+    static Stream<Arguments> genericNotFoundContract() {
+        return Stream.of(
+                Arguments.of(WorkflowErrorCode.DEFINITION_NOT_FOUND, "Workflow definition version not found"),
+                Arguments.of(WorkflowErrorCode.INSTANCE_NOT_FOUND, "Workflow instance not found"));
     }
 
     @Test
