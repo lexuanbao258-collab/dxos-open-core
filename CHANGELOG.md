@@ -11,6 +11,17 @@ User-visible DX-OS Open Core changes are recorded here. The format follows
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-11-04
+
+### Added
+
+- IT Helpdesk Backend HTTP API (nine application routes) with tenant/resource-scoped authorization, PostgreSQL 17 persistence and audited workflow transitions.
+- Portal BFF with OIDC Authorization Code + PKCE, server-side browser session, and CSRF protection.
+- React IT Helpdesk Portal: standalone MOCK demonstration and `integration-local` integration build mode; live browser/SSO acceptance remains a separate gate.
+- Apache-2.0 root `LICENSE` and `NOTICE` files for original DX-OS work, subject to ongoing third-party/SPDX verification tracked by Issue #38.
+- ArchUnit Core dependency rules and negative canary tests.
+
+
 ### Added
 
 - Contribution guidelines, issue and PR templates, and CODEOWNERS.
@@ -36,3 +47,5 @@ User-visible DX-OS Open Core changes are recorded here. The format follows
 ### Removed
 
 - The separate Issue #23 workflow; its security gates run in shared CI.
+
+[0.1.0]: https://github.com/lexuanbao258-collab/dxos-open-core/releases/tag/v0.1.0
