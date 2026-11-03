@@ -399,6 +399,30 @@ class HelpdeskHttpPostgresTest {
                 .contentType("application/json").content(createBody()))
                 .andExpect(status().isForbidden());
         assertThat(snapshot()).isEqualTo(before);
+
+        // The same denied technical authority must win even when the tenant's
+        // workflow definition binding is hidden; no lookup or write may occur.
+        try (var c = admin()) {
+            sql(c, "UPDATE " + schema + ".workflow_definition_bindings SET active=false WHERE tenant_id='tenant-a'");
+        }
+        try {
+            var hiddenBefore = snapshot();
+            protectedLookups.set(0);
+            assertThatThrownBy(() -> service.create("Hidden binding", "Still not authorized"))
+                    .isInstanceOfSatisfying(com.tricore.dxos.application.authorization.WorkflowAccessException.class,
+                            denied -> assertThat(denied.decision())
+                                    .isEqualTo(com.tricore.dxos.application.authorization.WorkflowAccessDecision.FORBIDDEN));
+            assertThat(protectedLookups).hasValue(0);
+            mvc.perform(post(API).header("Authorization",
+                            "Bearer " + token("employee", List.of("workflow:activate", "workflow:read"), key))
+                    .contentType("application/json").content(createBody()))
+                    .andExpect(status().isForbidden());
+            assertThat(snapshot()).isEqualTo(hiddenBefore);
+        } finally {
+            try (var c = admin()) {
+                sql(c, "UPDATE " + schema + ".workflow_definition_bindings SET active=true WHERE tenant_id='tenant-a'");
+            }
+        }
     }
 
     @Test void revokedMembershipHidesPreviouslyAssignedRequestAndRejectsMutation() throws Exception {
