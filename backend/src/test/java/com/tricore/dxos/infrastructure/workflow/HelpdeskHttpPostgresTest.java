@@ -13,7 +13,7 @@ import com.tricore.dxos.core.identity.*;
 import com.tricore.dxos.core.workflow.*;
 import com.tricore.dxos.gateway.helpdesk.HelpdeskController;
 import com.tricore.dxos.gateway.workflow.WorkflowJsonConfiguration;
-import com.tricore.dxos.gateway.workflow.controller.WorkflowExceptionHandler;
+import com.tricore.dxos.gateway.helpdesk.HelpdeskExceptionHandler;
 import com.tricore.dxos.infrastructure.identity.security.SecurityConfig;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
@@ -144,7 +144,7 @@ class HelpdeskHttpPostgresTest {
                 "tricore.security.oidc.resource-client-id","tricore-api","dxos.helpdesk.enabled","true","test.schema",schema)));
         context.addBeanFactoryPostProcessor(f -> f.registerSingleton("helpdeskPersistence",new PostgresWorkflowPersistence(runtime,schema)));
         context.register(SecurityConfig.class,Class.forName("com.tricore.dxos.infrastructure.identity.security.SpringSecurityCurrentPrincipal"),
-                Web.class,HelpdeskController.class,WorkflowExceptionHandler.class,WorkflowJsonConfiguration.class,
+                Web.class,HelpdeskController.class,HelpdeskExceptionHandler.class,WorkflowJsonConfiguration.class,
                 com.tricore.dxos.request.controller.RequestController.class,com.tricore.dxos.request.controller.RequestWorkflowController.class);
         context.refresh();
         mvc=MockMvcBuilders.webAppContextSetup(context).addFilters(context.getBean("springSecurityFilterChain",jakarta.servlet.Filter.class)).build();
