@@ -4,7 +4,7 @@ package com.tricore.dxos.application.authorization;
 public final class WorkflowAccessException extends RuntimeException {
     private final WorkflowAccessDecision decision;
 
-    WorkflowAccessException(WorkflowAccessDecision decision) {
+    public WorkflowAccessException(WorkflowAccessDecision decision) {
         super(decision.name(), null, false, false);
         this.decision = decision;
     }

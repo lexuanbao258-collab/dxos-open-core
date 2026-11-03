@@ -1,0 +1,32 @@
+import ReactDOM from "react-dom/client";
+import { BrowserRouter } from "react-router-dom";
+import "@fontsource/be-vietnam-pro/vietnamese-400.css";
+import "@fontsource/be-vietnam-pro/vietnamese-500.css";
+import "@fontsource/be-vietnam-pro/vietnamese-600.css";
+import "@fontsource/be-vietnam-pro/vietnamese-700.css";
+import "@fontsource/be-vietnam-pro/latin-400.css";
+import "@fontsource/be-vietnam-pro/latin-500.css";
+import "@fontsource/be-vietnam-pro/latin-600.css";
+import "@fontsource/be-vietnam-pro/latin-700.css";
+import { App } from "./App";
+import "./styles.css";
+import "./university-theme.css";
+
+const root = ReactDOM.createRoot(document.getElementById("root")!);
+if (import.meta.env.MODE === "integration-local") {
+  import("./features/helpdesk/LocalHelpdeskIntegration").then(
+    ({ default: LocalHelpdeskIntegration }) => {
+      root.render(
+        <BrowserRouter>
+          <LocalHelpdeskIntegration />
+        </BrowserRouter>,
+      );
+    },
+  );
+} else {
+  root.render(
+    <BrowserRouter>
+      <App />
+    </BrowserRouter>,
+  );
+}

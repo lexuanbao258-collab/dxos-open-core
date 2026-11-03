@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tricore.dxos.gateway.workflow.dto.ActivateWorkflowInstanceRequest;
 import com.tricore.dxos.gateway.workflow.dto.CreateWorkflowInstanceRequest;
 import com.tricore.dxos.gateway.workflow.dto.ExecuteWorkflowTransitionRequest;
+import com.tricore.dxos.gateway.helpdesk.HelpdeskController;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
@@ -22,7 +23,9 @@ public class WorkflowJsonConfiguration implements WebMvcConfigurer {
                 ObjectMapper strict = converter.getObjectMapper().copy()
                         .enable(DeserializationFeature.FAIL_ON_TRAILING_TOKENS);
                 for (Class<?> input : List.of(CreateWorkflowInstanceRequest.class,
-                        ActivateWorkflowInstanceRequest.class, ExecuteWorkflowTransitionRequest.class)) {
+                        ActivateWorkflowInstanceRequest.class, ExecuteWorkflowTransitionRequest.class,
+                        HelpdeskController.Create.class, HelpdeskController.Version.class,
+                        HelpdeskController.Assign.class, HelpdeskController.Resolve.class)) {
                     converter.registerObjectMappersForType(input, registrations ->
                             converter.getSupportedMediaTypes().forEach(mediaType -> registrations.put(mediaType, strict)));
                 }

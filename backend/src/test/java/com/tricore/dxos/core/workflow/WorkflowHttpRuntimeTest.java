@@ -111,7 +111,7 @@ class WorkflowHttpRuntimeTest {
         String definitionId = missing.equals("missing") ? "missing" : DEFINITION.definitionId();
         long version = missing.equals("missing") ? 7 : 8;
         mvc.perform(post(BASE).contentType(MediaType.APPLICATION_JSON).content(createBody(definitionId, version)))
-                .andExpect(status().isNotFound()).andExpect(jsonPath("$.code").value("DEFINITION_NOT_FOUND"));
+                .andExpect(status().isNotFound()).andExpect(jsonPath("$.code").value("NOT_FOUND"));
         assertError(() -> runtime.loadInstance("instance-1"), WorkflowErrorCode.INSTANCE_NOT_FOUND);
         verify(persistence, never()).createInstance(any());
     }

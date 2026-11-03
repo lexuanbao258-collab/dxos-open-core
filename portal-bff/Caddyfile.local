@@ -1,0 +1,32 @@
+{
+    auto_https disable_redirects
+    servers {
+        strict_sni_host on
+    }
+}
+
+https://localhost:8443 {
+    bind 127.0.0.1
+    tls internal
+
+    @bff path /bff/* /oauth2/authorization/* /login/oauth2/code/*
+    handle @bff {
+        reverse_proxy 127.0.0.1:8081 {
+            header_up -Forwarded
+            header_up X-Forwarded-For {remote_host}
+            header_up X-Forwarded-Host localhost:8443
+            header_up X-Forwarded-Proto https
+        }
+    }
+
+    # Never expose the private Java API through the browser ingress.
+    handle /api/* {
+        respond 404
+    }
+
+    handle {
+        root * ./frontend/dist
+        try_files {path} /index.html
+        file_server
+    }
+}
