@@ -56,7 +56,7 @@ External client / application
 
 This is an architecture view, not evidence that the full Gateway → Identity → Portal → Workflow → database path is integrated. Workflow owns `WorkflowPersistencePort`; a Data adapter can implement it without redefining Workflow semantics. Workflow does not own IT Support-specific rules, and Gateway does not own business workflows or persistence. Client-supplied identity headers are not trusted merely because they reached an HTTP boundary.
 
-See the [architecture baseline](docs/architecture/README.md) and [Core contracts](docs/contracts/).
+See the architecture overview above and the repository's `docs/` directory for available design material; the documentation index is being consolidated in R29.
 
 ## Core Capabilities
 
@@ -76,11 +76,11 @@ This table summarizes the **v0.1.0 source and tested scope** after PR #103 on `m
 | Portal BFF | OIDC PKCE, server-side session, CSRF and Helpdesk API client | Live browser full-stack acceptance pending |
 | React Portal | Standalone MOCK UI and `integration-local` build mode | MOCK is not proof of connected LIVE runtime |
 | Workflow / Data | Core contracts, PostgreSQL 17-backed Helpdesk/Workflow tests and ArchUnit rules | Deferred provider, privilege and audit checks remain |
-| Reuse / Storage | Core reuse contracts, Facility UI demonstration | Facility E2E and MinIO adapter not accepted |
+| Reuse / Storage | Core reuse contracts; Facility appears as a request type in the MOCK Portal | Facility E2E and MinIO adapter not accepted |
 
 ### Historical test checkpoint
 
-On **October 7, 2026**, at commit **`2b51a41`**, documentation recorded **29 Workflow tests, 109 Request tests, and 139 backend tests**. This is historical evidence, not the v0.1.0 test count. See the [Workflow POC](docs/poc/workflow-core-poc.md).
+On **October 7, 2026**, at commit **`2b51a41`**, documentation recorded **29 Workflow tests, 109 Request tests, and 139 backend tests**. This is historical evidence, not the v0.1.0 test count; refer to the historical commit for its test record.
 
 ## Technology Stack
 
@@ -114,7 +114,22 @@ Open [http://127.0.0.1:5173](http://127.0.0.1:5173). This uses in-memory demonst
 
 Follow the [local Helpdesk runbook](scripts/README-helpdesk-local.md) from the repository root and use the [isolated setup script](scripts/helpdesk-local-setup.ps1). It requires Windows PowerShell, Docker Desktop Linux Engine, JDK 21 and free demo ports. Run the script's **read-only preflight** before opting into creation of an isolated PostgreSQL 17 demo database; do not run its `-Execute` step against existing resources. The runbook covers required secrets, real identity subject provisioning and backend startup.
 
-The frontend also supplies an `integration-local` build mode (`npm.cmd run build:integration-local` from `frontend/`); building it alone does **not** establish an authenticated browser-to-BFF-to-Backend Golden Path.
+### Option C — `integration-local` Portal (configured local stack)
+
+Requires **Node.js >=22.12**, npm, **JDK 21**, Docker Desktop/PostgreSQL 17, a configured **real Keycloak OIDC client**, Backend, Portal BFF, and **Caddy HTTPS ingress** with a browser-trusted local certificate. Follow the [Portal BFF local setup](portal-bff/README.md) and the [Helpdesk local runbook](scripts/README-helpdesk-local.md); provision the exact issuer, three real subjects, database roles and BFF client secrets before claiming an authenticated run.
+
+From the repository root, build the distinct integration bundle:
+
+```powershell
+Set-Location frontend
+npm.cmd ci
+npm.cmd run build:integration-local
+Set-Location ..
+```
+
+Start Backend, BFF and the configured local HTTPS ingress **following the BFF runbook** (including its Caddy configuration); a build alone does not start any server. Only **after** those prerequisites are running and the certificate is trusted, open [https://localhost:8443/mvp/helpdesk](https://localhost:8443/mvp/helpdesk). The integration build uses the BFF's `/bff/session` boundary and real OIDC redirects instead of the MOCK demo-persona flow. Verify in the browser that the Helpdesk page is served by the HTTPS origin, `/bff/session` is reachable, and login requires actual Keycloak authentication. If the BFF or provider is not configured, a 502 or failed login is **not** a successful LIVE run.
+
+**Mode distinction:** Option A (`npm.cmd run dev`) serves synthetic, in-memory MOCK requests at `http://127.0.0.1:5173`. Option C (`npm.cmd run build:integration-local`) creates an integration bundle for HTTPS/BFF hosting, but **R12 fresh-clone and authenticated browser E2E remain unverified** until recorded separately.
 
 ## Known limitations
 
@@ -178,10 +193,10 @@ The target IT Support lifecycle is:
 
 ```text
 Create request → Review / classify → Assign → In progress
-               → Resolve → Requester confirms → Close
+               → Resolve → Requester confirms (CONFIRMED)
 ```
 
-This is the target end-to-end acceptance path. Backend integration is merged, but a full live browser run remains an R12 gate. **`CONFIRMED` and `CLOSED` are distinct states**; the application must retain the ratified transition and permission rules.
+The `it-helpdesk@1` workflow ends at `CONFIRMED`; it has no `/close` Helpdesk route. `CLOSED` belongs to the legacy `request/` prototype, not this integrated Helpdesk workflow. Backend integration is merged, but the full live browser flow remains an R12 gate.
 
 | Area | Acceptance evidence to obtain |
 | --- | --- |
@@ -218,10 +233,8 @@ This is a high-level map, not a claim that every package is fully implemented.
 ## Documentation and Verification
 
 - [Backend guide](backend/README.md): setup, configuration, APIs, and test limits.
-- [Architecture](docs/architecture/README.md): boundaries and dependency direction.
-- [Workflow contract](docs/contracts/workflow-core.md): mechanisms and invariants.
-- [Workflow POC](docs/poc/workflow-core-poc.md): historical test evidence.
-- [Evidence index](docs/evidence/README.md): checkpoints and limitations.
+- Architecture and workflow source documentation: browse the current `docs/` directory; consolidated navigation is tracked in R29.
+- Historical verification: refer to the relevant PR, workflow run and exact commit when reporting evidence.
 - [Glossary](GLOSSARY.md): project terminology.
 - [Issue #38](https://github.com/lexuanbao258-collab/dxos-open-core/issues/38): license, attribution, and SPDX review.
 

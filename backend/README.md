@@ -496,7 +496,7 @@ trên/dưới là lịch sử; **không chạy lại bootstrap hoặc Flyway**.
 Owner cũng xác nhận cloud smoke `cloud-20261015-01` COMMITTED_PASS, precheck,
 postcheck và fresh-JVM persistence PASS, 2 instances / 4 history, exit 0.
 Không chạy lại cloud smoke; giữ nguyên dữ liệu thử. Kế hoạch, dữ liệu và recovery ở phần “Cloud smoke sau migrations”
-trong `../docs/evidence/issue-25-readiness.md`.
+trong evidence lịch sử của Issue #25; đường dẫn tài liệu cũ chưa có trong phiên bản này.
 
 Từ repo root, Direct host/CA/password đã được cấp qua môi trường bảo mật:
 
@@ -528,7 +528,7 @@ OTHER_CLOUD_WRITES=NONE, BOOTSTRAP_EXIT=0.
 Không chạy workflow-schema-bootstrap.ps1 hoặc CREATE SCHEMA lại.
 
 V3/V4 và cloud smoke đã hoàn tất theo owner report. Phần
-[thực thi Flyway V3/V4](../docs/evidence/issue-25-readiness.md#thực-thi-flyway-v3v4--owner-đã-phê-duyệt)
+thực thi Flyway V3/V4 (xem issue và bằng chứng kiểm thử liên quan tới #25)
 là hồ sơ lịch sử; không phải bước tiếp theo và không chạy lại.
 Launcher khóa đúng Direct endpoint và schema; tự dừng nếu precheck FAIL.
 Dùng Direct db.zsfctpnitkdztlfhzqgw.supabase.co:5432/postgres, tài khoản postgres,
