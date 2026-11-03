@@ -20,10 +20,6 @@ User-visible DX-OS Open Core changes are recorded here. The format follows
 - React IT Helpdesk Portal: standalone MOCK demonstration and `integration-local` integration build mode; live browser/SSO acceptance remains a separate gate.
 - Apache-2.0 root `LICENSE` and `NOTICE` files for original DX-OS work, subject to ongoing third-party/SPDX verification tracked by Issue #38.
 - ArchUnit Core dependency rules and negative canary tests.
-
-
-### Added
-
 - Contribution guidelines, issue and PR templates, and CODEOWNERS.
 - Shared CI for PRs to `main`: backend build and tests, applicable application
   builds, repository checks, and Identity–Gateway security regressions.
