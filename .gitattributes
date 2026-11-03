@@ -1,0 +1,15 @@
+# SPDX-FileCopyrightText: 2026 TRICORE contributors
+# SPDX-License-Identifier: Apache-2.0
+#
+# Consistent line endings across Windows and Linux avoid whole-file diffs.
+* text=auto eol=lf
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
+gradlew text eol=lf
+*.sh text eol=lf
+*.jar binary
+*.png binary
+*.jpg binary
+*.ico binary
+*.pdf binary

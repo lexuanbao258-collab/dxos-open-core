@@ -13,7 +13,8 @@ import java.util.*;
 public final class WorkflowApprovedMigration {
     static final String S = WorkflowSmokeRunner.SCHEMA;
     static final String URL = WorkflowSchemaBootstrap.URL;
-    static final String MANIFEST_SHA = "d5de8c9deb62590653f2fb19d184c8ad9298d3a5386c98cf2b4b50eefc4a3237";
+    /** SHA-256 of the manifest as stored in Git (LF line endings, see .gitattributes). */
+    static final String MANIFEST_SHA = "f667e51ad2990844df482978bb6a9229c5d5964acb77b806ee6b1f188e47edf3";
     // Canonical catalog hashes are reviewed against the pinned bundle on PostgreSQL 17.11.
     static final Map<String,String> EXPECTED = Map.of(
         "relations","de8b4e77788fbc5e55eb06aafd4c07db72379cdb879e1b28b38850a75210026d",

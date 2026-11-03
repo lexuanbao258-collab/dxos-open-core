@@ -1,35 +1,25 @@
-## Related Issue / Objective
+<!--
+SPDX-FileCopyrightText: 2026 TRICORE contributors
+SPDX-License-Identifier: Apache-2.0
 
-Refs #
+PR title: <type>(<area>): <description>, for example: feat(workflow): add outbox event
+Keep the description near 150 words. Cite checks run on this PR.
+-->
 
-## Ownership and baseline
-- Owner:
-- Independent reviewer:
-- Workstream:
-- Base branch and exact SHA:
-- Head SHA:
-- Dependencies / stacked PRs:
+Closes #
 
-## Scope
-**IN:**
+## Changes
 
-**OUT:**
+-
 
-## Architecture / contract impacts
-- Core / Application / Infrastructure boundaries:
-- HTTP / Java contracts:
-- Database migration and persistence safety:
+## Verification
 
-## Test evidence
-- [ ] Build and affected unit tests
-- [ ] Security / negative tests where applicable
-- [ ] Integration tests where applicable
-- [ ] Skipped tests and unavailable providers documented
-- Commands, exact SHA, logs:
+<!-- Give commands or steps and their results; include screenshots for UI changes. -->
 
-## Independent review and merge gate
-- [ ] No unresolved P0/P1 or documented approved disposition
-- [ ] Reviewer verdict (PASS / CONDITIONAL / BLOCKED) at exact SHA
-- [ ] Base/head, overlap and downstream integration verified
+## Checklist
 
-> A checklist is not proof of execution. Do not claim E2E or release acceptance without evidence.
+- [ ] Base is `main`; reviewed the 400-line PR guideline
+- [ ] New logic has tests
+- [ ] New files have SPDX headers
+- [ ] User-visible changes are in `CHANGELOG.md` under Unreleased
+- [ ] No secrets, tokens, or real user data
