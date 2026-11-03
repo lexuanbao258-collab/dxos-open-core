@@ -20,10 +20,10 @@ User-visible DX-OS Open Core changes are recorded here. The format follows
 ### Changed
 
 - `backend/gradlew` is executable on Linux and macOS.
-- The Generic Workflow HTTP API normalizes `DEFINITION_NOT_FOUND` and
-  `INSTANCE_NOT_FOUND` into a public HTTP 404 / `NOT_FOUND` response to avoid
-  differentiating hidden and missing resources. This provisional public contract
-  will be formally reviewed in Issue #105 before Platform API publication.
+- The Helpdesk HTTP API uses a scoped HTTP 404 / `NOT_FOUND` response for
+  hidden or missing resources; the Generic Workflow HTTP API retains its
+  pre-existing distinct `DEFINITION_NOT_FOUND` / `INSTANCE_NOT_FOUND` public
+  codes and messages. Generic contract evolution is tracked in Issue #105.
 
 ### Fixed
 
