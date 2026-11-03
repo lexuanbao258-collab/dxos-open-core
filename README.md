@@ -234,7 +234,7 @@ The full workflow is in [CONTRIBUTING.md](CONTRIBUTING.md). In short:
 1. Every task has an Issue with one assignee, a release milestone and an `area:*` label.
 2. Branch from `main` as `<type>/<area>-<description>`; keep it under three days.
 3. Open a pull request into `main` (at most 400 changed lines) with a Conventional Commits title and `Closes #N`.
-4. CI (`backend`, `frontend`, `repo-hygiene`) must pass and one other member must approve.
+4. CI (`backend`, `portal-bff`, `frontend`, `repo-hygiene`) must pass; release PR #109 additionally requires Bảo and Ánh approvals after R12 acceptance.
 5. Changes land on `main` by squash merge only; nobody pushes to `main` directly.
 
 User-visible changes are recorded in [CHANGELOG.md](CHANGELOG.md).
