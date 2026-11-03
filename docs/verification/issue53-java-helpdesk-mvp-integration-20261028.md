@@ -133,4 +133,3 @@ Chưa merge, deploy, đổi production exposure hoặc bật LIVE.
 - **Vẫn chưa PASS:** Portal → BFF → Backend bằng browser + SSO/session thật; Facility Request E2E; MinIO runtime; deploy doanh nghiệp/production và independent review. Không đổi cổng \`DRAFT / REVIEW_PENDING / LIVE_BLOCKED / DO_NOT_MERGE\`.
 
 **Kết luận của lượt Postman:** \`LOCAL_BACKEND_HTTP_E2E_PASS\` đối với **một** request \`IT_HELPDESK\` end-to-end, kết thúc ở \`CONFIRMED\` cùng 4 history transitions. Đây là bằng chứng bổ sung cho PR #74, **không phải sign-off full-stack hoặc phê duyệt merge/LIVE**.
-
