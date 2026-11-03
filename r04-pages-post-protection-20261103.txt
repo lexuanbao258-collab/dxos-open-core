@@ -1,0 +1,6 @@
+DX-OS GitHub Pages post-protection smoke marker
+R04 evidence: https://github.com/lexuanbao258-collab/dxos-open-core/issues/102
+Source branch: gh-pages (root)
+Purpose: Confirm a new branch-published static file is served after an independently approved pull request is merged into the protected gh-pages branch.
+Probe identifier: R04-PAGES-20261103
+This is static documentation only. It does not claim Backend, OIDC, database, or live API availability.
