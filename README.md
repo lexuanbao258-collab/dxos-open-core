@@ -4,9 +4,9 @@
 
 DX-OS Open-Core is TRICORE's modular monolith for exploring reusable capabilities behind internal service applications. The Internal Service Portal / IT Support scenario is the main demonstration target. DX-OS is a digital transformation platform concept, not a computer operating system or a claim about the competition's required product.
 
-**Source baseline:** `origin/main` at `2115de3`. This README describes that source snapshot; work on unmerged branches and pull requests is identified separately.
+**Release documentation baseline:** v0.1.0 candidate based on `main@4428346` (PR #103 squash integration). Release acceptance is separate from source and CI verification.
 
-**Navigate:** [Overview](#overview) · [Architecture](#architecture-overview) · [Status](#implementation-status) · [Getting started](#getting-started) · [Documentation](#documentation-and-verification) · [License](#license-and-third-party-notices)
+**Navigate:** [Overview](#overview) · [Architecture](#architecture-overview) · [Status](#implementation-status) · [Run v0.1.0](#run-v010) · [Getting started](#getting-started) · [Documentation](#documentation-and-verification) · [License](#license-and-third-party-notices)
 
 ## Overview
 
@@ -60,34 +60,27 @@ See the [architecture baseline](docs/architecture/README.md) and [Core contracts
 
 ## Core Capabilities
 
-- **Identity / SSO:** Core identity and authorization contracts exist. Complete SSO/OIDC enforcement through Gateway is not established in the stated main baseline.
-- **API Gateway:** API boundary code exists, but the generic Workflow HTTP adapter is not registered as a production endpoint in this baseline. Trusted caller propagation and protection require separate evidence.
-- **Workflow:** Generic definitions, instances, transitions by transition ID, exact definition-version binding, optimistic concurrency, history, terminal-state safeguards, and a persistence port have code and tests. Application-specific Request workflow remains separate.
-- **Data Management:** Object-storage contracts and Workflow persistence work exist. A complete object-storage provider and release-level PostgreSQL behavior are not established by those contracts alone.
+- **Identity / SSO:** OIDC trust and authority contracts, with verified security regressions. Portal BFF has PKCE/session/CSRF implementation; live three-principal Keycloak/browser acceptance remains outstanding.
+- **API Gateway:** Spring Boot business API boundary, verified principal checks, exact Workflow authorization and scoped error contracts. APISIX is a selected target, not a verified deployed runtime.
+- **Workflow:** Provider-neutral definitions, instances, transition/version/history contracts, and PostgreSQL-backed Helpdesk integration. Flowable BPMN is a selected target, not a verified adapter in this release.
+- **Data Management:** PostgreSQL 17 Helpdesk/Workflow persistence and negative transaction checks. MinIO/object-storage provider integration is not a completed v0.1.0 capability.
 
 ## Implementation Status
 
-The table describes **`origin/main` at `2115de3`**, inspected on October 22, 2026. It is a source snapshot, not a test run performed on that date.
+This table summarizes the **v0.1.0 source and tested scope** after PR #103 on `main@4428346`. CI and focused PostgreSQL 17 evidence do not substitute for browser E2E or release sign-off.
 
-| Area | Present in the baseline | Still to verify or complete |
+| Area | Present in v0.1.0 source | Known verification boundary |
 | --- | --- | --- |
-| Workflow Core | Contracts, runtime, version binding, history, persistence port, and related tests | Full Portal integration and release acceptance |
-| Identity Core | Principal, context, authority, and decision contracts | End-to-end SSO/OIDC protection on main |
-| Data Core | Object-storage contracts and Workflow persistence mechanisms | Complete storage provider and reviewed live behavior |
-| Gateway / API | Request HTTP endpoints and API boundary code | Protected generic Workflow HTTP registration and trusted-context path |
-| Request prototype | Separate application code and tests | Integration with generic Workflow Core |
-| Frontend Portal | Demonstration direction and work outside the main baseline | A merged, verified Portal release |
-| PostgreSQL / Flyway | Configuration and migrations V1–V4 | Startup, privileges, rollback, and live-environment acceptance evidence |
-
-Identity–Gateway integration, the Portal, a complete demonstration, proof of Core reuse across two applications, and reproducible release packaging require their own reviewed evidence. An unmerged PR or roadmap item is not a capability already available on main.
+| Helpdesk Backend | Nine HTTP application routes; tenant/resource authorization; workflow history and transaction guards | R10 PG17 focused tests passed; full R12 Golden Path pending |
+| Identity / Gateway | Verified OIDC/security boundary and exact authority checks | Real three-principal Keycloak/browser SSO pending |
+| Portal BFF | OIDC PKCE, server-side session, CSRF and Helpdesk API client | Live browser full-stack acceptance pending |
+| React Portal | Standalone MOCK UI and `integration-local` build mode | MOCK is not proof of connected LIVE runtime |
+| Workflow / Data | Core contracts, PostgreSQL 17-backed Helpdesk/Workflow tests and ArchUnit rules | Deferred provider, privilege and audit checks remain |
+| Reuse / Storage | Core reuse contracts, Facility UI demonstration | Facility E2E, MinIO and Flowable adapter not accepted |
 
 ### Historical test checkpoint
 
-On **October 7, 2026**, at commit **`2b51a41`**, project documentation recorded **29 Workflow tests, 109 Request tests, and 139 backend tests**, with a successful build. The commands, environment, and limits are in the [Workflow POC](docs/poc/workflow-core-poc.md). These are historical results, **not** test counts or results from October 22.
-
-At that checkpoint, [Workflow Core Issue #13](https://github.com/lexuanbao258-collab/dxos-open-core/issues/13) was closed through [PR #15](https://github.com/lexuanbao258-collab/dxos-open-core/pull/15); [Identity Issue #12](https://github.com/lexuanbao258-collab/dxos-open-core/issues/12) and [Data Issue #14](https://github.com/lexuanbao258-collab/dxos-open-core/issues/14) were open. These are historical issue states, not a claim about their current status.
-
-Mock, fake, and MVC-slice tests do not by themselves establish PostgreSQL transactions, live security enforcement, or a complete Portal demonstration.
+On **October 7, 2026**, at commit **`2b51a41`**, documentation recorded **29 Workflow tests, 109 Request tests, and 139 backend tests**. This is historical evidence, not the v0.1.0 test count. See the [Workflow POC](docs/poc/workflow-core-poc.md).
 
 ## Technology Stack
 
@@ -95,13 +88,40 @@ Mock, fake, and MVC-slice tests do not by themselves establish PostgreSQL transa
 | --- | --- |
 | Backend | Java 21; Spring Boot 3.5.16 |
 | Build | Gradle Wrapper 8.14.3 |
-| Database | PostgreSQL target; Flyway migrations V1–V4 |
+| Database | PostgreSQL 17 Helpdesk/Workflow persistence; Flyway and local demo SQL with separate prerequisites |
 | ORM configuration | Hibernate `ddl-auto: none` |
 | Tests | JUnit and Spring Boot Test; dedicated integration tasks have separate prerequisites |
-| Frontend | Portal work outside this main snapshot |
+| Frontend | React 19, TypeScript, Vite; MOCK and integration-local builds |
 | Deployment | Requires commit-specific operational and acceptance evidence |
 
-Keycloak, a standalone gateway product, an object-storage provider, and a third-party workflow engine should be treated as options or proof-of-concept subjects unless a decision and implementation are evidenced for the relevant commit.
+Keycloak is the selected OIDC provider target; APISIX, MinIO and Flowable remain selected technology targets unless their exact runtime and adapter acceptance are independently evidenced.
+
+## Run v0.1.0
+
+### Option A — MOCK Portal (quick UI demonstration)
+
+Requires Node.js **22.12.0 or newer**, npm, and a browser. From the repository root:
+
+```powershell
+Set-Location frontend
+npm.cmd ci
+npm.cmd run dev
+```
+
+Open [http://127.0.0.1:5173](http://127.0.0.1:5173). This uses in-memory demonstration data and **does not require a backend, PostgreSQL, credentials, or live SSO**. Return to the repository root with `Set-Location ..`. On macOS/Linux use `npm` instead of `npm.cmd`.
+
+### Option B — Local PostgreSQL Helpdesk environment
+
+Follow the [local Helpdesk runbook](scripts/README-helpdesk-local.md) from the repository root and use the [isolated setup script](scripts/helpdesk-local-setup.ps1). It requires Windows PowerShell, Docker Desktop Linux Engine, JDK 21 and free demo ports. Run the script's **read-only preflight** before opting into creation of an isolated PostgreSQL 17 demo database; do not run its `-Execute` step against existing resources. The runbook covers required secrets, real identity subject provisioning and backend startup.
+
+The frontend also supplies an `integration-local` build mode (`npm.cmd run build:integration-local` from `frontend/`); building it alone does **not** establish an authenticated browser-to-BFF-to-Backend Golden Path.
+
+## Known limitations
+
+- The MOCK Portal is a demonstration, not a live application or security acceptance.
+- The full Keycloak/PKCE browser login, three-persona Helpdesk E2E flow and clean-install release acceptance require R12 evidence.
+- Facility workflow runtime reuse, Flowable BPMN, APISIX edge runtime, MinIO storage and production deployment are not claimed as completed v0.1.0 features.
+- Focused PostgreSQL 17 R10 passed with two documented skips; deferred database/provider audits and third-party SPDX/license review are tracked separately.
 
 ## Getting Started
 
@@ -161,7 +181,7 @@ Create request → Review / classify → Assign → In progress
                → Resolve → Requester confirms → Close
 ```
 
-This is a demonstration plan, not a claim that every step is available through the main branch's APIs or UI. **`CONFIRMED` and `CLOSED` are distinct states**; the application must retain the ratified transition and permission rules.
+This is the target end-to-end acceptance path. Backend integration is merged, but a full live browser run remains an R12 gate. **`CONFIRMED` and `CLOSED` are distinct states**; the application must retain the ratified transition and permission rules.
 
 | Area | Acceptance evidence to obtain |
 | --- | --- |
@@ -233,7 +253,7 @@ Responsibilities do not establish copyright ownership of each contributor's work
 
 ## License and Third-Party Notices
 
-Apache License 2.0 (`Apache-2.0`) is the selected license for original DX-OS materials that the relevant rights holders have authorized for distribution under these terms. The licensing work is tracked separately in [Issue #38](https://github.com/lexuanbao258-collab/dxos-open-core/issues/38).
+DX-OS original materials covered by the repository's [LICENSE](LICENSE) use **Apache License 2.0 (Apache-2.0)**, with attribution in [NOTICE](NOTICE). Third-party and per-file compliance work is tracked in [Issue #38](https://github.com/lexuanbao258-collab/dxos-open-core/issues/38).
 
 Third-party dependencies, the Gradle Wrapper, adapted materials, and externally sourced assets remain subject to their respective licenses and attribution obligations.
 
