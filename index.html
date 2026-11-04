@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="description" content="DX-OS Open-Core: tài liệu tích hợp API IT Helpdesk MVP, hợp đồng HTTP và nguyên tắc xác thực/phân quyền.">
-<title>DX-OS • IT Helpdesk API Reference</title>
+<meta name="description" content="DX-OS Open-Core giúp nhóm tiếp nhận, xử lý và theo dõi yêu cầu hỗ trợ nội bộ.">
+<title>DX-OS Open-Core | IT Helpdesk</title>
 <style>
 :root{color-scheme:light;--ink:#172439;--muted:#5c6e84;--line:#dce5ed;--blue:#2563eb;--navy:#0d1729;--pale:#f5f8fc;--green:#087f5b;--soft:#edf8f3;--white:#fff}
 *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;color:var(--ink);background:var(--pale);font:15px/1.65 system-ui,-apple-system,"Segoe UI",sans-serif}a{color:var(--blue);text-decoration:none}a:hover{text-decoration:underline}a:focus-visible,button:focus-visible,summary:focus-visible{outline:3px solid #8ab6ff;outline-offset:3px}
@@ -20,13 +20,12 @@ footer{background:#e9f0f8;border-top:1px solid var(--line);padding:26px;text-ali
 </head>
 <body>
 <header>
-<nav><a class="brand" href="#top">DX—OS <small> / Open-Core</small></a><div class="links"><a href="#api">API endpoints</a><a href="#auth">Bảo mật</a><a href="#integration">Tích hợp</a><a href="https://github.com/lexuanbao258-collab/dxos-open-core/pull/79">Mã nguồn &amp; PR #79</a></div></nav>
+<nav><a class="brand" href="#top">DX—OS <small> / Open-Core</small></a><div class="links"><a href="#api">Tài liệu API</a><a href="./blog/it-helpdesk-api.html">Blog</a><a href="https://github.com/lexuanbao258-collab/dxos-open-core/releases/tag/v0.1.0">Release v0.1.0</a></div></nav>
 <div class="hero" id="top">
-<div class="eyebrow">Developer Documentation · 30.10.2026</div>
-<h1>IT Helpdesk API Reference</h1>
-<p>Tài liệu tích hợp dành cho bản DX-OS Open-Core MVP: tạo yêu cầu, tiếp nhận, phân công, xử lý và xác nhận hoàn tất, với xác thực OIDC/JWT và kiểm soát truy cập theo tài nguyên.</p>
-<div class="tags"><span class="tag success">Swagger local đã kiểm tra giao diện</span><span class="tag">9 HTTP routes</span><span class="tag">MVP / Draft</span><span class="tag">Không có public API server</span></div>
-<div class="hero-links"><a class="action" href="#api">Xem 9 endpoint</a><a class="action alt" href="#integration">Hướng dẫn tích hợp</a></div>
+<div class="eyebrow">DX-OS · v0.1.0 Pre-release</div>
+<h1>DX-OS Open-Core</h1>
+<p>DX-OS giúp nhóm tiếp nhận và theo dõi yêu cầu nội bộ. Với IT Helpdesk, nhân viên có thể gửi yêu cầu hỗ trợ, theo dõi tiến độ và xác nhận khi sự cố đã được xử lý.</p>
+<div class="hero-links"><a class="action" href="https://github.com/lexuanbao258-collab/dxos-open-core/releases/tag/v0.1.0">Xem bản phát hành thử v0.1.0</a><a class="action alt" href="./blog/it-helpdesk-api.html">Đọc bài giới thiệu IT Helpdesk</a></div>
 </div>
 </header>
 <div class="layout">
@@ -34,7 +33,7 @@ footer{background:#e9f0f8;border-top:1px solid var(--line);padding:26px;text-ali
 <main>
 <section id="overview" class="section"><h2>Tổng quan</h2>
 <p>API thuộc bản thử nghiệm nội bộ và <strong>chỉ được bật khi cấu hình môi trường demo</strong>. Trang này là tài liệu tĩnh, không kết nối hoặc chuyển tiếp yêu cầu đến Backend.</p>
-<div class="notice"><strong>Giới hạn:</strong> Bản tài liệu này được biên soạn từ controller và tài liệu của ứng viên <a href="https://github.com/lexuanbao258-collab/dxos-open-core/pull/79">PR #79</a>, nằm trên PR #74 chưa merge. Không phải chứng nhận production-ready, không có địa chỉ API Internet và không cung cấp tài khoản dùng thử công khai.</div>
+<div class="notice"><strong>Phạm vi v0.1.0:</strong> Portal MOCK minh họa 5/6 thao tác. Phân công theo tên kỹ thuật viên chưa có trong MOCK. Kiểm thử toàn luồng trên trình duyệt với Keycloak thật được theo dõi tại <a href="https://github.com/lexuanbao258-collab/dxos-open-core/issues/118">R23 / #118</a>.</div>
 <div class="stats"><div class="stat"><strong>9</strong><span>HTTP operations</span></div><div class="stat"><strong>5</strong><span>Trạng thái nghiệp vụ</span></div><div class="stat"><strong>3</strong><span>Vai trò demo</span></div></div>
 <div class="panel"><span class="key">Base path:</span> <code>/api/v1/mvp/requests</code><p class="note">Giới hạn bản local: Java 21, Spring Boot, PostgreSQL, Keycloak. Backend cần cấu hình riêng và không được công bố public listener.</p></div>
 </section>
@@ -79,9 +78,9 @@ Content-Type: application/json
 <p class="note">Bảng mô tả trạng thái dự kiến từ nguồn; chưa được xác nhận bằng toàn bộ bộ kiểm thử HTTP thực tế.</p>
 </section>
 <section id="evidence" class="section"><h2>Trạng thái kiểm chứng &amp; nguồn</h2>
-<div class="panel"><ul class="warning-list"><li><b>Đã có bằng chứng:</b> Gradle <code>test build</code> thành công trên Windows/JDK21 theo log chạy local; ảnh Swagger UI hiển thị 9 endpoint; GitHub CI có một job PASS với phạm vi giới hạn.</li><li><b>Chưa xác nhận:</b> tất cả các ca HTTP auth/ACL/403/404/409, xuất bản snapshot OpenAPI JSON đã kiểm duyệt, kiểm thử Keycloak E2E trên database demo đang sử dụng.</li><li><b>Triển khai:</b> Backend production và public API endpoint không thuộc phạm vi trang tài liệu này.</li></ul>
-<p><a href="https://github.com/lexuanbao258-collab/dxos-open-core/pull/79">PR #79 — Swagger/OpenAPI</a> · <a href="https://github.com/lexuanbao258-collab/dxos-open-core/pull/74">PR #74 — Java Helpdesk MVP</a> · <a href="https://github.com/lexuanbao258-collab/dxos-open-core/blob/docs/helpdesk-swagger-openapi-20261030/docs/api/helpdesk-swagger.md">Chi tiết hợp đồng và runbook</a></p></div>
+<div class="panel"><p>R12 M1 đạt. R12 M2, kiểm thử toàn luồng trên trình duyệt với Keycloak thật, được chuyển sang R23. Trang này trình bày tài liệu API tĩnh cho môi trường cấu hình riêng.</p>
+<p><a href="https://github.com/lexuanbao258-collab/dxos-open-core/releases/tag/v0.1.0">Ghi chú phát hành v0.1.0</a> · <a href="https://github.com/lexuanbao258-collab/dxos-open-core/tree/v0.1.0">Mã nguồn tại tag v0.1.0</a></p></div>
 </section>
 </main></div>
-<footer>DX-OS Open-Core · IT Helpdesk MVP · Static documentation candidate · Không yêu cầu hoặc lưu credentials · 30/10/2026</footer>
+<footer>DX-OS Open-Core · IT Helpdesk MVP · Tài liệu tĩnh · v0.1.0 Pre-release</footer>
 </body></html>
