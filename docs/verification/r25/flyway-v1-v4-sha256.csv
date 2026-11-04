@@ -1,0 +1,5 @@
+﻿"Path","SHA256"
+"backend/src/main/resources/db/migration/V1__create_requests.sql","B496698D7695982D47D6004CAA7DCF6047D4BAF1B158503302B09AE45CAD17AC"
+"backend/src/main/resources/db/migration/V2__add_request_workflow.sql","DA39B56224CFF56A65A37793A89595CB3C374C1B8516A950568B2DFA27CD7AD7"
+"backend/src/main/resources/db/migration/V3__create_workflow_persistence.sql","15D615162C09B0C843680CF0C3B9FE48B16CD637877EB91215D8698CD7BC4832"
+"backend/src/main/resources/db/migration/V4__seed_workflow_definitions.sql","40EE5A6C3A357D7EBCA6D198C9981760868FC872121E8CAECE6AE6E86634A3EF"
