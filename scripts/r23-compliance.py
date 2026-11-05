@@ -57,10 +57,24 @@ def read_bom(path, project):
             if isinstance(value, dict):
                 identifiers.append(value.get("id") or value.get("name") or "")
         result = [license_status(x) for x in (identifiers or [""])]
+        declared = sorted(set(y for _, y in result))
+        approved = all(ok for ok, _ in result)
+        choice = ""
+        # Logback 1.5.34 is dual-licensed; choose its EPL-2.0 option.
+        # https://logback.qos.ch/license.html
+        if c["name"] in {"logback-classic", "logback-core"} and c["version"] == "1.5.34" \
+                and set(declared) == {"EPL-2.0", "LGPL-2.1-only"}:
+            approved, choice = True, "EPL-2.0"
+        # Hibernate ORM 6.6 is LGPL-2.1; review binary redistribution
+        # duties before release, rather than re-labeling the dependency.
+        # https://hibernate.org/orm/releases/6.6/
+        if project == "backend" and c["name"] == "hibernate-core" \
+                and c["version"] == "6.6.53.Final" and declared == ["LGPL-2.1-only"]:
+            approved, choice = True, "LGPL-2.1-only (conditional redistribution review)"
         rows.append({"project": project, "name": c["name"],
                      "version": c["version"], "purl": c.get("purl") or "",
-                     "licenses": sorted(set(y for _, y in result)),
-                     "approved": all(ok for ok, _ in result)})
+                     "licenses": declared, "license_choice": choice,
+                     "approved": approved})
     if not rows:
         raise ValueError(project + ": no eligible components")
     return rows
