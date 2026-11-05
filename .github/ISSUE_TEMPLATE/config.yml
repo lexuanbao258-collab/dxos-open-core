@@ -3,5 +3,5 @@
 blank_issues_enabled: false
 contact_links:
   - name: Team contribution guidelines
-    url: https://github.com/lexuanbao258-collab/dxos-open-core/blob/main/CONTRIBUTING.md
+    url: https://github.com/tricore-opentrix/opentrix/blob/main/CONTRIBUTING.md
     about: Read before opening an issue or PR.

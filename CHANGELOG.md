@@ -11,6 +11,10 @@ User-visible DX-OS Open Core changes are recorded here. The format follows
 
 ## [Unreleased]
 
+### Changed
+
+- R26: Prepare OpenTrix canonical repository identity and update organization links, documentation, and repository setup defaults. Activation requires a coordinated GitHub rename and independent review.
+
 ## [0.1.0] - 2026-11-04
 
 ### Added
@@ -46,4 +50,4 @@ User-visible DX-OS Open Core changes are recorded here. The format follows
 
 - The separate Issue #23 workflow; its security gates run in shared CI.
 
-[0.1.0]: https://github.com/lexuanbao258-collab/dxos-open-core/releases/tag/v0.1.0
+[0.1.0]: https://github.com/tricore-opentrix/opentrix/releases/tag/v0.1.0

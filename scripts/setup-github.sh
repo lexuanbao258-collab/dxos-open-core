@@ -6,8 +6,8 @@
 # Usage: DRY_RUN=1 scripts/setup-github.sh
 set -euo pipefail
 
-REPO="${REPO:-lexuanbao258-collab/dxos-open-core}"
-HOMEPAGE="${HOMEPAGE:-https://lexuanbao258-collab.github.io/dxos-open-core/}"
+REPO="${REPO:-tricore-opentrix/opentrix}"
+HOMEPAGE="${HOMEPAGE:-https://tricore-opentrix.github.io/opentrix/}"
 DRY_RUN="${DRY_RUN:-0}"
 run() {
   if [ "$DRY_RUN" = "1" ]; then
@@ -24,7 +24,7 @@ fi
 
 say "1/4 Repository metadata and merge settings"
 run gh api -X PATCH "repos/$REPO" \
-  -f description="DX-OS Open-Core: Identity, Workflow, Data and API Gateway as a headless PaaS, demonstrated by an IT Helpdesk (OLP PMNM 2026)." \
+  -f description="OpenTrix (DX-OS Open-Core): Identity, Workflow, Data and API Gateway as a headless PaaS, demonstrated by an IT Helpdesk (OLP PMNM 2026)." \
   -f homepage="$HOMEPAGE" \
   -F allow_squash_merge=true -F allow_merge_commit=false -F allow_rebase_merge=false \
   -F delete_branch_on_merge=true -F allow_update_branch=true \
