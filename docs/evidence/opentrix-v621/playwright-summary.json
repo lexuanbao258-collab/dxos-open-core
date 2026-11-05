@@ -1,0 +1,139 @@
+{
+  "note": "Summary of `npm run build && npm run test:preview` (tests/design-v621.spec.ts). Generated locally; GitHub CI does not run Playwright.",
+  "playwright": "1.64.1",
+  "node": "v24.19.0",
+  "os": "Windows 11 (chromium, Desktop Chrome profile)",
+  "stats": {
+    "expected": 25,
+    "unexpected": 0,
+    "skipped": 0,
+    "flaky": 0
+  },
+  "tests": [
+    {
+      "title": "no third-party requests and self-hosted fonts load with Vietnamese glyphs",
+      "status": "expected",
+      "ms": 731
+    },
+    {
+      "title": "existing routes keep working",
+      "status": "expected",
+      "ms": 344
+    },
+    {
+      "title": "placeholder never clips from 320 to 420px (incl. 361-370)",
+      "status": "expected",
+      "ms": 1845
+    },
+    {
+      "title": "typed search text survives resize between short and long placeholder",
+      "status": "expected",
+      "ms": 710
+    },
+    {
+      "title": "no horizontal overflow on every screen at 320px",
+      "status": "expected",
+      "ms": 3180
+    },
+    {
+      "title": "no horizontal overflow on every screen at 360px",
+      "status": "expected",
+      "ms": 3245
+    },
+    {
+      "title": "no horizontal overflow on every screen at 361px",
+      "status": "expected",
+      "ms": 3206
+    },
+    {
+      "title": "no horizontal overflow on every screen at 370px",
+      "status": "expected",
+      "ms": 3174
+    },
+    {
+      "title": "no horizontal overflow on every screen at 390px",
+      "status": "expected",
+      "ms": 3220
+    },
+    {
+      "title": "no horizontal overflow on every screen at 760px",
+      "status": "expected",
+      "ms": 3193
+    },
+    {
+      "title": "no horizontal overflow on every screen at 761px",
+      "status": "expected",
+      "ms": 3201
+    },
+    {
+      "title": "no horizontal overflow on every screen at 800px",
+      "status": "expected",
+      "ms": 3256
+    },
+    {
+      "title": "no horizontal overflow on every screen at 900px",
+      "status": "expected",
+      "ms": 3222
+    },
+    {
+      "title": "no horizontal overflow on every screen at 1024px",
+      "status": "expected",
+      "ms": 3204
+    },
+    {
+      "title": "no horizontal overflow on every screen at 1200px",
+      "status": "expected",
+      "ms": 3302
+    },
+    {
+      "title": "no horizontal overflow on every screen at 1440px",
+      "status": "expected",
+      "ms": 3315
+    },
+    {
+      "title": "QA unknown outcome locks the form and reset restores focus + announces",
+      "status": "expected",
+      "ms": 861
+    },
+    {
+      "title": "queue shows no write action and keyboard hint matches viewport",
+      "status": "expected",
+      "ms": 784
+    },
+    {
+      "title": "detail never offers actions and shows version only when provided",
+      "status": "expected",
+      "ms": 1184
+    },
+    {
+      "title": "reduced motion disables screen fade and skeleton animation",
+      "status": "expected",
+      "ms": 602
+    },
+    {
+      "title": "reload simulates a brief loading state and recovers with an announcement",
+      "status": "expected",
+      "ms": 1015
+    },
+    {
+      "title": "mobile filter sheet opens as a modal dialog and applies filters",
+      "status": "expected",
+      "ms": 1054
+    },
+    {
+      "title": "axe + screenshots desktop-1440",
+      "status": "expected",
+      "ms": 5997
+    },
+    {
+      "title": "axe + screenshots mobile-390",
+      "status": "expected",
+      "ms": 5821
+    },
+    {
+      "title": "axe + screenshots mobile-320",
+      "status": "expected",
+      "ms": 5678
+    }
+  ]
+}
