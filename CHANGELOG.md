@@ -15,7 +15,7 @@ User-visible DX-OS Open Core changes are recorded here. The format follows
 
 - R24 tag-triggered release-candidate packaging (Java jars, frontend, SBOM/NOTICE inventory, SHA256SUMS), with independent distribution-acceptance gate before GitHub Release/GHCR publication.
 
-## [0.2.0-rc.1] - 2026-11-05
+## [0.2.0-rc.1] - 2026-11-06
 
 ### Added
 
