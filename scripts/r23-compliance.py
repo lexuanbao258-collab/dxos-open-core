@@ -93,11 +93,11 @@ def audit(paths, destination):
               "# THIRD-PARTY-NOTICES — generated inventory", "",
               "Generated from resolved CycloneDX SBOMs. This is not a legal",
               "certification or a substitute for upstream license and NOTICE texts.", "",
-              "| Project | Dependency | Version | Declared licenses | PURL |",
-              "| --- | --- | --- | --- | --- |"]
+              "| Project | Dependency | Version | Declared licenses | License choice | PURL |",
+              "| --- | --- | --- | --- | --- | --- |"]
     for r in rows:
         values = [r["project"], r["name"], r["version"],
-                  ", ".join(r["licenses"]), r["purl"]]
+                  ", ".join(r["licenses"]), r["license_choice"], r["purl"]]
         header.append("| " + " | ".join(str(v).replace("|", "\\|").replace("\n", " ") for v in values) + " |")
     header += ["", "## Open compliance work", "",
                "Validate upstream required notice texts, bundled services,",
