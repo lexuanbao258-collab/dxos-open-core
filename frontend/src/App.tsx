@@ -36,6 +36,7 @@ import { AuthPage } from "./pages/Auth";
 import { HelpdeskPortal } from "./features/helpdesk/HelpdeskPortal";
 // OpenTrix V6.2.1 preview: isolated, lazy-loaded, MOCK/DEV only.
 const DesignV621 = lazy(() => import("./design-v621/DesignV621"));
+import { PreviewLoading } from "./design-v621/PreviewLoading";
 import type { MvpHelpdeskRequestPort } from "./services/mvp/helpdeskPortalPort";
 
 const navItems = [
@@ -274,7 +275,7 @@ export function App({
         <Route
           path="/design-v621/*"
           element={
-            <Suspense fallback={null}>
+            <Suspense fallback={<PreviewLoading />}>
               <DesignV621 />
             </Suspense>
           }
