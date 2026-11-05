@@ -108,6 +108,12 @@ jobs:
         with:
           name: r24-candidate-${{ github.run_id }}
           path: dist/r24
+      - name: Read reviewed acceptance document from main (not the tagged source commit)
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          mkdir -p /tmp/r24-acceptance
+          git show "origin/main:docs/06-deployment/r24-acceptances/$TAG.json" > /tmp/r24-acceptance/acceptance.json
       - name: Refuse publication without exact-SHA R24 distribution acceptance
         id: clearance
         env:
@@ -116,11 +122,11 @@ jobs:
           python3 scripts/r24-release.py gate \
             --archive "dist/r24/dxos-$TAG.tar.gz" \
             --checksums dist/r24/SHA256SUMS \
-            --acceptance docs/06-deployment/r24-acceptance.json \
+            --acceptance /tmp/r24-acceptance/acceptance.json \
             --tag "$TAG" --sha "$(git rev-parse HEAD)"
           python3 - <<'PYBASE'
           import json, os
-          data = json.load(open('docs/06-deployment/r24-acceptance.json'))
+          data = json.load(open('/tmp/r24-acceptance/acceptance.json'))
           with open(os.environ['GITHUB_OUTPUT'], 'a') as out:
               print('java_base=' + data['java_base_image'], file=out)
           PYBASE
