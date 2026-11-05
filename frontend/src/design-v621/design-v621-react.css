@@ -1,0 +1,101 @@
+/*
+ * SPDX-FileCopyrightText: 2026 TRICORE contributors
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * Additions needed by the React port. The HTML used inline styles / DOM
+ * toggles for these; they are class-based here.
+ */
+.ot-root .mobile-system-link,
+.ot-root .mobile-only {
+  display: none;
+}
+.ot-root {
+  min-height: 100vh;
+}
+/* Native <dialog> default centering is overridden by the sheet design. */
+.ot-root dialog:not([open]) {
+  display: none;
+}
+
+/*
+ * Real-font metric fixes. The HTML candidate was only measured with fallback
+ * fonts; Be Vietnam Pro is wider, so the list table overflowed at 761-~900px.
+ */
+.ot-root .col-updated {
+  white-space: nowrap;
+}
+@media (max-width: 1100px) {
+  .ot-root .data-table th,
+  .ot-root .data-table td {
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+  .ot-root .data-table .progress {
+    gap: 6px;
+  }
+  .ot-root .data-table .step-label,
+  .ot-root .data-table th {
+    white-space: normal;
+  }
+  .ot-root .data-table .col-updated {
+    white-space: normal;
+    min-width: 76px;
+  }
+}
+
+/*
+ * Tablet range 761-900px: Be Vietnam Pro makes the 6-column table wider than
+ * the viewport, so use the card list (same markup as <=760px) from 900px down.
+ * Intentional deviation from the HTML candidate; see PR notes.
+ */
+@media (max-width: 900px) {
+  .ot-root .data-table {
+    display: none;
+  }
+  .ot-root .mobile-list {
+    display: block;
+    border-top: 1px solid var(--line);
+  }
+  .ot-root .mobile-card {
+    display: block;
+    border-bottom: 1px solid var(--line);
+    padding: 13px 2px 12px;
+    min-height: 104px;
+  }
+  .ot-root .mobile-card:focus-visible {
+    outline: 3px solid var(--green);
+    outline-offset: -2px;
+    background: #edf6f0;
+  }
+  .ot-root .mobile-card-top {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    align-items: flex-start;
+  }
+  .ot-root .mobile-card h2 {
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.42;
+    margin: 0;
+    max-width: 95%;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .ot-root .mobile-card .progress {
+    margin: 8px 0 4px;
+  }
+  .ot-root .mobile-card .mobile-meta {
+    font-size: 12px;
+    color: var(--muted);
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .ot-root .mobile-card .ot-priority {
+    white-space: nowrap;
+  }
+}
