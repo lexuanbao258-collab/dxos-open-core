@@ -63,7 +63,7 @@ def normalize_cyclonedx(raw):
                 isinstance(ref, dict) and ref.get("type") == "build-system"
                 and isinstance(ref.get("url"), str)
                 and re.fullmatch(
-                    r"https://github[.]com/tricore-opentrix/dxos-open-core/actions/runs/[0-9]+",
+                    r"https://github[.]com/[^/]+/[^/]+/actions/runs/[0-9]+",
                     ref["url"]
                 )
             )]
