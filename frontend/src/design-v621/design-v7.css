@@ -1,0 +1,741 @@
+/*
+ * SPDX-FileCopyrightText: 2026 TRICORE contributors
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * OpenTrix Visual V7: tokens and restyled components, loaded after the V6.2.1
+ * port. Everything is scoped under .ot-root. Source of truth is THIS file.
+ */
+/* ---------- Tokens (V7). Existing V6 variable names are kept so the screens not yet
+   redesigned inherit the new palette. ---------- */
+.ot-root {
+  --canvas: #f6f8f7;
+  --white: #ffffff;
+  --sunken: #eef2f0;
+  --ink: #14231d;
+  --sub: #3a4a43;
+  --muted: #54645d;
+  --green: #0f6b57;
+  --darkgreen: #0a5546;
+  --pale: #e4f1ec;
+  --brand-ink: #0b4a3c;
+  --line: #dce3df;
+  --field-border: #7d8e86;
+  --field-hover: #5e6e67;
+  --amber: #7a4a06;
+  --amber-bg: #fbf1de;
+  --amber-line: #e3c58f;
+  --danger: #a12e29;
+  --focus: #0f6b57;
+  --content-max: 1240px;
+  --gutter: 32px;
+  font-size: 15px;
+  line-height: 1.6;
+}
+@media (max-width: 1100px) {
+  .ot-root {
+    --gutter: 24px;
+  }
+}
+@media (max-width: 760px) {
+  .ot-root {
+    --gutter: 16px;
+  }
+}
+/* Queue has seven columns: allow a little more room than other screens. */
+.ot-root[data-route="queue"] {
+  --content-max: 1320px;
+}
+
+/* ---------- Isolation: global app rules that leak into the preview ---------- */
+.ot-root main {
+  flex: none;
+  padding: 0;
+  margin: 0;
+  max-width: none;
+}
+.ot-root :focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+/* V6 `.form-field label` (block, 600) outranked `.choice`, stacking the radio
+   above its text and bolding the helper line. Restore the intended row. */
+.ot-root .form-field label.choice {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+  font-size: 14px;
+  font-weight: 400;
+}
+.ot-root .choice strong {
+  font-size: 15px;
+  font-weight: 600;
+}
+.ot-root .choice small {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--muted);
+}
+
+/* ---------- Shell ---------- */
+.ot-root .ot-topbar {
+  height: 56px;
+  background: #fff;
+  border-bottom: 1px solid var(--line);
+}
+.ot-root .top-inner {
+  max-width: var(--content-max);
+  padding: 0 var(--gutter);
+  gap: 24px;
+}
+.ot-root .mode {
+  color: var(--amber);
+  background: var(--amber-bg);
+  border: 1px solid var(--amber-line);
+  border-radius: 6px;
+}
+.ot-root .desktop-nav a {
+  font-size: 14px;
+  color: var(--sub);
+}
+.ot-root .persona {
+  font-size: 13px;
+}
+.ot-root .ot-notice {
+  margin: 0;
+  min-height: 32px;
+  border: 0;
+  border-bottom: 1px solid var(--amber-line);
+  border-radius: 0;
+  background: #fbf6eb;
+  padding-block: 4px;
+  padding-inline: max(
+    var(--gutter),
+    calc((100% - var(--content-max)) / 2 + var(--gutter))
+  );
+  color: var(--amber);
+  font-size: 13px;
+}
+.ot-root .ot-notice a {
+  color: var(--amber);
+}
+.ot-root .ot-wrap {
+  max-width: var(--content-max);
+  padding: 0 var(--gutter) 64px;
+}
+.ot-root .ot-footer {
+  margin-top: 48px;
+  padding-top: 16px;
+  font-size: 13px;
+}
+.ot-root .ot-footer span {
+  text-wrap: balance;
+}
+@media (max-width: 760px) {
+  .ot-root .ot-topbar {
+    height: 52px;
+  }
+  .ot-root .ot-notice {
+    margin: 0;
+    height: auto;
+    min-height: 32px;
+  }
+  .ot-root .ot-notice.qa-active {
+    padding-inline: var(--gutter);
+  }
+  .ot-root .ot-wrap {
+    padding-bottom: 100px;
+  }
+}
+
+/* ---------- Page head, buttons, section titles ---------- */
+.ot-root .ot-page-head {
+  padding: 32px 0 24px;
+}
+.ot-root .ot-page-head h1 {
+  font-size: 30px;
+  line-height: 38px;
+  letter-spacing: -0.02em;
+  font-weight: 600;
+  text-wrap: balance;
+}
+.ot-root .ot-page-head p {
+  font-size: 15px;
+  color: var(--sub);
+  margin-top: 6px;
+}
+@media (max-width: 760px) {
+  .ot-root .ot-page-head {
+    padding: 20px 0 16px;
+  }
+  .ot-root .ot-page-head h1 {
+    font-size: 26px;
+    line-height: 34px;
+  }
+  .ot-root .ot-page-head p {
+    display: block;
+    font-size: 14px;
+  }
+  /* The bottom navigation already offers "Tạo mới". */
+  .ot-root .cta-dup {
+    display: none;
+  }
+}
+.ot-root .btn {
+  min-height: 44px;
+  border-radius: 6px;
+  font-size: 14px;
+  border: 1px solid var(--field-border);
+  padding: 0 16px;
+}
+.ot-root .btn:hover {
+  background: #f1f5f3;
+  border-color: var(--green);
+  color: var(--green);
+}
+.ot-root .btn-primary {
+  background: var(--green);
+  border-color: var(--green);
+  color: #fff;
+}
+.ot-root .btn-primary:hover {
+  background: var(--darkgreen);
+  border-color: var(--darkgreen);
+  color: #fff;
+}
+.ot-root .btn-primary:active {
+  background: #084537;
+}
+.ot-root .btn-link {
+  border-color: transparent;
+  background: transparent;
+  color: var(--green);
+  padding: 0 8px;
+}
+.ot-root .btn-link:hover {
+  background: transparent;
+  border-color: transparent;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.ot-root .ot-section-title {
+  font-size: 20px;
+  line-height: 28px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+.ot-root .section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 16px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+.ot-root .section-hint {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+/* ---------- IDs and monospace metadata ---------- */
+.ot-root .ot-id {
+  font: 500 13px/20px var(--mono);
+  color: var(--sub);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* ---------- Workflow Rail (per-ticket progress) ---------- */
+.ot-root .rail {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  white-space: nowrap;
+}
+.ot-root .rail-track {
+  display: inline-flex;
+  gap: 5px;
+  flex-shrink: 0;
+}
+.ot-root .rail-seg {
+  width: 14px;
+  height: 8px;
+  border-radius: 2px;
+  box-sizing: border-box;
+}
+.ot-root .rail-seg.is-done,
+.ot-root .rail-seg.is-current {
+  background: var(--green);
+}
+.ot-root .rail-seg.is-current {
+  outline: 1.5px solid var(--green);
+  outline-offset: 1px;
+}
+.ot-root .rail-seg.is-todo {
+  background: #fff;
+  box-shadow: inset 0 0 0 1.5px var(--field-border);
+}
+.ot-root .rail-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink);
+}
+
+/* ---------- Badges ---------- */
+.ot-root .ot-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 22px;
+  padding: 0 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+}
+.ot-root .ot-badge-high {
+  color: var(--amber);
+  background: var(--amber-bg);
+  border: 1px solid var(--amber-line);
+}
+.ot-root .prio-normal {
+  font-size: 13px;
+  color: var(--muted);
+}
+.ot-root .empty-dash {
+  color: var(--muted);
+}
+
+/* ---------- Overview ---------- */
+.ot-root .home-grid {
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 48px;
+  padding-top: 0;
+}
+.ot-root .sidepanel {
+  border-top: 0;
+  padding-top: 0;
+}
+.ot-root .att-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.ot-root .att-row {
+  position: relative;
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr) 196px 56px;
+  grid-template-areas: "id main rail prio";
+  gap: 4px 16px;
+  align-items: center;
+  padding: 14px 20px;
+  min-height: 72px;
+  border-bottom: 1px solid var(--line);
+}
+.ot-root .att-row:last-child {
+  border-bottom: 0;
+}
+.ot-root .att-row:hover {
+  background: #f6f9f8;
+}
+.ot-root .att-id {
+  grid-area: id;
+}
+.ot-root .att-main {
+  grid-area: main;
+  min-width: 0;
+}
+.ot-root .att-rail {
+  grid-area: rail;
+}
+.ot-root .att-prio {
+  grid-area: prio;
+  justify-self: end;
+}
+.ot-root .att-row .ticket-name {
+  font-size: 15px;
+  line-height: 22px;
+  font-weight: 600;
+}
+/* The whole row is the click target. */
+.ot-root .att-row .ticket-name::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+.ot-root .att-row .subline {
+  font-size: 13px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+@supports selector(:has(*)) {
+  .ot-root .att-row .ticket-name:focus-visible {
+    outline: none;
+  }
+  .ot-root .att-row:has(.ticket-name:focus-visible) {
+    outline: 2px solid var(--focus);
+    outline-offset: -2px;
+  }
+}
+.ot-root .foot-note {
+  font-size: 13px;
+}
+.ot-root .dist-sub {
+  font-size: 13px;
+  color: var(--muted);
+  margin: 2px 0 12px;
+}
+.ot-root .dist-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.ot-root .dist-list li {
+  display: grid;
+  grid-template-columns: 112px minmax(0, 1fr) 28px;
+  gap: 12px;
+  align-items: center;
+  min-height: 36px;
+}
+.ot-root .dist-label {
+  font-size: 14px;
+  color: var(--sub);
+}
+.ot-root .dist-bar {
+  height: 8px;
+  border-radius: 4px;
+  background: var(--sunken);
+  overflow: hidden;
+}
+.ot-root .dist-bar > span {
+  display: block;
+  height: 100%;
+  border-radius: 4px;
+  background: var(--green);
+}
+.ot-root .dist-count {
+  text-align: right;
+  font-size: 15px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.ot-root .dist-note {
+  font-size: 13px;
+  color: var(--muted);
+  margin-top: 12px;
+  line-height: 1.6;
+}
+@media (max-width: 1000px) {
+  .ot-root .home-grid {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+}
+@media (max-width: 760px) {
+  .ot-root .att-row {
+    grid-template-columns: auto 1fr;
+    grid-template-areas: "id prio" "main main" "rail rail";
+    padding: 14px 16px;
+    min-height: 0;
+  }
+  .ot-root .att-prio {
+    justify-self: end;
+  }
+}
+
+/* ---------- Tabs, toolbar, chips ---------- */
+.ot-root .list-toolbar {
+  border-top: 0;
+  padding-top: 0;
+  margin-top: 0;
+}
+.ot-root .segments {
+  gap: 4px;
+  border-bottom: 1px solid var(--line);
+}
+.ot-root .seg {
+  min-height: 44px;
+  padding: 0 14px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  margin-bottom: -1px;
+  background: none;
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 600;
+}
+.ot-root .seg:hover {
+  background: none;
+  color: var(--ink);
+}
+.ot-root .seg[aria-pressed="true"] {
+  background: none;
+  color: var(--ink);
+  border-bottom-color: var(--green);
+}
+.ot-root .seg small {
+  font-size: 13px;
+  font-weight: 500;
+  margin-left: 6px;
+  color: inherit;
+  font-variant-numeric: tabular-nums;
+}
+.ot-root .toolbar-main {
+  margin: 16px 0 8px;
+  gap: 12px;
+}
+.ot-root .search-box {
+  max-width: 420px;
+}
+.ot-root .ot-input,
+.ot-root .ot-select,
+.ot-root .ot-textarea {
+  border-radius: 6px;
+  border-color: var(--field-border);
+  font-size: 15px;
+}
+.ot-root .ot-input:hover,
+.ot-root .ot-select:hover,
+.ot-root .ot-textarea:hover {
+  border-color: var(--field-hover);
+}
+.ot-root .ot-select {
+  appearance: none;
+  -webkit-appearance: none;
+  background-color: #fff;
+  color: var(--ink);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%2354645D' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 36px;
+}
+@media (min-width: 901px) {
+  .ot-root .toolbar-main > .ot-select {
+    width: auto;
+    min-width: 156px;
+    flex: 0 0 auto;
+  }
+}
+.ot-root .clear-filters {
+  min-height: 44px;
+  white-space: nowrap;
+}
+@media (max-width: 760px) {
+  .ot-root .clear-filters {
+    display: none;
+  }
+}
+.ot-root .result-note {
+  font-size: 13px;
+  color: var(--muted);
+  margin: 8px 0 12px;
+}
+.ot-root .chip {
+  border-radius: 4px;
+  background: var(--pale);
+  border: 1px solid #bfdccf;
+  color: var(--brand-ink);
+  font-size: 13px;
+  padding: 2px 8px;
+}
+
+@media (max-width: 360px) {
+  /* Keep the three tabs on one line at 320px. */
+  .ot-root .segments {
+    gap: 0;
+  }
+  .ot-root .seg {
+    padding: 0 8px;
+    font-size: 13px;
+  }
+  .ot-root .seg small {
+    margin-left: 4px;
+  }
+}
+
+/* ---------- Table (wide) ---------- */
+.ot-root .table-surface {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.ot-root .data-table th {
+  background: #f6f8f7;
+  border-top: 0;
+  border-bottom: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 12px;
+  white-space: nowrap;
+}
+.ot-root .data-table td {
+  white-space: normal;
+  padding: 14px 12px;
+  border-bottom: 1px solid var(--line);
+  font-size: 14px;
+  vertical-align: middle;
+}
+.ot-root .data-table tr:last-child td {
+  border-bottom: 0;
+}
+.ot-root .data-table th:first-child,
+.ot-root .data-table td:first-child {
+  padding-left: 20px;
+}
+.ot-root .data-table th:last-child,
+.ot-root .data-table td:last-child {
+  padding-right: 20px;
+}
+.ot-root .data-table tr:hover td {
+  background: #f6f9f8;
+}
+.ot-root .data-table .col-id {
+  width: 96px;
+  white-space: nowrap;
+}
+.ot-root .data-table .name-col {
+  width: auto;
+}
+.ot-root .row-link {
+  display: block;
+  border-radius: 4px;
+}
+.ot-root .row-link .ticket-name {
+  display: block;
+  font-size: 15px;
+  line-height: 22px;
+  font-weight: 600;
+}
+.ot-root .row-link .subline {
+  display: block;
+  font-size: 13px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+.ot-root .row-link:hover .ticket-name {
+  color: var(--green);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.ot-root .data-table .col-updated {
+  font: 500 13px/20px var(--mono);
+  color: var(--sub);
+  white-space: nowrap;
+  min-width: 0;
+}
+.ot-root .data-table .rail-label {
+  font-size: 14px;
+}
+
+/* Table -> rows breakpoint = 1040px, from measurement (Be Vietnam Pro loaded):
+   the 7-column Queue table fits without clipping down to ~920px, but the title
+   column drops below 240px / 2 lines under 1040px (233px at 1000, 206px at
+   960). Above 1040 it is a table; at or below 1040 the same data renders as
+   rows. */
+@media (max-width: 1040px) {
+  .ot-root .table-surface {
+    display: none;
+  }
+  .ot-root .mobile-list {
+    display: block;
+  }
+}
+
+/* Compact the wide table before it has to give way to rows. */
+@media (max-width: 1280px) {
+  .ot-root .data-table th,
+  .ot-root .data-table td {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+  .ot-root .data-table th:first-child,
+  .ot-root .data-table td:first-child {
+    padding-left: 16px;
+  }
+  .ot-root .data-table th:last-child,
+  .ot-root .data-table td:last-child {
+    padding-right: 16px;
+  }
+  .ot-root .data-table .col-id {
+    width: 84px;
+  }
+  .ot-root .data-table .col-updated {
+    white-space: normal;
+    width: 92px;
+  }
+  .ot-root .data-table .rail {
+    gap: 8px;
+  }
+}
+
+/* ---------- Rows (narrow): replaces the table below TABLE_BP ---------- */
+.ot-root .mobile-list {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.ot-root .mobile-card {
+  padding: 14px 16px;
+  min-height: 0;
+  border-bottom: 1px solid var(--line);
+}
+.ot-root .mobile-card:last-child {
+  border-bottom: 0;
+}
+.ot-root .mobile-card:hover {
+  background: #f6f9f8;
+}
+.ot-root .mobile-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+.ot-root .mobile-card-id {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+.ot-root .mobile-card-service {
+  font-size: 13px;
+  color: var(--muted);
+}
+.ot-root .mobile-card h2 {
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 600;
+  margin: 6px 0 8px;
+  max-width: none;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.ot-root .mobile-card-status {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.ot-root .mobile-card-date {
+  font: 500 13px/20px var(--mono);
+  color: var(--muted);
+}
+.ot-root .mobile-card .mobile-requester {
+  font-size: 13px;
+  color: var(--muted);
+  margin-top: 6px;
+}

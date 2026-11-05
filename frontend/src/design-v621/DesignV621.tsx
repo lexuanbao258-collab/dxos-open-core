@@ -14,6 +14,7 @@ import "@fontsource/ibm-plex-mono/500.css";
 import "@fontsource/ibm-plex-mono/600.css";
 import "./design-v621.css";
 import "./design-v621-react.css";
+import "./design-v7.css";
 import { Shell } from "./components/Shell";
 import { CreateRequest } from "./pages/CreateRequest";
 import { Integration } from "./pages/Integration";

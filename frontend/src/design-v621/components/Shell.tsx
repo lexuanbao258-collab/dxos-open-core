@@ -57,12 +57,13 @@ export function Shell() {
   const mainRef = useRef<HTMLElement>(null);
   const first = useRef(true);
   const rest = pathname.slice(BASE.length).replace(/\/+$/, "");
+  const routeKey = rest.split("/")[1] || "overview";
   const title = rest.startsWith("/detail")
     ? "Chi tiết yêu cầu"
     : (TITLES[rest] ?? TITLES[""]);
 
   useEffect(() => {
-    document.title = `${title} · OpenTrix V6.2.1 (MOCK)`;
+    document.title = `${title} · OpenTrix V7 (MOCK)`;
   }, [title]);
 
   // Mirror the HTML hashchange behaviour: scroll to top and focus <main>
@@ -82,7 +83,7 @@ export function Shell() {
     section === suffix ? ({ "aria-current": "page" } as const) : {};
 
   return (
-    <div className="ot-root">
+    <div className="ot-root" data-route={routeKey}>
       <a
         className="ot-skip-link"
         href="#main"
@@ -131,48 +132,46 @@ export function Shell() {
           </div>
         </div>
       </header>
-      <div className="ot-wrap">
-        <aside
-          className={`ot-notice ${active ? "qa-active" : ""}`}
-          aria-label="Trạng thái môi trường"
-        >
-          <span className="notice-label">
-            <span className="notice-long">
-              Đây là dữ liệu mẫu để xem trước thiết kế. Các kết nối và thao tác
-              LIVE chưa được xác nhận.
-            </span>
-            <span className="ot-sr-only">
-              Đây là dữ liệu mô phỏng, không phải thông tin vận hành thật.
-            </span>
-            <span className="mobile-only">Dữ liệu mẫu · Chưa kết nối LIVE</span>
+      <aside
+        className={`ot-notice ${active ? "qa-active" : ""}`}
+        aria-label="Trạng thái môi trường"
+      >
+        <span className="notice-label">
+          <span className="notice-long">
+            Đây là dữ liệu mẫu để xem trước thiết kế. Các kết nối và thao tác
+            LIVE chưa được xác nhận.
           </span>
-          {active && (
-            <>
-              <span id="qa-banner-state" className="qa-banner-state">
-                <span className="qa-state-desktop">
-                  Mô phỏng: {QA_NAMES[qa]}
-                </span>
-                <span className="qa-state-mobile">
-                  Mô phỏng: {QA_MOBILE_NAMES[qa]}
-                </span>
+          <span className="ot-sr-only">
+            Đây là dữ liệu mô phỏng, không phải thông tin vận hành thật.
+          </span>
+          <span className="mobile-only">Dữ liệu mẫu · Chưa kết nối LIVE</span>
+        </span>
+        {active && (
+          <>
+            <span id="qa-banner-state" className="qa-banner-state">
+              <span className="qa-state-desktop">Mô phỏng: {QA_NAMES[qa]}</span>
+              <span className="qa-state-mobile">
+                Mô phỏng: {QA_MOBILE_NAMES[qa]}
               </span>
-              <button
-                id="qa-banner-reset"
-                className="qa-banner-reset"
-                type="button"
-                aria-label="Tắt mô phỏng"
-                onClick={() => {
-                  setQa("normal");
-                  mainRef.current?.focus({ preventScroll: true });
-                  announce("Đã tắt mô phỏng trạng thái giao diện.");
-                }}
-              >
-                Tắt
-              </button>
-            </>
-          )}
-          <Link to={link("/integration")}>Xem giới hạn</Link>
-        </aside>
+            </span>
+            <button
+              id="qa-banner-reset"
+              className="qa-banner-reset"
+              type="button"
+              aria-label="Tắt mô phỏng"
+              onClick={() => {
+                setQa("normal");
+                mainRef.current?.focus({ preventScroll: true });
+                announce("Đã tắt mô phỏng trạng thái giao diện.");
+              }}
+            >
+              Tắt
+            </button>
+          </>
+        )}
+        <Link to={link("/integration")}>Xem giới hạn</Link>
+      </aside>
+      <div className="ot-wrap">
         <main id="main" tabIndex={-1} ref={mainRef}>
           <div id="view">
             <div className="screen">
@@ -181,8 +180,9 @@ export function Shell() {
           </div>
         </main>
         <footer className="ot-footer">
-          <span>OpenTrix · Service Portal V6.2.1 · bản xem trước nội bộ</span>
-          <span>Không dùng để xác nhận năng lực LIVE.</span>
+          <span>
+            OpenTrix · Service Portal · Visual V7 · bản xem trước nội bộ
+          </span>
         </footer>
       </div>
       <nav
