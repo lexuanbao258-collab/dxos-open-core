@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2026 TRICORE contributors
+//
+// SPDX-License-Identifier: Apache-2.0
+
 package com.tricore.dxos.request.service;
 
 import com.tricore.dxos.request.domain.InvalidRequestTransitionException;

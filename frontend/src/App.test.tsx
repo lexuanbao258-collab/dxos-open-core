@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2026 TRICORE contributors
+//
+// SPDX-License-Identifier: Apache-2.0
+
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { cleanup, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";

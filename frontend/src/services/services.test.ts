@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2026 TRICORE contributors
+//
+// SPDX-License-Identifier: Apache-2.0
+
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { MockRequestService } from "./MockRequestService";
 import { HttpApiClient } from "./HttpApiClient";

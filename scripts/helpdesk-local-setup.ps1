@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2026 TRICORE contributors
+#
+# SPDX-License-Identifier: Apache-2.0
+
 param(
     [Parameter(Mandatory)][ValidatePattern('(?-i)\A[a-z][a-z0-9_]{0,23}\z')][string]$RunId,
     [ValidateRange(1024,65535)][int]$Port = 55440,

@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2026 TRICORE contributors
+//
+// SPDX-License-Identifier: Apache-2.0
+
 /** Wire records from PR #63, exact review SHA below. Not Portal/MOCK models. */
 export const HELPDESK_CONTRACT_HEAD =
   "e12d105c89400a5fd69dd6cc1fca670ff1f04f51" as const;

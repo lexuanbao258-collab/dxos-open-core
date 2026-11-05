@@ -1,3 +1,9 @@
+<!--
+SPDX-FileCopyrightText: 2026 TRICORE contributors
+
+SPDX-License-Identifier: Apache-2.0
+-->
+
 # ADR-007 - MVP object storage provider
 
 **Status:** ACCEPTED architecture direction; implementation and integration acceptance PENDING

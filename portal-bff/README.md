@@ -1,3 +1,9 @@
+<!--
+SPDX-FileCopyrightText: 2026 TRICORE contributors
+
+SPDX-License-Identifier: Apache-2.0
+-->
+
 # DX-OS Portal BFF candidate (Y2.2)
 
 Server-side OAuth boundary imported from PR #70 `d833b363d22c1ad30a1f5d7bdc7b3d7712fb7d27`. The integration branch imports the complete `frontend/` tree from PR #71 `c73bbc306a698141169304e5da848ea0686700db`, including its stacked baseline, onto Backend #74 `b6e05d080ebb24b54cc4d61dc4e20e2907fd2eaa`. Only an explicit `integration-local` build connects the Helpdesk Portal to this BFF. Normal builds retain MOCK. LIVE remains blocked; no merge/deployment is authorized.

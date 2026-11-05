@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2026 TRICORE contributors
+//
+// SPDX-License-Identifier: Apache-2.0
+
 /** Internal error categories, not an assumed Backend error envelope. */
 export type MvpErrorCode =
   | "UNAUTHENTICATED"

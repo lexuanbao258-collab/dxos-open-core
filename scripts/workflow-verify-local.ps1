@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2026 TRICORE contributors
+#
+# SPDX-License-Identifier: Apache-2.0
+
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
 $keys = @('WORKFLOW_TEST_JDBC_URL', 'WORKFLOW_TEST_MIGRATION_USER', 'WORKFLOW_TEST_MIGRATION_PASSWORD',

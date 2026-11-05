@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2026 TRICORE contributors
+//
+// SPDX-License-Identifier: Apache-2.0
+
 import { HelpdeskApiClient } from "./http/HelpdeskApiClient";
 import type {
   HelpdeskAssignInput,

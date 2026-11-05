@@ -1,3 +1,9 @@
+<!--
+SPDX-FileCopyrightText: 2026 TRICORE contributors
+
+SPDX-License-Identifier: Apache-2.0
+-->
+
 # DX-OS — Product Vision and Positioning
 
 > **Status:** PROPOSED — REVIEW REQUIRED

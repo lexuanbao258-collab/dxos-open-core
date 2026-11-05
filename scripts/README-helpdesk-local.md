@@ -1,3 +1,9 @@
+<!--
+SPDX-FileCopyrightText: 2026 TRICORE contributors
+
+SPDX-License-Identifier: Apache-2.0
+-->
+
 # DX-OS MVP: PostgreSQL local
 
 Chỉ dành cho demo local, chưa bật LIVE. Script tạo **container + named volume mới**,

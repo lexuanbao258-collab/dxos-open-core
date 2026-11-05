@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2026 TRICORE contributors
+//
+// SPDX-License-Identifier: Apache-2.0
+
 import type { AssignmentFormProps } from "../../components/AssignmentForm";
 import type { HelpdeskAssignmentService } from "./HelpdeskRequestService";
 import type { HelpdeskPortalRequestPresentation } from "./helpdeskPresentation";

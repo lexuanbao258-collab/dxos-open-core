@@ -1,3 +1,9 @@
+<!--
+SPDX-FileCopyrightText: 2026 TRICORE contributors
+
+SPDX-License-Identifier: Apache-2.0
+-->
+
 # DX-OS Internal Service Portal — Issue #39
 
 **MOCK / DEVELOPMENT · Giao diện prototype Tầng 2. Chưa có HTTP end-to-end thật. Issue #39 phải giữ OPEN.**

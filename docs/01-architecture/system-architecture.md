@@ -1,4 +1,8 @@
 ---
+# SPDX-FileCopyrightText: 2026 TRICORE contributors
+#
+# SPDX-License-Identifier: Apache-2.0
+
 title: DX-OS Open-Core — System Architecture
 status: PROPOSED — REVIEW REQUIRED
 version: 1.0-review-draft

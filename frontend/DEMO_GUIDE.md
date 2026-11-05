@@ -1,3 +1,9 @@
+<!--
+SPDX-FileCopyrightText: 2026 TRICORE contributors
+
+SPDX-License-Identifier: Apache-2.0
+-->
+
 # Demo DX-OS Portal tại OLP 2026
 
 **Chỉ trình diễn MOCK / DEVELOPMENT. Không tuyên bố đã tích hợp Core qua HTTP.**

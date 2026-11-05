@@ -1,3 +1,9 @@
+<!--
+SPDX-FileCopyrightText: 2026 TRICORE contributors
+
+SPDX-License-Identifier: Apache-2.0
+-->
+
 # Scripts
 
 Nơi lưu script hỗ trợ phát triển và kiểm tra khi cần.

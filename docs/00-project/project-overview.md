@@ -1,3 +1,9 @@
+<!--
+SPDX-FileCopyrightText: 2026 TRICORE contributors
+
+SPDX-License-Identifier: Apache-2.0
+-->
+
 # DX-OS Open-Core — Project Overview
 
 > **Document status:** PROPOSED — REVIEW REQUIRED

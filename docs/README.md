@@ -1,4 +1,10 @@
-﻿# DX-OS Open-Core — Documentation
+﻿<!--
+SPDX-FileCopyrightText: 2026 TRICORE contributors
+
+SPDX-License-Identifier: Apache-2.0
+-->
+
+# DX-OS Open-Core — Documentation
 
 Status: DOCUMENTATION RESTRUCTURE IN PROGRESS
 

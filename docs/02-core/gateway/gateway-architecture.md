@@ -1,3 +1,9 @@
+<!--
+SPDX-FileCopyrightText: 2026 TRICORE contributors
+
+SPDX-License-Identifier: Apache-2.0
+-->
+
 # DX-OS OPEN-CORE — API GATEWAY CORE V2
 
 **Architecture Design, Decision Review, Implementation Plan & Acceptance Specification**

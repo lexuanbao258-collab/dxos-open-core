@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2026 TRICORE contributors
+#
+# SPDX-License-Identifier: Apache-2.0
+
 $ErrorActionPreference = 'Stop'
 $seedScript = Join-Path $PSScriptRoot 'helpdesk-local-actor-seed.ps1'
 $subjects = @('synthetic-employee','synthetic-coordinator','synthetic-worker')

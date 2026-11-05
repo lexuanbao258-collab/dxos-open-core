@@ -175,6 +175,4 @@ jobs:
             exit 1
           fi
       - name: REUSE licensing check
-        # Advisory until the separately agreed licensing enforcement change.
-        continue-on-error: true
         uses: fsfe/reuse-action@v5

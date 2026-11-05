@@ -1,3 +1,9 @@
+<!--
+SPDX-FileCopyrightText: 2026 TRICORE contributors
+
+SPDX-License-Identifier: Apache-2.0
+-->
+
 # Workflow access
 
 Language for deciding who may bind a resource to a workflow or access an existing workflow instance.
