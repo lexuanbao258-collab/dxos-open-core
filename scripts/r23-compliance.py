@@ -73,7 +73,11 @@ def license_status(value):
                 raise ValueError("missing SPDX exception")
             exception = tokens[index]
             index += 1
-            return token + " WITH " + exception in EXCEPTIONS
+            # Unsupported WITH exceptions are invalid at the expression
+            # level, including when another OR branch is acceptable.
+            if token + " WITH " + exception not in EXCEPTIONS:
+                raise ValueError("unsupported SPDX WITH exception")
+            return True
         return token in ALLOWED
 
     def parse_and(depth=0):
