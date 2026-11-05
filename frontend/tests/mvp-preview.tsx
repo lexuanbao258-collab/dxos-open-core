@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2026 TRICORE contributors
+//
+// SPDX-License-Identifier: Apache-2.0
+
 // Explicit test entry only. main.tsx keeps <App /> and MockRequestService.
 import ReactDOM from "react-dom/client";
 import { MemoryRouter } from "react-router-dom";

@@ -1,3 +1,9 @@
+<!--
+SPDX-FileCopyrightText: 2026 TRICORE contributors
+
+SPDX-License-Identifier: Apache-2.0
+-->
+
 # DX-OS — Scope, MVP and Golden Paths
 
 > **Status:** PROPOSED — BUSINESS CONTRACT REVIEW REQUIRED

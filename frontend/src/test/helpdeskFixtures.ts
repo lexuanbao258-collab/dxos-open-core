@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2026 TRICORE contributors
+//
+// SPDX-License-Identifier: Apache-2.0
+
 import type { HelpdeskRequest } from "../services/mvp/http/types";
 
 // Test-only Backend-shaped records. Never imported by the production graph.

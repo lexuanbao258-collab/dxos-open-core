@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2026 TRICORE contributors
+//
+// SPDX-License-Identifier: Apache-2.0
+
 import { PortalError } from "./RequestService";
 
 /** Deliberately closed seam. No endpoint, token, transport or enable flag until security/contract review. */

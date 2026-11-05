@@ -1,4 +1,8 @@
 ---
+# SPDX-FileCopyrightText: 2026 TRICORE contributors
+#
+# SPDX-License-Identifier: Apache-2.0
+
 title: DX-OS Identity Core v2 — Architecture Design & Acceptance Specification
 status: PROPOSED — NOT APPROVED
 version: 0.1

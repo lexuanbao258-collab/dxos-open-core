@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2026 TRICORE contributors
+//
+// SPDX-License-Identifier: Apache-2.0
+
 import { useId, useRef, useState, type FormEvent } from "react";
 import { AlertCircle, LoaderCircle } from "lucide-react";
 import {

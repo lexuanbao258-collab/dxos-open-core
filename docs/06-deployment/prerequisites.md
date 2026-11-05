@@ -1,3 +1,9 @@
+<!--
+SPDX-FileCopyrightText: 2026 TRICORE contributors
+
+SPDX-License-Identifier: Apache-2.0
+-->
+
 # MVP deployment prerequisites
 
 **Status:** TARGET PREREQUISITES - no verified clean-install runbook or integrated release claim

@@ -1,3 +1,9 @@
+<!--
+SPDX-FileCopyrightText: 2026 TRICORE contributors
+
+SPDX-License-Identifier: Apache-2.0
+-->
+
 # DX-OS Data Core v2 — Architecture Design & Decision Review
 
 > **Target path:** `docs/02-core/data/data-architecture.md`

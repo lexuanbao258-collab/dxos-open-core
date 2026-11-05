@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2026 TRICORE contributors
+#
+# SPDX-License-Identifier: Apache-2.0
+
 param([string]$MetadataFile, [string[]]$HelperSignature = @())
 $ErrorActionPreference = 'Stop'
 $reviewExit = 1

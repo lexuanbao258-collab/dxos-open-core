@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2026 TRICORE contributors
+//
+// SPDX-License-Identifier: Apache-2.0
+
 /**
  * CANDIDATE normalized Application models, not JSON DTOs or an HTTP contract.
  * No transport or authority is defined here. A future approved adapter must

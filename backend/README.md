@@ -1,3 +1,9 @@
+<!--
+SPDX-FileCopyrightText: 2026 TRICORE contributors
+
+SPDX-License-Identifier: Apache-2.0
+-->
+
 # DX-OS Open-Core backend
 
 Nền backend cho Internal Service Portal của TRICORE, theo kiến trúc Modular

@@ -1,3 +1,9 @@
+<!--
+SPDX-FileCopyrightText: 2026 TRICORE contributors
+
+SPDX-License-Identifier: Apache-2.0
+-->
+
 # Selected MVP deployment topology
 
 **Status:** TARGET - not a verified deployed or integrated environment

@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2026 TRICORE contributors
+//
+// SPDX-License-Identifier: Apache-2.0
+
 /** Local protocol errors, independent of the Backend ApiError wire envelope. */
 export type HelpdeskClientErrorCode =
   | "INVALID_INPUT"

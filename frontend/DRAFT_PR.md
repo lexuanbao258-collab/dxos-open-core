@@ -1,3 +1,9 @@
+<!--
+SPDX-FileCopyrightText: 2026 TRICORE contributors
+
+SPDX-License-Identifier: Apache-2.0
+-->
+
 # feat(portal): Layer 2 DX-OS Service Portal (#39)
 
 DX-OS chưa có consumer Tầng 2 có giao diện. PR này thêm portal tiếng Việt build/run độc lập, cho phép trình diễn tạo yêu cầu, phê duyệt/xử lý và lịch sử của IT Support/Facility bằng mock data. **Chỉ hoàn thành mock UI prototype. Issue #39 giữ OPEN; chưa có HTTP end-to-end thật.**

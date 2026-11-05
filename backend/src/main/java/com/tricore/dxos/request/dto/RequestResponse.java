@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2026 TRICORE contributors
+//
+// SPDX-License-Identifier: Apache-2.0
+
 package com.tricore.dxos.request.dto;
 
 import com.tricore.dxos.request.domain.Request;

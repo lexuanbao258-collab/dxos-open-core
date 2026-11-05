@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2026 TRICORE contributors
+//
+// SPDX-License-Identifier: Apache-2.0
+
 import type { HelpdeskRequestService } from "./HelpdeskRequestService";
 
 /** APP-14 port for the exact PR #63 presentation model. No default transport.

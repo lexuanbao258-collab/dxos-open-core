@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2026 TRICORE contributors
+//
+// SPDX-License-Identifier: Apache-2.0
+
 import { test, expect } from "@playwright/test";
 
 test("demo login restores the tab; logout keeps protected routes closed after back and reload", async ({

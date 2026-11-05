@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2026 TRICORE contributors
+//
+// SPDX-License-Identifier: Apache-2.0
+
 package com.tricore.dxos.application.authorization;
 
 /** Sanitized application failure; HTTP mapping belongs to later secured integration. */

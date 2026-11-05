@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2026 TRICORE contributors
+//
+// SPDX-License-Identifier: Apache-2.0
+
 import { useEffect, useState } from "react";
 import { usePortal } from "../../context";
 import { useSessionOperation } from "../../hooks/useSessionOperation";

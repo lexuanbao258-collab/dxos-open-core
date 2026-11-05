@@ -1,3 +1,9 @@
+<!--
+SPDX-FileCopyrightText: 2026 TRICORE contributors
+
+SPDX-License-Identifier: Apache-2.0
+-->
+
 # Issue #53 — Java-authorized Helpdesk MVP: bằng chứng tích hợp PR #74
 
 **Ngày:** 2026-10-28

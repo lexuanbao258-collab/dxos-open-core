@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2026 TRICORE contributors
+//
+// SPDX-License-Identifier: Apache-2.0
+
 import { afterEach, describe, expect, expectTypeOf, it, vi } from "vitest";
 import type { ServiceRequest } from "../../domain/request";
 import type { MvpRequestPort } from "./port";

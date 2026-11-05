@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2026 TRICORE contributors
+//
+// SPDX-License-Identifier: Apache-2.0
+
 import { describe, expect, expectTypeOf, it } from "vitest";
 import type { ServiceRequest } from "../../domain/request";
 import { helpdeskCursor, helpdeskWire } from "../../test/helpdeskFixtures";

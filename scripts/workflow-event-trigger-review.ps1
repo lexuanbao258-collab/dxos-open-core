@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2026 TRICORE contributors
+#
+# SPDX-License-Identifier: Apache-2.0
+
 param([string[]]$HelperOid = @(), [string[]]$HelperSignature = @())
 $ErrorActionPreference = 'Stop'
 $required = @('DB_HOST','DB_PORT','DB_NAME','DB_USER','DB_PASSWORD','PGSSLROOTCERT','LOCALAPPDATA')
