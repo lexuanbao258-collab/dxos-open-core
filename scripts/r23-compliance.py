@@ -197,7 +197,7 @@ def audit(paths, destination):
         header.append("| " + " | ".join(str(v).replace("|", "\\|").replace("\n", " ") for v in values) + " |")
     header += ["", "## Open compliance work", "",
                "Validate upstream required notice texts, bundled services,",
-               "copyright provenance and release packaging separately under R23.", ""]
+               "copyright provenance and release packaging separately under R24.", ""]
     (destination / "THIRD-PARTY-NOTICES.md").write_text(
         "\n".join(header), encoding="utf-8")
     bad = [r for r in rows if not r["approved"]]
