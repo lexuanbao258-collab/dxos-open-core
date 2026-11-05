@@ -40,6 +40,36 @@ class R23Tests(unittest.TestCase):
             fill(None)
             self.assertEqual(invoke().returncode, 1)
 
+    def test_strict_spdx_expression_grammar(self):
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("r23_policy", SCRIPT)
+        policy = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(policy)
+        valid = (
+            "MIT", "MIT OR Apache-2.0",
+            "(MIT OR Apache-2.0) AND BSD-3-Clause",
+            "MIT OR (Apache-2.0 AND ISC)",
+            "GPL-2.0-only WITH Classpath-exception-2.0",
+        )
+        invalid = (
+            "MIT OR Apache-2.0 OR", "MIT AND", "OR MIT",
+            "MIT (Apache-2.0)", "MIT(Apache-2.0)",
+            "(MIT)Apache-2.0", "MIT Apache-2.0",
+            "(MIT OR Apache-2.0", "MIT OR Apache-2.0)",
+            "MIT OR OR Apache-2.0", "MIT + Apache-2.0",
+            "MIT AND (Apache-2.0 OR)",
+            "MIT WITH", "MIT WITH RandomException",
+            "MIT OR GPL-3.0-only", "MIT/Apache-2.0",
+            "MIT @ Apache-2.0", "MIT OR ( )",
+            "", None,
+        )
+        for expression in valid:
+            with self.subTest(valid=expression):
+                self.assertTrue(policy.license_status(expression)[0])
+        for expression in invalid:
+            with self.subTest(invalid=expression):
+                self.assertFalse(policy.license_status(expression)[0])
+
     def test_version_pinned_choices_do_not_apply_to_future_releases(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
