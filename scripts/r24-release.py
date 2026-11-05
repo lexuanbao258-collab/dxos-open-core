@@ -75,9 +75,19 @@ def package(repo, tag, sha, output, mode="binary"):
                               check=True, capture_output=True)
         tracked = sorted(p.decode() for p in proc.stdout.split(b"\0") if p)
         require(tracked, "source-only archive needs a checked-out git worktree")
+        disallowed_binary = {".jar", ".war", ".class", ".zip", ".gz", ".tar",
+                             ".png", ".jpg", ".jpeg", ".webp", ".gif", ".ico",
+                             ".woff", ".woff2", ".ttf", ".otf", ".pdf", ".exe",
+                             ".dll", ".mp4"}
         for name in tracked:
             require(not (name == ".env" or name.startswith(".env.") and name != ".env.example"),
                     "secret-like tracked .env file: source publication blocked")
+            path = source / name
+            if path.suffix.lower() in disallowed_binary:
+                continue
+            raw = path.read_bytes()
+            require(b"\0" not in raw, f"binary data in source-only archive: {name}")
+            raw.decode("utf-8")
             add("source/" + name, Path(name))
 
     # Candidate builds may be incomplete; reviewed upstream texts are added only
