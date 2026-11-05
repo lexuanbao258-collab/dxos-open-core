@@ -151,9 +151,11 @@ class R24ReleaseTests(unittest.TestCase):
 
     def test_rc_source_only_does_not_ship_compiled_assets_or_require_131_clearances(self):
         self.put("frontend/src/example.ts", "export const example = 1;")
+        self.put("backend/gradle/wrapper/gradle-wrapper.jar", b"example binary jar")
         subprocess.run(["git", "init", "-q"], cwd=self.repo, check=True)
         subprocess.run(["git", "add", "README.md", "LICENSE", "NOTICE", "CHANGELOG.md",
-                        "frontend/src/example.ts"], cwd=self.repo, check=True)
+                        "frontend/src/example.ts",
+                        "backend/gradle/wrapper/gradle-wrapper.jar"], cwd=self.repo, check=True)
         self.make("source-only")
         doc = self.accept(mode="source-only")
         self.assertEqual(self.gate(), "source-only")
@@ -161,6 +163,7 @@ class R24ReleaseTests(unittest.TestCase):
         self.assertIn(prefix + "source/frontend/src/example.ts", data)
         self.assertNotIn(prefix + "backend/application.jar", data)
         self.assertNotIn(prefix + "frontend/index.html", data)
+        self.assertNotIn(prefix + "source/backend/gradle/wrapper/gradle-wrapper.jar", data)
         doc["mode"] = "binary"
         self.acceptance.write_text(json.dumps(doc))
         with self.assertRaisesRegex(ValueError, "scope differs"):
