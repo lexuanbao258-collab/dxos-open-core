@@ -195,22 +195,62 @@ def gate(archive, checksums, acceptance, tag, sha, notes_file=None):
         require(isinstance(ref, str) and ref.startswith("https://"),
                 f"missing independently reviewable evidence: {key}")
     inventory = json.loads(data[prefix + "compliance/license-inventory.json"])
-    def ident(row):
-        return (row["project"], row["name"], row["version"], row.get("purl", ""))
     expected = {ident(row) for row in inventory}
     require(len(expected) == len(inventory), "duplicate dependency inventory identities")
-    rows = accepted.get("components", [])
-    require(isinstance(rows, list), "R24 component dispositions absent")
-    actual = {ident(row) for row in rows}
-    require(len(actual) == len(rows) and actual == expected,
-            "R24 component coverage mismatch (including service/release scope)")
-    require(all(row.get("status") == "CLEARED" and
-                isinstance(row.get("evidence"), str) and row["evidence"].startswith("https://")
-                and isinstance(row.get("license_path"), str)
-                and row["license_path"].startswith("compliance/upstream/")
-                and bool(data.get(prefix + row["license_path"]))
-                for row in rows), "R24 obligations PENDING or upstream license text absent from archive")
-    print(f"R24_DISTRIBUTION_GATE_PASS {len(rows)} component dispositions")
+    index = json.loads(data[prefix + "compliance/upstream-index.json"])
+    require(isinstance(index, list), "upstream source manifest missing")
+    records = {ident(row): row for row in index}
+    require(len(records) == len(index) and set(records) == expected,
+            "upstream source manifest does not cover resolved components")
+    permissive = accepted.get("license_groups", {}).get("permissive", {})
+    require(permissive.get("status") == "CLEARED" and
+            isinstance(permissive.get("evidence"), str) and
+            permissive["evidence"].startswith("https://"),
+            "reviewed permissive-license group disposition is missing")
+    exceptions = accepted.get("exceptions", [])
+    require(isinstance(exceptions, list), "exception disposition list missing")
+    exceptions_by_id = {ident(row): row for row in exceptions}
+    require(len(exceptions_by_id) == len(exceptions), "duplicate license exception decisions")
+    required_exceptions = set()
+    for row in inventory:
+        key = ident(row)
+        record = records[key]
+        # POM dependency management metadata is not bundled code.
+        if record.get("status") == "METADATA_ONLY":
+            require("type=pom" in row.get("purl", ""), "unproven metadata-only exclusion")
+            continue
+        require(record.get("status") == "COLLECTED_UNREVIEWED",
+                f"unresolved upstream license text for {key}: cannot publish binaries")
+        docs = record.get("docs", [])
+        require(isinstance(docs, list) and docs, "upstream documents not collected")
+        has_license = False
+        for doc in docs:
+            path = doc.get("path", "")
+            require(path.startswith("compliance/upstream/") and
+                    path in {name[len(prefix):] for name in data if name.startswith(prefix)},
+                    "upstream license text absent from reviewed archive")
+            require(doc.get("sha256") == digest(data[prefix + path]),
+                    "upstream text checksum mismatch")
+            has_license |= bool(doc.get("license_text")) and bool(data[prefix + path])
+        require(has_license, f"actual upstream LICENSE/COPYING bytes missing: {key}")
+        licenses = set(row.get("licenses", []))
+        require(licenses, "empty license declaration cannot be grouped")
+        if not licenses <= PERMISSIVE:
+            required_exceptions.add(key)
+            decision = exceptions_by_id.get(key, {})
+            require(decision.get("status") == "CLEARED" and
+                    isinstance(decision.get("evidence"), str) and
+                    decision["evidence"].startswith("https://"),
+                    f"special-license exception not accepted: {key}")
+            require(decision.get("license_choice") in licenses or
+                    (row.get("license_choice") and
+                     decision.get("license_choice") == row.get("license_choice")),
+                    f"special-license option not recorded: {key}")
+    require(set(exceptions_by_id) == required_exceptions,
+            "exception decisions are stale, missing or outside shipped scope")
+    print(f"R24_BINARY_GATE_PASS {len(inventory)} resolved rows, "
+          f"{len(required_exceptions)} individually reviewed exceptions")
+    return "binary"
 
 
 def main():
