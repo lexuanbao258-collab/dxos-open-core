@@ -11,7 +11,7 @@ import sys
 import tarfile
 from pathlib import Path
 
-TAG = re.compile(r"v[0-9]+\.[0-9]+\.[0-9]+$")
+TAG = re.compile(r"v[0-9]+\.[0-9]+\.[0-9]+(?:-rc\.[1-9][0-9]*)?$")
 SHA = re.compile(r"[a-f0-9]{40}$")
 REVIEWERS = {"phanyen06ym-ien", "ngang02012007-crypto"}
 JAVA_BASE = re.compile(r"eclipse-temurin:21-jre@sha256:[a-f0-9]{64}$")
@@ -86,7 +86,7 @@ def package(repo, tag, sha, output):
                 "files_sha256": {name[len(prefix):]: digest(data)
                                  for name, data in sorted(files.items())}}
     files[prefix + "MANIFEST.json"] = (json.dumps(manifest, sort_keys=True, indent=2) + "\n").encode()
-    archive = output / f"dxos-{tag}.tar.gz"
+    archive = output / f"dxos-open-core-{tag[1:]}.tar.gz"
     with archive.open("wb") as raw:
         with gzip.GzipFile(filename="", fileobj=raw, mode="wb", mtime=0) as gz:
             with tarfile.open(fileobj=gz, mode="w") as tf:
@@ -129,8 +129,11 @@ def verify(archive, checksums):
     return manifest, data, prefix
 
 
-def gate(archive, checksums, acceptance, tag, sha):
+def gate(archive, checksums, acceptance, tag, sha, notes_file=None):
     manifest, data, prefix = verify(archive, checksums)
+    if notes_file is not None:
+        require(Path(notes_file).read_bytes() == data[prefix + "RELEASE-NOTES.md"],
+                "standalone release notes mismatch verified archive")
     require(manifest["tag"] == tag and manifest["source_sha"] == sha,
             "release candidate identity differs from tag/commit")
     path = Path(acceptance)
@@ -138,6 +141,8 @@ def gate(archive, checksums, acceptance, tag, sha):
     accepted = json.loads(path.read_text())
     require(accepted.get("tag") == tag and accepted.get("source_sha") == sha,
             "R24 acceptance is not for exact tag and source SHA")
+    require(accepted.get("archive_sha256") == digest(Path(archive).read_bytes()),
+            "reviewed archive SHA-256 mismatch")
     require(set(accepted.get("reviewed_by", [])) & REVIEWERS,
             "R24 independent compliance reviewer is missing")
     require(JAVA_BASE.fullmatch(accepted.get("java_base_image", "")),
@@ -182,6 +187,7 @@ def main():
     a.add_argument("--acceptance", required=True)
     a.add_argument("--tag", required=True)
     a.add_argument("--sha", required=True)
+    a.add_argument("--release-notes", default=None)
     args = p.parse_args()
     try:
         if args.command == "package":
@@ -189,7 +195,7 @@ def main():
         elif args.command == "verify":
             verify(args.archive, args.checksums)
         else:
-            gate(args.archive, args.checksums, args.acceptance, args.tag, args.sha)
+            gate(args.archive, args.checksums, args.acceptance, args.tag, args.sha, args.release_notes)
     except (ValueError, OSError, KeyError, TypeError, json.JSONDecodeError, tarfile.TarError) as exc:
         print("R24_BLOCKED:", exc, file=sys.stderr)
         return 1
