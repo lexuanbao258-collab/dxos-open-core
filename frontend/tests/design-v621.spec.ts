@@ -34,6 +34,11 @@ async function ready(page: Page, url: string) {
     await document.fonts.ready;
   });
   await expect(page.locator("#main h1")).toBeVisible();
+  // Let the 160ms screen fade finish so measurements (axe contrast, layout)
+  // never observe a half-transparent page.
+  await page.evaluate(() =>
+    Promise.all(document.getAnimations().map((a) => a.finished)),
+  );
 }
 
 async function noHorizontalOverflow(page: Page) {
