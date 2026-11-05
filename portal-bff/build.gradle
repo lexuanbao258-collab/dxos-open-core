@@ -15,6 +15,10 @@ java {
     toolchain { languageVersion = JavaLanguageVersion.of(21) }
 }
 
+tasks.named('cyclonedxDirectBom') {
+    includeConfigs = ['runtimeClasspath']
+}
+
 repositories { mavenCentral() }
 
 dependencies {
