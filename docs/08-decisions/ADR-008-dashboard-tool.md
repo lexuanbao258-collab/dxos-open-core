@@ -5,7 +5,7 @@ SPDX-License-Identifier: Apache-2.0
 
 # ADR-008 - MVP analytics dashboard provider
 
-**Status:** ACCEPTED (approved via PR #126)
+**Status:** ACCEPTED (architecture decision; PR #126 merge and R21 checklist acceptance pending)
 **Decision date:** 2026-11-05
 **Tracking:** R21; implementation planned under R54
 **Scope note:** R21 here is the dashboard decision; the compose work previously labelled "R21" (#119, PR #123) is R32a.
