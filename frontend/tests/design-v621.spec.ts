@@ -257,7 +257,7 @@ for (const [name, width, height] of [
 ] as const) {
   test(`axe + screenshots ${name}`, async ({ page }) => {
     await page.setViewportSize({ width, height });
-    await mkdir(evidence, { recursive: true });
+    if (process.env.SAVE_EVIDENCE) await mkdir(evidence, { recursive: true });
     for (const url of ROUTES) {
       await ready(page, url);
       const slug =
@@ -265,11 +265,14 @@ for (const [name, width, height] of [
           .replace("/design-v621", "")
           .replace(/[/?=]/g, "-")
           .replace(/^-/, "") || "overview";
-      await page.screenshot({
-        path: resolve(evidence, `${name}-${slug}.png`),
-        fullPage: true,
-        animations: "disabled",
-      });
+      // Evidence images are rewritten only on request (SAVE_EVIDENCE=1).
+      if (process.env.SAVE_EVIDENCE) {
+        await page.screenshot({
+          path: resolve(evidence, `${name}-${slug}.png`),
+          fullPage: true,
+          animations: "disabled",
+        });
+      }
       const results = await new AxeBuilder({ page })
         .withTags(["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa"])
         .analyze();
