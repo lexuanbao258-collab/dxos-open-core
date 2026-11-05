@@ -10,6 +10,7 @@
     "preview": "vite preview --host 127.0.0.1",
     "test": "vitest run",
     "test:smoke": "playwright test",
+    "test:preview": "playwright test tests/design-v621.spec.ts",
     "check:security": "node scripts/check-security.mjs"
   },
   "engines": {
@@ -17,6 +18,7 @@
   },
   "dependencies": {
     "@fontsource/be-vietnam-pro": "^5.3.0",
+    "@fontsource/ibm-plex-mono": "^5.3.0",
     "lucide-react": "^1.59.0",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",

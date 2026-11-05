@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { useEffect, useState } from "react";
+import { Suspense, lazy, useEffect, useState } from "react";
 import {
   Activity,
   ArrowUpRight,
@@ -38,6 +38,9 @@ import { Session, Integration } from "./pages/System";
 import { Empty } from "./components/ui";
 import { AuthPage } from "./pages/Auth";
 import { HelpdeskPortal } from "./features/helpdesk/HelpdeskPortal";
+// OpenTrix V6.2.1 preview: isolated, lazy-loaded, MOCK/DEV only.
+const DesignV621 = lazy(() => import("./design-v621/DesignV621"));
+import { PreviewLoading } from "./design-v621/PreviewLoading";
 import type { MvpHelpdeskRequestPort } from "./services/mvp/helpdeskPortalPort";
 
 const navItems = [
@@ -272,6 +275,14 @@ export function App({
         <Route
           path="/register"
           element={<AuthPage key="register" mode="register" />}
+        />
+        <Route
+          path="/design-v621/*"
+          element={
+            <Suspense fallback={<PreviewLoading />}>
+              <DesignV621 />
+            </Suspense>
+          }
         />
         <Route element={<Layout />}>
           <Route path="/session" element={<Session />} />

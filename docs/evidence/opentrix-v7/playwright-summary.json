@@ -1,0 +1,234 @@
+{
+  "note": "Summary of `npm run build && npm run test:preview` (tests/design-v621.spec.ts) for Visual V7, all six screens. Generated locally; GitHub CI does not run Playwright.",
+  "playwright": "1.64.1",
+  "node": "v24.19.0",
+  "os": "Windows 11 (chromium, Desktop Chrome profile)",
+  "stats": {
+    "expected": 44,
+    "unexpected": 0,
+    "skipped": 0,
+    "flaky": 0
+  },
+  "tests": [
+    {
+      "title": "no third-party requests and self-hosted fonts load with Vietnamese glyphs",
+      "status": "expected",
+      "ms": 694
+    },
+    {
+      "title": "existing routes keep working",
+      "status": "expected",
+      "ms": 385
+    },
+    {
+      "title": "placeholder never clips from 320 to 420px (incl. 361-370)",
+      "status": "expected",
+      "ms": 2294
+    },
+    {
+      "title": "typed search text survives resize between short and long placeholder",
+      "status": "expected",
+      "ms": 714
+    },
+    {
+      "title": "no horizontal overflow on every screen at 320px",
+      "status": "expected",
+      "ms": 3266
+    },
+    {
+      "title": "no horizontal overflow on every screen at 360px",
+      "status": "expected",
+      "ms": 3257
+    },
+    {
+      "title": "no horizontal overflow on every screen at 361px",
+      "status": "expected",
+      "ms": 3254
+    },
+    {
+      "title": "no horizontal overflow on every screen at 370px",
+      "status": "expected",
+      "ms": 3221
+    },
+    {
+      "title": "no horizontal overflow on every screen at 390px",
+      "status": "expected",
+      "ms": 3240
+    },
+    {
+      "title": "no horizontal overflow on every screen at 760px",
+      "status": "expected",
+      "ms": 3240
+    },
+    {
+      "title": "no horizontal overflow on every screen at 761px",
+      "status": "expected",
+      "ms": 3239
+    },
+    {
+      "title": "no horizontal overflow on every screen at 800px",
+      "status": "expected",
+      "ms": 3239
+    },
+    {
+      "title": "no horizontal overflow on every screen at 900px",
+      "status": "expected",
+      "ms": 3271
+    },
+    {
+      "title": "no horizontal overflow on every screen at 1024px",
+      "status": "expected",
+      "ms": 3310
+    },
+    {
+      "title": "no horizontal overflow on every screen at 1040px",
+      "status": "expected",
+      "ms": 3304
+    },
+    {
+      "title": "no horizontal overflow on every screen at 1041px",
+      "status": "expected",
+      "ms": 3376
+    },
+    {
+      "title": "no horizontal overflow on every screen at 1100px",
+      "status": "expected",
+      "ms": 3213
+    },
+    {
+      "title": "no horizontal overflow on every screen at 1200px",
+      "status": "expected",
+      "ms": 3255
+    },
+    {
+      "title": "no horizontal overflow on every screen at 1440px",
+      "status": "expected",
+      "ms": 3229
+    },
+    {
+      "title": "QA unknown outcome locks the form and reset restores focus + announces",
+      "status": "expected",
+      "ms": 826
+    },
+    {
+      "title": "queue shows no write action and keyboard hint matches viewport",
+      "status": "expected",
+      "ms": 793
+    },
+    {
+      "title": "detail never offers actions and shows version only when provided",
+      "status": "expected",
+      "ms": 1175
+    },
+    {
+      "title": "reduced motion disables screen fade and skeleton animation",
+      "status": "expected",
+      "ms": 627
+    },
+    {
+      "title": "reload simulates a brief loading state and recovers with an announcement",
+      "status": "expected",
+      "ms": 1023
+    },
+    {
+      "title": "content, notice strip and topbar share one left edge (no leaked main padding)",
+      "status": "expected",
+      "ms": 1691
+    },
+    {
+      "title": "queue table is never clipped and keeps a readable title column above the 1040px breakpoint",
+      "status": "expected",
+      "ms": 835
+    },
+    {
+      "title": "table gives way to rows at 1040px and below, both stay keyboard reachable",
+      "status": "expected",
+      "ms": 2234
+    },
+    {
+      "title": "overview: whole attention row is the click target; chart and rail are distinct",
+      "status": "expected",
+      "ms": 1253
+    },
+    {
+      "title": "mobile hides the duplicate create CTA while the bottom navigation stays usable",
+      "status": "expected",
+      "ms": 677
+    },
+    {
+      "title": "clear-filters button resets desktop filters",
+      "status": "expected",
+      "ms": 733
+    },
+    {
+      "title": "200% zoom (emulated as a 720x450 CSS viewport): no overflow, no axe violations",
+      "status": "expected",
+      "ms": 2110
+    },
+    {
+      "title": "mine table is never clipped above 1040px and gives way to rows below",
+      "status": "expected",
+      "ms": 877
+    },
+    {
+      "title": "list rows keep the date on the first meta line, right aligned, at 320px",
+      "status": "expected",
+      "ms": 1163
+    },
+    {
+      "title": "list rows keep the date on the first meta line, right aligned, at 360px",
+      "status": "expected",
+      "ms": 1174
+    },
+    {
+      "title": "list rows keep the date on the first meta line, right aligned, at 390px",
+      "status": "expected",
+      "ms": 1143
+    },
+    {
+      "title": "list rows keep the date on the first meta line, right aligned, at 760px",
+      "status": "expected",
+      "ms": 1159
+    },
+    {
+      "title": "bottom navigation stays fixed while scrolling and never covers the last content",
+      "status": "expected",
+      "ms": 3177
+    },
+    {
+      "title": "detail: hero rail, timeline order and the actions disclosure work by keyboard",
+      "status": "expected",
+      "ms": 716
+    },
+    {
+      "title": "create: invalid submit focuses the first field and error text keeps its icon",
+      "status": "expected",
+      "ms": 712
+    },
+    {
+      "title": "create: single-line placeholders never clip at 320, 360, 390 and keep the long text on desktop",
+      "status": "expected",
+      "ms": 1180
+    },
+    {
+      "title": "mobile filter sheet opens as a modal dialog and applies filters",
+      "status": "expected",
+      "ms": 967
+    },
+    {
+      "title": "axe + screenshots desktop-1440",
+      "status": "expected",
+      "ms": 6423
+    },
+    {
+      "title": "axe + screenshots mobile-390",
+      "status": "expected",
+      "ms": 6740
+    },
+    {
+      "title": "axe + screenshots mobile-320",
+      "status": "expected",
+      "ms": 6495
+    }
+  ]
+}
