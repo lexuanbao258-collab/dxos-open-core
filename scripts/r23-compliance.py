@@ -25,14 +25,82 @@ EXCEPTIONS = {"GPL-2.0-only WITH Classpath-exception-2.0",
               "GPL-2.0-or-later WITH Classpath-exception-2.0",
               "GPL-2.0-with-classpath-exception"}
 
+# Tokenize the entire expression; any unrecognized byte is a syntax error.
+# This is a strict subset of SPDX license-expression grammar (AND, OR,
+# parentheses and the specifically reviewed WITH exceptions).
+SPDX_TOKEN = re.compile(r"\s*([()]|[A-Za-z0-9][A-Za-z0-9.+-]*)")
+
 def license_status(value):
+    if not isinstance(value, str) or not value.strip():
+        return False, "UNDECLARED"
     val = ALIASES.get(value.lower().strip(), value.strip())
-    if val in ALLOWED or val in EXCEPTIONS:
+    # Legacy reviewed spelling is retained only for this exact identifier.
+    if val == "GPL-2.0-with-classpath-exception":
         return True, val
-    tokens = [t for t in re.split(r"\s+(?:AND|OR)\s+|[()]", val) if t]
-    if len(tokens) > 1 and all(t in ALLOWED for t in tokens):
-        return True, val
-    return False, val or "UNDECLARED"
+
+    tokens = []
+    position = 0
+    while position < len(val):
+        match = SPDX_TOKEN.match(val, position)
+        if match is None:
+            if val[position:].strip():
+                return False, val
+            break
+        tokens.append(match.group(1))
+        position = match.end()
+        if len(tokens) > 128:
+            return False, val
+
+    index = 0
+
+    def atom(depth=0):
+        nonlocal index
+        if index >= len(tokens) or depth > 32:
+            raise ValueError("expected SPDX license")
+        token = tokens[index]
+        index += 1
+        if token == "(":
+            accepted = parse_or(depth + 1)
+            if index >= len(tokens) or tokens[index] != ")":
+                raise ValueError("unbalanced parentheses")
+            index += 1
+            return accepted
+        if token in {"AND", "OR", "WITH", ")"}:
+            raise ValueError("invalid SPDX operand")
+        if index < len(tokens) and tokens[index] == "WITH":
+            index += 1
+            if index >= len(tokens) or tokens[index] in {"AND", "OR", "WITH", "(", ")"}:
+                raise ValueError("missing SPDX exception")
+            exception = tokens[index]
+            index += 1
+            return token + " WITH " + exception in EXCEPTIONS
+        return token in ALLOWED
+
+    def parse_and(depth=0):
+        nonlocal index
+        accepted = atom(depth)
+        while index < len(tokens) and tokens[index] == "AND":
+            index += 1
+            rhs = atom(depth)
+            accepted = accepted and rhs
+        return accepted
+
+    def parse_or(depth=0):
+        nonlocal index
+        accepted = parse_and(depth)
+        while index < len(tokens) and tokens[index] == "OR":
+            index += 1
+            rhs = parse_and(depth)
+            accepted = accepted and rhs
+        return accepted
+
+    try:
+        accepted = parse_or()
+        if index != len(tokens):
+            return False, val
+        return accepted, val
+    except (ValueError, RecursionError):
+        return False, val
 
 def read_bom(path, project):
     data = json.loads(Path(path).read_text(encoding="utf-8"))
