@@ -4,6 +4,7 @@
 import {
   PREVIEW_VIEWER,
   SERVICES,
+  type ServiceId,
   STEPS,
   STEP_LABELS,
   type ListFilters,
@@ -39,6 +40,28 @@ export function numbers(tickets: readonly PreviewTicket[]) {
     processing: tickets.filter((r) => r.status === "IN_PROGRESS").length,
     high: tickets.filter((r) => r.priority === "Cao").length,
   };
+}
+
+/** Ticket count per workflow step; every step is present (0 when empty). */
+export function stepCounts(
+  tickets: readonly PreviewTicket[],
+): Record<Step, number> {
+  const out = Object.fromEntries(STEPS.map((s) => [s, 0])) as Record<
+    Step,
+    number
+  >;
+  for (const t of tickets) out[t.status] += 1;
+  return out;
+}
+
+export function serviceCounts(
+  tickets: readonly PreviewTicket[],
+): Record<ServiceId, number> {
+  const out = Object.fromEntries(
+    (Object.keys(SERVICES) as ServiceId[]).map((id) => [id, 0]),
+  ) as Record<ServiceId, number>;
+  for (const t of tickets) out[t.service] += 1;
+  return out;
 }
 
 export function counters(tickets: readonly PreviewTicket[], route: ListRoute) {

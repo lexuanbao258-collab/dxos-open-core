@@ -69,7 +69,7 @@ export function RequestList({ route }: { route: ListRoute }) {
   const resultsRef = useRef<HTMLElement>(null);
   const placeholder = useFittingPlaceholder(
     searchRef,
-    "Tìm mã hoặc tiêu đề",
+    "Tìm mã, tiêu đề…",
     "Tìm…",
   );
 
@@ -219,11 +219,21 @@ export function RequestList({ route }: { route: ListRoute }) {
           >
             <Icon name="filter" /> Lọc{filterCount ? ` (${filterCount})` : ""}
           </button>
+          {(filterCount > 0 || f.query !== "") && (
+            <button
+              className="btn btn-link clear-filters"
+              type="button"
+              onClick={() => resetFilters(route)}
+            >
+              Xóa lọc
+            </button>
+          )}
           <div className="toolbar-end">
             <button
               className="btn"
               type="button"
               aria-label="Tải lại dữ liệu mẫu"
+              title="Tải lại dữ liệu mẫu"
               style={{ minWidth: 44 }}
               onClick={() => {
                 setQa("loading");
@@ -289,7 +299,7 @@ export function RequestList({ route }: { route: ListRoute }) {
 
 export function CreateButton() {
   return (
-    <Link className="btn btn-primary" to={`${BASE}/create`}>
+    <Link className="btn btn-primary cta-dup" to={`${BASE}/create`}>
       <Icon name="plus" /> Tạo yêu cầu
     </Link>
   );

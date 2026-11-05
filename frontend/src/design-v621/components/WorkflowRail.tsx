@@ -3,17 +3,26 @@
 
 import { STEPS, STEP_LABELS, type Step } from "../model";
 
-/** Compact five-bar progress used in lists. */
-export function Progress({ status }: { status: Step }) {
-  const i = STEPS.indexOf(status);
+/**
+ * Workflow Rail: the identity of a single ticket's progress. Five equal
+ * segments (done = solid, current = solid + ring, to do = outline) and the
+ * step name. Do not reuse it for counts; see StepDistribution.
+ */
+export function WorkflowRail({ status }: { status: Step }) {
+  const current = STEPS.indexOf(status);
   return (
-    <span className="progress">
-      <span className="ot-bars" aria-hidden="true">
-        {STEPS.map((s, j) => (
-          <span key={s} className={`ot-bar ${j <= i ? "done" : ""}`} />
+    <span className="rail">
+      <span className="rail-track" aria-hidden="true">
+        {STEPS.map((s, i) => (
+          <span
+            key={s}
+            className={`rail-seg ${
+              i < current ? "is-done" : i === current ? "is-current" : "is-todo"
+            }`}
+          />
         ))}
       </span>
-      <span className="step-label">{STEP_LABELS[status]}</span>
+      <span className="rail-label">{STEP_LABELS[status]}</span>
     </span>
   );
 }

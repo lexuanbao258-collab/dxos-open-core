@@ -9,7 +9,8 @@ import {
   type PreviewTicket,
   type QaScenario,
 } from "../model";
-import { Progress } from "./Progress";
+import { PriorityBadge } from "./PriorityBadge";
+import { WorkflowRail } from "./WorkflowRail";
 
 export const detailPath = (id: string, from: string) =>
   `${BASE}/detail/${encodeURIComponent(id)}?from=${encodeURIComponent(from)}`;
@@ -70,6 +71,18 @@ interface Props {
   onResetFilters: () => void;
 }
 
+/** Empty value that never reads as data: a dash plus a screen-reader label. */
+function NoData() {
+  return (
+    <>
+      <span className="empty-dash" aria-hidden="true">
+        —
+      </span>
+      <span className="ot-sr-only">Chưa có dữ liệu</span>
+    </>
+  );
+}
+
 export function RequestResults({ rows, route, qa, onResetFilters }: Props) {
   const withQueue = route === "queue";
   if (qa !== "normal") return <QaStateBox qa={qa} route={route} />;
@@ -86,63 +99,59 @@ export function RequestResults({ rows, route, qa, onResetFilters }: Props) {
   }
   return (
     <>
-      <table className="data-table">
-        <caption className="ot-sr-only">
-          {withQueue ? "Hàng đợi" : "Yêu cầu của tôi"} — dữ liệu mẫu
-        </caption>
-        <thead>
-          <tr>
-            <th className="name-col" scope="col">
-              Yêu cầu
-            </th>
-            <th scope="col">Dịch vụ</th>
-            <th scope="col">Ưu tiên</th>
-            <th scope="col">Bước</th>
-            {withQueue && <th scope="col">Phụ trách</th>}
-            <th scope="col">Cập nhật</th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((r) => (
-            <tr key={r.id}>
-              <td>
-                <Link
-                  className="row-link"
-                  data-ticket={r.id}
-                  to={detailPath(r.id, route)}
-                >
-                  <span className="ot-id">{r.id}</span>
-                  <span className="ticket-name">{r.title}</span>
-                  <span className="subline">{r.requester}</span>
-                </Link>
-              </td>
-              <td>{SERVICES[r.service]}</td>
-              <td>
-                <span
-                  className={`ot-priority ${r.priority === "Cao" ? "ot-high" : ""}`}
-                >
-                  {r.priority}
-                </span>
-              </td>
-              <td>
-                <Progress status={r.status} />
-              </td>
-              {withQueue && (
-                <td>
-                  {r.assignee ?? (
-                    <span className="empty-value">Chưa có dữ liệu</span>
-                  )}
-                </td>
-              )}
-              <td className="col-updated">{r.updated}</td>
+      <div className="table-surface">
+        <table className="data-table">
+          <caption className="ot-sr-only">
+            {withQueue ? "Hàng đợi" : "Yêu cầu của tôi"} — dữ liệu mẫu
+          </caption>
+          <thead>
+            <tr>
+              <th className="col-id" scope="col">
+                Mã
+              </th>
+              <th className="name-col" scope="col">
+                Yêu cầu
+              </th>
+              <th scope="col">Dịch vụ</th>
+              <th scope="col">Ưu tiên</th>
+              <th scope="col">Bước</th>
+              {withQueue && <th scope="col">Phụ trách</th>}
+              <th scope="col">Cập nhật</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
-      <div
-        className="mobile-list"
-        aria-label="Danh sách yêu cầu trên điện thoại"
-      >
+          </thead>
+          <tbody>
+            {rows.map((r) => (
+              <tr key={r.id}>
+                <td className="col-id">
+                  <span className="ot-id">{r.id}</span>
+                </td>
+                <td>
+                  <Link
+                    className="row-link"
+                    data-ticket={r.id}
+                    to={detailPath(r.id, route)}
+                  >
+                    <span className="ticket-name">{r.title}</span>
+                    {withQueue && (
+                      <span className="subline">{r.requester}</span>
+                    )}
+                  </Link>
+                </td>
+                <td>{SERVICES[r.service]}</td>
+                <td>
+                  <PriorityBadge priority={r.priority} />
+                </td>
+                <td>
+                  <WorkflowRail status={r.status} />
+                </td>
+                {withQueue && <td>{r.assignee ?? <NoData />}</td>}
+                <td className="col-updated">{r.updated}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div className="mobile-list" aria-label="Danh sách yêu cầu">
         {rows.map((r) => (
           <Link
             key={r.id}
@@ -151,17 +160,20 @@ export function RequestResults({ rows, route, qa, onResetFilters }: Props) {
             to={detailPath(r.id, route)}
           >
             <div className="mobile-card-top">
-              <h2>{r.title}</h2>
-              {r.priority === "Cao" && (
-                <span className="ot-priority ot-high">Cao</span>
-              )}
-            </div>
-            <Progress status={r.status} />
-            <div className="mobile-meta">
-              <span>
-                <span className="mono">{r.id}</span> · {SERVICES[r.service]}
+              <span className="mobile-card-id">
+                <span className="ot-id">{r.id}</span>
+                <span className="mobile-card-service">
+                  {SERVICES[r.service]}
+                </span>
               </span>
-              <span>{r.updated.split(" ").slice(-1)[0]}</span>
+              {r.priority === "Cao" && <PriorityBadge priority={r.priority} />}
+            </div>
+            <h2>{r.title}</h2>
+            <div className="mobile-card-status">
+              <WorkflowRail status={r.status} />
+              <span className="mobile-card-date">
+                {r.updated.split(" ").slice(-1)[0]}
+              </span>
             </div>
             {withQueue && (
               <div className="mobile-requester">
