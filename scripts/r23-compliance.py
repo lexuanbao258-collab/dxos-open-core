@@ -8,7 +8,7 @@ import sys
 from pathlib import Path
 
 ALLOWED = set("""0BSD Apache-2.0 BSD-2-Clause BSD-3-Clause CDDL-1.0 CDDL-1.1
-CC0-1.0 EDL-1.0 EPL-1.0 EPL-2.0 ISC MIT MPL-2.0 OFL-1.1
+CC0-1.0 EDL-1.0 EPL-1.0 EPL-2.0 ISC MIT MIT-0 BlueOak-1.0.0 MPL-2.0 OFL-1.1
 Unicode-3.0 Unicode-DFS-2016 Unlicense Zlib""".split())
 ALIASES = {
     "the apache software license, version 2.0": "Apache-2.0",
