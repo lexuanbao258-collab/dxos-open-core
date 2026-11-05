@@ -1,0 +1,130 @@
+# SPDX-FileCopyrightText: 2026 TRICORE contributors
+# SPDX-License-Identifier: Apache-2.0
+
+version = 1
+
+# Preserve approved Flyway migrations and workflow manifest bytes.
+# Do not insert SPDX headers into these files.
+
+[[annotations]]
+path = [
+  "backend/src/main/resources/db/migration/V1__create_requests.sql",
+  "backend/src/main/resources/db/migration/V2__add_request_workflow.sql",
+  "backend/src/main/resources/db/migration/V3__create_workflow_persistence.sql",
+  "backend/src/main/resources/db/migration/V4__seed_workflow_definitions.sql",
+  "backend/src/main/resources/workflow-event-trigger-manifest.json"
+]
+precedence = "closest"
+SPDX-FileCopyrightText = "2026 TRICORE contributors"
+SPDX-License-Identifier = "Apache-2.0"
+# SQL evidence reviewed through checksum-sensitive verification.
+# Keep original file bytes unchanged.
+
+[[annotations]]
+path = [
+  "docs/evidence/issue-25-event-trigger-catalog-review.sql",
+  "docs/evidence/issue-25-runtime-privilege-review.sql",
+  "docs/evidence/issue-25-security-definer-review.sql"
+]
+precedence = "closest"
+SPDX-FileCopyrightText = "2026 TRICORE contributors"
+SPDX-License-Identifier = "Apache-2.0"
+
+# Non-empty application placeholder files.
+[[annotations]]
+path = [
+  "backend/src/main/java/com/tricore/dxos/application/facility/.gitkeep",
+  "backend/src/main/java/com/tricore/dxos/application/helpdesk/.gitkeep"
+]
+precedence = "closest"
+SPDX-FileCopyrightText = "2026 TRICORE contributors"
+SPDX-License-Identifier = "Apache-2.0"
+
+# Official Gradle 8.14.3 wrapper JAR.
+# Verified against the upstream published SHA-256.
+# This is third-party code, not TRICORE-authored code.
+
+[[annotations]]
+path = "backend/gradle/wrapper/gradle-wrapper.jar"
+precedence = "closest"
+SPDX-FileCopyrightText = "Gradle contributors"
+SPDX-License-Identifier = "Apache-2.0"
+
+# Project lockfile and frontend favicon.
+# Preserve original bytes and dependency metadata.
+
+[[annotations]]
+path = [
+  "frontend/package-lock.json",
+  "frontend/public/favicon.svg"
+]
+precedence = "closest"
+SPDX-FileCopyrightText = "2026 TRICORE contributors"
+SPDX-License-Identifier = "Apache-2.0"
+
+# Frontend HTML and JSON configuration files.
+# Preserve DOCTYPE and valid JSON syntax.
+
+[[annotations]]
+path = [
+  "frontend/index.html",
+  "frontend/tests/mvp-preview.html",
+  "frontend/package.json",
+  "frontend/tsconfig.json"
+]
+precedence = "closest"
+SPDX-FileCopyrightText = "2026 TRICORE contributors"
+SPDX-License-Identifier = "Apache-2.0"
+
+# Root README: preserve the existing release and attribution statements.
+
+[[annotations]]
+path = "README.md"
+precedence = "closest"
+SPDX-FileCopyrightText = "2026 TRICORE contributors"
+SPDX-License-Identifier = "Apache-2.0"
+
+# Helpdesk offline SQL resources.
+# Keep original SQL bytes unchanged for integration verification.
+
+[[annotations]]
+path = [
+  "backend/src/main/resources/db/helpdesk/definition.sql",
+  "backend/src/main/resources/db/helpdesk/policy-schema.sql",
+  "backend/src/main/resources/db/helpdesk/runtime-grants.sql",
+  "backend/src/main/resources/db/helpdesk/schema.sql"
+]
+precedence = "closest"
+SPDX-FileCopyrightText = "2026 TRICORE contributors"
+SPDX-License-Identifier = "Apache-2.0"
+
+# Runtime configuration files; preserve original bytes.
+
+[[annotations]]
+path = [
+  "backend/gradle/wrapper/gradle-wrapper.properties",
+  "portal-bff/Caddyfile.local"
+]
+precedence = "closest"
+SPDX-FileCopyrightText = "2026 TRICORE contributors"
+SPDX-License-Identifier = "Apache-2.0"
+
+# Environment template: preserve original bytes and configuration syntax.
+
+[[annotations]]
+path = ".env.example"
+precedence = "closest"
+SPDX-FileCopyrightText = "2026 TRICORE contributors"
+SPDX-License-Identifier = "Apache-2.0"
+
+# Git ignore rules: preserve existing file bytes.
+
+[[annotations]]
+path = [
+  ".gitignore",
+  "frontend/.gitignore",
+  "portal-bff/.gitignore"
+]
+precedence = "closest"
+SPDX-FileCopyrightText = "2026 TRICORE contributors"
+SPDX-License-Identifier = "Apache-2.0"

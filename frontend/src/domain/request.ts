@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2026 TRICORE contributors
+//
+// SPDX-License-Identifier: Apache-2.0
+
 export type RequestKind = "it" | "facility";
 // MOCK presentation states; CONFIRMED does not define a Backend terminal state.
 export type RequestStatus =

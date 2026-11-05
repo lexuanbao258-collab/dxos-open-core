@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2026 TRICORE contributors
+//
+// SPDX-License-Identifier: Apache-2.0
+
 import ReactDOM from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 import "@fontsource/be-vietnam-pro/vietnamese-400.css";

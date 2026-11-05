@@ -1,3 +1,9 @@
+<!--
+SPDX-FileCopyrightText: 2026 TRICORE contributors
+
+SPDX-License-Identifier: Apache-2.0
+-->
+
 # DX-OS Repository Layout and Ownership — Migration-Safe Proposal
 
 > Status: TEAM-SELECTED LAYOUT — 2026-10-31. Implementation migration and gate acceptance remain separate; not a source refactor or runtime acceptance.

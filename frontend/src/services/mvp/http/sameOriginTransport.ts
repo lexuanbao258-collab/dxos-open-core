@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2026 TRICORE contributors
+//
+// SPDX-License-Identifier: Apache-2.0
+
 import type { HelpdeskHttpTransport } from "./transport";
 
 const BASE = "/api/v1/mvp/requests";

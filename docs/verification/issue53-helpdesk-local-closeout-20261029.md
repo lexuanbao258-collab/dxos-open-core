@@ -1,3 +1,9 @@
+<!--
+SPDX-FileCopyrightText: 2026 TRICORE contributors
+
+SPDX-License-Identifier: Apache-2.0
+-->
+
 # Helpdesk local closeout — 2026-10-29
 
 MODE: IMPLEMENT + VERIFY. Local provisioning and isolated HTTP/PostgreSQL checks PASS;

@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2026 TRICORE contributors
+//
+// SPDX-License-Identifier: Apache-2.0
+
 /** The concrete transport handles JSON and the BFF session boundary. */
 export interface HelpdeskHttpRequest {
   readonly method: "GET" | "POST";
