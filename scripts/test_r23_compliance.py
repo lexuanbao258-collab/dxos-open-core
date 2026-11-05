@@ -40,5 +40,28 @@ class R23Tests(unittest.TestCase):
             fill(None)
             self.assertEqual(invoke().returncode, 1)
 
+    def test_version_pinned_choices_do_not_apply_to_future_releases(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            def inspect(project, name, version, ids):
+                file = root / "bom.json"
+                component = {"type": "library", "name": name, "version": version,
+                             "licenses": [{"license": {"id": item}} for item in ids]}
+                file.write_text(json.dumps({"bomFormat": "CycloneDX",
+                                            "specVersion": "1.6",
+                                            "components": [component]}))
+                cmd = [sys.executable, str(SCRIPT)]
+                for label in ("backend", "portal-bff", "frontend"):
+                    cmd.extend(("--" + label, str(file)))
+                cmd.extend(("--output", str(root / "report")))
+                status = subprocess.run(cmd, capture_output=True, text=True).returncode
+                return status
+            # Every input gets the same synthetic component; only the
+            # backend Hibernate exception should match, so this remains red.
+            self.assertEqual(inspect("backend", "hibernate-core", "6.6.54.Final",
+                                     ["LGPL-2.1-only"]), 1)
+            self.assertEqual(inspect("portal-bff", "logback-core", "1.5.35",
+                                     ["EPL-2.0", "LGPL-2.1-only"]), 1)
+
 if __name__ == "__main__":
     unittest.main()
