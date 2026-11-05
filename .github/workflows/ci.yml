@@ -165,7 +165,7 @@ jobs:
         working-directory: frontend
         run: |
           npm ci
-          npx --yes @cyclonedx/cyclonedx-npm@6.0.1 --output-format JSON --output-file ../frontend-sbom.json
+          npx --yes @cyclonedx/cyclonedx-npm@6.0.1 --omit dev --output-format JSON --output-file ../frontend-sbom.json
       - name: Validate licenses and generate notices
         run: |
           python3 scripts/r23-compliance.py \
