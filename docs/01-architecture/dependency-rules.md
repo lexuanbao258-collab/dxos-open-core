@@ -55,7 +55,6 @@ backend/src/main/java/com/tricore/dxos/
 │   ├── workflow/                # PostgresWorkflowPersistence, migration/verification tools
 │   ├── persistence/             # package boundary
 │   └── storage/                 # package boundary
-├── request/                     # legacy Request prototype: controller/domain/service/repository
 ├── common/                      # ApiError, HealthController
 └── DxosApplication.java         # Spring Boot composition entry
 ```
@@ -87,16 +86,15 @@ The diagram is **logical/target architecture**, not an assertion that every conn
 
 **Legend:** YES = allowed through published API; NO = forbidden; CONDITIONAL = only as scoped below; BOOTSTRAP = composition root only.
 
-| Importing module → imported module | Core Identity | Core Workflow | Core Data | Application | Gateway | Infrastructure | `request` prototype |
-|---|---|---|---|---|---|---|---|
-| `core.identity` | YES (self) | NO | NO | NO | NO | NO | NO |
-| `core.workflow` | NO | YES (self) | NO | NO | NO | NO | NO |
-| `core.data` | NO | NO | YES (self) | NO | NO | NO | NO |
-| `application.*` | YES (contracts) | YES (public domain/runtime API) | YES (published ports) | YES (published app APIs) | NO | NO | NO except explicit migration seam |
-| `gateway.*` | CONDITIONAL (facts) | CONDITIONAL (DTO mapping only during migration) | CONDITIONAL | YES (published use cases) | YES (self) | NO | EXCEPTION: legacy controllers only |
-| `infrastructure.*` | YES (implementation) | YES (implementation) | YES (implementation) | YES (ports) | NO except dedicated HTTP wiring | YES (self) | CONDITIONAL (own adapter boundary) |
-| `request.*` | CONDITIONAL (migration only) | CONDITIONAL | CONDITIONAL | CONDITIONAL | NO unless its controllers | CONDITIONAL: legacy JPA | YES (legacy scope) |
-| `DxosApplication` / `bootstrap` | BOOTSTRAP | BOOTSTRAP | BOOTSTRAP | BOOTSTRAP | BOOTSTRAP | BOOTSTRAP | BOOTSTRAP |
+| Importing module → imported module | Core Identity | Core Workflow | Core Data | Application | Gateway | Infrastructure |
+|---|---|---|---|---|---|---|
+| `core.identity` | YES (self) | NO | NO | NO | NO | NO |
+| `core.workflow` | NO | YES (self) | NO | NO | NO | NO |
+| `core.data` | NO | NO | YES (self) | NO | NO | NO |
+| `application.*` | YES (contracts) | YES (public domain/runtime API) | YES (published ports) | YES (published app APIs) | NO | NO |
+| `gateway.*` | CONDITIONAL (facts) | CONDITIONAL (DTO mapping only during migration) | CONDITIONAL | YES (published use cases) | YES (self) | NO |
+| `infrastructure.*` | YES (implementation) | YES (implementation) | YES (implementation) | YES (ports) | NO except dedicated HTTP wiring | YES (self) |
+| `DxosApplication` / `bootstrap` | BOOTSTRAP | BOOTSTRAP | BOOTSTRAP | BOOTSTRAP | BOOTSTRAP | BOOTSTRAP |
 
 **This is not a license for every same-layer import.** Cross-capability Core dependencies are forbidden by default. Application-to-Application use is through explicit published services/ports, not private models. A direct Gateway→Workflow domain call may exist in the historical unregistered controller, but must be replaced by Gateway→Authorized Use Case for production exposure.
 
@@ -258,7 +256,6 @@ No broad `ignoreDependency` suppression; every waiver specifies file/class, rule
 | `infrastructure.identity.security.SpringSecurityCurrentPrincipal` | Spring Security adapter for port | Valid DIP inversion | JWT adversarial tests |
 | `core.data.ObjectStoragePort` | Provider-neutral contract | Complies in principle with DR-03 | Verify real adapters separately |
 | `gateway.workflow.controller.WorkflowController` | Workflow HTTP candidate code, not registered as production controller | Not production-ready by existence alone | Route policy & authorized use case |
-| `request.*` | Legacy JPA/HTTP application prototype | Deliberate debt/exception | Isolate behind profile/route gates; plan migration |
 | `backend/build.gradle` | No ArchUnit test dependency | Enforcement not implemented | Propose dependency + tests |
 | PR #47 / #48 | Stacked AuthorizedWorkflowService / exact-authority regression proposals | Not merged evidence on this baseline | Verify exact head/CI/route handoff |
 | PR #63 | Helpdesk candidate using SQL guarded transaction | Direct SQL/provider coupling at Application boundary | Approved transaction seam + resource-policy test |
@@ -276,8 +273,6 @@ No broad `ignoreDependency` suppression; every waiver specifies file/class, rule
 | Application directly calls `wf_port_*` SQL everywhere | Provider coupling and hidden transaction semantics | Transactional application port with adapter | Design cost, potential contract reconciliation |
 | Wrapping independent JDBC commit with `@Transactional` | False atomicity assurance | Explicit composite transaction seam | Must address Workflow port semantics |
 | Internal REST for every Core in same JVM | Latency, unnecessary distributed failure surfaces | Java port calls inside monolith | No independent deploy per Core |
-| ArchUnit blanket exclusion for `request.*` forever | Debt concealed rather than contained | Bounded legacy register + deadline/gate | Migration effort |
-| Automatically sharing `request` entities with Facility | Hidden business coupling | Separate application models + shared Core contracts | Some intentional duplication |
 
 ## 12. Exception / waiver process
 
@@ -293,7 +288,7 @@ A temporary exception is permitted only when all fields are recorded:
 | Lifecycle | Creation date, planned removal milestone, issue/PR link |
 | CI behavior | Specific allowlist; new violations still fail |
 
-Suggested initial waivers: legacy `request.*` isolation and the unregistered generic Workflow controller pending guarded exposure. These are **candidates** for review, not automatically granted exemptions.
+Suggested initial waiver: the unregistered generic Workflow controller pending guarded exposure; review any waiver explicitly.
 
 ## 13. Architecture acceptance criteria (DEP-AC-01 … DEP-AC-18)
 
@@ -313,7 +308,7 @@ Suggested initial waivers: legacy `request.*` isolation and the unregistered gen
 | DEP-AC-12 | Concurrent operations do not yield lost updates or partial history |
 | DEP-AC-13 | Unknown commit outcome is reconciled, not blindly retried |
 | DEP-AC-14 | Existing Flyway migrations not edited |
-| DEP-AC-15 | Legacy route exposure gated and independently tested |
+| DEP-AC-15 | Legacy route removal and 404 regression independently tested |
 | DEP-AC-16 | Two different Application golden paths reuse same Core without Core edits |
 | DEP-AC-17 | CI fails on a seeded forbidden import (negative architectural test) |
 | DEP-AC-18 | Exceptions documented with owner, expiry and removal issue |
@@ -327,7 +322,7 @@ Suggested initial waivers: legacy `request.*` isolation and the unregistered gen
 | DEP-G0 | Approved rules and explicit exception register | Docs only | Architecture review |
 | DEP-G1 | Baseline production dependency graph | Test/report only | Exact SHA |
 | DEP-G2 | ArchUnit dependency and JUnit test | `backend/build.gradle`, tests | Core rules PASS |
-| DEP-G3 | Application/Gateway dependency tests and legacy allowlist | Tests, bounded code refactor | No new violations |
+| DEP-G3 | Application/Gateway dependency tests after R25 cleanup | Tests, bounded code refactor | No new violations |
 | DEP-G4 | Protected use cases and HTTP registration governance | Production only after independent approval | Security E2E |
 | DEP-G5 | Provider transactional contract and real Postgres guards | Explicitly reviewed application/infra | Atomicity/NEG evidence |
 | DEP-G6 | Facility reuse and CI gates | Facility app/tests, no Core forks | Two golden paths |

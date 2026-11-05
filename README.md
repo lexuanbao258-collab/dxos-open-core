@@ -156,7 +156,6 @@ Set-Location dxos-open-core\backend
 java -version
 .\gradlew.bat --version
 .\gradlew.bat test --tests 'com.tricore.dxos.core.workflow.*'
-.\gradlew.bat test --tests 'com.tricore.dxos.request.*'
 .\gradlew.bat test
 .\gradlew.bat build
 ```
@@ -196,7 +195,7 @@ Create request → Review / classify → Assign → In progress
                → Resolve → Requester confirms (CONFIRMED)
 ```
 
-The `it-helpdesk@1` workflow ends at `CONFIRMED`; it has no `/close` Helpdesk route. `CLOSED` belongs to the legacy `request/` prototype, not this integrated Helpdesk workflow. Backend integration is merged, but the full live browser flow remains an R12 gate.
+The `it-helpdesk@1` workflow ends at `CONFIRMED`; it has no `/close` Helpdesk route. The legacy Request prototype and its `/api/v1/requests/*` routes were removed in R25; the historical Flyway V1/V2 scripts remain immutable. Backend integration is merged, but the full live browser flow remains an R12 gate.
 
 | Area | Acceptance evidence to obtain |
 | --- | --- |
@@ -219,7 +218,6 @@ DX-OS/
 │       ├── application/      # Orchestration and policies
 │       ├── gateway/          # API boundary code
 │       ├── infrastructure/   # Provider and persistence adapters
-│       ├── request/          # Application/business prototype
 │       └── common/
 ├── docs/                     # Architecture, contracts, POCs, evidence
 ├── infra/

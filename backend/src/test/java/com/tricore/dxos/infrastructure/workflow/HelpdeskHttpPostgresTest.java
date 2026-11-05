@@ -148,8 +148,7 @@ class HelpdeskHttpPostgresTest {
                 "tricore.security.oidc.resource-client-id","tricore-api","dxos.helpdesk.enabled","true","test.schema",schema)));
         context.addBeanFactoryPostProcessor(f -> f.registerSingleton("helpdeskPersistence",new PostgresWorkflowPersistence(runtime,schema)));
         context.register(SecurityConfig.class,Class.forName("com.tricore.dxos.infrastructure.identity.security.SpringSecurityCurrentPrincipal"),
-                Web.class,HelpdeskController.class,HelpdeskExceptionHandler.class,WorkflowJsonConfiguration.class,
-                com.tricore.dxos.request.controller.RequestController.class,com.tricore.dxos.request.controller.RequestWorkflowController.class);
+                Web.class,HelpdeskController.class,HelpdeskExceptionHandler.class,WorkflowJsonConfiguration.class);
         context.refresh();
         mvc=MockMvcBuilders.webAppContextSetup(context).addFilters(context.getBean("springSecurityFilterChain",jakarta.servlet.Filter.class)).build();
     }
@@ -939,6 +938,24 @@ class HelpdeskHttpPostgresTest {
         String id=create("employee").path("id").asText(); var before=snapshot();
         expect(post(API+"/"+id+"/triage").content("{\"expectedVersion\":"+version+"}"),"coordinator",400);
         assertThat(snapshot()).isEqualTo(before);
+    }
+
+    @Test void helpdeskAndWorkflowTablesStayInPrivateSchema() throws Exception {
+        // Replaces the retired Request/JPA schema assertion with the live Helpdesk/Workflow boundary.
+        try (var c = admin()) {
+            assertThat(number(c, "SELECT count(*) FROM pg_catalog.pg_class WHERE relnamespace='"
+                    + schema + "'::regnamespace AND relname IN ('helpdesk_requests','workflow_instances')"))
+                    .isEqualTo(2);
+            assertThat(number(c, "SELECT count(*) FROM pg_catalog.pg_class "
+                    + "WHERE relnamespace='public'::regnamespace "
+                    + "AND relname IN ('helpdesk_requests','workflow_instances')"))
+                    .isZero();
+        }
+        try (var c = runtime.getConnection()) {
+            assertThat(c.getSchema()).isEqualTo(schema);
+            assertThat(number(c, "SELECT count(*) FROM " + schema + ".helpdesk_requests")).isGreaterThanOrEqualTo(0);
+            assertThat(number(c, "SELECT count(*) FROM " + schema + ".workflow_instances")).isGreaterThanOrEqualTo(0);
+        }
     }
 
     @Test void paginationAndPrototypeIsolation() throws Exception {

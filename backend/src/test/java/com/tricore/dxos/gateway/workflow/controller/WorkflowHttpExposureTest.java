@@ -5,8 +5,6 @@
 package com.tricore.dxos.gateway.workflow.controller;
 
 import com.tricore.dxos.core.workflow.WorkflowRuntime;
-import com.tricore.dxos.request.service.RequestService;
-import com.tricore.dxos.request.service.RequestWorkflowService;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -37,8 +35,6 @@ class WorkflowHttpExposureTest {
     @Autowired private ApplicationContext context;
     @Autowired @Qualifier("requestMappingHandlerMapping") private RequestMappingHandlerMapping mappings;
     @MockitoBean private WorkflowRuntime runtime;
-    @MockitoBean private RequestService requestService;
-    @MockitoBean private RequestWorkflowService requestWorkflowService;
 
     @ParameterizedTest
     @MethodSource("routes")
