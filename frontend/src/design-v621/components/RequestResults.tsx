@@ -9,6 +9,7 @@ import {
   type PreviewTicket,
   type QaScenario,
 } from "../model";
+import { nextStepNote } from "../logic";
 import { PriorityBadge } from "./PriorityBadge";
 import { WorkflowRail } from "./WorkflowRail";
 
@@ -113,7 +114,7 @@ export function RequestResults({ rows, route, qa, onResetFilters }: Props) {
                 Yêu cầu
               </th>
               <th scope="col">Dịch vụ</th>
-              <th scope="col">Ưu tiên</th>
+              {withQueue && <th scope="col">Ưu tiên</th>}
               <th scope="col">Bước</th>
               {withQueue && <th scope="col">Phụ trách</th>}
               <th scope="col">Cập nhật</th>
@@ -131,16 +132,23 @@ export function RequestResults({ rows, route, qa, onResetFilters }: Props) {
                     data-ticket={r.id}
                     to={detailPath(r.id, route)}
                   >
-                    <span className="ticket-name">{r.title}</span>
-                    {withQueue && (
-                      <span className="subline">{r.requester}</span>
-                    )}
+                    <span className="title-row">
+                      <span className="ticket-name">{r.title}</span>
+                      {!withQueue && r.priority === "Cao" && (
+                        <PriorityBadge priority={r.priority} />
+                      )}
+                    </span>
+                    <span className="subline">
+                      {withQueue ? r.requester : nextStepNote(r.status)}
+                    </span>
                   </Link>
                 </td>
                 <td>{SERVICES[r.service]}</td>
-                <td>
-                  <PriorityBadge priority={r.priority} />
-                </td>
+                {withQueue && (
+                  <td>
+                    <PriorityBadge priority={r.priority} />
+                  </td>
+                )}
                 <td>
                   <WorkflowRail status={r.status} />
                 </td>
@@ -171,16 +179,17 @@ export function RequestResults({ rows, route, qa, onResetFilters }: Props) {
             <h2>{r.title}</h2>
             <div className="mobile-card-status">
               <WorkflowRail status={r.status} />
+            </div>
+            <div className="mobile-meta">
+              <span className="mobile-meta-text">
+                {withQueue
+                  ? `${r.requester}${r.assignee ? ` · ${r.assignee}` : ""}`
+                  : nextStepNote(r.status)}
+              </span>
               <span className="mobile-card-date">
                 {r.updated.split(" ").slice(-1)[0]}
               </span>
             </div>
-            {withQueue && (
-              <div className="mobile-requester">
-                {r.requester}
-                {r.assignee ? ` · ${r.assignee}` : ""}
-              </div>
-            )}
           </Link>
         ))}
       </div>
