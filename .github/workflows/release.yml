@@ -105,7 +105,7 @@ jobs:
           python3 scripts/r24-release.py package --mode "$MODE" \
             --tag "$TAG" --sha "$SOURCE_SHA" --output dist/r24
           python3 scripts/r24-release.py verify --archive "dist/r24/dxos-open-core-${TAG#v}.tar.gz" --checksums dist/r24/SHA256SUMS
-          sha256sum -c dist/r24/SHA256SUMS --ignore-missing
+          (cd dist/r24 && sha256sum -c SHA256SUMS)
       - uses: actions/upload-artifact@v4
         with:
           name: r24-candidate-${{ github.run_id }}
