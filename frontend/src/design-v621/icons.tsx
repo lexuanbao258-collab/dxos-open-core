@@ -12,6 +12,18 @@ const PATHS = {
       <path d="m15.6 15.6 5 5" />
     </>
   ),
+  alert: (
+    <>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 7.5v5.5M12 16.5v.01" />
+    </>
+  ),
+  check: (
+    <>
+      <circle cx="12" cy="12" r="9" />
+      <path d="m8 12.5 2.8 2.8L16 9.8" />
+    </>
+  ),
   filter: <path d="M4 7h16M7 12h10M10 17h4" />,
   back: <path d="m15 5-7 7 7 7" />,
   home: <path d="M3 10 12 3l9 7v11H3zM9 21v-8h6v8" />,

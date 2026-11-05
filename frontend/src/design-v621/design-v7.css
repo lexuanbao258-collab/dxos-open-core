@@ -739,3 +739,600 @@
   color: var(--muted);
   margin-top: 6px;
 }
+
+/* =====================================================================
+   Stage B2: Mine, Detail, Create, Integration
+   ===================================================================== */
+
+/* ---------- Shared: ticket title row, mobile row meta, missing data ---------- */
+.ot-root .title-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+}
+.ot-root .title-row .ticket-name {
+  display: inline;
+}
+.ot-root .no-data {
+  font-weight: 400;
+  color: var(--muted);
+}
+.ot-root .ot-time {
+  font: 500 13px/20px var(--mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--sub);
+}
+/* Date always sits at the right of the meta line, never on a row of its own. */
+.ot-root .mobile-card-status {
+  display: block;
+}
+.ot-root .mobile-card .mobile-meta {
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-top: 8px;
+  font-size: 13px;
+  color: var(--muted);
+}
+.ot-root .mobile-meta-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--muted);
+}
+.ot-root .mobile-card-date {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+/* ---------- Request detail ---------- */
+.ot-root .detail-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 44px;
+  margin-top: 16px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--green);
+}
+.ot-root .detail-head {
+  padding: 4px 0 20px;
+  border-bottom: 0;
+}
+.ot-root .detail-head h1 {
+  max-width: 900px;
+  margin: 0;
+  font-size: 30px;
+  line-height: 38px;
+  letter-spacing: -0.02em;
+  font-weight: 600;
+  text-wrap: balance;
+}
+.ot-root .detail-topline {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin-top: 10px;
+  font-size: 14px;
+  color: var(--sub);
+}
+.ot-root .detail-progress {
+  padding: 24px 0 28px;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+.ot-root .current-step {
+  margin: 8px 0 16px;
+  color: var(--ink);
+}
+.ot-root .current-step strong {
+  font-size: 17px;
+  font-weight: 600;
+}
+.ot-root .hero-rail {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+}
+.ot-root .hero-seg {
+  display: block;
+  height: 10px;
+  border-radius: 3px;
+  box-sizing: border-box;
+}
+.ot-root .hero-step.is-done .hero-seg,
+.ot-root .hero-step.is-current .hero-seg {
+  background: var(--green);
+}
+.ot-root .hero-step.is-current .hero-seg {
+  outline: 2px solid var(--green);
+  outline-offset: 2px;
+}
+.ot-root .hero-step.is-todo .hero-seg {
+  background: #fff;
+  box-shadow: inset 0 0 0 1.5px var(--field-border);
+}
+.ot-root .hero-label {
+  display: block;
+  margin-top: 12px;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--sub);
+}
+.ot-root .hero-step.is-current .hero-label {
+  font-weight: 700;
+  color: var(--ink);
+}
+.ot-root .next-note {
+  margin: 20px 0 0;
+  padding: 0 0 0 12px;
+  border-left: 3px solid #9ec5ae;
+  background: none;
+  color: var(--sub);
+  font-size: 15px;
+  line-height: 24px;
+}
+.ot-root .ot-detail-layout {
+  grid-template-columns: minmax(0, 1.6fr) minmax(280px, 0.9fr);
+  gap: 56px;
+  padding-top: 28px;
+}
+.ot-root .ot-timeline {
+  list-style: none;
+  margin: 16px 0 0;
+  padding: 0 0 0 20px;
+  border-left: 1px solid #b9c5bf;
+}
+.ot-root .tl-item {
+  position: relative;
+  padding: 0 0 24px;
+}
+.ot-root .tl-item:last-child {
+  padding-bottom: 0;
+}
+.ot-root .tl-item::before {
+  content: "";
+  position: absolute;
+  left: -26px;
+  top: 6px;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: inset 0 0 0 2px var(--field-border);
+}
+.ot-root .tl-item.is-latest::before {
+  background: var(--green);
+  box-shadow: 0 0 0 3px var(--pale);
+}
+.ot-root .tl-title {
+  display: block;
+  font-size: 15px;
+  line-height: 24px;
+  font-weight: 600;
+}
+.ot-root .tl-meta {
+  margin: 2px 0 0;
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--muted);
+}
+.ot-root .detail-aside {
+  border-left: 0;
+  padding-left: 0;
+}
+.ot-root .info-list {
+  margin: 12px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 14px;
+}
+.ot-root .info-list dt {
+  font-size: 13px;
+  color: var(--muted);
+}
+.ot-root .info-list dd {
+  margin: 2px 0 0;
+  max-width: none;
+  text-align: left;
+  font-size: 15px;
+  font-weight: 600;
+}
+.ot-root .actions-block {
+  margin-top: 28px;
+  padding-top: 20px;
+  border-top: 1px solid var(--line);
+}
+.ot-root .actions-block h3 {
+  margin: 0 0 6px;
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 600;
+}
+.ot-root .actions-block p {
+  margin: 0;
+  font-size: 14px;
+  color: var(--sub);
+}
+.ot-root .actions-block summary {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--green);
+}
+.ot-root .actions-block details p {
+  margin-top: 4px;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.ot-root .attach-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
+  margin: 24px 0 0;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+  font-size: 14px;
+  color: var(--sub);
+}
+.ot-root .blocked-ref {
+  font: 600 12px/1 var(--mono);
+  color: var(--amber);
+  background: var(--amber-bg);
+  border: 1px solid var(--amber-line);
+  border-radius: 4px;
+  padding: 3px 6px;
+}
+.ot-root .attach-note {
+  font-size: 13px;
+  color: var(--muted);
+}
+@media (max-width: 1000px) {
+  .ot-root .ot-detail-layout {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+}
+@media (max-width: 760px) {
+  .ot-root .detail-head h1 {
+    font-size: 24px;
+    line-height: 32px;
+  }
+  .ot-root .detail-progress {
+    padding: 20px 0 24px;
+  }
+  /* The current step is spelled out above the rail; labels would not fit. */
+  .ot-root .hero-label {
+    display: none;
+  }
+  .ot-root .hero-rail {
+    gap: 6px;
+  }
+  .ot-root .ot-detail-layout {
+    display: grid;
+    padding-top: 24px;
+  }
+}
+
+/* ---------- Create request ---------- */
+.ot-root .ot-form-layout {
+  align-items: start;
+  grid-template-columns: minmax(0, 640px) minmax(240px, 320px);
+  justify-content: start;
+  gap: 64px;
+  padding-top: 0;
+}
+.ot-root .ot-form {
+  max-width: 640px;
+}
+.ot-root .form-field label,
+.ot-root .form-field legend {
+  margin-bottom: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+}
+.ot-root .form-field label.choice {
+  margin: 0;
+}
+.ot-root .choice {
+  border-radius: 6px;
+  padding: 14px 16px;
+  min-height: 72px;
+  background: #fff;
+  transition:
+    border-color 120ms ease-out,
+    background-color 120ms ease-out,
+    box-shadow 120ms ease-out;
+}
+.ot-root .choice:hover {
+  border-color: var(--field-hover);
+}
+.ot-root .choice:has(input:checked) {
+  background: var(--pale);
+  border-color: var(--green);
+  box-shadow: inset 0 0 0 1px var(--green);
+}
+.ot-root .choice:has(input:focus-visible) {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+.ot-root .choice input {
+  width: 20px;
+  height: 20px;
+  margin: 0;
+  flex-shrink: 0;
+  accent-color: var(--green);
+}
+.ot-root .ot-textarea {
+  min-height: 140px;
+  padding: 12px 14px;
+  line-height: 1.6;
+}
+.ot-root .ot-input[aria-invalid="true"],
+.ot-root .ot-textarea[aria-invalid="true"] {
+  border-color: var(--danger);
+}
+.ot-root .ot-field-error {
+  min-height: 0;
+  margin-top: 6px;
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--danger);
+}
+.ot-root .ot-field-error:not(:empty) {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+}
+.ot-root .ot-field-error .ot-icon {
+  width: 16px;
+  height: 16px;
+  margin-top: 2px;
+}
+.ot-root .ot-form-actions {
+  margin-top: 8px;
+  padding-top: 20px;
+  gap: 12px;
+}
+.ot-root .btn:disabled {
+  background: #e3e9e6;
+  border-color: #e3e9e6;
+  color: #5e6e67;
+  opacity: 1;
+  cursor: not-allowed;
+}
+.ot-root .form-lock-reason {
+  margin: 12px 0 0;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--amber);
+}
+.ot-root .success-inline {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-top: 16px;
+  padding: 14px 16px;
+  border: 1px solid #bfdccf;
+  border-radius: 6px;
+  background: #e6f3ea;
+}
+.ot-root .success-inline .ot-icon {
+  width: 20px;
+  height: 20px;
+  margin-top: 1px;
+  color: #1b6b3a;
+}
+.ot-root .success-inline strong {
+  font-size: 15px;
+}
+.ot-root .success-inline p {
+  margin: 2px 0 0;
+  font-size: 14px;
+  color: var(--sub);
+}
+.ot-root .ot-form-note {
+  border-top: 0;
+  padding: 0 0 0 16px;
+  border-left: 3px solid #9ec5ae;
+}
+.ot-root .ot-form-note h2 {
+  margin: 0 0 8px;
+  font-size: 16px;
+  line-height: 24px;
+}
+.ot-root .ot-form-note p {
+  margin: 0 0 8px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--sub);
+}
+@media (max-width: 1000px) {
+  .ot-root .ot-form-layout {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+}
+@media (max-width: 480px) {
+  .ot-root .choice-wrap {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ---------- Integration ---------- */
+.ot-root .int-summary {
+  margin: 0 0 8px;
+  font-size: 15px;
+  color: var(--sub);
+}
+.ot-root .int-summary strong {
+  color: var(--ink);
+  font-weight: 600;
+}
+.ot-root .int-note {
+  max-width: 72ch;
+  margin: 0 0 20px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--muted);
+}
+.ot-root .int-surface {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.ot-root .int-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+.ot-root .int-table thead th {
+  padding: 12px 16px;
+  background: #f6f8f7;
+  border-bottom: 1px solid var(--line);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+}
+.ot-root .int-table tbody th,
+.ot-root .int-table tbody td {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--line);
+  font-size: 14px;
+  vertical-align: middle;
+}
+.ot-root .int-table tbody tr:last-child > * {
+  border-bottom: 0;
+}
+.ot-root .int-table tbody th {
+  background: transparent;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink);
+}
+.ot-root .int-condition {
+  color: var(--sub);
+}
+.ot-root .int-ref {
+  font: 500 13px/20px var(--mono);
+  color: var(--sub);
+  white-space: nowrap;
+}
+.ot-root .blocked {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border: 1px solid var(--amber-line);
+  border-radius: 4px;
+  background: var(--amber-bg);
+  color: var(--amber);
+  font: 600 12px/18px var(--mono);
+}
+.ot-root .int-principles {
+  max-width: 72ch;
+  margin-top: 40px;
+}
+.ot-root .int-principles ul {
+  margin: 12px 0 0;
+  padding-left: 20px;
+}
+.ot-root .int-principles li {
+  margin: 6px 0;
+  font-size: 15px;
+  line-height: 24px;
+  color: var(--sub);
+}
+.ot-root .qa-layout {
+  margin: 48px 0 0;
+  padding: 20px;
+  border: 1px dashed var(--field-border);
+  border-radius: 10px;
+  background: transparent;
+}
+.ot-root .qa-layout h2 {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  margin: 0 0 6px;
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 600;
+}
+.ot-root .qa-tag {
+  padding: 2px 8px;
+  border: 1px solid var(--amber-line);
+  border-radius: 4px;
+  background: var(--amber-bg);
+  color: var(--amber);
+  font-size: 12px;
+  font-weight: 600;
+}
+.ot-root .qa-layout p {
+  margin: 0 0 12px;
+  font-size: 14px;
+  color: var(--sub);
+}
+.ot-root .qa-label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 14px;
+  font-weight: 600;
+}
+.ot-root .qa-select {
+  max-width: 340px;
+}
+@media (max-width: 760px) {
+  .ot-root .int-table thead {
+    display: none;
+  }
+  .ot-root .int-table,
+  .ot-root .int-table tbody {
+    display: block;
+  }
+  .ot-root .int-table tbody tr {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 4px 12px;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--line);
+  }
+  .ot-root .int-table tbody tr:last-child {
+    border-bottom: 0;
+  }
+  .ot-root .int-table tbody th,
+  .ot-root .int-table tbody td {
+    padding: 0;
+    border: 0;
+  }
+  .ot-root .int-condition,
+  .ot-root .int-ref {
+    grid-column: 1 / -1;
+  }
+}
+
+/* Keep the two optional-field columns on one label line at desktop width. */
+.ot-root .ot-form .form-row {
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  align-items: start;
+}
+@media (max-width: 760px) {
+  .ot-root .ot-form .form-row {
+    grid-template-columns: 1fr;
+  }
+}
