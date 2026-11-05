@@ -125,6 +125,9 @@ def collect(root, inventory, output):
     collected = sum(row["status"] == "COLLECTED_UNREVIEWED" for row in entries)
     metadata = sum(row["status"] == "METADATA_ONLY" for row in entries)
     print(f"R24 upstream collection: {collected} collected UNREVIEWED, {missing} MISSING, {metadata} metadata-only")
+    for row in entries:
+        if row["status"] == "MISSING":
+            print("R24_MISSING_LICENSE:", row["project"], row["name"], row["version"], row["purl"])
     return entries
 
 
