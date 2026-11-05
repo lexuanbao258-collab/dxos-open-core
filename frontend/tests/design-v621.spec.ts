@@ -8,7 +8,22 @@ import { resolve } from "node:path";
 
 const evidence = resolve("..", "docs", "evidence", "opentrix-v7");
 // Screens already redesigned for V7; extend as each screen is approved.
-const EVIDENCE_SLUGS = new Set(["overview", "queue"]);
+const EVIDENCE_SLUGS = new Set([
+  "overview",
+  "queue",
+  "mine",
+  "detail-DX-1046-from-queue",
+  "create",
+  "integration",
+]);
+// 320px images only where the narrow layout matters most.
+const EVIDENCE_320 = new Set([
+  "overview",
+  "queue",
+  "mine",
+  "detail-DX-1046-from-queue",
+  "create",
+]);
 const ROUTES = [
   "/design-v621",
   "/design-v621/mine",
@@ -203,7 +218,7 @@ test("detail never offers actions and shows version only when provided", async (
   await expect(page.getByText("v2", { exact: true })).toBeVisible();
   await expect(page.getByText("Lịch sử xử lý (3)")).toBeVisible();
   await expect(
-    page.getByText("Không có thao tác xử lý nào được máy chủ cấp"),
+    page.getByText("Chưa có thao tác nào được máy chủ cấp"),
   ).toBeVisible();
   await expect(
     page.getByRole("button", { name: /duyệt|xử lý|xác nhận/i }),
@@ -372,6 +387,158 @@ test("200% zoom (emulated as a 720x450 CSS viewport): no overflow, no axe violat
   }
 });
 
+test("mine table is never clipped above 1040px and gives way to rows below", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1500, height: 900 });
+  await ready(page, "/design-v621/mine");
+  for (let w = 1041; w <= 1500; w += 41) {
+    await page.setViewportSize({ width: w, height: 900 });
+    const m = await page.evaluate(() => {
+      const table = document.querySelector<HTMLElement>(".data-table")!;
+      const surface = document.querySelector<HTMLElement>(".table-surface")!;
+      const titles = [...document.querySelectorAll(".data-table .ticket-name")];
+      return {
+        visible: table.getClientRects().length > 0,
+        fits: table.scrollWidth <= surface.clientWidth + 1,
+        minTitle: Math.min(
+          ...titles.map((e) => e.getBoundingClientRect().width),
+        ),
+        headers: [...document.querySelectorAll(".data-table th")].map(
+          (e) => e.textContent,
+        ),
+      };
+    });
+    expect(m.visible, `table visible @${w}`).toBe(true);
+    expect(m.fits, `table not clipped @${w}`).toBe(true);
+    expect(m.minTitle, `title width @${w}`).toBeGreaterThanOrEqual(240);
+    expect(m.headers).toEqual(["Mã", "Yêu cầu", "Dịch vụ", "Bước", "Cập nhật"]);
+  }
+  await page.setViewportSize({ width: 1040, height: 900 });
+  await expect(page.locator(".table-surface")).toBeHidden();
+  await expect(page.locator(".mobile-list")).toBeVisible();
+});
+
+for (const width of [320, 360, 390, 760]) {
+  test(`list rows keep the date on the first meta line, right aligned, at ${width}px`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height: 800 });
+    for (const url of ["/design-v621/mine", "/design-v621/queue"]) {
+      await ready(page, url);
+      const bad = await page.evaluate(() =>
+        [...document.querySelectorAll(".mobile-card")].flatMap((card) => {
+          const text = card
+            .querySelector(".mobile-meta-text")!
+            .getBoundingClientRect();
+          const date = card
+            .querySelector(".mobile-card-date")!
+            .getBoundingClientRect();
+          const box = card.getBoundingClientRect();
+          const problems: string[] = [];
+          // Same line: the date's top is inside the first line of the text.
+          if (Math.abs(date.top - text.top) > 4)
+            problems.push("date on another line");
+          if (date.right > box.right + 0.5)
+            problems.push("date overflows card");
+          if (box.width > innerWidth) problems.push("card wider than viewport");
+          return problems.map(
+            (p) => `${card.getAttribute("data-ticket")}: ${p}`,
+          );
+        }),
+      );
+      expect(bad, `${url} @${width}`).toEqual([]);
+      expect(await noHorizontalOverflow(page), `${url} @${width}`).toBe(true);
+    }
+  });
+}
+
+test("bottom navigation stays fixed while scrolling and never covers the last content", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  for (const url of [
+    "/design-v621/queue",
+    "/design-v621/mine",
+    "/design-v621/detail/DX-1046?from=queue",
+    "/design-v621/create",
+    "/design-v621/integration",
+  ]) {
+    await ready(page, url);
+    const nav = page.locator(".bottom-nav");
+    const height = await page.evaluate(() => window.innerHeight);
+    for (const frac of [0, 0.5, 1]) {
+      await page.evaluate((f) => {
+        const max = document.documentElement.scrollHeight - innerHeight;
+        window.scrollTo(0, max * f);
+      }, frac);
+      const box = (await nav.boundingBox())!;
+      expect(Math.round(box.y + box.height), `${url} nav bottom @${frac}`).toBe(
+        height,
+      );
+      expect(await nav.evaluate((e) => getComputedStyle(e).position)).toBe(
+        "fixed",
+      );
+    }
+    // At the very bottom the footer must sit fully above the fixed bar.
+    const gap = await page.evaluate(() => {
+      const footer = document
+        .querySelector(".ot-footer")!
+        .getBoundingClientRect();
+      const nav = document
+        .querySelector(".bottom-nav")!
+        .getBoundingClientRect();
+      return nav.top - footer.bottom;
+    });
+    expect(gap, `${url} footer vs nav`).toBeGreaterThanOrEqual(0);
+    if (process.env.SAVE_EVIDENCE && url.endsWith("/queue")) {
+      await mkdir(evidence, { recursive: true });
+      await page.evaluate(() => window.scrollTo(0, 420));
+      await page.screenshot({
+        path: resolve(evidence, "mobile-390-queue-scrolled-viewport.png"),
+        animations: "disabled",
+      });
+    }
+  }
+});
+
+test("detail: hero rail, timeline order and the actions disclosure work by keyboard", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await ready(page, "/design-v621/detail/DX-1046?from=queue");
+  await expect(page.locator(".hero-step")).toHaveCount(5);
+  await expect(page.locator(".hero-step.is-current .hero-label")).toHaveText(
+    "Đang xử lý",
+  );
+  await expect(page.locator(".tl-item .tl-title").first()).toHaveText(
+    "Đã tiếp nhận → Đang xử lý v2",
+  );
+  const summary = page.getByText("Vì sao không có thao tác?");
+  await summary.focus();
+  await expect(summary).toBeFocused();
+  await page.keyboard.press("Enter");
+  await expect(page.locator(".actions-block details")).toHaveAttribute(
+    "open",
+    "",
+  );
+  await expect(
+    page.getByRole("button", { name: /duyệt|xử lý|xác nhận/i }),
+  ).toHaveCount(0);
+});
+
+test("create: invalid submit focuses the first field and error text keeps its icon", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await ready(page, "/design-v621/create");
+  await page.getByRole("button", { name: "Kiểm tra biểu mẫu" }).click();
+  await expect(page.locator("#title")).toBeFocused();
+  await expect(page.locator("#title-error svg")).toHaveCount(1);
+  await expect(page.locator("#title")).toHaveAttribute("aria-invalid", "true");
+  expect(await noHorizontalOverflow(page)).toBe(true);
+});
+
 test("mobile filter sheet opens as a modal dialog and applies filters", async ({
   page,
 }) => {
@@ -408,7 +575,11 @@ for (const [name, width, height] of [
           .replace(/[/?=]/g, "-")
           .replace(/^-/, "") || "overview";
       // Evidence images are rewritten only on request (SAVE_EVIDENCE=1).
-      if (process.env.SAVE_EVIDENCE && EVIDENCE_SLUGS.has(slug)) {
+      if (
+        process.env.SAVE_EVIDENCE &&
+        EVIDENCE_SLUGS.has(slug) &&
+        (width !== 320 || EVIDENCE_320.has(slug))
+      ) {
         await page.screenshot({
           path: resolve(evidence, `${name}-${slug}.png`),
           fullPage: true,

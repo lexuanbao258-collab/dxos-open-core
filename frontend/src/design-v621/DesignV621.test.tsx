@@ -682,7 +682,7 @@ describe("request detail", () => {
     ).toBeInTheDocument();
     expect(screen.getByText("Đang xử lý · Bước 3/5")).toBeInTheDocument();
     expect(screen.getByText("Lịch sử xử lý (3)")).toBeInTheDocument();
-    const items = [...document.querySelectorAll(".audit-item strong")].map(
+    const items = [...document.querySelectorAll(".tl-item .tl-title")].map(
       (e) => e.textContent,
     );
     expect(items).toEqual([
@@ -692,9 +692,7 @@ describe("request detail", () => {
     ]);
     expect(screen.getByText("v2", { exact: true })).toBeInTheDocument();
     expect(
-      screen.getByText(
-        "Không có thao tác xử lý nào được máy chủ cấp cho bản xem trước này.",
-      ),
+      screen.getByText("Chưa có thao tác nào được máy chủ cấp."),
     ).toBeInTheDocument();
     expect(screen.queryByRole("button")).toBeNull();
     expect(screen.getByText(/BLOCKED #26/)).toBeInTheDocument();
@@ -777,7 +775,7 @@ describe("create request form", () => {
     await user.click(screen.getByRole("radio", { name: /Cơ sở vật chất/ }));
     const facility = screen.getByLabelText(/Vị trí \/ khu vực/);
     expect(facility).toBeRequired();
-    expect(facility).toHaveAttribute("placeholder", "Ví dụ: Phòng họp Lotus");
+    expect(facility).toHaveAttribute("placeholder", "Ví dụ: Phòng họp Lotus…");
     await user.type(screen.getByLabelText(/Tiêu đề/), "Điều hòa hỏng");
     await user.type(
       screen.getByLabelText(/Mô tả chi tiết/),
@@ -802,15 +800,49 @@ describe("create request form", () => {
   });
 });
 
-describe("integration screen", () => {
-  it("marks every capability BLOCKED and links the baseline references", () => {
+describe("integration screen (V7)", () => {
+  it("summarises from the data, lists every capability as BLOCKED, no font copy", () => {
     renderAt("/design-v621/integration");
+    expect(screen.getByText("7 thành phần")).toBeInTheDocument();
+    expect(document.querySelector(".int-summary")).toHaveTextContent(
+      "7 thành phần · 7 chưa nghiệm thu",
+    );
     expect(screen.getAllByText("BLOCKED")).toHaveLength(7);
     expect(screen.getByText("PR #63")).toBeInTheDocument();
-    expect(screen.getByText(/expectedVersion/)).toBeInTheDocument();
+    const names = [
+      ...document.querySelectorAll(".int-table tbody th[scope='row']"),
+    ].map((e) => e.textContent);
+    expect(names).toHaveLength(7);
+    expect(names[0]).toBe("Identity / SSO");
+    expect(document.body).not.toHaveTextContent(
+      /Be Vietnam Pro|IBM Plex|Google Fonts/,
+    );
+  });
+
+  it("states the write-safety principles as a list", () => {
+    renderAt("/design-v621/integration");
+    const section = screen
+      .getByRole("heading", { name: "Nguyên tắc tích hợp" })
+      .closest("section")!;
+    const items = section.querySelectorAll("li");
+    expect(items).toHaveLength(4);
+    expect(section).toHaveTextContent("allowedActions");
+    expect(section).toHaveTextContent("expectedVersion");
+    expect(section).toHaveTextContent("không gửi lại lệnh");
+  });
+
+  it("separates the preview-only QA tool from the status content", () => {
+    renderAt("/design-v621/integration");
+    const tool = screen
+      .getByRole("heading", { name: /Công cụ xem trạng thái giao diện/ })
+      .closest("section")!;
+    expect(tool).toHaveTextContent("Chỉ dùng khi xem trước");
+    expect(within(tool).getByLabelText("Tình huống")).toBeInTheDocument();
     expect(
-      screen.getByText(/không tải\s+tài nguyên từ bên thứ ba/),
-    ).toBeInTheDocument();
+      screen
+        .getByRole("heading", { name: "Trạng thái tích hợp" })
+        .closest("section"),
+    ).not.toBe(tool);
   });
 });
 
@@ -851,5 +883,248 @@ describe("search placeholder fitting (V6.2.1 N-09, incl. 361–370px)", () => {
   it("falls back to the full text when canvas is unavailable", () => {
     vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue(null);
     expect(textFitsInput(fakeInput(500), "x")).toBe(true);
+  });
+});
+
+describe("mine (V7)", () => {
+  const row = (id: string) =>
+    document.querySelector(`a.row-link[data-ticket="${id}"]`)!.closest("tr")!;
+
+  it("drops queue-only columns and explains each status in plain words", () => {
+    renderAt("/design-v621/mine");
+    for (const name of ["Mã", "Yêu cầu", "Dịch vụ", "Bước", "Cập nhật"])
+      expect(screen.getByRole("columnheader", { name })).toBeInTheDocument();
+    expect(
+      screen.queryByRole("columnheader", { name: "Phụ trách" }),
+    ).toBeNull();
+    expect(screen.queryByRole("columnheader", { name: "Ưu tiên" })).toBeNull();
+    expect(row("DX-1046").querySelector(".subline")).toHaveTextContent(
+      "Đang được xử lý; bước tiếp theo là ghi nhận kết quả.",
+    );
+    expect(row("DX-1048").querySelector(".subline")).toHaveTextContent(
+      "Đang chờ tiếp nhận yêu cầu.",
+    );
+    // The requester is the viewer; it is not repeated.
+    expect(row("DX-1048")).not.toHaveTextContent("Ngọc Ánh");
+  });
+
+  it("shows the Cao badge next to the title and nowhere else", () => {
+    renderAt("/design-v621/mine");
+    expect(
+      row("DX-1048").querySelector(".title-row .ot-badge-high"),
+    ).toHaveTextContent("Cao");
+    expect(row("DX-1046").querySelector(".ot-badge-high")).toBeNull();
+    expect(row("DX-1046")).not.toHaveTextContent("Bình thường");
+  });
+
+  it("closed tab lists only confirmed tickets with their status sentence", async () => {
+    const user = userEvent.setup();
+    renderAt("/design-v621/mine");
+    await user.click(screen.getByRole("button", { name: /Đã xong/ }));
+    expect(
+      [...document.querySelectorAll("a.row-link")].map((a) =>
+        a.getAttribute("data-ticket"),
+      ),
+    ).toEqual(["DX-1042"]);
+    expect(row("DX-1042").querySelector(".subline")).toHaveTextContent(
+      "Yêu cầu đã được xác nhận hoàn thành.",
+    );
+  });
+
+  it("cards: status sentence and date share one meta line, date last", () => {
+    renderAt("/design-v621/mine");
+    for (const card of document.querySelectorAll("a.mobile-card")) {
+      const meta = card.querySelector(".mobile-meta")!;
+      expect(meta.children).toHaveLength(2);
+      expect(meta.lastElementChild).toHaveClass("mobile-card-date");
+      expect(meta.lastElementChild?.textContent).toMatch(/^\d\d\/\d\d\/\d{4}$/);
+      expect(
+        card.querySelector(".mobile-card-status .mobile-card-date"),
+      ).toBeNull();
+    }
+    const card = document.querySelector(
+      'a.mobile-card[data-ticket="DX-1046"]',
+    )!;
+    expect(card.querySelector(".mobile-meta-text")).toHaveTextContent(
+      "Đang được xử lý; bước tiếp theo là ghi nhận kết quả.",
+    );
+  });
+
+  it("queue cards still show requester and assignee instead", () => {
+    renderAt("/design-v621/queue");
+    const card = document.querySelector(
+      'a.mobile-card[data-ticket="DX-1046"]',
+    )!;
+    expect(card.querySelector(".mobile-meta-text")).toHaveTextContent(
+      "Ngọc Ánh · Nhóm IT Support",
+    );
+  });
+
+  it("mine never exposes a write action or shortcut", async () => {
+    const user = userEvent.setup();
+    renderAt("/design-v621/mine");
+    vi.spyOn(Element.prototype, "getClientRects").mockReturnValue([
+      {},
+    ] as unknown as DOMRectList);
+    await user.keyboard("je");
+    expect(document.activeElement).toBe(document.body);
+    expect(document.getElementById("kbd-feedback")).toBeEmptyDOMElement();
+  });
+});
+
+describe("request detail (V7)", () => {
+  it("renders the hero rail as 5 ordered steps with states", () => {
+    renderAt("/design-v621/detail/DX-1046?from=queue");
+    const steps = [...document.querySelectorAll(".hero-rail li")];
+    expect(steps.map((li) => li.className)).toEqual([
+      "hero-step is-done",
+      "hero-step is-done",
+      "hero-step is-current",
+      "hero-step is-todo",
+      "hero-step is-todo",
+    ]);
+    expect(steps.map((li) => li.textContent)).toEqual([
+      "Đã gửi",
+      "Đã tiếp nhận",
+      "Đang xử lý",
+      "Đã giải quyết",
+      "Đã xác nhận",
+    ]);
+    expect(
+      screen.getByText(/Quy trình 5 bước, hiện ở bước 3 trên 5: Đang xử lý\./),
+    ).toBeInTheDocument();
+  });
+
+  it("timeline: newest first, title then actor and timestamp", () => {
+    renderAt("/design-v621/detail/DX-1046?from=queue");
+    const items = [...document.querySelectorAll(".tl-item")];
+    expect(items).toHaveLength(3);
+    expect(items[0]).toHaveClass("is-latest");
+    expect(items[1]).not.toHaveClass("is-latest");
+    expect(items[0].querySelector(".tl-meta")).toHaveTextContent(
+      "Nhóm IT Support · 11:17 19/10/2026",
+    );
+    expect(items[0].querySelector("time")).toHaveTextContent(
+      "11:17 19/10/2026",
+    );
+    expect(items[2].querySelector(".tl-title")).toHaveTextContent(
+      "Khởi tạo v0",
+    );
+  });
+
+  it("info list pairs each label with its value; missing values are muted text", () => {
+    renderAt("/design-v621/detail/DX-1048?from=mine");
+    const rows = [...document.querySelectorAll(".info-list > div")].map((d) => [
+      d.querySelector("dt")?.textContent,
+      d.querySelector("dd")?.textContent,
+    ]);
+    expect(rows).toEqual([
+      ["Người gửi", "Ngọc Ánh"],
+      ["Nhóm phụ trách", "Chưa có dữ liệu"],
+      ["Cập nhật", "09:15 20/10/2026"],
+      ["Phiên bản", "Chưa có dữ liệu"],
+    ]);
+    expect(document.querySelectorAll(".info-list .no-data")).toHaveLength(2);
+  });
+
+  it("explains missing actions in a disclosure, without offering any action", async () => {
+    const user = userEvent.setup();
+    renderAt("/design-v621/detail/DX-1046?from=queue");
+    const block = screen
+      .getByRole("heading", { name: "Thao tác xử lý" })
+      .closest("section")!;
+    expect(block).toHaveTextContent("Chưa có thao tác nào được máy chủ cấp.");
+    const details = block.querySelector("details")!;
+    expect(details).not.toHaveAttribute("open");
+    await user.click(screen.getByText("Vì sao không có thao tác?"));
+    expect(details).toHaveAttribute("open");
+    expect(details).toHaveTextContent("allowedActions");
+    expect(details).toHaveTextContent("expectedVersion");
+    expect(block.querySelectorAll("button, a, input")).toHaveLength(0);
+  });
+
+  it("keeps attachments as a quiet BLOCKED row", () => {
+    renderAt("/design-v621/detail/DX-1046?from=queue");
+    const row = document.querySelector(".attach-row")!;
+    expect(row).toHaveTextContent("Tệp đính kèm");
+    expect(row.querySelector(".blocked-ref")).toHaveTextContent("BLOCKED #26");
+    expect(row.querySelectorAll("input[type=file]")).toHaveLength(0);
+  });
+});
+
+describe("create request (V7)", () => {
+  it("turns browser autofill off and ends placeholders with an ellipsis", () => {
+    renderAt("/design-v621/create");
+    for (const id of ["title", "description", "location"]) {
+      const el = document.getElementById(id)!;
+      expect(el, id).toHaveAttribute("autocomplete", "off");
+      expect(el.getAttribute("placeholder"), id).toMatch(/…$/);
+    }
+  });
+
+  it("copy no longer points at 'the left button'", () => {
+    renderAt("/design-v621/create");
+    const note = document.querySelector(".ot-form-note")!;
+    expect(note).toHaveTextContent("nút Kiểm tra biểu mẫu");
+    expect(note).not.toHaveTextContent("bên trái");
+  });
+
+  it("unknown outcome: disabled submit with a visible reason, never a retry", async () => {
+    const user = userEvent.setup();
+    renderAt("/design-v621/integration");
+    await user.selectOptions(screen.getByLabelText("Tình huống"), "unknown");
+    await user.click(
+      within(
+        screen.getByRole("navigation", { name: "Điều hướng chính" }),
+      ).getByRole("link", { name: "Tạo yêu cầu" }),
+    );
+    const submit = screen.getByRole("button", { name: "Kiểm tra biểu mẫu" });
+    expect(submit).toBeDisabled();
+    expect(submit).toHaveAttribute("aria-describedby", "lock-reason");
+    expect(document.getElementById("lock-reason")).toHaveTextContent(
+      "Đang khóa: kết quả ghi chưa xác định. Cần đối soát trước khi tiếp tục.",
+    );
+    expect(
+      screen.queryByRole("button", { name: /thử lại|gửi lại/i }),
+    ).toBeNull();
+  });
+
+  it("errors carry an icon and the invalid field is marked", async () => {
+    const user = userEvent.setup();
+    renderAt("/design-v621/create");
+    await user.click(screen.getByRole("button", { name: "Kiểm tra biểu mẫu" }));
+    const err = document.getElementById("title-error")!;
+    expect(err).toHaveTextContent("Tiêu đề cần ít nhất 5 ký tự.");
+    expect(err.querySelector("svg")).toHaveAttribute("aria-hidden", "true");
+    expect(document.getElementById("title")).toHaveAttribute(
+      "aria-invalid",
+      "true",
+    );
+    // Facility rule is untouched: IT does not require a location.
+    expect(document.getElementById("location-error")).toBeEmptyDOMElement();
+  });
+
+  it("valid IT form shows the success block without sending anything", async () => {
+    const user = userEvent.setup();
+    renderAt("/design-v621/create");
+    await user.type(screen.getByLabelText(/Tiêu đề/), "Không vào được VPN");
+    await user.type(
+      screen.getByLabelText(/Mô tả chi tiết/),
+      "Không đăng nhập được VPN từ sáng nay",
+    );
+    await user.click(screen.getByRole("button", { name: "Kiểm tra biểu mẫu" }));
+    const ok = screen.getByRole("status", { name: "" });
+    expect(ok).toHaveTextContent("Biểu mẫu hợp lệ");
+    expect(ok.querySelector("svg")).toHaveAttribute("aria-hidden", "true");
+    expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
+  it("service choices are labelled radios inside one group", () => {
+    renderAt("/design-v621/create");
+    const group = screen.getByRole("group", { name: /Dịch vụ/ });
+    expect(within(group).getAllByRole("radio")).toHaveLength(2);
+    expect(
+      within(group).getByRole("radio", { name: /Hỗ trợ CNTT/ }),
+    ).toBeChecked();
   });
 });
