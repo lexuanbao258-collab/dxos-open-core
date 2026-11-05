@@ -694,7 +694,7 @@ class HelpdeskHttpPostgresTest {
         }
         try(var app=new SpringApplicationBuilder(com.tricore.dxos.DxosApplication.class).run(
                 "--server.address=127.0.0.1","--server.port=0","--spring.main.banner-mode=off",
-                "--spring.flyway.enabled=false","--spring.jpa.hibernate.ddl-auto=none",
+                "--spring.flyway.enabled=false",
                 "--spring.datasource.url="+url+"?currentSchema="+schema+",pg_catalog,pg_temp",
                 "--spring.datasource.username="+runtimeRole,"--spring.datasource.password="+runtimePassword,
                 "--spring.security.oauth2.resourceserver.jwt.issuer-uri="+keycloakIssuer,
@@ -788,7 +788,7 @@ class HelpdeskHttpPostgresTest {
     @Test void fullBootApplicationStartsAndServesGuardedRoutesOverHttp() throws Exception {
         try(var app=new SpringApplicationBuilder(com.tricore.dxos.DxosApplication.class).run(
                 "--server.address=127.0.0.1","--server.port=0","--spring.main.banner-mode=off",
-                "--spring.flyway.enabled=false","--spring.jpa.hibernate.ddl-auto=none",
+                "--spring.flyway.enabled=false",
                 "--spring.datasource.url="+url+"?currentSchema="+schema+",pg_catalog,pg_temp",
                 "--spring.datasource.username="+runtimeRole,"--spring.datasource.password="+runtimePassword,
                 "--spring.security.oauth2.resourceserver.jwt.issuer-uri="+issuer,

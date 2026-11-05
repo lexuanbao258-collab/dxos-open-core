@@ -11,14 +11,6 @@ spring:
     username: ${DB_USER}
     password: ${DB_PASSWORD}
 
-  jpa:
-    open-in-view: false
-    properties:
-      hibernate:
-        default_schema: public
-    hibernate:
-      ddl-auto: none
-
   security:
     oauth2:
       resourceserver:
