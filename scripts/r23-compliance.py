@@ -137,18 +137,10 @@ def read_bom(path, project):
         if c["name"] in {"logback-classic", "logback-core"} and c["version"] == "1.5.34" \
                 and set(declared) == {"EPL-2.0", "LGPL-2.1-only"}:
             approved, choice = True, "EPL-2.0"
-        # Hibernate ORM 6.6 is LGPL-2.1; review binary redistribution
-        # duties before release, rather than re-labeling the dependency.
-        # https://hibernate.org/orm/releases/6.6/
-        if project == "backend" and c["name"] == "hibernate-core" \
-                and c["version"] == "6.6.53.Final" and declared == ["LGPL-2.1-only"]:
-            approved, choice = True, "LGPL-2.1-only (conditional redistribution review)"
         # CI policy approval and rights/redistribution acceptance are
         # independent gates. Do not turn a reviewed SPDX ID into a release PASS.
         obligations = ["CHECK_UPSTREAM_LICENSE_NOTICE_AND_ATTRIBUTION",
                        "R24_VERIFY_RELEASE_PACKAGING"]
-        if c["name"] == "hibernate-core" and c["version"] == "6.6.53.Final":
-            obligations.append("LGPL_SOURCE_LINKING_RELINK_DISTRIBUTION_REVIEW")
         if c["name"] in {"logback-core", "logback-classic"} and c["version"] == "1.5.34":
             obligations.append("EPL_LICENSE_NOTICE_SOURCE_REVIEW")
         if "BlueOak-1.0.0" in declared:

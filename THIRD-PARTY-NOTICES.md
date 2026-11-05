@@ -10,19 +10,12 @@ certification or a substitute for upstream license and NOTICE texts.
 
 | Project | Dependency | Version | Declared licenses | License choice | PURL |
 | --- | --- | --- | --- | --- | --- |
-| backend | angus-activation | 2.0.3 | BSD-3-Clause |  | pkg:maven/org.eclipse.angus/angus-activation@2.0.3?type=jar |
-| backend | antlr4-runtime | 4.13.2 | BSD-3-Clause |  | pkg:maven/org.antlr/antlr4-runtime@4.13.2?type=jar |
-| backend | aspectjweaver | 1.9.25.1 | EPL-2.0 |  | pkg:maven/org.aspectj/aspectjweaver@1.9.25.1?type=jar |
-| backend | byte-buddy | 1.17.8 | Apache-2.0 |  | pkg:maven/net.bytebuddy/byte-buddy@1.17.8?type=jar |
 | backend | classmate | 1.7.3 | Apache-2.0 |  | pkg:maven/com.fasterxml/classmate@1.7.3?type=jar |
 | backend | flyway-core | 11.7.2 | Apache-2.0 |  | pkg:maven/org.flywaydb/flyway-core@11.7.2?type=jar |
 | backend | flyway-database-postgresql | 11.7.2 | Apache-2.0 |  | pkg:maven/org.flywaydb/flyway-database-postgresql@11.7.2?type=jar |
 | backend | HdrHistogram | 2.2.2 | BSD-2-Clause, CC0-1.0 |  | pkg:maven/org.hdrhistogram/HdrHistogram@2.2.2?type=jar |
-| backend | hibernate-commons-annotations | 7.0.3.Final | Apache-2.0 |  | pkg:maven/org.hibernate.common/hibernate-commons-annotations@7.0.3.Final?type=jar |
-| backend | hibernate-core | 6.6.53.Final | LGPL-2.1-only | LGPL-2.1-only (conditional redistribution review) | pkg:maven/org.hibernate.orm/hibernate-core@6.6.53.Final?type=jar |
 | backend | hibernate-validator | 8.0.3.Final | Apache-2.0 |  | pkg:maven/org.hibernate.validator/hibernate-validator@8.0.3.Final?type=jar |
 | backend | HikariCP | 6.3.3 | Apache-2.0 |  | pkg:maven/com.zaxxer/HikariCP@6.3.3?type=jar |
-| backend | istack-commons-runtime | 4.1.2 | BSD-3-Clause |  | pkg:maven/com.sun.istack/istack-commons-runtime@4.1.2?type=jar |
 | backend | jackson-annotations | 2.21 | Apache-2.0 |  | pkg:maven/com.fasterxml.jackson.core/jackson-annotations@2.21?type=jar |
 | backend | jackson-bom | 2.21.4 | Apache-2.0 |  | pkg:maven/com.fasterxml.jackson/jackson-bom@2.21.4?type=pom |
 | backend | jackson-core | 2.21.4 | Apache-2.0 |  | pkg:maven/com.fasterxml.jackson.core/jackson-core@2.21.4?type=jar |
@@ -31,16 +24,8 @@ certification or a substitute for upstream license and NOTICE texts.
 | backend | jackson-datatype-jdk8 | 2.21.4 | Apache-2.0 |  | pkg:maven/com.fasterxml.jackson.datatype/jackson-datatype-jdk8@2.21.4?type=jar |
 | backend | jackson-datatype-jsr310 | 2.21.4 | Apache-2.0 |  | pkg:maven/com.fasterxml.jackson.datatype/jackson-datatype-jsr310@2.21.4?type=jar |
 | backend | jackson-module-parameter-names | 2.21.4 | Apache-2.0 |  | pkg:maven/com.fasterxml.jackson.module/jackson-module-parameter-names@2.21.4?type=jar |
-| backend | jakarta.activation-api | 2.1.4 | BSD-3-Clause |  | pkg:maven/jakarta.activation/jakarta.activation-api@2.1.4?type=jar |
 | backend | jakarta.annotation-api | 2.1.1 | EPL-2.0, GPL-2.0-with-classpath-exception |  | pkg:maven/jakarta.annotation/jakarta.annotation-api@2.1.1?type=jar |
-| backend | jakarta.inject-api | 2.0.1 | Apache-2.0 |  | pkg:maven/jakarta.inject/jakarta.inject-api@2.0.1?type=jar |
-| backend | jakarta.persistence-api | 3.1.0 | BSD-3-Clause, EPL-2.0 |  | pkg:maven/jakarta.persistence/jakarta.persistence-api@3.1.0?type=jar |
-| backend | jakarta.transaction-api | 2.0.1 | EPL-2.0, GPL-2.0-with-classpath-exception |  | pkg:maven/jakarta.transaction/jakarta.transaction-api@2.0.1?type=jar |
 | backend | jakarta.validation-api | 3.0.2 | Apache-2.0 |  | pkg:maven/jakarta.validation/jakarta.validation-api@3.0.2?type=jar |
-| backend | jakarta.xml.bind-api | 4.0.5 | BSD-3-Clause |  | pkg:maven/jakarta.xml.bind/jakarta.xml.bind-api@4.0.5?type=jar |
-| backend | jandex | 3.2.0 | Apache-2.0 |  | pkg:maven/io.smallrye/jandex@3.2.0?type=jar |
-| backend | jaxb-core | 4.0.9 | BSD-3-Clause |  | pkg:maven/org.glassfish.jaxb/jaxb-core@4.0.9?type=jar |
-| backend | jaxb-runtime | 4.0.9 | BSD-3-Clause |  | pkg:maven/org.glassfish.jaxb/jaxb-runtime@4.0.9?type=jar |
 | backend | jboss-logging | 3.6.3.Final | Apache-2.0 |  | pkg:maven/org.jboss.logging/jboss-logging@3.6.3.Final?type=jar |
 | backend | jcip-annotations | 1.0-1 | Apache-2.0 |  | pkg:maven/com.github.stephenc.jcip/jcip-annotations@1.0-1?type=jar |
 | backend | jul-to-slf4j | 2.0.18 | MIT |  | pkg:maven/org.slf4j/jul-to-slf4j@2.0.18?type=jar |
@@ -58,7 +43,6 @@ certification or a substitute for upstream license and NOTICE texts.
 | backend | slf4j-api | 2.0.18 | MIT |  | pkg:maven/org.slf4j/slf4j-api@2.0.18?type=jar |
 | backend | snakeyaml | 2.4 | Apache-2.0 |  | pkg:maven/org.yaml/snakeyaml@2.4?type=jar |
 | backend | spring-aop | 6.2.19 | Apache-2.0 |  | pkg:maven/org.springframework/spring-aop@6.2.19?type=jar |
-| backend | spring-aspects | 6.2.19 | Apache-2.0 |  | pkg:maven/org.springframework/spring-aspects@6.2.19?type=jar |
 | backend | spring-beans | 6.2.19 | Apache-2.0 |  | pkg:maven/org.springframework/spring-beans@6.2.19?type=jar |
 | backend | spring-boot | 3.5.16 | Apache-2.0 |  | pkg:maven/org.springframework.boot/spring-boot@3.5.16?type=jar |
 | backend | spring-boot-actuator | 3.5.16 | Apache-2.0 |  | pkg:maven/org.springframework.boot/spring-boot-actuator@3.5.16?type=jar |
@@ -67,7 +51,6 @@ certification or a substitute for upstream license and NOTICE texts.
 | backend | spring-boot-dependencies | 3.5.16 | Apache-2.0 |  | pkg:maven/org.springframework.boot/spring-boot-dependencies@3.5.16?type=pom |
 | backend | spring-boot-starter | 3.5.16 | Apache-2.0 |  | pkg:maven/org.springframework.boot/spring-boot-starter@3.5.16?type=jar |
 | backend | spring-boot-starter-actuator | 3.5.16 | Apache-2.0 |  | pkg:maven/org.springframework.boot/spring-boot-starter-actuator@3.5.16?type=jar |
-| backend | spring-boot-starter-data-jpa | 3.5.16 | Apache-2.0 |  | pkg:maven/org.springframework.boot/spring-boot-starter-data-jpa@3.5.16?type=jar |
 | backend | spring-boot-starter-jdbc | 3.5.16 | Apache-2.0 |  | pkg:maven/org.springframework.boot/spring-boot-starter-jdbc@3.5.16?type=jar |
 | backend | spring-boot-starter-json | 3.5.16 | Apache-2.0 |  | pkg:maven/org.springframework.boot/spring-boot-starter-json@3.5.16?type=jar |
 | backend | spring-boot-starter-logging | 3.5.16 | Apache-2.0 |  | pkg:maven/org.springframework.boot/spring-boot-starter-logging@3.5.16?type=jar |
@@ -78,12 +61,9 @@ certification or a substitute for upstream license and NOTICE texts.
 | backend | spring-boot-starter-web | 3.5.16 | Apache-2.0 |  | pkg:maven/org.springframework.boot/spring-boot-starter-web@3.5.16?type=jar |
 | backend | spring-context | 6.2.19 | Apache-2.0 |  | pkg:maven/org.springframework/spring-context@6.2.19?type=jar |
 | backend | spring-core | 6.2.19 | Apache-2.0 |  | pkg:maven/org.springframework/spring-core@6.2.19?type=jar |
-| backend | spring-data-commons | 3.5.13 | Apache-2.0 |  | pkg:maven/org.springframework.data/spring-data-commons@3.5.13?type=jar |
-| backend | spring-data-jpa | 3.5.13 | Apache-2.0 |  | pkg:maven/org.springframework.data/spring-data-jpa@3.5.13?type=jar |
 | backend | spring-expression | 6.2.19 | Apache-2.0 |  | pkg:maven/org.springframework/spring-expression@6.2.19?type=jar |
 | backend | spring-jcl | 6.2.19 | Apache-2.0 |  | pkg:maven/org.springframework/spring-jcl@6.2.19?type=jar |
 | backend | spring-jdbc | 6.2.19 | Apache-2.0 |  | pkg:maven/org.springframework/spring-jdbc@6.2.19?type=jar |
-| backend | spring-orm | 6.2.19 | Apache-2.0 |  | pkg:maven/org.springframework/spring-orm@6.2.19?type=jar |
 | backend | spring-security-config | 6.5.11 | Apache-2.0 |  | pkg:maven/org.springframework.security/spring-security-config@6.5.11?type=jar |
 | backend | spring-security-core | 6.5.11 | Apache-2.0 |  | pkg:maven/org.springframework.security/spring-security-core@6.5.11?type=jar |
 | backend | spring-security-crypto | 6.5.11 | Apache-2.0 |  | pkg:maven/org.springframework.security/spring-security-crypto@6.5.11?type=jar |
@@ -97,7 +77,6 @@ certification or a substitute for upstream license and NOTICE texts.
 | backend | tomcat-embed-core | 10.1.55 | Apache-2.0 |  | pkg:maven/org.apache.tomcat.embed/tomcat-embed-core@10.1.55?type=jar |
 | backend | tomcat-embed-el | 10.1.55 | Apache-2.0 |  | pkg:maven/org.apache.tomcat.embed/tomcat-embed-el@10.1.55?type=jar |
 | backend | tomcat-embed-websocket | 10.1.55 | Apache-2.0 |  | pkg:maven/org.apache.tomcat.embed/tomcat-embed-websocket@10.1.55?type=jar |
-| backend | txw2 | 4.0.9 | BSD-3-Clause |  | pkg:maven/org.glassfish.jaxb/txw2@4.0.9?type=jar |
 | frontend | be-vietnam-pro | 5.3.0 | OFL-1.1 |  | pkg:npm/%40fontsource/be-vietnam-pro@5.3.0 |
 | frontend | cookie | 1.1.1 | MIT |  | pkg:npm/cookie@1.1.1 |
 | frontend | csstype | 3.2.3 | MIT |  | pkg:npm/csstype@3.2.3 |

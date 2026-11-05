@@ -11,9 +11,9 @@ R23 implements reproducible CycloneDX inventories for the backend and Portal BFF
 
 ## Prerequisite — JPA cleanup (#133)
 
-The backend's deprecated `spring-boot-starter-data-jpa` dependency must be replaced by `spring-boot-starter-jdbc` via [PR #133](https://github.com/tricore-opentrix/dxos-open-core/pull/133) **merged into `main` first**. Only then synchronize R23 and regenerate the backend runtime BOM. Confirm `hibernate-core`, `jakarta.persistence-api`, `antlr4-runtime` and `hibernate-commons-annotations` no longer occur in its resolved runtime inventory. Do not claim they were removed while #133 remains open.
+PR [#133](https://github.com/tricore-opentrix/dxos-open-core/pull/133) was squash-merged into `main@84a7ca9e5b5f1012b95f676c86c2ec1d95dd3ea7`. The synchronized backend declares `spring-boot-starter-jdbc` instead of the obsolete `spring-boot-starter-data-jpa`.
 
-The version-pinned Hibernate 6.6.53.Final LGPL exception was documented for the *pre-cleanup* runtime; after #133 integration, verify whether the exception is now dead policy and remove it if so. `hibernate-validator` is distinct from Hibernate ORM and may remain present.
+Fresh R23 CycloneDX generation must prove `hibernate-core`, `jakarta.persistence-api`, `antlr4-runtime` and `hibernate-commons-annotations` absent from the resolved **backend runtime** inventory. The prior Hibernate 6.6.53.Final LGPL policy exception is now **removed**; retaining `hibernate-validator` for Bean Validation is expected and does not imply Hibernate ORM use. A future JPA/ORM reintroduction must undergo new independent license policy and redistribution review.
 
 ## Reproduction / exact-HEAD CI evidence
 

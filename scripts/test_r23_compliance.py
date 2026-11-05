@@ -80,8 +80,6 @@ class R23Tests(unittest.TestCase):
         policy = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(policy)
         examples = (
-            ("backend", "hibernate-core", "6.6.53.Final",
-             ["LGPL-2.1-only"], "LGPL_SOURCE_LINKING_RELINK_DISTRIBUTION_REVIEW"),
             ("portal-bff", "logback-core", "1.5.34",
              ["EPL-2.0", "LGPL-2.1-only"], "EPL_LICENSE_NOTICE_SOURCE_REVIEW"),
             ("frontend", "lru-cache", "11.5.3",
@@ -106,6 +104,18 @@ class R23Tests(unittest.TestCase):
                     if name == "lru-cache":
                         self.assertIn("BlueOak-1.0.0",
                                       record["license_reference_links"])
+            # After PR #133 removes JPA/ORM from the backend runtime, the
+            # former version-pinned Hibernate LGPL waiver must not survive.
+            legacy_orm = {"type": "library", "name": "hibernate-core",
+                          "version": "6.6.53.Final",
+                          "licenses": [{"license": {"id": "LGPL-2.1-only"}}]}
+            path.write_text(json.dumps({"bomFormat": "CycloneDX",
+                                        "specVersion": "1.6",
+                                        "components": [legacy_orm]}))
+            record = policy.read_bom(path, "backend")[0]
+            self.assertFalse(record["approved"])
+            self.assertEqual(record["license_policy_status"], "REVIEW")
+            self.assertEqual(record["license_choice"], "")
 
     def test_version_pinned_choices_do_not_apply_to_future_releases(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -123,8 +133,7 @@ class R23Tests(unittest.TestCase):
                 cmd.extend(("--output", str(root / "report")))
                 status = subprocess.run(cmd, capture_output=True, text=True).returncode
                 return status
-            # Every input gets the same synthetic component; only the
-            # backend Hibernate exception should match, so this remains red.
+            # No formerly pinned Hibernate ORM exception is allowed.
             self.assertEqual(inspect("backend", "hibernate-core", "6.6.54.Final",
                                      ["LGPL-2.1-only"]), 1)
             self.assertEqual(inspect("portal-bff", "logback-core", "1.5.35",
