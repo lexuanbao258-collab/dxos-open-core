@@ -43,6 +43,38 @@ def release_notes(changelog, tag):
     return f"# DX-OS {tag}\n\n" + match.group(1).strip() + "\n"
 
 
+def normalize_cyclonedx(raw):
+    """Remove only volatile generator metadata from packaged CycloneDX JSON.
+
+    CycloneDX runtime components, licenses and dependency edges remain intact.
+    Raw generator SBOM files are still used by the R23 compliance policy gate.
+    """
+    sbom = json.loads(raw)
+    require(isinstance(sbom, dict) and sbom.get("bomFormat") == "CycloneDX",
+            "invalid CycloneDX SBOM for release")
+    sbom.pop("serialNumber", None)  # generator UUID, changes on every build
+    metadata = sbom.get("metadata")
+    if isinstance(metadata, dict):
+        metadata.pop("timestamp", None)  # generator wall-clock time
+        component = metadata.get("component")
+        if isinstance(component, dict) and isinstance(component.get("externalReferences"), list):
+            refs = component["externalReferences"]
+            refs = [ref for ref in refs if not (
+                isinstance(ref, dict) and ref.get("type") == "build-system"
+                and isinstance(ref.get("url"), str)
+                and re.fullmatch(
+                    r"https://github[.]com/tricore-opentrix/dxos-open-core/actions/runs/[0-9]+",
+                    ref["url"]
+                )
+            )]
+            if refs:
+                component["externalReferences"] = refs
+            else:
+                component.pop("externalReferences", None)
+    return (json.dumps(sbom, sort_keys=True, ensure_ascii=False,
+                       separators=(",", ":")) + "\n").encode("utf-8")
+
+
 def package(repo, tag, sha, output, mode="binary"):
     require(mode in {"binary", "source-only"}, "unknown R24 release mode")
     require(TAG.fullmatch(tag), "release tag must be vMAJOR.MINOR.PATCH")
@@ -55,7 +87,10 @@ def package(repo, tag, sha, output, mode="binary"):
     def add(target, path):
         path = source / path
         require(path.is_file() and not path.is_symlink(), f"missing/unsafe release input: {path}")
-        files[prefix + target] = path.read_bytes()
+        contents = path.read_bytes()
+        if target.endswith(".cdx.json"):
+            contents = normalize_cyclonedx(contents)
+        files[prefix + target] = contents
 
     if mode == "binary":
         for app in ("backend", "portal-bff"):
