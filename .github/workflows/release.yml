@@ -173,6 +173,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Publish backend image to GHCR
+        id: backend-image
         if: steps.clearance.outputs.mode == 'binary'
         uses: docker/build-push-action@v6
         with:
@@ -185,6 +186,7 @@ jobs:
             org.opencontainers.image.source=https://github.com/tricore-opentrix/dxos-open-core
             org.opencontainers.image.revision=${{ github.sha }}
       - name: Publish Portal BFF image to GHCR
+        id: bff-image
         if: steps.clearance.outputs.mode == 'binary'
         uses: docker/build-push-action@v6
         with:
@@ -202,10 +204,26 @@ jobs:
         run: |
           tar -xOf "dist/r24/dxos-open-core-${TAG#v}.tar.gz" \
             "dxos-$TAG/RELEASE-NOTES.md" > dist/r24/RELEASE-NOTES.md
+      - name: Record GHCR OCI digests as release evidence
+        if: steps.clearance.outputs.mode == 'binary'
+        env:
+          TAG: ${{ github.ref_name }}
+          BACKEND_DIGEST: ${{ steps.backend-image.outputs.digest }}
+          BFF_DIGEST: ${{ steps.bff-image.outputs.digest }}
+        run: |
+          [[ "$BACKEND_DIGEST" =~ ^sha256:[a-f0-9]{64}$ ]]
+          [[ "$BFF_DIGEST" =~ ^sha256:[a-f0-9]{64}$ ]]
+          printf "ghcr.io/tricore-opentrix/dxos-backend:%s@%s\n" "$TAG" "$BACKEND_DIGEST" > dist/r24/IMAGE-DIGESTS.txt
+          printf "ghcr.io/tricore-opentrix/dxos-portal-bff:%s@%s\n" "$TAG" "$BFF_DIGEST" >> dist/r24/IMAGE-DIGESTS.txt
       - name: Publish GitHub Release with checksums and release notes
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG: ${{ github.ref_name }}
+          MODE: ${{ steps.clearance.outputs.mode }}
         run: |
-          gh release create "$TAG" "dist/r24/dxos-open-core-${TAG#v}.tar.gz" dist/r24/SHA256SUMS \
+          assets=("dist/r24/dxos-open-core-${TAG#v}.tar.gz" "dist/r24/SHA256SUMS")
+          if [ "$MODE" = binary ]; then
+            assets+=("dist/r24/IMAGE-DIGESTS.txt")
+          fi
+          gh release create "$TAG" "${assets[@]}" \
             --verify-tag --title "DX-OS $TAG" --notes-file dist/r24/RELEASE-NOTES.md
