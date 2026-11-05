@@ -1,7 +1,7 @@
 {
   "tag": "v0.2.0-rc.1",
   "mode": "source-only",
-  "source_sha": "e03fb1aeeafa59dffa18a30a4108d6a67f2c8008",
+  "source_sha": null,
   "archive_sha256": null,
   "reviewed_by": [],
   "evidence": {
