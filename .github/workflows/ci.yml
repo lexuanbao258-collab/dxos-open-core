@@ -138,10 +138,66 @@ jobs:
           npm run build
           npm test
 
+  r23-compliance:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate Gradle wrapper before execution
+        uses: gradle/actions/wrapper-validation@v6
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: gradle
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Generate Java CycloneDX SBOMs
+        run: |
+          ./backend/gradlew -p backend cyclonedxBom --no-daemon
+          ./backend/gradlew -p portal-bff cyclonedxBom --no-daemon
+      - name: Generate npm CycloneDX SBOM
+        working-directory: frontend
+        run: |
+          npm ci
+          npx --yes @cyclonedx/cyclonedx-npm@6.0.1 --output-format JSON --output-file ../frontend-sbom.json
+      - name: Validate licenses and generate notices
+        run: |
+          python3 scripts/r23-compliance.py \
+            --backend backend/build/reports/cyclonedx/bom.json \
+            --portal-bff portal-bff/build/reports/cyclonedx/bom.json \
+            --frontend frontend-sbom.json \
+            --output build/r23
+      - name: Upload R23 evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: r23-sbom-and-notices
+          retention-days: 30
+          path: |
+            backend/build/reports/cyclonedx/bom.json
+            portal-bff/build/reports/cyclonedx/bom.json
+            frontend-sbom.json
+            build/r23/THIRD-PARTY-NOTICES.md
+            build/r23/license-inventory.json
+
   repo-hygiene:
+    needs: [r23-compliance]
+    if: always()
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
+      - name: Enforce R23 in required repo-hygiene check
+        env:
+          R23_RESULT: ${{ needs.r23-compliance.result }}
+        run: |
+          if [ "$R23_RESULT" != "success" ]; then
+            echo "::error::R23 compliance job: $R23_RESULT"
+            exit 1
+          fi
       - uses: actions/checkout@v4
       - name: PR title follows Conventional Commits
         if: github.event_name == 'pull_request'
