@@ -41,4 +41,4 @@ Both families are self-hosted through `@fontsource` packages (version 5.3.0, `OF
 
 Neither copyright line declares a Reserved Font Name. `NOTICE` is not edited: it defers third-party notices to Issue #38.
 
-Not done: the repository has no `LICENSES/` directory (not even `Apache-2.0.txt`), so `reuse lint` fails repo-wide before and after this PR; that is the separately agreed REUSE work.
+REUSE: since #127 the repository enforces REUSE 3.3. This PR adds `LICENSES/OFL-1.1.txt` (SPDX text, via `reuse download OFL-1.1`) for the font licence sidecars. `reuse lint` on this branch: compliant (388/388 files with copyright and licence information).
