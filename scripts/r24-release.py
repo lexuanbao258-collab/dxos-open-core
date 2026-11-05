@@ -258,6 +258,7 @@ def main():
     sp = p.add_subparsers(dest="command", required=True)
     a = sp.add_parser("package")
     a.add_argument("--repo", default=".")
+    a.add_argument("--mode", choices=("binary", "source-only"), default="binary")
     a.add_argument("--tag", required=True)
     a.add_argument("--sha", required=True)
     a.add_argument("--output", default="dist/r24")
@@ -274,12 +275,13 @@ def main():
     args = p.parse_args()
     try:
         if args.command == "package":
-            package(args.repo, args.tag, args.sha, args.output)
+            package(args.repo, args.tag, args.sha, args.output, args.mode)
         elif args.command == "verify":
             verify(args.archive, args.checksums)
         else:
             gate(args.archive, args.checksums, args.acceptance, args.tag, args.sha, args.release_notes)
-    except (ValueError, OSError, KeyError, TypeError, json.JSONDecodeError, tarfile.TarError) as exc:
+    except (ValueError, OSError, KeyError, TypeError, json.JSONDecodeError,
+            tarfile.TarError, subprocess.CalledProcessError) as exc:
         print("R24_BLOCKED:", exc, file=sys.stderr)
         return 1
     return 0
