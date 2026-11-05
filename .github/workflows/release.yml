@@ -41,7 +41,7 @@ jobs:
             }
             echo "tag=$REF" >> "$GITHUB_OUTPUT"
           else
-            echo 'tag=v0.1.0' >> "$GITHUB_OUTPUT"
+            echo 'tag=v0.2.0-rc.1' >> "$GITHUB_OUTPUT"
             echo '::notice::Validation-only candidate; no publication on pull_request/workflow_dispatch'
           fi
           echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
@@ -82,7 +82,7 @@ jobs:
           SOURCE_SHA: ${{ steps.meta.outputs.sha }}
         run: |
           python3 scripts/r24-release.py package --tag "$TAG" --sha "$SOURCE_SHA" --output dist/r24
-          python3 scripts/r24-release.py verify --archive "dist/r24/dxos-$TAG.tar.gz" --checksums dist/r24/SHA256SUMS
+          python3 scripts/r24-release.py verify --archive "dist/r24/dxos-open-core-${TAG#v}.tar.gz" --checksums dist/r24/SHA256SUMS
       - uses: actions/upload-artifact@v4
         with:
           name: r24-candidate-${{ github.run_id }}
@@ -120,9 +120,10 @@ jobs:
           TAG: ${{ github.ref_name }}
         run: |
           python3 scripts/r24-release.py gate \
-            --archive "dist/r24/dxos-$TAG.tar.gz" \
+            --archive "dist/r24/dxos-open-core-${TAG#v}.tar.gz" \
             --checksums dist/r24/SHA256SUMS \
             --acceptance /tmp/r24-acceptance/acceptance.json \
+            --release-notes dist/r24/RELEASE-NOTES.md \
             --tag "$TAG" --sha "$(git rev-parse HEAD)"
           python3 - <<'PYBASE'
           import json, os
@@ -135,8 +136,8 @@ jobs:
           TAG: ${{ github.ref_name }}
         run: |
           mkdir -p image-context/backend image-context/portal-bff
-          tar -xOf "dist/r24/dxos-$TAG.tar.gz" "dxos-$TAG/backend/application.jar" > image-context/backend/application.jar
-          tar -xOf "dist/r24/dxos-$TAG.tar.gz" "dxos-$TAG/portal-bff/application.jar" > image-context/portal-bff/application.jar
+          tar -xOf "dist/r24/dxos-open-core-${TAG#v}.tar.gz" "dxos-$TAG/backend/application.jar" > image-context/backend/application.jar
+          tar -xOf "dist/r24/dxos-open-core-${TAG#v}.tar.gz" "dxos-$TAG/portal-bff/application.jar" > image-context/portal-bff/application.jar
       - uses: docker/setup-buildx-action@v3
       - uses: docker/login-action@v3
         with:
@@ -170,5 +171,5 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG: ${{ github.ref_name }}
         run: |
-          gh release create "$TAG" "dist/r24/dxos-$TAG.tar.gz" dist/r24/SHA256SUMS \
+          gh release create "$TAG" "dist/r24/dxos-open-core-${TAG#v}.tar.gz" dist/r24/SHA256SUMS \
             --verify-tag --title "DX-OS $TAG" --notes-file dist/r24/RELEASE-NOTES.md
