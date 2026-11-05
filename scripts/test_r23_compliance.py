@@ -70,6 +70,39 @@ class R23Tests(unittest.TestCase):
             with self.subTest(invalid=expression):
                 self.assertFalse(policy.license_status(expression)[0])
 
+    def test_policy_pass_is_not_release_distribution_pass(self):
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("r23_policy", SCRIPT)
+        policy = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(policy)
+        examples = (
+            ("backend", "hibernate-core", "6.6.53.Final",
+             ["LGPL-2.1-only"], "LGPL_SOURCE_LINKING_RELINK_DISTRIBUTION_REVIEW"),
+            ("portal-bff", "logback-core", "1.5.34",
+             ["EPL-2.0", "LGPL-2.1-only"], "EPL_LICENSE_NOTICE_SOURCE_REVIEW"),
+            ("frontend", "lru-cache", "11.5.3",
+             ["BlueOak-1.0.0"], "BLUEOAK_LICENSE_TEXT_OR_LINK"),
+        )
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "test-bom.json"
+            for project, name, version, licenses, gate in examples:
+                with self.subTest(component=name):
+                    component = {"type": "library", "name": name,
+                                 "version": version,
+                                 "licenses": [{"license": {"id": x}} for x in licenses]}
+                    path.write_text(json.dumps({
+                        "bomFormat": "CycloneDX", "specVersion": "1.6",
+                        "components": [component]}))
+                    record = policy.read_bom(path, project)[0]
+                    self.assertTrue(record["approved"])
+                    self.assertEqual(record["license_policy_status"], "APPROVED")
+                    self.assertEqual(record["release_distribution_status"], "PENDING")
+                    self.assertEqual(record["release_distribution_owner"], "R24 / Yến")
+                    self.assertIn(gate, record["release_distribution_requirements"])
+                    if name == "lru-cache":
+                        self.assertIn("BlueOak-1.0.0",
+                                      record["license_reference_links"])
+
     def test_version_pinned_choices_do_not_apply_to_future_releases(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
