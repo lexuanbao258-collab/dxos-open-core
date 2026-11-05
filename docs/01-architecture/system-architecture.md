@@ -77,7 +77,7 @@ Internal requests enter through messaging/email/manual channels, creating incons
 | Application | Request prototype on main; Helpdesk candidate PR #63 | Do not label candidate business routes integrated in main |
 | BFF/Frontend | Candidate PR #70 / #71 | Separate development/review, not release-accepted simply because a PR exists |
 
-**Source baseline SHA:** [`e06fa429`](https://github.com/lexuanbao258-collab/dxos-open-core/commit/e06fa429cfd92b032c166eb3ebf32803d13191c2). The root README contains an older source-baseline paragraph: use its conceptual descriptions but do not treat its historical test counts as tests on this SHA. This document is a source review, **not an independently executed build**.
+**Source baseline SHA:** [`e06fa429`](https://github.com/tricore-opentrix/opentrix/commit/e06fa429cfd92b032c166eb3ebf32803d13191c2). The root README contains an older source-baseline paragraph: use its conceptual descriptions but do not treat its historical test counts as tests on this SHA. This document is a source review, **not an independently executed build**.
 
 ## 3. Các quyết định Modular Monolith, Hexagonal, DIP
 
@@ -163,7 +163,7 @@ Workflow Core models definition versions, transitions, instance lifecycle, versi
 ### 5.2 Implementation evidence and caution
 
 - `main`: Request prototype and Generic Workflow are distinct; do not claim migrated Helpdesk E2E.
-- [PR #63](https://github.com/lexuanbao258-collab/dxos-open-core/pull/63) (candidate) implements Helpdesk-oriented API and guarded SQL path. Its cross-table atomicity should be preserved during refactor. A direct Workflow SQL-function call in the application candidate is a portability gap, **not proof the generic Core contract is unusable**.
+- [PR #63](https://github.com/tricore-opentrix/opentrix/pull/63) (candidate) implements Helpdesk-oriented API and guarded SQL path. Its cross-table atomicity should be preserved during refactor. A direct Workflow SQL-function call in the application candidate is a portability gap, **not proof the generic Core contract is unusable**.
 - Facility is a planned reuse slice, not a proven complete application on the pinned baseline. The exact Facility process and schema need business approval before coding.
 
 ### 5.3 Application use-case rule
@@ -417,11 +417,11 @@ Use these as **future gates**; no PASS is implied without pinned runnable eviden
 
 | PR | Purpose / seam | Review caution |
 |---|---|---|
-| [#47](https://github.com/lexuanbao258-collab/dxos-open-core/pull/47) | AuthorizedWorkflowService stage 3 | Stage-only service not proof of production HTTP registration |
-| [#48](https://github.com/lexuanbao258-collab/dxos-open-core/pull/48) | Exact Workflow operation authorities | Authority regression tests do not establish resource ACL |
-| [#63](https://github.com/lexuanbao258-collab/dxos-open-core/pull/63) | Helpdesk Backend candidate / transaction path | Preserve atomic guarded SQL semantics; candidate E2E evidence is not independent integrated release acceptance |
-| [#70](https://github.com/lexuanbao258-collab/dxos-open-core/pull/70) | Portal BFF candidate | Session/cookie/CSRF and token relay need exact-HEAD integration verification |
-| [#71](https://github.com/lexuanbao258-collab/dxos-open-core/pull/71) | React Portal candidate | Mock mode ≠ verified live mode |
+| [#47](https://github.com/tricore-opentrix/opentrix/pull/47) | AuthorizedWorkflowService stage 3 | Stage-only service not proof of production HTTP registration |
+| [#48](https://github.com/tricore-opentrix/opentrix/pull/48) | Exact Workflow operation authorities | Authority regression tests do not establish resource ACL |
+| [#63](https://github.com/tricore-opentrix/opentrix/pull/63) | Helpdesk Backend candidate / transaction path | Preserve atomic guarded SQL semantics; candidate E2E evidence is not independent integrated release acceptance |
+| [#70](https://github.com/tricore-opentrix/opentrix/pull/70) | Portal BFF candidate | Session/cookie/CSRF and token relay need exact-HEAD integration verification |
+| [#71](https://github.com/tricore-opentrix/opentrix/pull/71) | React Portal candidate | Mock mode ≠ verified live mode |
 
 ### 14.3 Documentation review record
 

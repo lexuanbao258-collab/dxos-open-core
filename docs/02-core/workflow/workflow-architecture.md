@@ -47,7 +47,7 @@ Workflow Core hiện có domain model, Runtime và provider-neutral `WorkflowPer
 | PR #48 | Exact authority regression candidate | Không thay thế resource/tenant policy |
 | PR #63 | Helpdesk 9 routes, direct guarded SQL functions và business+Workflow transaction | Implementation đang phụ thuộc PostgreSQL, cần lộ trình chuyển đổi |
 
-Nguồn: https://github.com/lexuanbao258-collab/dxos-open-core ; PRs https://github.com/lexuanbao258-collab/dxos-open-core/pull/47 , /pull/48 , /pull/63 . Các kết quả test trong PR là **author-reported**, không được nâng thành independent acceptance.
+Nguồn: https://github.com/tricore-opentrix/opentrix ; PRs https://github.com/tricore-opentrix/opentrix/pull/47 , /pull/48 , /pull/63 . Các kết quả test trong PR là **author-reported**, không được nâng thành independent acceptance.
 
 ## 3. RESPONSIBILITY — Core nên và không nên làm gì
 

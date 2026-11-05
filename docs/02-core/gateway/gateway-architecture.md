@@ -55,15 +55,15 @@ DX-OS có bốn năng lực logic: **Identity, Workflow, Data, API Gateway**. AP
 | Portal | PR #71 | HTTP adapter và mocked tests; LIVE còn BLOCKED | Không tính mock E2E là real end-to-end |
 
 **Nguồn:**
-- https://github.com/lexuanbao258-collab/dxos-open-core/blob/e06fa429cfd92b032c166eb3ebf32803d13191c2/backend/src/main/java/com/tricore/dxos/gateway/workflow/controller/WorkflowController.java
-- https://github.com/lexuanbao258-collab/dxos-open-core/blob/e06fa429cfd92b032c166eb3ebf32803d13191c2/backend/src/main/java/com/tricore/dxos/gateway/workflow/security/WorkflowGatewayPrincipalGate.java
-- https://github.com/lexuanbao258-collab/dxos-open-core/blob/e06fa429cfd92b032c166eb3ebf32803d13191c2/backend/src/main/java/com/tricore/dxos/infrastructure/identity/security/SecurityConfig.java
-- https://github.com/lexuanbao258-collab/dxos-open-core/blob/e12d105c89400a5fd69dd6cc1fca670ff1f04f51/backend/src/main/java/com/tricore/dxos/gateway/helpdesk/HelpdeskController.java
-- https://github.com/lexuanbao258-collab/dxos-open-core/blob/d833b363d22c1ad30a1f5d7bdc7b3d7712fb7d27/portal-bff/src/main/java/com/tricore/dxos/portal/PortalBackendClient.java
-- https://github.com/lexuanbao258-collab/dxos-open-core/blob/d833b363d22c1ad30a1f5d7bdc7b3d7712fb7d27/portal-bff/src/main/java/com/tricore/dxos/portal/PortalSecurity.java
-- https://github.com/lexuanbao258-collab/dxos-open-core/pull/63
-- https://github.com/lexuanbao258-collab/dxos-open-core/pull/70
-- https://github.com/lexuanbao258-collab/dxos-open-core/pull/71
+- https://github.com/tricore-opentrix/opentrix/blob/e06fa429cfd92b032c166eb3ebf32803d13191c2/backend/src/main/java/com/tricore/dxos/gateway/workflow/controller/WorkflowController.java
+- https://github.com/tricore-opentrix/opentrix/blob/e06fa429cfd92b032c166eb3ebf32803d13191c2/backend/src/main/java/com/tricore/dxos/gateway/workflow/security/WorkflowGatewayPrincipalGate.java
+- https://github.com/tricore-opentrix/opentrix/blob/e06fa429cfd92b032c166eb3ebf32803d13191c2/backend/src/main/java/com/tricore/dxos/infrastructure/identity/security/SecurityConfig.java
+- https://github.com/tricore-opentrix/opentrix/blob/e12d105c89400a5fd69dd6cc1fca670ff1f04f51/backend/src/main/java/com/tricore/dxos/gateway/helpdesk/HelpdeskController.java
+- https://github.com/tricore-opentrix/opentrix/blob/d833b363d22c1ad30a1f5d7bdc7b3d7712fb7d27/portal-bff/src/main/java/com/tricore/dxos/portal/PortalBackendClient.java
+- https://github.com/tricore-opentrix/opentrix/blob/d833b363d22c1ad30a1f5d7bdc7b3d7712fb7d27/portal-bff/src/main/java/com/tricore/dxos/portal/PortalSecurity.java
+- https://github.com/tricore-opentrix/opentrix/pull/63
+- https://github.com/tricore-opentrix/opentrix/pull/70
+- https://github.com/tricore-opentrix/opentrix/pull/71
 
 ## 3. Sáu Architecture Decision Records (phản biện và chốt có điều kiện)
 
@@ -492,16 +492,16 @@ Thiết kế này giúp chứng minh: nguồn mở có docs/release/build, tính
 
 ## 15. Source links và provenance
 
-- Main: https://github.com/lexuanbao258-collab/dxos-open-core/tree/e06fa429cfd92b032c166eb3ebf32803d13191c2
-- PR63: https://github.com/lexuanbao258-collab/dxos-open-core/pull/63
-- PR70: https://github.com/lexuanbao258-collab/dxos-open-core/pull/70
-- PR71: https://github.com/lexuanbao258-collab/dxos-open-core/pull/71
-- Workflow Core: https://github.com/lexuanbao258-collab/dxos-open-core/blob/e06fa429cfd92b032c166eb3ebf32803d13191c2/backend/src/main/java/com/tricore/dxos/core/workflow/WorkflowRuntime.java
-- Gateway controller: https://github.com/lexuanbao258-collab/dxos-open-core/blob/e06fa429cfd92b032c166eb3ebf32803d13191c2/backend/src/main/java/com/tricore/dxos/gateway/workflow/controller/WorkflowController.java
-- Principal gate: https://github.com/lexuanbao258-collab/dxos-open-core/blob/e06fa429cfd92b032c166eb3ebf32803d13191c2/backend/src/main/java/com/tricore/dxos/gateway/workflow/security/WorkflowGatewayPrincipalGate.java
-- Helpdesk controller: https://github.com/lexuanbao258-collab/dxos-open-core/blob/e12d105c89400a5fd69dd6cc1fca670ff1f04f51/backend/src/main/java/com/tricore/dxos/gateway/helpdesk/HelpdeskController.java
-- BFF client: https://github.com/lexuanbao258-collab/dxos-open-core/blob/d833b363d22c1ad30a1f5d7bdc7b3d7712fb7d27/portal-bff/src/main/java/com/tricore/dxos/portal/PortalBackendClient.java
-- BFF security: https://github.com/lexuanbao258-collab/dxos-open-core/blob/d833b363d22c1ad30a1f5d7bdc7b3d7712fb7d27/portal-bff/src/main/java/com/tricore/dxos/portal/PortalSecurity.java
+- Main: https://github.com/tricore-opentrix/opentrix/tree/e06fa429cfd92b032c166eb3ebf32803d13191c2
+- PR63: https://github.com/tricore-opentrix/opentrix/pull/63
+- PR70: https://github.com/tricore-opentrix/opentrix/pull/70
+- PR71: https://github.com/tricore-opentrix/opentrix/pull/71
+- Workflow Core: https://github.com/tricore-opentrix/opentrix/blob/e06fa429cfd92b032c166eb3ebf32803d13191c2/backend/src/main/java/com/tricore/dxos/core/workflow/WorkflowRuntime.java
+- Gateway controller: https://github.com/tricore-opentrix/opentrix/blob/e06fa429cfd92b032c166eb3ebf32803d13191c2/backend/src/main/java/com/tricore/dxos/gateway/workflow/controller/WorkflowController.java
+- Principal gate: https://github.com/tricore-opentrix/opentrix/blob/e06fa429cfd92b032c166eb3ebf32803d13191c2/backend/src/main/java/com/tricore/dxos/gateway/workflow/security/WorkflowGatewayPrincipalGate.java
+- Helpdesk controller: https://github.com/tricore-opentrix/opentrix/blob/e12d105c89400a5fd69dd6cc1fca670ff1f04f51/backend/src/main/java/com/tricore/dxos/gateway/helpdesk/HelpdeskController.java
+- BFF client: https://github.com/tricore-opentrix/opentrix/blob/d833b363d22c1ad30a1f5d7bdc7b3d7712fb7d27/portal-bff/src/main/java/com/tricore/dxos/portal/PortalBackendClient.java
+- BFF security: https://github.com/tricore-opentrix/opentrix/blob/d833b363d22c1ad30a1f5d7bdc7b3d7712fb7d27/portal-bff/src/main/java/com/tricore/dxos/portal/PortalSecurity.java
 
 ---
 

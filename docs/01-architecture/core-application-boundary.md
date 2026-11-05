@@ -218,7 +218,7 @@ The HTTP mappings are **proposed**, not automatically normative from Core error 
 | PR #70 Portal BFF | CANDIDATE | Server OAuth session/CSRF/relay; separate HTTPS/cookie release gates |
 | PR #71 Portal adapter | CANDIDATE | Frontend integration; mock vs live must be evidenced |
 
-Reference repository: https://github.com/lexuanbao258-collab/dxos-open-core . Pinned baseline `main`: `e06fa429cfd92b032c166eb3ebf32803d13191c2`. Historical docs may contain stale claims; source and recorded evidence must be evaluated at their own commit SHA.
+Reference repository: https://github.com/tricore-opentrix/opentrix . Pinned baseline `main`: `e06fa429cfd92b032c166eb3ebf32803d13191c2`. Historical docs may contain stale claims; source and recorded evidence must be evaluated at their own commit SHA.
 
 ## 11. Risks, gaps and independent reviewer findings
 
@@ -282,8 +282,8 @@ Reference repository: https://github.com/lexuanbao258-collab/dxos-open-core . Pi
 - [Data Core contract](../contracts/data-core.md).
 - [Data & persistence boundaries](../architecture/data-persistence-boundaries.md).
 - [Workflow authorization](../contracts/workflow-authorization.md).
-- [PR #47 AuthorizedWorkflowService](https://github.com/lexuanbao258-collab/dxos-open-core/pull/47).
-- [PR #48 Exact Workflow Authorities](https://github.com/lexuanbao258-collab/dxos-open-core/pull/48).
-- [PR #63 Helpdesk Backend](https://github.com/lexuanbao258-collab/dxos-open-core/pull/63).
-- [PR #70 Portal BFF](https://github.com/lexuanbao258-collab/dxos-open-core/pull/70).
-- [PR #71 Portal Integration](https://github.com/lexuanbao258-collab/dxos-open-core/pull/71).
+- [PR #47 AuthorizedWorkflowService](https://github.com/tricore-opentrix/opentrix/pull/47).
+- [PR #48 Exact Workflow Authorities](https://github.com/tricore-opentrix/opentrix/pull/48).
+- [PR #63 Helpdesk Backend](https://github.com/tricore-opentrix/opentrix/pull/63).
+- [PR #70 Portal BFF](https://github.com/tricore-opentrix/opentrix/pull/70).
+- [PR #71 Portal Integration](https://github.com/tricore-opentrix/opentrix/pull/71).
