@@ -109,7 +109,7 @@ class SecurityConfigTest {
         when(helpdeskService.create("Repair printer", "Printer is offline"))
                 .thenReturn(new HelpdeskService.RequestView(
                         id, "Repair printer", "Printer is offline", "IT_HELPDESK",
-                        "user-123", null, null, 0L, "workflow-id", "NEW", 0L,
+                        "user-123", null, null, 0L, "workflow-id", "SUBMITTED", 0L,
                         List.of(), null, null, null));
 
         mvc.perform(post("/api/v1/mvp/requests")

@@ -131,7 +131,9 @@ The historical `/api/v1/requests/*` routes and `com.tricore.dxos.request` JPA pr
 
 The supported application entry point is `/api/v1/mvp/requests` when `dxos.helpdesk.enabled=true`. The workflow is:
 
-`SUBMITTED → TRIAGED → ASSIGNED → IN_PROGRESS → RESOLVED → CONFIRMED`
+`SUBMITTED → TRIAGED → IN_PROGRESS → RESOLVED → CONFIRMED`
+
+Assignment is not a Workflow state: `POST /api/v1/mvp/requests/{id}/assign` records the assignee and increments `assignment_version` (guarded by `expectedAssignmentVersion`) while the request is `TRIAGED`; `POST /api/v1/mvp/requests/{id}/start` performs the `start_work` transition to `IN_PROGRESS`.
 
 `CONFIRMED` is terminal; there is **no** `/close` route or `CLOSED` state in the Helpdesk workflow.
 
