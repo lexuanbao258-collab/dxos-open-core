@@ -173,6 +173,8 @@ jobs:
             --portal-bff portal-bff/build/reports/cyclonedx/bom.json \
             --frontend frontend-sbom.json \
             --output build/r23
+      - name: Verify tracked notices match resolved dependencies
+        run: diff -u THIRD-PARTY-NOTICES.md build/r23/THIRD-PARTY-NOTICES.md
       - name: Upload R23 evidence
         if: always()
         uses: actions/upload-artifact@v4
