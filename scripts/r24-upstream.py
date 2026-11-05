@@ -47,7 +47,9 @@ def npm_package(root, row):
     if not purl.startswith("pkg:npm/"):
         return None
     package = urllib.parse.unquote(purl[len("pkg:npm/"):].split("?", 1)[0].rsplit("@", 1)[0])
-    if package != row["name"]:
+    # Some CycloneDX npm versions emit an unscoped component name while
+    # the PURL accurately retains the namespace (for example @types/react).
+    if row["name"] not in {package, package.rsplit("/", 1)[-1]}:
         return None
     modules = Path(root) / "frontend/node_modules"
     candidates = [modules / package]
