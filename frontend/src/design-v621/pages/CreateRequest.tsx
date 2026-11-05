@@ -3,6 +3,7 @@
 
 import { useRef, useState, type FormEvent } from "react";
 import { PageHead } from "../components/PageHead";
+import { Icon } from "../icons";
 import { validateCreate, type CreateErrors } from "../logic";
 import { usePreview } from "../PreviewContext";
 
@@ -64,6 +65,8 @@ export function CreateRequest() {
   }
 
   const err = (k: Field) => errors[k];
+  const lockReason =
+    "Đang khóa: kết quả ghi chưa xác định. Cần đối soát trước khi tiếp tục.";
   return (
     <>
       <PageHead
@@ -126,7 +129,8 @@ export function CreateRequest() {
               name="title"
               ref={refs.title}
               className="ot-input"
-              placeholder="Ví dụ: Không truy cập được kho mã nguồn"
+              placeholder="Ví dụ: Không truy cập được kho mã nguồn…"
+              autoComplete="off"
               maxLength={120}
               value={values.title}
               onChange={(e) => set({ title: e.target.value })}
@@ -138,7 +142,7 @@ export function CreateRequest() {
               id="title-error"
               aria-live="polite"
             >
-              {err("title")}
+              <FieldError message={err("title")} />
             </span>
           </div>
           <div className="form-field">
@@ -151,7 +155,8 @@ export function CreateRequest() {
               ref={refs.description}
               className="ot-textarea"
               maxLength={2000}
-              placeholder="Mô tả vấn đề và thông tin cần thiết để xử lý"
+              placeholder="Mô tả vấn đề và thông tin cần thiết để xử lý…"
+              autoComplete="off"
               value={values.description}
               onChange={(e) => set({ description: e.target.value })}
               aria-invalid={Boolean(err("description"))}
@@ -162,7 +167,7 @@ export function CreateRequest() {
               id="description-error"
               aria-live="polite"
             >
-              {err("description")}
+              <FieldError message={err("description")} />
             </span>
           </div>
           <div className="form-row">
@@ -186,10 +191,13 @@ export function CreateRequest() {
                 className="ot-input"
                 maxLength={100}
                 placeholder={
-                  facility ? "Ví dụ: Phòng họp Lotus" : "Ví dụ: Laptop cá nhân"
+                  facility
+                    ? "Ví dụ: Phòng họp Lotus…"
+                    : "Ví dụ: Laptop cá nhân…"
                 }
                 value={values.location}
                 onChange={(e) => set({ location: e.target.value })}
+                autoComplete="off"
                 required={facility}
                 aria-required={facility}
                 aria-invalid={Boolean(err("location"))}
@@ -200,7 +208,7 @@ export function CreateRequest() {
                 id="location-error"
                 aria-live="polite"
               >
-                {err("location")}
+                <FieldError message={err("location")} />
               </span>
             </div>
             <div className="form-field">
@@ -225,6 +233,7 @@ export function CreateRequest() {
               type="submit"
               id="submit-form"
               disabled={locked}
+              aria-describedby={locked ? "lock-reason" : undefined}
             >
               Kiểm tra biểu mẫu
             </button>
@@ -232,6 +241,11 @@ export function CreateRequest() {
               Làm lại
             </button>
           </div>
+          {locked && (
+            <p className="form-lock-reason" id="lock-reason">
+              {lockReason}
+            </p>
+          )}
           {locked && (
             <div className="state-box unknown" role="alert">
               <strong>Kết quả ghi chưa xác định</strong>
@@ -244,16 +258,20 @@ export function CreateRequest() {
           <div id="form-feedback" aria-live="polite">
             {invalid && (
               <p className="ot-field-error" role="alert">
+                <Icon name="alert" />
                 Vui lòng kiểm tra các trường đã đánh dấu.
               </p>
             )}
             {checked && (
               <div className="success-inline" role="status">
-                <strong>Biểu mẫu hợp lệ</strong>
-                <p>
-                  Đã kiểm tra trên trình duyệt. Chưa gửi yêu cầu lên máy chủ,
-                  chưa tạo ticket.
-                </p>
+                <Icon name="check" />
+                <div>
+                  <strong>Biểu mẫu hợp lệ</strong>
+                  <p>
+                    Đã kiểm tra trên trình duyệt. Chưa gửi yêu cầu lên máy chủ,
+                    chưa tạo ticket.
+                  </p>
+                </div>
               </div>
             )}
           </div>
@@ -265,12 +283,20 @@ export function CreateRequest() {
             Chọn đúng loại dịch vụ để biểu mẫu hiển thị trường phù hợp.
           </p>
           <p>
-            <strong>Bản xem trước:</strong> nút bên trái chỉ kiểm tra nội dung
-            nhập trên trình duyệt; không tạo ticket hay gửi dữ liệu đến hệ
-            thống.
+            <strong>Bản xem trước:</strong> nút Kiểm tra biểu mẫu chỉ kiểm tra
+            nội dung nhập trên trình duyệt; không tạo ticket hay gửi dữ liệu đến
+            hệ thống.
           </p>
         </aside>
       </div>
     </>
   );
+}
+
+function FieldError({ message }: { message?: string }) {
+  return message ? (
+    <>
+      <Icon name="alert" /> {message}
+    </>
+  ) : null;
 }
