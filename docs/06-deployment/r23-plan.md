@@ -3,74 +3,65 @@ SPDX-FileCopyrightText: 2026 TRICORE contributors
 SPDX-License-Identifier: Apache-2.0
 -->
 
-# R23 implementation scope
+# R23 — runtime SBOM and license-policy implementation
 
-Generate CycloneDX SBOMs for backend, Portal BFF and frontend, implement a fail-closed dependency-license policy, generate THIRD-PARTY-NOTICES, and validate the Gradle wrapper in CI. Preserve immutable Flyway migrations and dependency lockfiles.
+R23 implements reproducible CycloneDX inventories for the backend and Portal BFF Gradle runtime classpaths and the frontend npm **production** dependency graph. It validates the Gradle wrapper, applies fail-closed license policy, generates the tracked `THIRD-PARTY-NOTICES.md` inventory, and makes the license gate mandatory through the required `repo-hygiene` CI job. Preserve historical Flyway migrations, dependency lockfiles, upstream notices and application behavior.
 
-Acceptance requires evidence at exact HEAD, independent review, and inclusion of notices in release assets. This plan alone is not implementation acceptance.
+**Separation of decisions:** R23's machine-policy approval verifies dependency declarations against a reviewed allowlist. It is NOT permission to distribute binaries and is NOT R24 release/distribution acceptance.
 
-## Implementation status and commands
+## Prerequisite — JPA cleanup (#133)
 
-The draft PR creates three CycloneDX JSON SBOMs (Backend Gradle,
-Portal BFF Gradle, and Frontend npm) and uploads them with
-license-inventory.json and generated THIRD-PARTY-NOTICES.md. The generated
-notices inventory is also tracked at repository root; CI uses diff -u to
-reject stale notices when resolved dependency versions or licenses change.
+The backend's deprecated `spring-boot-starter-data-jpa` dependency must be replaced by `spring-boot-starter-jdbc` via [PR #133](https://github.com/tricore-opentrix/dxos-open-core/pull/133) **merged into `main` first**. Only then synchronize R23 and regenerate the backend runtime BOM. Confirm `hibernate-core`, `jakarta.persistence-api`, `antlr4-runtime` and `hibernate-commons-annotations` no longer occur in its resolved runtime inventory. Do not claim they were removed while #133 remains open.
 
-    ./backend/gradlew -p backend cyclonedxBom
-    ./backend/gradlew -p portal-bff cyclonedxBom
-    cd frontend && npm ci && npx --yes @cyclonedx/cyclonedx-npm@6.0.1 --output-format JSON --output-file ../frontend-sbom.json
-    cd ..
-    python3 scripts/r23-compliance.py --backend backend/build/reports/cyclonedx/bom.json --portal-bff portal-bff/build/reports/cyclonedx/bom.json --frontend frontend-sbom.json --output build/r23
+The version-pinned Hibernate 6.6.53.Final LGPL exception was documented for the *pre-cleanup* runtime; after #133 integration, verify whether the exception is now dead policy and remove it if so. `hibernate-validator` is distinct from Hibernate ORM and may remain present.
 
-The required repo-hygiene job explicitly fails if the R23 compliance
-job fails. The audit rejects missing or unknown licenses. Exact-version
-license decisions under review: Hibernate ORM 6.6.53.Final uses LGPL-2.1;
-Logback 1.5.34 offers an EPL-2.0 alternative; MIT-0 and BlueOak-1.0.0
-are separate recognized license identifiers. This does not waive upstream
-license texts, copyright notices or binary redistribution obligations.
+## Reproduction / exact-HEAD CI evidence
 
-**Remaining acceptance:** independently review the license decisions,
-review the tracked notice inventory against upstream license/NOTICE
-texts, include it and the SBOMs in release assets through R24, inventory
-standalone services, and verify exact-HEAD hosted CI. Do not mark R23 Done solely
-on a successful metadata scan. Release packaging belongs to R24.
+The R23 job installs npm packages for tool execution, but `--omit dev` **excludes** frontend development/test dependencies from the SBOM. For the intended runtime inventory, `vitest`, `jsdom`, `typescript` and `@vitest/*` must not appear unless independently proven to be actual production dependencies. Do not indiscriminately delete MIT-0 or BlueOak packages: retain them whenever present in the resolved runtime graph.
 
-## R24 handoff — independent distribution acceptance (NOT automatic)
+```sh
+./backend/gradlew -p backend cyclonedxBom --no-daemon
+./backend/gradlew -p portal-bff cyclonedxBom --no-daemon
+(cd frontend && npm ci && npx --yes @cyclonedx/cyclonedx-npm@6.0.1 --omit dev --output-format JSON --output-file ../frontend-sbom.json)
+python3 scripts/r23-compliance.py \
+  --backend backend/build/reports/cyclonedx/bom.json \
+  --portal-bff portal-bff/build/reports/cyclonedx/bom.json \
+  --frontend frontend-sbom.json --output build/r23
+diff -u THIRD-PARTY-NOTICES.md build/r23/THIRD-PARTY-NOTICES.md
+python3 -m unittest discover -s scripts -p 'test_r23_*.py'
+```
 
-Owner: **Yến (R24 release coordination)**. R23 owner Bảo supplies CI
-evidence, the complete component inventory, SBOM artifacts, notice snapshot
-and reference links. R24 records a release-specific signed disposition.
-A license_policy_status of APPROVED means a declaration matched the reviewed
-CI policy. It is **not** an approval to redistribute binaries.
-Every generated component starts with release_distribution_status=PENDING
-until its upstream requirements are checked. A CI result saying
-"0 unapproved" must never be described as "0 outstanding obligations".
+Every candidate HEAD must pass required hosted CI `backend`, `portal-bff`, `frontend`, `r23-compliance`, and `repo-hygiene`; the last checks `needs.r23-compliance.result == success`. Archive all three CycloneDX JSON BOMs, license-inventory.json and generated THIRD-PARTY-NOTICES.md with the exact-run evidence. Generated notices are an inventory, not an upstream license/NOTICE collection or legal certification.
 
-| Group | Upstream reference | R24 acceptance before distributing |
-| --- | --- | --- |
-| Hibernate ORM 6.6.53.Final (LGPL-2.1-only) | https://hibernate.org/orm/releases/6.6/ and https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html | Determine actual packaging/linking, preserve LGPL text, provide corresponding source/source offer and replacement/relinking information where applicable; document the distribution model. |
-| Logback classic/core 1.5.34 (EPL-2.0 option) | https://logback.qos.ch/license.html and https://www.eclipse.org/legal/epl-2.0/ | Preserve selected EPL-2.0 terms, provenance, notices and applicable source availability for redistributed parts. |
-| MIT-0 dependencies | https://spdx.org/licenses/MIT-0.html | Preserve required license text and attribution as applicable. |
-| BlueOak-1.0.0 (lru-cache@11.5.3) | https://spdx.org/licenses/BlueOak-1.0.0.html | Deliver the BlueOak license text or a valid link to recipients, and record where it appears. |
-| Other dependencies | SBOM PURLs and upstream sources | Verify copyright, license text, upstream NOTICE requirements and any dual-license selection. |
-| Standalone service/container images | Superset, Grafana and other images actually shipped | Prepare image-level SBOM and service-license audit; they are outside the npm/Gradle inventory. |
+## R23 implementation — Definition of Done (NOT release acceptance)
 
-**Release gate:** before R24 publishes, retain a versioned manifest
-recording final SHA, package/image versions, per-component dispositions,
-reviewer, upstream license links/text and NOTICE obligations. Include
-reviewed THIRD-PARTY-NOTICES.md, required upstream license files and
-the three SBOM JSON artifacts in actual release assets. Inspect the
-archive, digests, access and image coverage. Any pending obligation
-at release sign-off remains **BLOCKED**, absent documented authorized
-exception; a policy PASS cannot waive this gate. R23 closes after
-independent review and accepted R24 handoff, not from green CI alone.
+R23 may be marked **Done only after** all of these are satisfied:
 
-## Strict SPDX-expression parser verification
+1. **#133 has merged into main** and R23 is synchronized to that main SHA without unexpected changes to code, historical SQL or lockfiles.
+2. Resolved **runtime** inventories match the intended dependency scopes: backend JPA/Hibernate ORM leftovers eliminated, frontend development/test dependencies omitted, real runtime licensing obligations retained; no unreviewed/unknown declarations.
+3. The generated notice inventory exactly matches the checked-in `THIRD-PARTY-NOTICES.md`, and the three SBOMs, inventory, notices and strict SPDX negative-test evidence correspond to the same final HEAD.
+4. Independent reviewers record the applicable formal verdict on that exact HEAD; the required CI `repo-hygiene` gate enforces R23; **PR #131 is merged into `main`** under branch protection.
+5. The concrete **R24 release/distribution handoff list is documented and accepted** by the responsible owner(s): upstream license/NOTICE and provenance review, component and service-image coverage, packaging/relinking obligations when applicable, and release artifact acceptance criteria.
 
-The license_status function now validates the full token stream,
-using a strict SPDX subset: license identifiers, AND/OR, parentheses
-and explicitly reviewed WITH exceptions. Invalid syntax is rejected,
-even if its individual identifiers are allowlisted. Tests cover
-dangling/missing operators, unbalanced parentheses, bad characters
-and invalid WITH clauses.
+R23 completion does **not** require R24 to have attached reviewed license/NOTICE texts and SBOMs to a *future release archive*. Such archive publication and redistribution sign-off belong to R24. CI `APPROVED` must never be presented as `distribution CLEARED`.
+
+## R24 — independently gated distribution acceptance
+
+**Owner: Yến (R24 release coordination).** Bảo hands over the exact-head SBOMs, notices inventory, pending-obligations matrix, reproducible commands and CI artifact IDs. R24 independently determines actual release contents and each required license/source/notice disposition.
+
+Each component enters the inventory with `release_distribution_status=PENDING` and `release_distribution_owner=R24 / Yến`. That state does not change merely because `license_policy_status=APPROVED` or CI is green. R24 must not distribute a release while material obligations are unresolved, except for an explicitly documented, authorized exception.
+
+| Scope when actually shipped | Evidence / required R24 disposition |
+| --- | --- |
+| Logback classic/core 1.5.34 (selected EPL-2.0 option) | [Upstream dual-license statement](https://logback.qos.ch/license.html), [EPL-2.0](https://www.eclipse.org/legal/epl-2.0/): record selected terms, downstream notices, provenance and applicable source availability |
+| Hibernate ORM LGPL-2.1 **only if still shipped** | [Hibernate ORM releases](https://hibernate.org/orm/releases/6.6/), [LGPL-2.1](https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html): evaluate actual linking/packaging, license text, source/offer and replacement/relink rights; do not carry forward this obligation when verified absent after #133 |
+| MIT-0 runtime dependencies | [MIT-0](https://spdx.org/licenses/MIT-0.html): preserve required text and attribution where applicable |
+| BlueOak-1.0.0 runtime dependencies | [BlueOak](https://spdx.org/licenses/BlueOak-1.0.0.html): provide license text or valid link to recipients; do not infer runtime coverage from the former dev-only npm SBOM |
+| Other shipped dependencies and frontend assets | Per-component upstream license/NOTICE texts, provenance, source/source-offer requirements where applicable and any dual-license selection; verify actual output bundles |
+| Superset, Grafana or other independently shipped service images | Independent image inventory/SBOM, service license texts, attestations and downstream notices beyond the three Gradle/npm BOMs |
+
+**R24 distribution acceptance** requires versioned release SHA and package/image manifest, approved per-component dispositions, the reviewed upstream license and NOTICE texts, correctly included/generated SBOMs and THIRD-PARTY-NOTICES.md in the **actual release archive**, archive/digest checks, accessibility verification, image coverage and recorded independent sign-off. Unresolved items keep the release **BLOCKED**. These release-asset checks are not R23-implementation completion criteria.
+
+## Strict SPDX expression checks
+
+`license_status` consumes the full token stream using a constrained SPDX grammar: identifiers, AND/OR, parentheses and explicitly reviewed `WITH` exceptions. Malformed expressions, unknown licenses, unexpected characters, unsupported `WITH` clauses (including under an accepted `OR` sibling), and upgraded versions outside a pinned exception fail closed. Tests include negative canaries.
