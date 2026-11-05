@@ -36,7 +36,8 @@ def maven_archive(root, row):
         return None
     if row["name"] != artifact or row["version"] != version:
         return None
-    base = Path(root) / ".gradle/caches/modules-2/files-2.1" / group / artifact / version
+    gradle_home = Path(os.environ.get("GRADLE_USER_HOME", str(Path.home() / ".gradle")))
+    base = gradle_home / "caches/modules-2/files-2.1" / group / artifact / version
     jars = sorted(base.glob(f"*/{artifact}-{version}.jar"))
     return jars[0] if len(jars) == 1 else None
 
