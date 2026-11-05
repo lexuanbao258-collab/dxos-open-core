@@ -58,6 +58,18 @@ class UpstreamTests(unittest.TestCase):
         self.assertEqual(rows[1]["status"], "MISSING")
         self.assertEqual(rows[1]["docs"], [])
 
+    def test_scoped_npm_purl_with_unscoped_component_name(self):
+        component = {"project": "frontend", "name": "be-vietnam-pro", "version": "5.3.0",
+                     "purl": "pkg:npm/%40fontsource/be-vietnam-pro@5.3.0"}
+        self.inventory.write_text(json.dumps([component]))
+        npm = self.root / "frontend/node_modules/@fontsource/be-vietnam-pro"
+        npm.mkdir(parents=True)
+        (npm / "package.json").write_text('{"name":"@fontsource/be-vietnam-pro","version":"5.3.0"}')
+        (npm / "LICENSE").write_text("upstream font license")
+        result = self.collect()
+        self.assertEqual(result[0]["status"], "COLLECTED_UNREVIEWED")
+        self.assertTrue(result[0]["docs"][0]["license_text"])
+
     def test_pom_is_not_shipped_jar(self):
         rows = [dict(self.maven, purl="pkg:maven/com.example/sample@1.2.3?type=pom")]
         self.inventory.write_text(json.dumps(rows))
