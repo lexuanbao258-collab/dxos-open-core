@@ -7,6 +7,12 @@ SPDX-License-Identifier: Apache-2.0
 
 This document accompanies the separate draft acceptance JSON. Its presence and all passing CI jobs **do not** constitute distribution approval. Binary/JAR/GHCR acceptance remains BLOCKED; the source-only mode never publishes GHCR images.
 
+## Verified update — 2026-11-05
+
+- Yến posted screenshots of the protected `r24-release` environment and the `protect-release-tags` ruleset on [Issue #40](https://github.com/tricore-opentrix/dxos-open-core/issues/40). GitHub's ruleset API independently reports this tag ruleset as `active`. The environment configuration is supported by Yến's screenshots; the connected GitHub API cannot independently read that administration endpoint.
+- **New blocking predecessor:** [PR #140 — stabilize packaged SBOM generator data](https://github.com/tricore-opentrix/dxos-open-core/pull/140) must be merged before freezing source SHA. Real R24 candidates carry run-dependent CycloneDX timestamps, UUIDs and Actions run URLs; unnormalized tag rebuild can never guarantee a matching reviewed archive digest. **CI PASS on #140 is not an approval/merge.**
+- Do not reuse the original provisional `main@e03fb1a` source SHA after PR #140 merges. Final `CHANGELOG.md` release date must match the actual day the tag is pushed. That date has not been fixed in the user's release schedule, so no future date is asserted here.
+
 ## Fixed prerequisites and dependency ordering
 
 1. **Release calendar / source SHA:** the checked-in CHANGELOG currently says `[0.2.0-rc.1] - 2026-11-05`. Align this to the actual *future* tag date, if different, in a separately reviewed/merged source change **before freezing the tagged source SHA**. The current provisional source baseline is `e03fb1aeeafa59dffa18a30a4108d6a67f2c8008`; if any source change is merged, replace this SHA in the acceptance JSON. Do not tag the acceptance PR commit.
