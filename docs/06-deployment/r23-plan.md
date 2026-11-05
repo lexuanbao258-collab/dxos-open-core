@@ -13,7 +13,9 @@ Acceptance requires evidence at exact HEAD, independent review, and inclusion of
 
 The draft PR creates three CycloneDX JSON SBOMs (Backend Gradle,
 Portal BFF Gradle, and Frontend npm) and uploads them with
-license-inventory.json and generated THIRD-PARTY-NOTICES.md.
+license-inventory.json and generated THIRD-PARTY-NOTICES.md. The generated
+notices inventory is also tracked at repository root; CI uses diff -u to
+reject stale notices when resolved dependency versions or licenses change.
 
     ./backend/gradlew -p backend cyclonedxBom
     ./backend/gradlew -p portal-bff cyclonedxBom
@@ -29,6 +31,7 @@ are separate recognized license identifiers. This does not waive upstream
 license texts, copyright notices or binary redistribution obligations.
 
 **Remaining acceptance:** independently review the license decisions,
-commit and release a final notice inventory, check bundled service
-licenses, and verify exact-HEAD hosted CI. Do not mark R23 Done solely
+review the tracked notice inventory against upstream license/NOTICE
+texts, include it and the SBOMs in release assets through R24, inventory
+standalone services, and verify exact-HEAD hosted CI. Do not mark R23 Done solely
 on a successful metadata scan. Release packaging belongs to R24.
