@@ -155,6 +155,8 @@ jobs:
           node-version: '22'
           cache: npm
           cache-dependency-path: frontend/package-lock.json
+      - name: Verify R23 license rejection canaries
+        run: python3 -m unittest discover -s scripts -p 'test_r23_*.py'
       - name: Generate Java CycloneDX SBOMs
         run: |
           ./backend/gradlew -p backend cyclonedxBom --no-daemon
