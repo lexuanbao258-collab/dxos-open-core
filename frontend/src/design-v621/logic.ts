@@ -25,9 +25,7 @@ export const stepLabel = (s: Step): string => STEP_LABELS[s];
 /** Sortable timestamp from "HH:MM DD/MM/YYYY" or "DD/MM/YYYY". */
 export function dateKey(t: string): number {
   const m = t.match(/(?:(\d\d?):(\d\d?)\s+)?(\d\d?)\/(\d\d?)\/(\d{4})/);
-  return m
-    ? Date.UTC(+m[5], +m[4] - 1, +m[3], +(m[1] ?? 0), +(m[2] ?? 0))
-    : 0;
+  return m ? Date.UTC(+m[5], +m[4] - 1, +m[3], +(m[1] ?? 0), +(m[2] ?? 0)) : 0;
 }
 
 const scope = (tickets: readonly PreviewTicket[], route: ListRoute) =>

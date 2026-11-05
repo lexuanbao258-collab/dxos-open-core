@@ -55,7 +55,10 @@ test("no third-party requests and self-hosted fonts load with Vietnamese glyphs"
   const loaded = await page.evaluate(() =>
     [...document.fonts]
       .filter((f) => f.status === "loaded")
-      .map((f) => `${f.family}:${f.unicodeRange.toLowerCase().includes("1ea0") ? "vi" : "latin"}`),
+      .map(
+        (f) =>
+          `${f.family}:${f.unicodeRange.toLowerCase().includes("1ea0") ? "vi" : "latin"}`,
+      ),
   );
   expect(loaded.some((f) => f.startsWith("Be Vietnam Pro"))).toBe(true);
   expect(loaded.some((f) => f.startsWith("IBM Plex Mono"))).toBe(true);
@@ -123,7 +126,9 @@ test("typed search text survives resize between short and long placeholder", asy
   await expect(page.locator("#search")).toHaveValue("wifi");
 });
 
-for (const width of [320, 360, 361, 370, 390, 760, 761, 800, 900, 1024, 1200, 1440]) {
+for (const width of [
+  320, 360, 361, 370, 390, 760, 761, 800, 900, 1024, 1200, 1440,
+]) {
   test(`no horizontal overflow on every screen at ${width}px`, async ({
     page,
   }) => {
@@ -155,9 +160,7 @@ test("QA unknown outcome locks the form and reset restores focus + announces", a
   await expect(page.locator("#qa-banner-reset")).toHaveCount(0);
   await expect(page.locator("#submit-form")).toBeEnabled();
   expect(await page.evaluate(() => document.activeElement?.id)).toBe("main");
-  await expect(page.locator("#announcement")).toContainText(
-    "Đã tắt mô phỏng",
-  );
+  await expect(page.locator("#announcement")).toContainText("Đã tắt mô phỏng");
 });
 
 test("queue shows no write action and keyboard hint matches viewport", async ({
@@ -194,7 +197,9 @@ test("detail never offers actions and shows version only when provided", async (
   await expect(
     page.getByText("Không có thao tác xử lý nào được máy chủ cấp"),
   ).toBeVisible();
-  await expect(page.getByRole("button", { name: /duyệt|xử lý|xác nhận/i })).toHaveCount(0);
+  await expect(
+    page.getByRole("button", { name: /duyệt|xử lý|xác nhận/i }),
+  ).toHaveCount(0);
   await ready(page, "/design-v621/detail/DX-1048?from=mine");
   await expect(page.getByText("Chưa có dữ liệu").first()).toBeVisible();
 });
@@ -206,7 +211,8 @@ test("reduced motion disables screen fade and skeleton animation", async ({
   const page = await context.newPage();
   await ready(page, "/design-v621/mine");
   const duration = await page.evaluate(
-    () => getComputedStyle(document.querySelector(".screen")!).animationDuration,
+    () =>
+      getComputedStyle(document.querySelector(".screen")!).animationDuration,
   );
   expect(parseFloat(duration)).toBeLessThan(0.001);
   await context.close();
@@ -255,8 +261,10 @@ for (const [name, width, height] of [
     for (const url of ROUTES) {
       await ready(page, url);
       const slug =
-        url.replace("/design-v621", "").replace(/[/?=]/g, "-").replace(/^-/, "") ||
-        "overview";
+        url
+          .replace("/design-v621", "")
+          .replace(/[/?=]/g, "-")
+          .replace(/^-/, "") || "overview";
       await page.screenshot({
         path: resolve(evidence, `${name}-${slug}.png`),
         fullPage: true,

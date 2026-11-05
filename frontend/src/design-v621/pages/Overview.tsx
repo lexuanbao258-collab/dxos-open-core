@@ -65,7 +65,8 @@ export function Overview() {
             <span>5 bước xử lý dùng chung</span>
           </div>
           <p className="side-note">
-            Đây là mô hình nghiệp vụ của bản demo, không chứng minh kết nối LIVE.
+            Đây là mô hình nghiệp vụ của bản demo, không chứng minh kết nối
+            LIVE.
           </p>
           <div className="work-summary">
             {STEPS.map((s, i) => (

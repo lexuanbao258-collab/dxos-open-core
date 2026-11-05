@@ -125,7 +125,8 @@ export function RequestDetail() {
           </dl>
           {!hasActions && (
             <div className="no-actions">
-              Không có thao tác xử lý nào được máy chủ cấp cho bản xem trước này.
+              Không có thao tác xử lý nào được máy chủ cấp cho bản xem trước
+              này.
             </div>
           )}
           <p className="minor-alert">

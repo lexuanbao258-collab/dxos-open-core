@@ -76,7 +76,16 @@ export function PreviewProvider({ children }: { children: ReactNode }) {
       patchFilters,
       resetFilters,
     }),
-    [qa, announcement, announce, tabs, setTab, filters, patchFilters, resetFilters],
+    [
+      qa,
+      announcement,
+      announce,
+      tabs,
+      setTab,
+      filters,
+      patchFilters,
+      resetFilters,
+    ],
   );
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

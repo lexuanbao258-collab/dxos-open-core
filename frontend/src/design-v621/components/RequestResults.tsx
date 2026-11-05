@@ -3,7 +3,12 @@
 
 import { Link } from "react-router-dom";
 import { BASE } from "../PreviewContext";
-import { SERVICES, type ListRoute, type PreviewTicket, type QaScenario } from "../model";
+import {
+  SERVICES,
+  type ListRoute,
+  type PreviewTicket,
+  type QaScenario,
+} from "../model";
 import { Progress } from "./Progress";
 
 export const detailPath = (id: string, from: string) =>
@@ -134,7 +139,10 @@ export function RequestResults({ rows, route, qa, onResetFilters }: Props) {
           ))}
         </tbody>
       </table>
-      <div className="mobile-list" aria-label="Danh sách yêu cầu trên điện thoại">
+      <div
+        className="mobile-list"
+        aria-label="Danh sách yêu cầu trên điện thoại"
+      >
         {rows.map((r) => (
           <Link
             key={r.id}

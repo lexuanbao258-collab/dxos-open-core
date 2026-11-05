@@ -52,12 +52,7 @@ export interface PreviewAuditEvent {
 }
 
 export type QaScenario =
-  | "normal"
-  | "loading"
-  | "empty"
-  | "error"
-  | "success"
-  | "unknown";
+  "normal" | "loading" | "empty" | "error" | "success" | "unknown";
 
 export type ListRoute = "mine" | "queue";
 export type ListTab = "open" | "closed" | "processing" | "all";
@@ -72,13 +67,14 @@ export interface ListFilters {
 /** The only requester whose tickets appear under "Yêu cầu của tôi". */
 export const PREVIEW_VIEWER = "Ngọc Ánh";
 
-export const INTEGRATION_ROWS: ReadonlyArray<readonly [string, string, string]> =
-  [
-    ["Identity / SSO", "#24", "Chờ OIDC Authorization Code + PKCE"],
-    ["API Gateway", "#22 / #23", "Chưa nghiệm thu kết nối API có kiểm quyền"],
-    ["Workflow Engine", "#22 / #23 / #24", "Chưa có bằng chứng LIVE đầy đủ"],
-    ["Data Management", "#25 / #26", "Chưa xác nhận năng lực dữ liệu LIVE"],
-    ["Tệp đính kèm", "#26", "Chờ Storage API có kiểm quyền"],
-    ["OpenAPI / DTO mapping", "#37", "Chưa duyệt hợp đồng và mapping tích hợp"],
-    ["HTTP adapter (9 route)", "PR #63", "Có mã, mới thử với fake transport"],
-  ];
+export const INTEGRATION_ROWS: ReadonlyArray<
+  readonly [string, string, string]
+> = [
+  ["Identity / SSO", "#24", "Chờ OIDC Authorization Code + PKCE"],
+  ["API Gateway", "#22 / #23", "Chưa nghiệm thu kết nối API có kiểm quyền"],
+  ["Workflow Engine", "#22 / #23 / #24", "Chưa có bằng chứng LIVE đầy đủ"],
+  ["Data Management", "#25 / #26", "Chưa xác nhận năng lực dữ liệu LIVE"],
+  ["Tệp đính kèm", "#26", "Chờ Storage API có kiểm quyền"],
+  ["OpenAPI / DTO mapping", "#37", "Chưa duyệt hợp đồng và mapping tích hợp"],
+  ["HTTP adapter (9 route)", "PR #63", "Có mã, mới thử với fake transport"],
+];

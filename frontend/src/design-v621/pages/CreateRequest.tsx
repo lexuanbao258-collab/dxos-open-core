@@ -133,7 +133,11 @@ export function CreateRequest() {
               aria-invalid={Boolean(err("title"))}
               aria-describedby="title-error"
             />
-            <span className="ot-field-error" id="title-error" aria-live="polite">
+            <span
+              className="ot-field-error"
+              id="title-error"
+              aria-live="polite"
+            >
               {err("title")}
             </span>
           </div>
@@ -257,8 +261,8 @@ export function CreateRequest() {
         <aside className="ot-form-note">
           <h2>Trước khi gửi yêu cầu</h2>
           <p>
-            Mô tả ngắn gọn vấn đề, ảnh hưởng thực tế và thông tin liên quan. Chọn
-            đúng loại dịch vụ để biểu mẫu hiển thị trường phù hợp.
+            Mô tả ngắn gọn vấn đề, ảnh hưởng thực tế và thông tin liên quan.
+            Chọn đúng loại dịch vụ để biểu mẫu hiển thị trường phù hợp.
           </p>
           <p>
             <strong>Bản xem trước:</strong> nút bên trái chỉ kiểm tra nội dung

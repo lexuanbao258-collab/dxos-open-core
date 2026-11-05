@@ -250,7 +250,12 @@ export function RequestList({ route }: { route: ListRoute }) {
           </span>
         </div>
       </section>
-      <div className="kbd-feedback" id="kbd-feedback" role="status" hidden={!feedback}>
+      <div
+        className="kbd-feedback"
+        id="kbd-feedback"
+        role="status"
+        hidden={!feedback}
+      >
         {feedback}
       </div>
       <section

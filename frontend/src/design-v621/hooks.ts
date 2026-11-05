@@ -1,12 +1,7 @@
 // SPDX-FileCopyrightText: 2026 TRICORE contributors
 // SPDX-License-Identifier: Apache-2.0
 
-import {
-  useEffect,
-  useLayoutEffect,
-  useState,
-  type RefObject,
-} from "react";
+import { useEffect, useLayoutEffect, useState, type RefObject } from "react";
 
 /** True when `text` fits on one line inside the input's content box. */
 export function textFitsInput(input: HTMLInputElement, text: string): boolean {

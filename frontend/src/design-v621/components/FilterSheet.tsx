@@ -15,7 +15,9 @@ import {
 interface Props {
   open: boolean;
   filters: ListFilters;
-  onApply: (patch: Pick<ListFilters, "service" | "status" | "priority">) => void;
+  onApply: (
+    patch: Pick<ListFilters, "service" | "status" | "priority">,
+  ) => void;
   onClose: () => void;
 }
 
