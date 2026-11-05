@@ -39,7 +39,7 @@ class R24ReleaseTests(unittest.TestCase):
         put("build/r23/license-inventory.json", json.dumps([ROW]))
         self.output = self.repo / "output"
         release.package(self.repo, TAG, SHA, self.output)
-        self.archive = self.output / "dxos-v0.1.0.tar.gz"
+        self.archive = self.output / "dxos-open-core-0.1.0.tar.gz"
         self.sums = self.output / "SHA256SUMS"
         self.acceptance = self.repo / "docs/06-deployment/r24-acceptance.json"
 
@@ -51,6 +51,7 @@ class R24ReleaseTests(unittest.TestCase):
         release.package(self.repo, TAG, SHA, self.output)
         doc = {"tag": TAG, "source_sha": SHA, "reviewed_by": ["phanyen06ym-ien"],
                "java_base_image": "eclipse-temurin:21-jre@sha256:" + "b" * 64,
+               "archive_sha256": release.digest(self.archive.read_bytes()),
                "evidence": {k: "https://example.test/evidence" for k in release.GATES},
                "components": [{"project": ROW["project"], "name": ROW["name"],
                                "version": ROW["version"], "purl": ROW["purl"],
@@ -69,7 +70,7 @@ class R24ReleaseTests(unittest.TestCase):
     def test_malformed_tag_and_checksum_rejected(self):
         with self.assertRaises(ValueError):
             release.package(self.repo, "../../bad", SHA, self.output)
-        self.sums.write_text("deadbeef  dxos-v0.1.0.tar.gz\n")
+        self.sums.write_text("deadbeef  dxos-open-core-0.1.0.tar.gz\n")
         with self.assertRaisesRegex(ValueError, "checksum mismatch"):
             release.verify(self.archive, self.sums)
 
@@ -91,7 +92,25 @@ class R24ReleaseTests(unittest.TestCase):
 
     def test_explicit_clearance_passes(self):
         self.clearance()
-        release.gate(self.archive, self.sums, self.acceptance, TAG, SHA)
+        release.gate(self.archive, self.sums, self.acceptance, TAG, SHA, self.output / "RELEASE-NOTES.md")
+
+    def test_reviewed_archive_digest_rejects_repackaged_same_tag_and_sha(self):
+        self.clearance()
+        (self.repo / "NOTICE").write_text("tampered but internally consistent")
+        release.package(self.repo, TAG, SHA, self.output)
+        release.verify(self.archive, self.sums)
+        with self.assertRaisesRegex(ValueError, "reviewed archive SHA-256 mismatch"):
+            release.gate(self.archive, self.sums, self.acceptance, TAG, SHA)
+
+    def test_release_notes_must_match_verified_archive(self):
+        self.clearance()
+        (self.output / "RELEASE-NOTES.md").write_text("different notes")
+        with self.assertRaisesRegex(ValueError, "release notes mismatch"):
+            release.gate(self.archive, self.sums, self.acceptance, TAG, SHA, self.output / "RELEASE-NOTES.md")
+
+    def test_rc_release_notes_and_archive_name(self):
+        self.assertTrue(release.TAG.fullmatch("v0.2.0-rc.1"))
+        self.assertFalse(release.TAG.fullmatch("v0.2.0-rc.0"))
 
 
 if __name__ == "__main__":
