@@ -940,6 +940,24 @@ class HelpdeskHttpPostgresTest {
         assertThat(snapshot()).isEqualTo(before);
     }
 
+    @Test void helpdeskAndWorkflowTablesStayInPrivateSchema() throws Exception {
+        // Replaces the retired Request/JPA schema assertion with the live Helpdesk/Workflow boundary.
+        try (var c = admin()) {
+            assertThat(number(c, "SELECT count(*) FROM pg_catalog.pg_class WHERE relnamespace='"
+                    + schema + "'::regnamespace AND relname IN ('helpdesk_requests','workflow_instances')"))
+                    .isEqualTo(2);
+            assertThat(number(c, "SELECT count(*) FROM pg_catalog.pg_class "
+                    + "WHERE relnamespace='public'::regnamespace "
+                    + "AND relname IN ('helpdesk_requests','workflow_instances')"))
+                    .isZero();
+        }
+        try (var c = runtime.getConnection()) {
+            assertThat(c.getSchema()).isEqualTo(schema);
+            assertThat(number(c, "SELECT count(*) FROM " + schema + ".helpdesk_requests")).isGreaterThanOrEqualTo(0);
+            assertThat(number(c, "SELECT count(*) FROM " + schema + ".workflow_instances")).isGreaterThanOrEqualTo(0);
+        }
+    }
+
     @Test void paginationAndPrototypeIsolation() throws Exception {
         create("employee");create("employee");
         var first=read(expect(get(API+"?limit=1"),"employee",200));
