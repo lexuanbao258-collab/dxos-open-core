@@ -4,6 +4,7 @@
 
 plugins {
     id 'java'
+    id 'org.cyclonedx.bom' version '3.5.1'
     id 'org.springframework.boot' version '3.5.16'
 }
 
@@ -12,6 +13,10 @@ version = '0.1.0'
 
 java {
     toolchain { languageVersion = JavaLanguageVersion.of(21) }
+}
+
+tasks.named('cyclonedxDirectBom') {
+    includeConfigs = ['runtimeClasspath']
 }
 
 repositories { mavenCentral() }
