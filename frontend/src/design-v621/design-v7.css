@@ -1164,6 +1164,7 @@
 @media (max-width: 1000px) {
   .ot-root .ot-form-layout {
     grid-template-columns: 1fr;
+    align-items: stretch;
     gap: 32px;
   }
 }

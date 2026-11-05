@@ -3,6 +3,7 @@
 
 import { useRef, useState, type FormEvent } from "react";
 import { PageHead } from "../components/PageHead";
+import { useFittingPlaceholder } from "../hooks";
 import { Icon } from "../icons";
 import { validateCreate, type CreateErrors } from "../logic";
 import { usePreview } from "../PreviewContext";
@@ -32,6 +33,13 @@ export function CreateRequest() {
     description: useRef<HTMLTextAreaElement>(null),
     location: useRef<HTMLInputElement>(null),
   };
+  // Long example text is clipped by the input below ~400px, so fall back to a
+  // shorter example (same rule as the search box).
+  const titlePlaceholder = useFittingPlaceholder(
+    refs.title,
+    "Ví dụ: Không truy cập được kho mã nguồn…",
+    "Ví dụ: Không vào được kho mã…",
+  );
   const facility = values.service === "facility.v1";
   const locked = qa === "unknown";
   const set = (patch: Partial<typeof INITIAL>) =>
@@ -129,7 +137,7 @@ export function CreateRequest() {
               name="title"
               ref={refs.title}
               className="ot-input"
-              placeholder="Ví dụ: Không truy cập được kho mã nguồn…"
+              placeholder={titlePlaceholder}
               autoComplete="off"
               maxLength={120}
               value={values.title}
