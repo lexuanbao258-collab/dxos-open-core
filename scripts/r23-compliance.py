@@ -139,10 +139,34 @@ def read_bom(path, project):
         if project == "backend" and c["name"] == "hibernate-core" \
                 and c["version"] == "6.6.53.Final" and declared == ["LGPL-2.1-only"]:
             approved, choice = True, "LGPL-2.1-only (conditional redistribution review)"
+        # CI policy approval and rights/redistribution acceptance are
+        # independent gates. Do not turn a reviewed SPDX ID into a release PASS.
+        obligations = ["CHECK_UPSTREAM_LICENSE_NOTICE_AND_ATTRIBUTION",
+                       "R24_VERIFY_RELEASE_PACKAGING"]
+        if c["name"] == "hibernate-core" and c["version"] == "6.6.53.Final":
+            obligations.append("LGPL_SOURCE_LINKING_RELINK_DISTRIBUTION_REVIEW")
+        if c["name"] in {"logback-core", "logback-classic"} and c["version"] == "1.5.34":
+            obligations.append("EPL_LICENSE_NOTICE_SOURCE_REVIEW")
+        if "BlueOak-1.0.0" in declared:
+            obligations.append("BLUEOAK_LICENSE_TEXT_OR_LINK")
+        if "MIT-0" in declared:
+            obligations.append("MIT_0_LICENSE_TEXT")
+        license_links = {
+            "BlueOak-1.0.0": "https://spdx.org/licenses/BlueOak-1.0.0.html",
+            "MIT-0": "https://spdx.org/licenses/MIT-0.html",
+            "EPL-2.0": "https://www.eclipse.org/legal/epl-2.0/",
+            "LGPL-2.1-only": "https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html",
+        }
         rows.append({"project": project, "name": c["name"],
                      "version": c["version"], "purl": c.get("purl") or "",
                      "licenses": declared, "license_choice": choice,
-                     "approved": approved})
+                     "approved": approved,
+                     "license_policy_status": "APPROVED" if approved else "REVIEW",
+                     "release_distribution_status": "PENDING",
+                     "release_distribution_owner": "R24 / Yến",
+                     "release_distribution_requirements": obligations,
+                     "license_reference_links": {lic: license_links[lic] for lic in declared
+                                                 if lic in license_links}})
     if not rows:
         raise ValueError(project + ": no eligible components")
     return rows
@@ -174,6 +198,7 @@ def audit(paths, destination):
         "\n".join(header), encoding="utf-8")
     bad = [r for r in rows if not r["approved"]]
     print(f"R23: {len(rows)} components, {len(bad)} unapproved or unknown license declarations")
+    print(f"R23 release distribution: {sum(r['release_distribution_status'] == 'PENDING' for r in rows)} PENDING; independent R24 sign-off required")
     for r in bad:
         print("R23 REVIEW:", r["project"], r["name"], r["version"], r["licenses"], file=sys.stderr)
     return not bad
