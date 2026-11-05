@@ -84,6 +84,58 @@ class R24ReleaseTests(unittest.TestCase):
         self.assertEqual(first, release.digest(self.archive.read_bytes()))
         release.verify(self.archive, self.sums)
 
+    def test_generated_sbom_timestamp_uuid_and_run_link_do_not_change_archive(self):
+        def populate(uuid, timestamp, run):
+            generated = {
+                "bomFormat": "CycloneDX", "specVersion": "1.6",
+                "serialNumber": "urn:uuid:" + uuid,
+                "metadata": {
+                    "timestamp": timestamp,
+                    "component": {
+                        "type": "application", "name": "dxos",
+                        "externalReferences": [
+                            {"type": "build-system",
+                             "url": "https://github.com/tricore-opentrix/dxos-open-core/actions/runs/" + run},
+                            {"type": "vcs",
+                             "url": "https://github.com/tricore-opentrix/dxos-open-core"}]
+                    }},
+                "components": [{"type": "library", "name": "example", "version": "1.0",
+                                "licenses": [{"license": {"id": "Apache-2.0"}}]}]
+            }
+            for name in ("backend/build/reports/cyclonedx/bom.json",
+                         "portal-bff/build/reports/cyclonedx/bom.json", "frontend-sbom.json"):
+                self.put(name, json.dumps(generated))
+
+        populate("aaa", "2026-11-05T01:02:03Z", "12345")
+        self.make()
+        first = release.digest(self.archive.read_bytes())
+        populate("bbb", "2026-11-06T04:05:06Z", "99999")
+        self.make()
+        self.assertEqual(first, release.digest(self.archive.read_bytes()))
+        _, data, prefix = release.verify(self.archive, self.sums)
+        bom = json.loads(data[prefix + "compliance/backend.cdx.json"])
+        self.assertNotIn("serialNumber", bom)
+        self.assertNotIn("timestamp", bom["metadata"])
+        self.assertEqual(len(bom["components"]), 1)
+        self.assertEqual(bom["metadata"]["component"]["externalReferences"],
+                         [{"type": "vcs", "url": "https://github.com/tricore-opentrix/dxos-open-core"}])
+
+    def test_source_only_candidate_stable_across_generated_sbom_runs(self):
+        subprocess.run(["git", "init", "-q"], cwd=self.repo, check=True)
+        subprocess.run(["git", "add", "README.md", "LICENSE", "NOTICE", "CHANGELOG.md"],
+                       cwd=self.repo, check=True)
+        self.put("frontend-sbom.json",
+                 json.dumps({"bomFormat": "CycloneDX", "serialNumber": "urn:uuid:old",
+                             "metadata": {"timestamp": "2026-11-05T12:00:00Z"}}))
+        self.make("source-only")
+        first = release.digest(self.archive.read_bytes())
+        self.put("frontend-sbom.json",
+                 json.dumps({"bomFormat": "CycloneDX", "serialNumber": "urn:uuid:new",
+                             "metadata": {"timestamp": "2026-11-06T12:00:00Z"}}))
+        self.make("source-only")
+        self.assertEqual(first, release.digest(self.archive.read_bytes()))
+        release.verify(self.archive, self.sums)
+
     def test_invalid_tag_and_checksum_rejected(self):
         with self.assertRaises(ValueError):
             release.package(self.repo, "../../bad", SHA, self.output)
