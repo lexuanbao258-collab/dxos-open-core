@@ -6,7 +6,9 @@ import AxeBuilder from "@axe-core/playwright";
 import { mkdir } from "node:fs/promises";
 import { resolve } from "node:path";
 
-const evidence = resolve("..", "docs", "evidence", "opentrix-v621");
+const evidence = resolve("..", "docs", "evidence", "opentrix-v7");
+// Screens already redesigned for V7; extend as each screen is approved.
+const EVIDENCE_SLUGS = new Set(["overview", "queue"]);
 const ROUTES = [
   "/design-v621",
   "/design-v621/mine",
@@ -132,7 +134,8 @@ test("typed search text survives resize between short and long placeholder", asy
 });
 
 for (const width of [
-  320, 360, 361, 370, 390, 760, 761, 800, 900, 1024, 1200, 1440,
+  320, 360, 361, 370, 390, 760, 761, 800, 900, 1024, 1040, 1041, 1100, 1200,
+  1440,
 ]) {
   test(`no horizontal overflow on every screen at ${width}px`, async ({
     page,
@@ -235,6 +238,140 @@ test("reload simulates a brief loading state and recovers with an announcement",
   );
 });
 
+test("content, notice strip and topbar share one left edge (no leaked main padding)", async ({
+  page,
+}) => {
+  for (const width of [390, 1100, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    await ready(page, "/design-v621");
+    const edges = await page.evaluate(() => {
+      const left = (sel: string) =>
+        Math.round(document.querySelector(sel)!.getBoundingClientRect().left);
+      return {
+        brand: left(".ot-brand"),
+        h1: left("#main h1"),
+        notice: left(".ot-notice .notice-label"),
+        mainPad: getComputedStyle(document.querySelector("main")!).paddingLeft,
+      };
+    });
+    expect(edges.mainPad, `@${width}`).toBe("0px");
+    expect(edges.h1, `h1 vs brand @${width}`).toBe(edges.brand);
+    expect(edges.notice, `notice vs brand @${width}`).toBe(edges.brand);
+  }
+});
+
+test("queue table is never clipped and keeps a readable title column above the 1040px breakpoint", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1500, height: 900 });
+  await ready(page, "/design-v621/queue");
+  for (let w = 1041; w <= 1500; w += 41) {
+    await page.setViewportSize({ width: w, height: 900 });
+    const m = await page.evaluate(() => {
+      const table = document.querySelector<HTMLElement>(".data-table")!;
+      const surface = document.querySelector<HTMLElement>(".table-surface")!;
+      const titles = [...document.querySelectorAll(".data-table .ticket-name")];
+      return {
+        visible: table.getClientRects().length > 0,
+        fits: table.scrollWidth <= surface.clientWidth + 1,
+        minTitle: Math.min(
+          ...titles.map((e) => e.getBoundingClientRect().width),
+        ),
+        maxLines: Math.max(
+          ...titles.map((e) =>
+            Math.round(e.getBoundingClientRect().height / 22),
+          ),
+        ),
+      };
+    });
+    expect(m.visible, `table visible @${w}`).toBe(true);
+    expect(m.fits, `table not clipped @${w}`).toBe(true);
+    expect(m.minTitle, `title width @${w}`).toBeGreaterThanOrEqual(240);
+    expect(m.maxLines, `title lines @${w}`).toBeLessThanOrEqual(2);
+  }
+});
+
+test("table gives way to rows at 1040px and below, both stay keyboard reachable", async ({
+  page,
+}) => {
+  for (const [width, tableShown] of [
+    [1041, true],
+    [1040, false],
+    [900, false],
+    [390, false],
+  ] as const) {
+    await page.setViewportSize({ width, height: 900 });
+    await ready(page, "/design-v621/queue");
+    const state = await page.evaluate(() => ({
+      table:
+        document.querySelector(".table-surface")!.getClientRects().length > 0,
+      rows: document.querySelector(".mobile-list")!.getClientRects().length > 0,
+    }));
+    expect(state.table, `table @${width}`).toBe(tableShown);
+    expect(state.rows, `rows @${width}`).toBe(!tableShown);
+  }
+});
+
+test("overview: whole attention row is the click target; chart and rail are distinct", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await ready(page, "/design-v621");
+  const rows = page.locator(".att-row");
+  await expect(rows).toHaveCount(5);
+  await expect(rows.first().locator(".att-id")).toHaveText("DX-1048");
+  const box = (await rows.first().locator(".att-rail").boundingBox())!;
+  await page.mouse.click(box.x + 4, box.y + box.height / 2);
+  await expect(page).toHaveURL(/\/design-v621\/detail\/DX-1048\?from=overview/);
+  await ready(page, "/design-v621");
+  await expect(page.locator(".dist-list li")).toHaveCount(5);
+  await expect(page.locator(".dist .rail")).toHaveCount(0);
+});
+
+test("mobile hides the duplicate create CTA while the bottom navigation stays usable", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await ready(page, "/design-v621");
+  await expect(page.locator(".ot-page-head .cta-dup")).toBeHidden();
+  const nav = page.getByRole("navigation", {
+    name: "Điều hướng nhanh trên điện thoại",
+  });
+  await expect(nav.getByRole("link", { name: "Tạo mới" })).toBeVisible();
+  await nav.getByRole("link", { name: "Tạo mới" }).focus();
+  await expect(nav.getByRole("link", { name: "Tạo mới" })).toBeFocused();
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await expect(page.locator(".ot-page-head .cta-dup")).toBeVisible();
+});
+
+test("clear-filters button resets desktop filters", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await ready(page, "/design-v621/queue");
+  await expect(page.getByRole("button", { name: "Xóa lọc" })).toHaveCount(0);
+  await page.getByLabel("Lọc ưu tiên").selectOption("Cao");
+  await expect(page.locator("#count")).toHaveText("2 / 8 yêu cầu");
+  await page.getByRole("button", { name: "Xóa lọc" }).click();
+  await expect(page.locator("#count")).toHaveText("6 / 8 yêu cầu");
+});
+
+test("200% zoom (emulated as a 720x450 CSS viewport): no overflow, no axe violations", async ({
+  page,
+}) => {
+  // Not real browser zoom: the layout viewport a 1440px window has at 200%.
+  await page.setViewportSize({ width: 720, height: 450 });
+  for (const url of ["/design-v621", "/design-v621/queue"]) {
+    await ready(page, url);
+    expect(await noHorizontalOverflow(page), url).toBe(true);
+    const results = await new AxeBuilder({ page })
+      .withTags(["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa"])
+      .analyze();
+    expect(
+      results.violations.map((v) => v.id),
+      url,
+    ).toEqual([]);
+  }
+});
+
 test("mobile filter sheet opens as a modal dialog and applies filters", async ({
   page,
 }) => {
@@ -271,7 +408,7 @@ for (const [name, width, height] of [
           .replace(/[/?=]/g, "-")
           .replace(/^-/, "") || "overview";
       // Evidence images are rewritten only on request (SAVE_EVIDENCE=1).
-      if (process.env.SAVE_EVIDENCE) {
+      if (process.env.SAVE_EVIDENCE && EVIDENCE_SLUGS.has(slug)) {
         await page.screenshot({
           path: resolve(evidence, `${name}-${slug}.png`),
           fullPage: true,

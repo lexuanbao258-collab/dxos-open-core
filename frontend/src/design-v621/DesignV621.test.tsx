@@ -17,6 +17,8 @@ import {
   emptyFilters,
   numbers,
   selectRows,
+  serviceCounts,
+  stepCounts,
   validateCreate,
 } from "./logic";
 
@@ -187,6 +189,24 @@ describe("list logic", () => {
   });
 });
 
+describe("step and service counts", () => {
+  it("are derived from the tickets, not hardcoded", () => {
+    expect(stepCounts(PREVIEW_TICKETS)).toEqual({
+      SUBMITTED: 3,
+      TRIAGED: 1,
+      IN_PROGRESS: 2,
+      RESOLVED: 0,
+      CONFIRMED: 2,
+    });
+    expect(serviceCounts(PREVIEW_TICKETS)).toEqual({
+      "helpdesk.v1": 5,
+      "facility.v1": 3,
+    });
+    expect(stepCounts([PREVIEW_TICKETS[0]]).SUBMITTED).toBe(1);
+    expect(Object.values(stepCounts([])).every((n) => n === 0)).toBe(true);
+  });
+});
+
 describe("create validation", () => {
   const ok = {
     service: "helpdesk.v1",
@@ -238,7 +258,7 @@ describe("shell", () => {
     const live = document.querySelectorAll("[aria-live]");
     expect(live).toHaveLength(1);
     expect(live[0]).toHaveAttribute("aria-live", "polite");
-    expect(document.title).toBe("Tổng quan · OpenTrix V6.2.1 (MOCK)");
+    expect(document.title).toBe("Tổng quan · OpenTrix V7 (MOCK)");
   });
 
   it("brands as OpenTrix with the DX-OS Open-Core note", () => {
@@ -258,21 +278,107 @@ describe("shell", () => {
 });
 
 describe("overview", () => {
-  it("lists up to 5 open requests and the shared 5-step flow", () => {
+  it("summarises open requests and keeps the MOCK boundary visible", () => {
     renderAt("/design-v621");
     expect(
       screen.getByText("6 yêu cầu đang mở · 3 chờ tiếp nhận · 2 đang xử lý"),
     ).toBeInTheDocument();
-    expect(document.querySelectorAll(".home-row")).toHaveLength(5);
-    const aside = screen.getByLabelText("Kiến trúc nghiệp vụ");
-    for (const label of [
-      "Đã gửi",
-      "Đã tiếp nhận",
-      "Đang xử lý",
-      "Đã giải quyết",
-      "Đã xác nhận",
-    ])
-      expect(within(aside).getByText(label)).toBeInTheDocument();
+    expect(screen.getByLabelText("Trạng thái môi trường")).toHaveTextContent(
+      "LIVE chưa được xác nhận",
+    );
+  });
+
+  it("lists attention items: high priority first, then oldest, max 5", () => {
+    renderAt("/design-v621");
+    const list = screen
+      .getByRole("heading", { name: "Cần chú ý" })
+      .closest("section")!;
+    const rows = [...list.querySelectorAll(".att-row")];
+    expect(rows).toHaveLength(5);
+    expect(rows.map((r) => r.querySelector(".att-id")?.textContent)).toEqual([
+      "DX-1048",
+      "DX-1047",
+      "DX-1040",
+      "DX-1043",
+      "DX-1045",
+    ]);
+    // Only the two "Cao" tickets carry a badge.
+    expect(list.querySelectorAll(".ot-badge-high")).toHaveLength(2);
+    expect(
+      within(list).getByRole("link", {
+        name: "Cấp quyền truy cập kho mã nguồn dự án",
+      }),
+    ).toHaveAttribute("href", "/design-v621/detail/DX-1048?from=overview");
+    expect(
+      within(list).getByRole("link", { name: "Xem toàn bộ hàng đợi" }),
+    ).toHaveAttribute("href", "/design-v621/queue");
+  });
+
+  it("shows the per-step distribution derived from fixtures, not a rail", () => {
+    renderAt("/design-v621");
+    const aside = screen.getByLabelText("Phân bố theo bước");
+    expect(
+      within(aside).getByRole("heading", { name: "Số yêu cầu theo bước" }),
+    ).toBeInTheDocument();
+    const items = [...aside.querySelectorAll(".dist-list li")].map((li) => [
+      li.querySelector(".dist-label")?.textContent,
+      li.querySelector(".dist-count")?.textContent,
+    ]);
+    expect(items).toEqual([
+      ["Đã gửi", "3"],
+      ["Đã tiếp nhận", "1"],
+      ["Đang xử lý", "2"],
+      ["Đã giải quyết", "0"],
+      ["Đã xác nhận", "2"],
+    ]);
+    expect(
+      [...aside.querySelectorAll(".dist-bar")].every(
+        (b) => b.getAttribute("aria-hidden") === "true",
+      ),
+    ).toBe(true);
+    // The distribution chart must never reuse the per-ticket rail.
+    expect(aside.querySelector(".rail")).toBeNull();
+    expect(aside).toHaveTextContent("Hỗ trợ CNTT 5 · Cơ sở vật chất 3");
+    expect(aside).toHaveTextContent("Workflow Core");
+    const widths = [
+      ...aside.querySelectorAll<HTMLElement>(".dist-bar > span"),
+    ].map((e) => e.style.width);
+    expect(widths[0]).toBe("100%");
+    expect(widths[3]).toBe("0%");
+  });
+
+  it("marks the create CTA as a mobile duplicate of the bottom navigation", () => {
+    renderAt("/design-v621");
+    const cta = screen.getAllByRole("link", { name: /Tạo yêu cầu/ });
+    expect(cta.some((a) => a.classList.contains("cta-dup"))).toBe(true);
+    const bottom = screen.getByRole("navigation", {
+      name: "Điều hướng nhanh trên điện thoại",
+    });
+    expect(
+      within(bottom).getByRole("link", { name: "Tạo mới" }),
+    ).toHaveAttribute("href", "/design-v621/create");
+  });
+});
+
+describe("workflow rail", () => {
+  it("renders 5 segments: done, current and outline, plus the step label", () => {
+    renderAt("/design-v621/queue");
+    const row = document
+      .querySelector('a.row-link[data-ticket="DX-1046"]')!
+      .closest("tr")!;
+    const segs = [...row.querySelectorAll(".rail-seg")].map((e) => e.className);
+    expect(segs).toEqual([
+      "rail-seg is-done",
+      "rail-seg is-done",
+      "rail-seg is-current",
+      "rail-seg is-todo",
+      "rail-seg is-todo",
+    ]);
+    expect(row.querySelector(".rail-label")).toHaveTextContent("Đang xử lý");
+    expect(row.querySelector(".rail-track")).toHaveAttribute(
+      "aria-hidden",
+      "true",
+    );
   });
 });
 
@@ -393,6 +499,73 @@ describe("request list (mine / queue)", () => {
   it("mine has no keyboard shortcuts hint", () => {
     renderAt("/design-v621/mine");
     expect(document.querySelector(".kbd-hint")).toBeNull();
+  });
+});
+
+describe("queue table (V7)", () => {
+  it("has a separate id column, badges only for high priority, dashes for no data", () => {
+    renderAt("/design-v621/queue");
+    expect(
+      screen.getByRole("columnheader", { name: "Mã" }),
+    ).toBeInTheDocument();
+    const row = (id: string) =>
+      document.querySelector(`a.row-link[data-ticket="${id}"]`)!.closest("tr")!;
+    expect(row("DX-1048").querySelector(".ot-id")).toHaveTextContent("DX-1048");
+    expect(row("DX-1048").querySelector(".ot-badge-high")).toHaveTextContent(
+      "Cao",
+    );
+    expect(row("DX-1040").querySelector(".ot-badge-high")).toBeNull();
+    expect(row("DX-1040").querySelector(".prio-normal")).toHaveTextContent(
+      "Bình thường",
+    );
+    // Missing assignee is a dash visually, but still "Chưa có dữ liệu" for SR.
+    const cell = row("DX-1048").querySelectorAll("td")[5];
+    expect(cell.querySelector(".empty-dash")).toHaveAttribute(
+      "aria-hidden",
+      "true",
+    );
+    expect(cell).toHaveTextContent("Chưa có dữ liệu");
+    expect(row("DX-1046").querySelectorAll("td")[5]).toHaveTextContent(
+      "Nhóm IT Support",
+    );
+  });
+
+  it("shows Xóa lọc only while a filter or query is active and resets everything", async () => {
+    const user = userEvent.setup();
+    renderAt("/design-v621/queue");
+    expect(screen.queryByRole("button", { name: "Xóa lọc" })).toBeNull();
+    await user.selectOptions(
+      screen.getByLabelText("Lọc dịch vụ"),
+      "facility.v1",
+    );
+    await user.type(screen.getByLabelText("Tìm kiếm yêu cầu"), "lotus");
+    expect(screen.getByText("1 / 8 yêu cầu")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Xóa lọc" }));
+    expect(screen.getByText("6 / 8 yêu cầu")).toBeInTheDocument();
+    expect(screen.getByLabelText("Tìm kiếm yêu cầu")).toHaveValue("");
+    expect(screen.queryByRole("button", { name: "Xóa lọc" })).toBeNull();
+  });
+
+  it("card rows keep the keyboard contract (data-ticket links, priority badge)", () => {
+    renderAt("/design-v621/queue");
+    const card = document.querySelector(
+      'a.mobile-card[data-ticket="DX-1047"]',
+    )!;
+    expect(card.querySelector(".ot-badge-high")).toHaveTextContent("Cao");
+    expect(card.querySelector("h2")).toHaveTextContent(
+      "Điều hòa phòng họp Lotus không làm mát",
+    );
+    expect(card.getAttribute("href")).toBe(
+      "/design-v621/detail/DX-1047?from=queue",
+    );
+  });
+
+  it("uses the V7 placeholder text", () => {
+    renderAt("/design-v621/queue");
+    expect(screen.getByLabelText("Tìm kiếm yêu cầu")).toHaveAttribute(
+      "placeholder",
+      "Tìm mã, tiêu đề…",
+    );
   });
 });
 
