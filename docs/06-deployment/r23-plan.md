@@ -47,7 +47,7 @@ R23 completion does **not** require R24 to have attached reviewed license/NOTICE
 
 ## R24 — independently gated distribution acceptance
 
-**Owner: Yến (R24 release coordination).** Bảo hands over the exact-head SBOMs, notices inventory, pending-obligations matrix, reproducible commands and CI artifact IDs. R24 independently determines actual release contents and each required license/source/notice disposition.
+**R24 automation implementation owner: Bảo. R24 compliance/distribution acceptance coordinator: Yến.** Bảo hands over the exact-head SBOMs, notices inventory, pending-obligations matrix, reproducible commands and CI artifact IDs. The R23 inventory's `release_distribution_owner=R24 / Yến` denotes the compliance acceptance workstream, not transfer of release-workflow coding ownership. R24 independently determines actual release contents and each required license/source/notice disposition.
 
 Each component enters the inventory with `release_distribution_status=PENDING` and `release_distribution_owner=R24 / Yến`. That state does not change merely because `license_policy_status=APPROVED` or CI is green. R24 must not distribute a release while material obligations are unresolved, except for an explicitly documented, authorized exception.
 
