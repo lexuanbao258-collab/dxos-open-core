@@ -13,6 +13,7 @@ User-visible DX-OS Open Core changes are recorded here. The format follows
 
 ### Added
 
+- Portal: OpenTrix Visual V7 restyle of the `/design-v621/*` preview (Workflow Rail, Overview with step distribution, Queue table/rows). MOCK/DEV only, no data or behaviour change.
 - Portal: OpenTrix V6.2.1 design preview at `/design-v621/*` (React, MOCK/DEV only, lazy-loaded, isolated from the existing routes). Uses its own preview fixtures; no service, LIVE call or `allowedActions` is introduced. Self-hosts IBM Plex Mono (OFL-1.1) alongside Be Vietnam Pro.
 
 ## [0.1.0] - 2026-11-04

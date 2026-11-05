@@ -3,7 +3,9 @@ SPDX-FileCopyrightText: 2026 TRICORE contributors
 SPDX-License-Identifier: Apache-2.0
 -->
 
-# OpenTrix V6.2.1 preview: evidence
+# OpenTrix V6.2.1 preview: evidence (baseline)
+
+> Historical V6.2.1 baseline, kept as the "before" for Visual V7. Current evidence and test counts: `../opentrix-v7/README.md`.
 
 Scope: the MOCK/DEV React preview at `/design-v621/*` (PR #128). Not LIVE evidence and not a WCAG sign-off.
 

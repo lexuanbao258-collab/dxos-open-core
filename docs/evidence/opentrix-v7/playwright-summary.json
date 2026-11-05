@@ -1,0 +1,189 @@
+{
+  "note": "Summary of `npm run build && npm run test:preview` (tests/design-v621.spec.ts) for Visual V7 (Overview + Queue). Generated locally; GitHub CI does not run Playwright.",
+  "playwright": "1.64.1",
+  "node": "v24.19.0",
+  "os": "Windows 11 (chromium, Desktop Chrome profile)",
+  "stats": {
+    "expected": 35,
+    "unexpected": 0,
+    "skipped": 0,
+    "flaky": 0
+  },
+  "tests": [
+    {
+      "title": "no third-party requests and self-hosted fonts load with Vietnamese glyphs",
+      "status": "expected",
+      "ms": 733
+    },
+    {
+      "title": "existing routes keep working",
+      "status": "expected",
+      "ms": 351
+    },
+    {
+      "title": "placeholder never clips from 320 to 420px (incl. 361-370)",
+      "status": "expected",
+      "ms": 1916
+    },
+    {
+      "title": "typed search text survives resize between short and long placeholder",
+      "status": "expected",
+      "ms": 708
+    },
+    {
+      "title": "no horizontal overflow on every screen at 320px",
+      "status": "expected",
+      "ms": 3147
+    },
+    {
+      "title": "no horizontal overflow on every screen at 360px",
+      "status": "expected",
+      "ms": 3212
+    },
+    {
+      "title": "no horizontal overflow on every screen at 361px",
+      "status": "expected",
+      "ms": 3205
+    },
+    {
+      "title": "no horizontal overflow on every screen at 370px",
+      "status": "expected",
+      "ms": 3173
+    },
+    {
+      "title": "no horizontal overflow on every screen at 390px",
+      "status": "expected",
+      "ms": 3176
+    },
+    {
+      "title": "no horizontal overflow on every screen at 760px",
+      "status": "expected",
+      "ms": 3194
+    },
+    {
+      "title": "no horizontal overflow on every screen at 761px",
+      "status": "expected",
+      "ms": 3191
+    },
+    {
+      "title": "no horizontal overflow on every screen at 800px",
+      "status": "expected",
+      "ms": 3145
+    },
+    {
+      "title": "no horizontal overflow on every screen at 900px",
+      "status": "expected",
+      "ms": 3196
+    },
+    {
+      "title": "no horizontal overflow on every screen at 1024px",
+      "status": "expected",
+      "ms": 3208
+    },
+    {
+      "title": "no horizontal overflow on every screen at 1040px",
+      "status": "expected",
+      "ms": 3258
+    },
+    {
+      "title": "no horizontal overflow on every screen at 1041px",
+      "status": "expected",
+      "ms": 3246
+    },
+    {
+      "title": "no horizontal overflow on every screen at 1100px",
+      "status": "expected",
+      "ms": 3238
+    },
+    {
+      "title": "no horizontal overflow on every screen at 1200px",
+      "status": "expected",
+      "ms": 3230
+    },
+    {
+      "title": "no horizontal overflow on every screen at 1440px",
+      "status": "expected",
+      "ms": 3234
+    },
+    {
+      "title": "QA unknown outcome locks the form and reset restores focus + announces",
+      "status": "expected",
+      "ms": 834
+    },
+    {
+      "title": "queue shows no write action and keyboard hint matches viewport",
+      "status": "expected",
+      "ms": 765
+    },
+    {
+      "title": "detail never offers actions and shows version only when provided",
+      "status": "expected",
+      "ms": 1164
+    },
+    {
+      "title": "reduced motion disables screen fade and skeleton animation",
+      "status": "expected",
+      "ms": 603
+    },
+    {
+      "title": "reload simulates a brief loading state and recovers with an announcement",
+      "status": "expected",
+      "ms": 1028
+    },
+    {
+      "title": "content, notice strip and topbar share one left edge (no leaked main padding)",
+      "status": "expected",
+      "ms": 1696
+    },
+    {
+      "title": "queue table is never clipped and keeps a readable title column above the 1040px breakpoint",
+      "status": "expected",
+      "ms": 861
+    },
+    {
+      "title": "table gives way to rows at 1040px and below, both stay keyboard reachable",
+      "status": "expected",
+      "ms": 2223
+    },
+    {
+      "title": "overview: whole attention row is the click target; chart and rail are distinct",
+      "status": "expected",
+      "ms": 1215
+    },
+    {
+      "title": "mobile hides the duplicate create CTA while the bottom navigation stays usable",
+      "status": "expected",
+      "ms": 680
+    },
+    {
+      "title": "clear-filters button resets desktop filters",
+      "status": "expected",
+      "ms": 730
+    },
+    {
+      "title": "200% zoom (emulated as a 720x450 CSS viewport): no overflow, no axe violations",
+      "status": "expected",
+      "ms": 2093
+    },
+    {
+      "title": "mobile filter sheet opens as a modal dialog and applies filters",
+      "status": "expected",
+      "ms": 1052
+    },
+    {
+      "title": "axe + screenshots desktop-1440",
+      "status": "expected",
+      "ms": 5855
+    },
+    {
+      "title": "axe + screenshots mobile-390",
+      "status": "expected",
+      "ms": 5757
+    },
+    {
+      "title": "axe + screenshots mobile-320",
+      "status": "expected",
+      "ms": 5717
+    }
+  ]
+}
