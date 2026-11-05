@@ -120,6 +120,54 @@ class R24ReleaseTests(unittest.TestCase):
         self.assertEqual(bom["metadata"]["component"]["externalReferences"],
                          [{"type": "vcs", "url": "https://github.com/tricore-opentrix/dxos-open-core"}])
 
+    def test_repository_rename_keeps_binary_and_source_only_archive_digests(self):
+        # Both repo name and run number change; unrelated refs must remain intact.
+        subprocess.run(["git", "init", "-q"], cwd=self.repo, check=True)
+        subprocess.run(["git", "add", "README.md", "LICENSE", "NOTICE", "CHANGELOG.md"],
+                       cwd=self.repo, check=True)
+
+        retained = [
+            {"type": "vcs", "url": "https://github.com/tricore-opentrix/dxos-open-core"},
+            {"type": "build-system", "url": "https://ci.example.test/build/unchanged"}]
+        def generate(repo_name, run_number, timestamp, serial):
+            bom = {
+                "bomFormat": "CycloneDX", "specVersion": "1.6",
+                "serialNumber": "urn:uuid:" + serial,
+                "metadata": {
+                    "timestamp": timestamp,
+                    "component": {
+                        "name": "dxos", "type": "application",
+                        "externalReferences": [
+                            {"type": "build-system",
+                             "url": f"https://github.com/tricore-opentrix/{repo_name}/actions/runs/{run_number}"},
+                            *retained]
+                    }},
+                "components": [{"type": "library", "name": "preserved", "version": "1.0",
+                                "licenses": [{"license": {"id": "Apache-2.0"}}]}],
+                "dependencies": [{"ref": "pkg:maven/example@1.0", "dependsOn": []}]
+            }
+            for name in ("backend/build/reports/cyclonedx/bom.json",
+                         "portal-bff/build/reports/cyclonedx/bom.json",
+                         "frontend-sbom.json"):
+                self.put(name, json.dumps(bom))
+
+        generate("dxos-open-core", "11111", "2026-11-05T00:00:00Z", "one")
+        first = {}
+        for mode in ("binary", "source-only"):
+            self.make(mode)
+            first[mode] = release.digest(self.archive.read_bytes())
+
+        generate("opentrix", "22222", "2026-11-06T00:00:00Z", "two")
+        for mode in ("binary", "source-only"):
+            self.make(mode)
+            self.assertEqual(first[mode], release.digest(self.archive.read_bytes()),
+                             f"{mode} archive changed after repository rename")
+            _, data, prefix = release.verify(self.archive, self.sums)
+            packaged = json.loads(data[prefix + "compliance/backend.cdx.json"])
+            self.assertEqual(packaged["metadata"]["component"]["externalReferences"], retained)
+            self.assertEqual(len(packaged["components"]), 1)
+            self.assertEqual(len(packaged["dependencies"]), 1)
+
     def test_source_only_candidate_stable_across_generated_sbom_runs(self):
         subprocess.run(["git", "init", "-q"], cwd=self.repo, check=True)
         subprocess.run(["git", "add", "README.md", "LICENSE", "NOTICE", "CHANGELOG.md"],
