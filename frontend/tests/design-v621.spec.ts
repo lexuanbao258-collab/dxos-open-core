@@ -539,6 +539,56 @@ test("create: invalid submit focuses the first field and error text keeps its ic
   expect(await noHorizontalOverflow(page)).toBe(true);
 });
 
+test("create: single-line placeholders never clip at 320, 360, 390 and keep the long text on desktop", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 320, height: 800 });
+  await ready(page, "/design-v621/create");
+  for (const width of [320, 360, 390, 1440]) {
+    await page.setViewportSize({ width, height: 800 });
+    for (const facility of [false, true]) {
+      await page
+        .getByRole("radio", {
+          name: facility ? /Cơ sở vật chất/ : /Hỗ trợ CNTT/,
+        })
+        .check();
+      for (const id of ["title", "location"]) {
+        const m = await page.evaluate(async (fieldId) => {
+          await document.fonts.ready;
+          const el = document.getElementById(fieldId) as HTMLInputElement;
+          const cs = getComputedStyle(el);
+          const ctx = document.createElement("canvas").getContext("2d")!;
+          ctx.font = `${cs.fontStyle} ${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+          return {
+            text: el.placeholder,
+            width: ctx.measureText(el.placeholder).width,
+            available:
+              el.clientWidth -
+              parseFloat(cs.paddingLeft) -
+              parseFloat(cs.paddingRight),
+          };
+        }, id);
+        expect(
+          m.width,
+          `${id} ${facility ? "facility" : "IT"} @${width}: "${m.text}"`,
+        ).toBeLessThanOrEqual(m.available);
+        expect(m.text.endsWith("…")).toBe(true);
+      }
+    }
+  }
+  await page.getByRole("radio", { name: /Hỗ trợ CNTT/ }).check();
+  await expect(page.locator("#title")).toHaveAttribute(
+    "placeholder",
+    "Ví dụ: Không truy cập được kho mã nguồn…",
+  );
+  await page.setViewportSize({ width: 320, height: 800 });
+  await expect(page.locator("#title")).toHaveAttribute(
+    "placeholder",
+    "Ví dụ: Không vào được kho mã…",
+  );
+  expect(await noHorizontalOverflow(page)).toBe(true);
+});
+
 test("mobile filter sheet opens as a modal dialog and applies filters", async ({
   page,
 }) => {

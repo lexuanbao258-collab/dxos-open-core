@@ -5,7 +5,7 @@ SPDX-License-Identifier: Apache-2.0
 
 # OpenTrix Visual V7: evidence (all six screens)
 
-Scope: MOCK/DEV React preview at `/design-v621/*` (PR #128). Stage B1 (tokens, Overview, Queue) was approved at `41590fb`; Stage B2 adds Mine, Detail, Create and Integration. Awaiting visual review of the whole set.
+Scope: MOCK/DEV React preview at `/design-v621/*` (PR #128). Stage B1 (tokens, Overview, Queue) was approved at `41590fb`; Stage B2 (Mine, Detail, Create, Integration) was approved visually with conditions at `7fb7872`; the handoff commit adds the Create placeholder fix below.
 
 ## Before / after
 
@@ -32,7 +32,7 @@ Stage B2 also changed the mobile list rows: the status sentence (Mine) or reques
 cd frontend
 npm ci && npx playwright install chromium
 npm run build
-npm run test:preview                              # 43 tests
+npm run test:preview                              # 44 tests
 SAVE_EVIDENCE=1 npm run test:preview -- -g axe    # rewrite the images
 npm test                                          # Vitest (77 preview tests)
 ```
@@ -45,6 +45,7 @@ CI runs only build and Vitest; Playwright is not in CI. `playwright-summary.json
 - **One left edge.** Topbar, environment strip and page content share the same left edge at 390, 1100 and 1440px (global `main` padding no longer leaks in).
 - **Mobile row meta.** At 320, 360, 390 and 760px every Mine and Queue row keeps its date on the first line of the meta block, right aligned, with no overflow.
 - **Bottom navigation** is `position: fixed` and sits on the viewport bottom edge at 0%, 50% and 100% scroll on Queue, Mine, Detail, Create and Integration at 390x844 (real Chromium scrolling, emulated viewport); the footer always ends above it.
+- **Create placeholders** never clip at 320, 360, 390 (IT and Facility, title and location); the title input switches to a shorter example when the long one does not fit (same rule as the search box). This also exposed and fixed a layout bug: below 1000px the form column shrank to its content (29px narrower in Facility mode).
 - **200% zoom** is only *emulated* as a 720x450 CSS viewport (no overflow, axe 0 violations) for Overview and Queue.
 
 ## Not run
