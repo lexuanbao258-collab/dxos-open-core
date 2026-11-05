@@ -4,11 +4,8 @@
 
 package com.tricore.dxos.infrastructure.identity.security;
 
-import com.tricore.dxos.request.controller.RequestController;
-import com.tricore.dxos.request.domain.RequestStatus;
-import com.tricore.dxos.request.dto.CreateRequestDto;
-import com.tricore.dxos.request.dto.RequestResponse;
-import com.tricore.dxos.request.service.RequestService;
+import com.tricore.dxos.gateway.helpdesk.HelpdeskController;
+import com.tricore.dxos.infrastructure.workflow.HelpdeskService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -21,9 +18,9 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.json.JsonCompareMode;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.time.Instant;
 import java.util.Locale;
 import java.util.UUID;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -37,10 +34,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(
-        controllers = RequestController.class,
+        controllers = HelpdeskController.class,
         properties = {
                 "OIDC_ISSUER_URI=https://issuer.example.test",
-                "OIDC_AUDIENCE=tricore-api"
+                "OIDC_AUDIENCE=tricore-api",
+                "dxos.helpdesk.enabled=true"
         }
 )
 @Import(SecurityConfig.class)
@@ -50,14 +48,14 @@ class SecurityConfigTest {
     private MockMvc mvc;
 
     @MockitoBean
-    private RequestService requestService;
+    private HelpdeskService helpdeskService;
 
     @MockitoBean
     private JwtDecoder jwtDecoder;
 
     @Test
     void rejectsAnonymousRequestBeforeController() throws Exception {
-        mvc.perform(get("/api/v1/requests"))
+        mvc.perform(get("/api/v1/mvp/requests"))
                 .andExpectAll(
                         status().isUnauthorized(),
                         content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON),
@@ -67,25 +65,25 @@ class SecurityConfigTest {
                                 """, JsonCompareMode.STRICT)
                 );
 
-        verifyNoInteractions(requestService);
+        verifyNoInteractions(helpdeskService);
     }
 
     @Test
     void anonymousRequestDoesNotCreateHttpSession() throws Exception {
-        mvc.perform(get("/api/v1/requests"))
+        mvc.perform(get("/api/v1/mvp/requests"))
                 .andExpect(status().isUnauthorized())
                 .andExpect(result -> assertNull(result.getRequest().getSession(false)));
 
-        verifyNoInteractions(requestService);
+        verifyNoInteractions(helpdeskService);
     }
 
     @Test
     void anonymousPostReturnsSafeUnauthorizedWithoutCreatingSession() throws Exception {
-        mvc.perform(post("/api/v1/requests")
+        mvc.perform(post("/api/v1/mvp/requests")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"title":"Repair printer","description":"Printer is offline",
-                                 "requestType":"IT_SUPPORT"}
+                                 "requestType":"IT_HELPDESK"}
                                 """))
                 .andExpectAll(
                         status().isUnauthorized(),
@@ -97,7 +95,7 @@ class SecurityConfigTest {
                         result -> assertNull(result.getRequest().getSession(false))
                 );
 
-        verifyNoInteractions(requestService);
+        verifyNoInteractions(helpdeskService);
     }
     @Test
     void authenticatedBearerPostDoesNotRequireCsrfToken() throws Exception {
@@ -107,28 +105,28 @@ class SecurityConfigTest {
                 .build();
         when(jwtDecoder.decode("test-token")).thenReturn(jwt);
 
-        CreateRequestDto input = new CreateRequestDto("Repair printer", "Printer is offline", "IT_SUPPORT");
         UUID id = UUID.fromString("f3bf54b7-fdab-4b45-85dd-94cbd8587a9d");
-        Instant timestamp = Instant.parse("2026-10-04T01:00:00Z");
-        when(requestService.create(input)).thenReturn(new RequestResponse(
-                id, input.title(), input.description(), input.requestType(),
-                RequestStatus.NEW, null, null, 0L, timestamp, timestamp));
+        when(helpdeskService.create("Repair printer", "Printer is offline"))
+                .thenReturn(new HelpdeskService.RequestView(
+                        id, "Repair printer", "Printer is offline", "IT_HELPDESK",
+                        "user-123", null, null, 0L, "workflow-id", "NEW", 0L,
+                        List.of(), null, null, null));
 
-        mvc.perform(post("/api/v1/requests")
+        mvc.perform(post("/api/v1/mvp/requests")
                         .header("Authorization", "Bearer test-token")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"title":"Repair printer","description":"Printer is offline",
-                                 "requestType":"IT_SUPPORT"}
+                                 "requestType":"IT_HELPDESK"}
                                 """))
                 .andExpect(status().isCreated());
 
-        verify(requestService).create(input);
+        verify(helpdeskService).create("Repair printer", "Printer is offline");
     }
 
     @Test
     void spoofedIdentityHeadersCannotAuthenticateAnonymousRequest() throws Exception {
-        mvc.perform(get("/api/v1/requests")
+        mvc.perform(get("/api/v1/mvp/requests")
                         .header("X-User", "admin")
                         .header("X-Role", "workflow:create"))
                 .andExpectAll(
@@ -140,7 +138,7 @@ class SecurityConfigTest {
                                 """, JsonCompareMode.STRICT)
                 );
 
-        verifyNoInteractions(requestService);
+        verifyNoInteractions(helpdeskService);
     }
 
     @Test
@@ -148,7 +146,7 @@ class SecurityConfigTest {
         when(jwtDecoder.decode(anyString()))
                 .thenThrow(new BadJwtException("Invalid JWT"));
 
-        mvc.perform(get("/api/v1/requests")
+        mvc.perform(get("/api/v1/mvp/requests")
                         .header("Authorization", "Bearer not-a-valid-jwt"))
                 .andExpectAll(
                         status().isUnauthorized(),
@@ -164,14 +162,14 @@ class SecurityConfigTest {
                         }
                 );
 
-        verifyNoInteractions(requestService);
+        verifyNoInteractions(helpdeskService);
     }
     @Test
     void rejectedJwtSubjectReturnsSafeUnauthorizedBeforeController() throws Exception {
         when(jwtDecoder.decode("invalid-subject-token"))
                 .thenThrow(new BadJwtException("JWT subject is missing or invalid"));
 
-        mvc.perform(get("/api/v1/requests")
+        mvc.perform(get("/api/v1/mvp/requests")
                         .header("Authorization", "Bearer invalid-subject-token"))
                 .andExpectAll(
                         status().isUnauthorized(),
@@ -187,6 +185,6 @@ class SecurityConfigTest {
                         }
                 );
 
-        verifyNoInteractions(requestService);
+        verifyNoInteractions(helpdeskService);
     }
 }

@@ -123,48 +123,9 @@ components và không expose endpoint qua JMX. Health tổng hợp của Actuato
 có thể kiểm tra database và trả trạng thái khác health API tùy tình trạng
 PostgreSQL. Không expose `env`, `beans`, `metrics` hoặc endpoint quản trị khác.
 
-## Request API
+## Legacy Request prototype (removed in R25)
 
-Module `request` dùng luồng controller → service → repository → PostgreSQL.
-REST nhận/trả DTO riêng; service quản lý transaction và backend luôn gán `NEW`
-khi tạo. `requestType` là chuỗi do application cung cấp; chưa có danh mục loại yêu cầu.
-
-| Endpoint | Kết quả |
-| --- | --- |
-| `POST /api/v1/requests` | `201 Created`, response DTO và header `Location` |
-| `GET /api/v1/requests` | `200 OK`, mảng response DTO; `[]` nếu chưa có dữ liệu |
-| `GET /api/v1/requests/{id}` | `200 OK`, response DTO; `404` nếu UUID không tồn tại |
-
-Body tạo Request:
-
-```json
-{"title":"Repair printer","description":"Printer is offline","requestType":"IT_SUPPORT"}
-```
-
-Cả ba trường bắt buộc và không được chỉ chứa khoảng trắng. `title` tối đa 200
-ký tự; `requestType` tối đa 100 ký tự. Body có trường khác (kể cả `status`) bị
-từ chối. Response gồm `id` (UUID), `title`, `description`, `requestType`,
-`status`, `assigneeId`, `resolution`, `version`, `createdAt`, `updatedAt` (thời gian UTC).
-Request mới có `assigneeId`/`resolution` null và version 0. List chưa phân trang và
-không cam kết thứ tự.
-
-Lỗi JSON có `status`, `code`, `message`, `errors` (map tên trường → thông báo).
-Validation trả `400 VALIDATION_FAILED`; JSON/body sai trả `400 INVALID_BODY`;
-UUID sai trả `400 INVALID_ID`; không tìm thấy trả `404 REQUEST_NOT_FOUND`.
-
-Flyway tự chạy các migration trong `db/migration` trước JPA khi khởi động,
-dùng cùng datasource `DB_*`. V1 tạo bảng `requests` với UUID primary key,
-`timestamptz`, các trường bắt buộc và CHECK cho sáu trạng thái lifecycle.
-V1 đã merge và không được sửa. V2 thêm `assignee_id` (100 ký tự), `resolution`
-(4000 ký tự), `version` (BIGINT, mặc định 0 cho dữ liệu M1), và bảng history.
-Hibernate vẫn dùng `ddl-auto: none`. Môi trường Issue #3 cần cung cấp database
-và tài khoản có quyền tạo bảng/schema history để migration chạy lần đầu.
-
-Test domain, service (mock repository) và MVC (mock service) chạy bằng
-`.\gradlew.bat test`, không cần PostgreSQL hoặc H2. Chúng chưa chứng minh
-migration/JPA hoạt động trên PostgreSQL thật. Khi có môi trường Issue #3,
-cần xác minh startup, migration và cả ba endpoint, bao gồm dữ liệu còn tồn tại
-sau khi khởi động lại ứng dụng.
+The historical `/api/v1/requests/*` routes and `com.tricore.dxos.request` JPA prototype are no longer registered or compiled. The supported Helpdesk Application API is `/api/v1/mvp/requests` (see the Helpdesk integration documentation). The historic Flyway V1/V2 scripts and existing tables remain in the migration history to preserve `flyway validate` on databases already initialized with v0.1.0. Removing these historical objects is outside R25.
 
 ## IT Support workflow API
 

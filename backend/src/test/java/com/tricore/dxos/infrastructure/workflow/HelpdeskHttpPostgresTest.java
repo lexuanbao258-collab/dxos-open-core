@@ -148,8 +148,7 @@ class HelpdeskHttpPostgresTest {
                 "tricore.security.oidc.resource-client-id","tricore-api","dxos.helpdesk.enabled","true","test.schema",schema)));
         context.addBeanFactoryPostProcessor(f -> f.registerSingleton("helpdeskPersistence",new PostgresWorkflowPersistence(runtime,schema)));
         context.register(SecurityConfig.class,Class.forName("com.tricore.dxos.infrastructure.identity.security.SpringSecurityCurrentPrincipal"),
-                Web.class,HelpdeskController.class,HelpdeskExceptionHandler.class,WorkflowJsonConfiguration.class,
-                com.tricore.dxos.request.controller.RequestController.class,com.tricore.dxos.request.controller.RequestWorkflowController.class);
+                Web.class,HelpdeskController.class,HelpdeskExceptionHandler.class,WorkflowJsonConfiguration.class);
         context.refresh();
         mvc=MockMvcBuilders.webAppContextSetup(context).addFilters(context.getBean("springSecurityFilterChain",jakarta.servlet.Filter.class)).build();
     }

@@ -42,6 +42,8 @@ User-visible DX-OS Open Core changes are recorded here. The format follows
 
 ### Removed
 
+- R25: Remove the legacy `com.tricore.dxos.request` prototype (controllers, domain, DTOs, repositories, services and tests) and retire `/api/v1/requests/*` routes and their `CLOSED` lifecycle. Preserve historical Flyway V1/V2 migration bytes; Helpdesk remains available at `/api/v1/mvp/requests`.
+
 - The separate Issue #23 workflow; its security gates run in shared CI.
 
 [0.1.0]: https://github.com/lexuanbao258-collab/dxos-open-core/releases/tag/v0.1.0
