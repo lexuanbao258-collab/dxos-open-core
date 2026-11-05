@@ -1,0 +1,200 @@
+# SPDX-FileCopyrightText: 2026 TRICORE contributors
+# SPDX-License-Identifier: Apache-2.0
+"""R24: reproducible release candidate archives and fail-closed distribution gate."""
+import argparse
+import gzip
+import hashlib
+import io
+import json
+import re
+import sys
+import tarfile
+from pathlib import Path
+
+TAG = re.compile(r"v[0-9]+\.[0-9]+\.[0-9]+$")
+SHA = re.compile(r"[a-f0-9]{40}$")
+REVIEWERS = {"phanyen06ym-ien", "ngang02012007-crypto"}
+JAVA_BASE = re.compile(r"eclipse-temurin:21-jre@sha256:[a-f0-9]{64}$")
+GATES = ("upstream_license_notices", "source_and_relink", "frontend_assets",
+         "service_images", "base_images", "archive_and_checksums", "release_notes")
+
+
+def require(condition, message):
+    if not condition:
+        raise ValueError(message)
+
+
+def digest(data):
+    return hashlib.sha256(data).hexdigest()
+
+
+def release_notes(changelog, tag):
+    version = re.escape(tag[1:])
+    match = re.search(rf"(?ms)^## \[{version}\][^\n]*\n(.*?)(?=^## \[|\Z)", changelog)
+    require(match and match.group(1).strip(), "CHANGELOG is missing this version's release notes")
+    return f"# DX-OS {tag}\n\n" + match.group(1).strip() + "\n"
+
+
+def package(repo, tag, sha, output):
+    require(TAG.fullmatch(tag), "release tag must be vMAJOR.MINOR.PATCH")
+    require(SHA.fullmatch(sha), "source SHA must be a full lowercase commit hash")
+    source = Path(repo)
+    output = Path(output)
+    output.mkdir(parents=True, exist_ok=True)
+    prefix = f"dxos-{tag}/"
+    files = {}
+    def add(target, path):
+        path = source / path
+        require(path.is_file() and not path.is_symlink(), f"missing/unsafe release input: {path}")
+        files[prefix + target] = path.read_bytes()
+
+    for app in ("backend", "portal-bff"):
+        jars = [p for p in (source / app / "build/libs").glob("*.jar")
+                if not p.name.endswith("-plain.jar")]
+        require(len(jars) == 1, f"expected exactly one bootJar for {app}, got {len(jars)}")
+        add(f"{app}/application.jar", jars[0].relative_to(source))
+    frontend = source / "frontend/dist"
+    require(frontend.is_dir(), "frontend/dist missing")
+    assets = sorted(p for p in frontend.rglob("*") if p.is_file())
+    require(assets and (frontend / "index.html").is_file(), "frontend build has no index.html")
+    for path in assets:
+        add("frontend/" + path.relative_to(frontend).as_posix(), path.relative_to(source))
+    # Candidate builds may be incomplete; reviewed upstream texts are added only
+    # by the independently approved R24 distribution workstream.
+    upstream = source / "docs/06-deployment/r24-upstream"
+    if upstream.is_dir():
+        for path in sorted(p for p in upstream.rglob("*") if p.is_file()):
+            add("compliance/upstream/" + path.relative_to(upstream).as_posix(),
+                path.relative_to(source))
+    for target, path in {
+        "LICENSE": "LICENSE", "NOTICE": "NOTICE",
+        "THIRD-PARTY-NOTICES.md": "THIRD-PARTY-NOTICES.md",
+        "CHANGELOG.md": "CHANGELOG.md",
+        "compliance/backend.cdx.json": "backend/build/reports/cyclonedx/bom.json",
+        "compliance/portal-bff.cdx.json": "portal-bff/build/reports/cyclonedx/bom.json",
+        "compliance/frontend.cdx.json": "frontend-sbom.json",
+        "compliance/license-inventory.json": "build/r23/license-inventory.json",
+    }.items():
+        add(target, path)
+    inventory = json.loads(files[prefix + "compliance/license-inventory.json"])
+    require(isinstance(inventory, list) and inventory and
+            all(row.get("license_policy_status") == "APPROVED" for row in inventory),
+            "R23 dependency policy is not approved")
+    notes = release_notes((source / "CHANGELOG.md").read_text(encoding="utf-8"), tag)
+    files[prefix + "RELEASE-NOTES.md"] = notes.encode()
+    manifest = {"tag": tag, "source_sha": sha,
+                "files_sha256": {name[len(prefix):]: digest(data)
+                                 for name, data in sorted(files.items())}}
+    files[prefix + "MANIFEST.json"] = (json.dumps(manifest, sort_keys=True, indent=2) + "\n").encode()
+    archive = output / f"dxos-{tag}.tar.gz"
+    with archive.open("wb") as raw:
+        with gzip.GzipFile(filename="", fileobj=raw, mode="wb", mtime=0) as gz:
+            with tarfile.open(fileobj=gz, mode="w") as tf:
+                for name, contents in sorted(files.items()):
+                    info = tarfile.TarInfo(name)
+                    info.size, info.mode = len(contents), 0o644
+                    info.uid = info.gid = info.mtime = 0
+                    info.uname = info.gname = ""
+                    tf.addfile(info, io.BytesIO(contents))
+    (output / "SHA256SUMS").write_text(f"{digest(archive.read_bytes())}  {archive.name}\n")
+    (output / "RELEASE-NOTES.md").write_text(notes, encoding="utf-8")
+    verify(archive, output / "SHA256SUMS")
+    print(f"R24_CANDIDATE_BUILT {archive.name}: {len(files)} files, {len(inventory)} distribution PENDING")
+
+
+def verify(archive, checksums):
+    archive, checksums = Path(archive), Path(checksums)
+    line = checksums.read_text().strip()
+    require(line == f"{digest(archive.read_bytes())}  {archive.name}", "checksum mismatch")
+    with tarfile.open(archive, "r:gz") as tf:
+        members = tf.getmembers()
+        require(members and all(m.isfile() and not m.issym() and not m.islnk()
+                                and not Path(m.name).is_absolute()
+                                and ".." not in Path(m.name).parts for m in members),
+                "unsafe archive member")
+        data = {m.name: tf.extractfile(m).read() for m in members}
+    require(len(data) == len(members), "duplicate archive entries")
+    manifests = [name for name in data if name.endswith("/MANIFEST.json")]
+    require(len(manifests) == 1, "missing/duplicate manifest")
+    manifest = json.loads(data[manifests[0]])
+    prefix = manifests[0][:-len("MANIFEST.json")]
+    require(TAG.fullmatch(manifest.get("tag", "")) and SHA.fullmatch(manifest.get("source_sha", "")),
+            "invalid release identity")
+    require(prefix == f"dxos-{manifest['tag']}/", "invalid archive root")
+    expected = {prefix + name: d for name, d in manifest["files_sha256"].items()}
+    require(set(expected) == set(data) - {manifests[0]}, "archive manifest coverage mismatch")
+    require(all(digest(data[name]) == value for name, value in expected.items()),
+            "archive file digest mismatch")
+    print(f"R24_ARCHIVE_VERIFY_PASS {archive.name}")
+    return manifest, data, prefix
+
+
+def gate(archive, checksums, acceptance, tag, sha):
+    manifest, data, prefix = verify(archive, checksums)
+    require(manifest["tag"] == tag and manifest["source_sha"] == sha,
+            "release candidate identity differs from tag/commit")
+    path = Path(acceptance)
+    require(path.is_file(), "R24 distribution acceptance file is absent: publication BLOCKED")
+    accepted = json.loads(path.read_text())
+    require(accepted.get("tag") == tag and accepted.get("source_sha") == sha,
+            "R24 acceptance is not for exact tag and source SHA")
+    require(set(accepted.get("reviewed_by", [])) & REVIEWERS,
+            "R24 independent compliance reviewer is missing")
+    require(JAVA_BASE.fullmatch(accepted.get("java_base_image", "")),
+            "pinned, reviewed JRE base image digest is required")
+    for key in GATES:
+        ref = accepted.get("evidence", {}).get(key, "")
+        require(isinstance(ref, str) and ref.startswith("https://"),
+                f"missing independently reviewable evidence: {key}")
+    inventory = json.loads(data[prefix + "compliance/license-inventory.json"])
+    def ident(row):
+        return (row["project"], row["name"], row["version"], row.get("purl", ""))
+    expected = {ident(row) for row in inventory}
+    require(len(expected) == len(inventory), "duplicate dependency inventory identities")
+    rows = accepted.get("components", [])
+    require(isinstance(rows, list), "R24 component dispositions absent")
+    actual = {ident(row) for row in rows}
+    require(len(actual) == len(rows) and actual == expected,
+            "R24 component coverage mismatch (including service/release scope)")
+    require(all(row.get("status") == "CLEARED" and
+                isinstance(row.get("evidence"), str) and row["evidence"].startswith("https://")
+                and isinstance(row.get("license_path"), str)
+                and row["license_path"].startswith("compliance/upstream/")
+                and bool(data.get(prefix + row["license_path"]))
+                for row in rows), "R24 obligations PENDING or upstream license text absent from archive")
+    print(f"R24_DISTRIBUTION_GATE_PASS {len(rows)} component dispositions")
+
+
+def main():
+    p = argparse.ArgumentParser()
+    sp = p.add_subparsers(dest="command", required=True)
+    a = sp.add_parser("package")
+    a.add_argument("--repo", default=".")
+    a.add_argument("--tag", required=True)
+    a.add_argument("--sha", required=True)
+    a.add_argument("--output", default="dist/r24")
+    a = sp.add_parser("verify")
+    a.add_argument("--archive", required=True)
+    a.add_argument("--checksums", required=True)
+    a = sp.add_parser("gate")
+    a.add_argument("--archive", required=True)
+    a.add_argument("--checksums", required=True)
+    a.add_argument("--acceptance", required=True)
+    a.add_argument("--tag", required=True)
+    a.add_argument("--sha", required=True)
+    args = p.parse_args()
+    try:
+        if args.command == "package":
+            package(args.repo, args.tag, args.sha, args.output)
+        elif args.command == "verify":
+            verify(args.archive, args.checksums)
+        else:
+            gate(args.archive, args.checksums, args.acceptance, args.tag, args.sha)
+    except (ValueError, OSError, KeyError, TypeError, json.JSONDecodeError, tarfile.TarError) as exc:
+        print("R24_BLOCKED:", exc, file=sys.stderr)
+        return 1
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
