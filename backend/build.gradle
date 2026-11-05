@@ -17,6 +17,10 @@ java {
     }
 }
 
+tasks.named('cyclonedxDirectBom') {
+    includeConfigs = ['runtimeClasspath']
+}
+
 repositories {
     mavenCentral()
 }
