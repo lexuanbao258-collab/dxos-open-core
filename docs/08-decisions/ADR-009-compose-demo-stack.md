@@ -3,33 +3,20 @@ SPDX-FileCopyrightText: 2026 TRICORE contributors
 SPDX-License-Identifier: Apache-2.0
 -->
 
-# ADR-008 — R21 Docker Compose demo stack
+# ADR-009 — R32a Docker Compose demo stack
 
-**Trạng thái: PROPOSED — chưa được owner phê duyệt, chưa cho phép triển khai.**
-Ngày khảo sát: 2026-11-04. Phạm vi: local demo, release đề xuất **v0.2.0**.
-Theo dõi: [R21 / #119](https://github.com/lexuanbao258-collab/dxos-open-core/issues/119),
-[release / #40](https://github.com/lexuanbao258-collab/dxos-open-core/issues/40),
-[R23 / #118](https://github.com/lexuanbao258-collab/dxos-open-core/issues/118).
-Tài liệu này chỉ đề xuất kiến trúc và kế hoạch; không ghi nhận quyết định ACCEPTED.
+**Trạng thái: DECIDED (ingress architecture) — đã chọn Caddy + hai public hostnames để bắt đầu R32a; triển khai và nghiệm thu runtime vẫn PENDING.**
+Ngày khảo sát: 2026-11-04; quyết định ingress: 2026-11-05. Phạm vi: local demo, release mục tiêu **v0.2.0**.
+Theo dõi: [R32a / #119](https://github.com/tricore-opentrix/dxos-open-core/issues/119),
+[release / #40](https://github.com/tricore-opentrix/dxos-open-core/issues/40),
+[R36 / #118 — LIVE browser login/E2E](https://github.com/tricore-opentrix/dxos-open-core/issues/118),
+[R23 / #38 — SBOM và third-party notices](https://github.com/tricore-opentrix/dxos-open-core/issues/38).
+**Phạm vi quyết định đã chốt:** Caddy HTTPS ingress; hai public origins tách biệt là Portal `https://localhost:8443` và OIDC `https://auth.dxos.test:8443` (issuer cố định theo realm bên dưới). Đây là điều kiện **bắt đầu PR triển khai R32a**, không phải phê duyệt chi tiết D2–D5, thay đổi trust boundary, hoặc kết quả DNS/TLS/OIDC/runtime. Những phần đó vẫn cần cross-review và test độc lập.
 
-## Baseline và bảo toàn công việc
+## Phạm vi baseline kỹ thuật
 
-Các mốc checkout/fetch/PR44 dưới đây là lịch sử khảo sát ban đầu. Lượt đối chiếu bổ sung
-giữ HEAD `0e789cffa11447f3acef25d0e582bf25ed46c7b4` trên `docs/infra-r21-compose-plan`;
-đầu lượt chỉ ADR này untracked, không có thay đổi staged/source runtime.
-
-- Checkout ban đầu: branch `main`, HEAD/local main và origin/main trước fetch đều là
-  `a55e06ecae233501c76f82bae9d513eb7d744ac0`; staged/unstaged/untracked đều sạch.
-- Sau fetch: `origin/main = 0e789cffa11447f3acef25d0e582bf25ed46c7b4`, tag `v0.1.0`.
-  Local main chậm 2 commit: `4428346` tích hợp Backend/BFF/Portal, `0e789cf` release.
-- Branch tài liệu mới `docs/infra-r21-compose-plan` bắt đầu đúng remote main trên.
-  Local main cũ được giữ nguyên; chưa commit, push, mở PR hoặc chỉnh GitHub.
-- Hai worktree khác được liệt kê nhưng không sửa: `D:/olp/dxos-pr96-r03`
-  tại `af51c8cbfa7e6ebad7dda27e3bb91c44fcade012` và
-  `D:/olp/dxos-pr96-r03-rebased` tại `013ab4c18d1482fb525c56b23c5703ce9a4e0e23`.
-- Đã đọc CONTRIBUTING, CODEOWNERS, README tại baseline, #119/#40/#118 và các comment #40.
-  Không có approval D1–D5 trong #119 tại thời điểm khảo sát (0 comment).
-  Không dùng các hướng dẫn/biên bản cũ làm phê duyệt cho R21.
+Tài liệu đối chiếu với mã nguồn đã phát hành ở `main@0e789cffa11447f3acef25d0e582bf25ed46c7b4` (`v0.1.0`).
+Các giới hạn kỹ thuật được mô tả dưới đây là cơ sở thiết kế, không phải bằng chứng Docker Compose hoặc đăng nhập trình duyệt thật đã chạy. Việc phê duyệt ingress không thay thế review bảo mật của các PR triển khai.
 
 ## Hiện trạng có thể tái sử dụng
 
@@ -47,29 +34,29 @@ Backend runtime hiện không có Flyway user/password riêng trong `application
 Helpdesk dùng datasource riêng `dxos.helpdesk.*`; chỉ đặt `DB_*` là chưa đủ.
 Bean Workflow vẫn cần `dxos.workflow.schema`, kể cả khi tắt auto-Flyway.
 
-### PR #44: giữ nguồn tham khảo, không nhập nguyên branch
+### PR #44: nguồn tham khảo kỹ thuật, không nhập nguyên branch
 
-Đã đọc source diff `origin/main...origin/pr-44`, không chỉ PR description.
-PR Draft, head `3c187d872ea6dbe1d9d258240c026bfe95060289`,
-merge-base `2115de355e8df4f0567e8e8421dae8465da9cea8`, 8 file, +392/-2.
-Đối chiếu thêm nội dung với main mới: Dockerfile, staging Compose và env vẫn chưa có trên main.
+PR #44 là ứng viên staging Draft cũ, không phải bằng chứng nghiệm thu R32a.
+Dockerfile, staging Compose và cấu hình env trong PR này chưa có trên main tại baseline;
+chỉ tái sử dụng có chọn lọc các ý tưởng phù hợp, sau khi đối chiếu lại mã nguồn hiện tại.
 
 - Tái sử dụng có chọn lọc: multi-stage Wrapper build trong Docker, explicit COPY đầu vào,
   UID 10001, JRE runtime, `.dockerignore`, nguyên tắc giữ volume và loopback host publishing.
   `.gitattributes` main đã đặt LF cho Wrapper; xử lý CRLF trong image chỉ là phòng vệ.
 - Không dùng staging Compose làm full stack: mặc định chỉ PG; Backend là profile `app`,
   thiếu OIDC và Helpdesk wiring, không bootstrap role/schema. Các biến filesystem storage
-  không chứng minh provider đã có; R21 không thêm storage provider.
+  không chứng minh provider đã có; R32a không thêm storage provider.
 - Không mang nguyên README/runbook AWS cũ sang main: mô tả nhiều thành phần chưa merge
-  đã lỗi thời; bằng chứng build/PG do operator báo ở SHA cũ không phải test R21.
+  đã lỗi thời; bằng chứng build/PG do operator báo ở SHA cũ không phải test R32a.
 - Không reuse tên/port/volume staging 55426, Workflow test hay tài nguyên đang được giữ lại.
 
-## D1 — canonical issuer, networking và URL: cần Yến/Bảo/Ánh review
+## D1 — ingress/hostname đã chốt; tích hợp và bảo mật còn cần Yến/Bảo/Ánh review
 
-**Đề xuất ưu tiên:** giữ Portal `https://localhost:8443/mvp/helpdesk`, tách auth hostname
-`auth.dxos.test`; canonical issuer duy nhất
+**Quyết định ingress:** dùng Caddy; Portal ở `https://localhost:8443/mvp/helpdesk`,
+OIDC sử dụng hostname riêng `auth.dxos.test` với canonical issuer duy nhất
 `https://auth.dxos.test:8443/auth/realms/tricore-demo`.
-Đây là phương án thay cho candidate issuer localhost trong #119, chưa phải quyết định.
+Phương án hai public origins thay candidate issuer localhost trong #119. Việc chọn topology
+đã chốt để bắt đầu R32a; DNS, Java trust, discovery, callback/logout và route guards **chưa được chứng minh**.
 
 | Luồng | URL/routing đề xuất |
 | --- | --- |
@@ -132,7 +119,7 @@ Strip `Forwarded` và header proxy do client gửi; pin `X-Forwarded-Host=auth.d
 Portal host chỉ có Portal/BFF routes; auth host không có BFF/API routes. Listener 8443
 không được phục vụ Backend kể cả khi client giả Host/SNI của listener 9443.
 
-**Trade-off cần duyệt:** listener TLS nội bộ của Caddy giữ nguyên HTTPS guard của BFF,
+**Trade-off cần review khi triển khai:** listener TLS nội bộ của Caddy giữ nguyên HTTPS guard của BFF,
 nhưng thêm một hop. Hop Caddy → Backend/Keycloak là HTTP trên private demo networks;
 đây là giới hạn local demo cần owner chấp thuận, không là thiết kế production.
 Không có public ingress vào Backend listener; public `/api/*` luôn bị chặn.
@@ -148,9 +135,10 @@ trên các interface đó. Phải kiểm tra reachability và giới hạn route
 | Một public origin `https://demo.dxos.test:8443`, auth dưới `/auth` | Cùng host map trên host/alias trong bridge; khả thi về mạng, BFF `PortalOrigin` chấp nhận HTTPS hostname | Cần sửa opt-in allowlist + tests `sameOriginTransport.requireLocalHttps`, cập nhật callback/logout/actor fixtures; cookie Path=/ đi cả tới auth path, cần lọc cookie Portal trước Keycloak |
 | Một public origin localhost như candidate #119 | Không hoạt động trực tiếp với bridge: localhost trong Java container là chính container đó | Không giải quyết bằng alias/host-gateway; host networking không đồng nhất Windows/Linux, endpoint overrides tăng wiring |
 
-Hai hostname là ưu tiên để giữ guard integration-local hiện tại, **không phải** một public
-origin tùy chỉnh là bất khả thi. Cả hai phương án routable vẫn cần Java trust ở D3 và
-private HTTPS Backend hop. Chưa có proof chạy thật cho phương án nào; owner chọn trước triển khai.
+Hai hostname đã được chọn cho local demo để giữ guard integration-local hiện tại;
+điều này không có nghĩa một public origin tùy chỉnh là bất khả thi. Phương án đã chọn
+vẫn cần Java trust ở D3 và private HTTPS Backend hop. Chưa có proof chạy thật;
+các PR triển khai phải bổ sung positive/negative tests trước khi merge.
 
 ### D1: container guards — thay đổi bảo mật cần review riêng
 
@@ -253,7 +241,7 @@ Không dùng cấu hình datasource chính trỏ shared DB để lách guard Hel
 Role Keycloak có DDL trong **DB Keycloak** để Keycloak tự migrate, không phải Helpdesk
 runtime; role này không có SUPERUSER/CREATEDB/CREATEROLE/BYPASSRLS hay quyền DB Helpdesk.
 
-Chỉ init trên project/volume mới thuộc R21. PostgreSQL init scripts và Keycloak
+Chỉ init trên project/volume mới thuộc R32a. PostgreSQL init scripts và Keycloak
 startup import không tự nâng cấp dữ liệu đã có. Cần migration/version ledger và kiểm tra
 checksum/fixture/issuer khi chạy lại: cùng version là no-op, drift/partial setup thì
 fail closed, không drop/reseed/repair ngầm. Không dùng `IF NOT EXISTS` để che drift.
@@ -271,20 +259,20 @@ Secret và subject IDs phải giữ ổn định qua restart, realm không tự 
 
 ## D5 — release/scope: cần Yến điều phối, Bảo/Ánh xác nhận
 
-Đề xuất **v0.2.0**, đồng bộ #118; không tự đổi sang v0.1.1. CONTRIBUTING ghi mốc nội bộ
+Mục tiêu **v0.2.0** cho R32a; R36/#118 là gate browser LIVE riêng. Không tự đổi sang v0.1.1. CONTRIBUTING ghi mốc nội bộ
 v0.2.0 là 2026-11-15; #119 muốn trước 2026-12-06 nếu khả thi. Đây là mốc kế hoạch,
 không thay thế acceptance và không xác nhận deadline cuộc thi.
-R21 có đúng sáu runtime services: postgres, keycloak, backend, bff, portal, caddy;
+R32a có đúng sáu runtime services: postgres, keycloak, backend, bff, portal, caddy;
 init/bootstrap là tác vụ hữu hạn, không thêm service runtime thứ bảy.
 Chỉ Caddy publish `127.0.0.1:8443`; listener nội bộ không publish.
 Pin image version/digest ở PR triển khai, xác minh tag thực tế và ghi license của
 Keycloak/PG/Caddy cùng Java/Node/static-server base image, liên kết #38.
 
 #40/ADR-007 còn nói tới MinIO và phạm vi release rộng hơn; #119 loại MinIO/APISIX/
-Node-RED khỏi R21. Cần xác nhận R21 là subset prerequisite, không đóng #40/#27/#38
+Node-RED khỏi R32a. Cần xác nhận R32a là subset prerequisite, không đóng #40/#27/#38
 hay thay thế ADR-007. Không có deploy LIVE, cloud staging hoặc reset dữ liệu trong scope.
 
-## Kế hoạch file/PR sau approval
+## Kế hoạch file/PR sau quyết định ingress
 
 Mọi PR triển khai bắt đầu từ main sạch mới nhất khi thực hiện, ghi exact SHA và
 đối chiếu lại baseline nếu main tiến lên; không cherry-pick nguyên #44.
@@ -305,7 +293,7 @@ chỉ PR hoàn tất toàn bộ acceptance mới đề xuất `Closes #119`.
 Review theo CONTRIBUTING/CODEOWNERS: Bảo Backend/Data/infra, Yến Identity/Gateway/
 secrets/release, Ánh Portal/BFF. Helpdesk Core/BFF API thay đổi cần manual Bảo + Ánh;
 tác giả không tự approve, conflict cần alternative reviewer/exception trước merge.
-R21 final acceptance do Yến, kiểm chứng độc lập bởi người không viết phần tương ứng.
+R32a final acceptance do Yến, kiểm chứng độc lập bởi người không viết phần tương ứng.
 
 ## Nghiệm thu và blocker
 
@@ -325,18 +313,17 @@ R21 final acceptance do Yến, kiểm chứng độc lập bởi người không
    lỗi DB/provider phải thấy fail closed. Không reset volume bằng chứng.
 5. **Release evidence:** CI Linux smoke pinned SHA; Windows run độc lập cùng SHA;
    artifact tải được, scan secrets, skip có lý do, reviewer PASS/CONDITIONAL/BLOCKED.
-   R23 chỉ PASS khi browser E2E thực sự chạy và được duyệt riêng; macOS chưa xác minh.
+   R36 chỉ PASS khi browser E2E thực sự chạy và được duyệt riêng; macOS chưa xác minh.
 
 | Mức | Blocker hiện tại | Owner/action |
 | --- | --- | --- |
-| P0 | D1–D5 chưa phê duyệt; phương án hai hostname chưa có proof DNS/TLS/discovery/callback/logout từ browser và Java containers | Yến/Bảo/Ánh chọn origin, review trust boundary rồi cho phép proof triển khai riêng |
+| P0 | Ingress Caddy + hai hostnames đã chốt, nhưng DNS/TLS/discovery/callback/logout chưa có proof từ browser và Java containers; các chi tiết bảo mật D1 và D2–D5 chưa đạt nghiệm thu | Bảo có thể bắt đầu PR triển khai R32a; Yến/Ánh review trust boundary, yêu cầu positive/negative tests trước merge |
 | P0 | Cả HelpdeskConfiguration và WorkflowEventTriggerGuard từ chối DB service DNS; BFF cần bind bridge và HTTPS upstream | Bảo/Ánh/Yến review ngoại lệ chỉ runtime demo, không nới emptyLocal/cloud/migration; tests giữ guard cũ |
 | P0 | Chưa có sáu-service stack, realm/subjects, secrets/trust bootstrap, schema/version wiring idempotent | PR A–C, không dùng owner DB login làm runtime |
-| P1 | Chưa có Windows/Linux fresh-clone evidence, readiness DB thực, compose CI hoặc browser R23 | PR D và #118, phân loại NOT_RUN riêng |
-| P1 | Chưa pin toàn bộ image/digest/license; scope MinIO ở #40 cần ghi rõ subset R21 | Release owners và #38; không tuyên bố release hoàn tất |
+| P1 | Chưa có Windows/Linux fresh-clone evidence, readiness DB thực, compose CI hoặc browser R36 | PR D và #118, phân loại NOT_RUN riêng |
+| P1 | Chưa pin toàn bộ image/digest/license; scope MinIO ở #40 cần ghi rõ subset R32a | Release owners và #38; không tuyên bố release hoàn tất |
 
-**Approval record:** Yến D1/D2/D3/D5: PENDING; Bảo D1/D2/D4/D5: PENDING;
-Ánh D1/D3/D5 và Portal/BFF: PENDING. Chưa có chữ ký thay người khác.
+**Decision record:** Theo thống nhất nhóm ngày 2026-11-05, đã chọn **Caddy + hai public hostnames** để bắt đầu R32a. Các xác minh runtime và ngoại lệ security ở D1, cùng D2–D5/Portal/BFF/DB/release, vẫn **PENDING** theo owner tương ứng (Yến, Bảo, Ánh). Chưa có approval thay mặt người khác.
 
 ## Đối chiếu D1–D5 để independent review
 
@@ -354,28 +341,13 @@ Source để reviewer kiểm tra: [Helpdesk guard](../../backend/src/main/java/c
 [frontend guard](../../frontend/src/services/mvp/http/sameOriginTransport.ts),
 [SQL bootstrap hiện tại](../../scripts/helpdesk-local-setup.ps1),
 [runtime grants](../../backend/src/main/resources/db/helpdesk/runtime-grants.sql).
-Đủ cơ sở **review đề xuất** không có nghĩa D1–D5 APPROVED hay sẵn sàng chạy stack;
-P0 ở trên chặn triển khai/nghiệm thu, không được che bằng trạng thái tài liệu.
+Chốt ingress cho phép **bắt đầu triển khai R32a**, không có nghĩa D1–D5 runtime checks đã PASS.
+Các P0 kỹ thuật/bảo mật còn mở chặn merge và nghiệm thu phần tương ứng, không chặn chuẩn bị PR.
 
-## Kiểm tra thực hiện
+## Tài liệu kỹ thuật tham khảo
 
-Lượt hoàn thiện ADR: đọc toàn bộ ADR, Git branch/HEAD/status, #119 và comments (vẫn 0,
-không approval), #40/#118, source/config/SQL/callers/tests liên quan và tài liệu chính thức.
-Chỉ chỉnh ADR; không fetch lại refs, chạy app, DB hoặc Docker ở lượt này.
-PASS: `git diff --check`, `git diff --cached --check`; cấu trúc PROPOSED/D1–D5,
-UTF-8 và cả sáu source links tương đối hợp lệ. Chỉ ADR được stage cho commit tài liệu.
-Bằng chứng khảo sát ban đầu dưới đây được giữ như lịch sử, không coi là test chạy lại:
+Các tài liệu upstream cần kiểm tra lại theo phiên bản image/digest được pin khi triển khai:
 
-PASS: Git status/refs/worktrees, fetch main/PR44, exact source/diff và callers/tests
-của container guards; rà soát cấu hình/SQL/scripts/CI và tài liệu upstream.
-Host báo Windows NT 10.0.26200.0; Docker CLI 29.7.2, Compose v5.4.0.
-Lệnh version cảnh báo sandbox không đọc được Docker config; không kiểm tra daemon.
-Không có memory connector để truy xuất ngữ cảnh; kết luận dựa vào Git/GitHub/source.
-NOT_RUN: Docker build/up/config của stack mới, DB mutation, unit/integration tests,
-Linux/macOS install, trust installation và browser E2E. Chưa có implementation để
-kiểm thử; không tiếp xúc hoặc chỉnh tài nguyên Docker đang được giữ lại.
-
-Tài liệu chính thức đã đối chiếu (2026-11-04; cần kiểm lại theo image pin khi triển khai):
 [Keycloak hostname](https://www.keycloak.org/server/hostname),
 [reverse proxy/context path](https://www.keycloak.org/server/reverseproxy),
 [realm import](https://www.keycloak.org/server/importExport),
