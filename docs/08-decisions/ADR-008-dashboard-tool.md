@@ -5,9 +5,10 @@ SPDX-License-Identifier: Apache-2.0
 
 # ADR-008 - MVP analytics dashboard provider
 
-**Status:** PROPOSED; pending review by Bao and Anh
+**Status:** ACCEPTED (approved via PR #126)
 **Decision date:** 2026-11-05
 **Tracking:** R21; implementation planned under R54
+**Scope note:** R21 here is the dashboard decision; the compose work previously labelled "R21" (#119, PR #123) is R32a.
 
 ## Context and decision
 
@@ -19,7 +20,7 @@ Superset will run as an independent service in Docker Compose, with its own meta
 
 The planned Portal integration uses embedded dashboards and backend-issued guest tokens. Keycloak/OIDC integration and tenant-specific row-level security require separate implementation and verification. Tenant identity must come from a trusted authenticated context, not an unverified client parameter.
 
-Metabase OSS was considered because it is simpler to deploy initially. However, its licensing and feature-edition constraints for the required embedding, SSO and row-level access controls make it less suitable for the selected architecture.
+Metabase OSS was considered because it is simpler to deploy initially and offers free guest embedding. However, JWT SSO, full-app embedding, and row and column security (formerly data sandboxing) have edition-dependent limits associated with Metabase Pro/Enterprise. Apache Superset's Apache-2.0 license aligns with the project's licensing direction, while its planned guest-token embedding and row-level security can be integrated with DX-OS's trusted, tenant-aware backend and read-only reporting views. This is an architectural fit, not a claim that Superset has been deployed or passed security testing.
 
 ## Consequences and acceptance
 
@@ -30,3 +31,12 @@ Implementation must preserve database least privilege and tenant isolation. Repo
 R21 acceptance requires this ADR to be reviewed by Bao and Anh, merged into the repository, and linked from the project checklist. R23 must record Superset's license and distribution implications. R54 owns actual deployment, reporting views, Portal embedding, tenant-isolation tests and dashboard verification.
 
 This architecture decision does **not** assert that Superset integration, SSO, embedding or runtime deployment has already passed testing.
+
+## References
+
+- [Apache Superset official documentation](https://superset.apache.org/docs/intro/)
+- [Metabase embedding documentation](https://www.metabase.com/docs/latest/embedding/introduction)
+- [Metabase SSO and authentication documentation](https://www.metabase.com/docs/latest/people-and-groups/authenticating-with-sso)
+- [Metabase row and column security documentation](https://www.metabase.com/docs/latest/permissions/data-sandboxes)
+- [GitHub Issue #119](https://github.com/tricore-opentrix/dxos-open-core/issues/119)
+- [GitHub PR #123](https://github.com/tricore-opentrix/dxos-open-core/pull/123)
