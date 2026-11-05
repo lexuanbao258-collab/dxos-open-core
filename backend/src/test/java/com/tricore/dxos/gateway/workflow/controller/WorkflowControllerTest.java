@@ -18,11 +18,6 @@ import com.tricore.dxos.core.workflow.WorkflowException;
 import com.tricore.dxos.core.workflow.WorkflowInstance;
 import com.tricore.dxos.core.workflow.WorkflowRuntime;
 import com.tricore.dxos.core.workflow.WorkflowTransition;
-import com.tricore.dxos.request.controller.RequestController;
-import com.tricore.dxos.request.dto.CreateRequestDto;
-import com.tricore.dxos.request.dto.RequestResponse;
-import com.tricore.dxos.request.domain.RequestStatus;
-import com.tricore.dxos.request.service.RequestService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -55,7 +50,7 @@ import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(controllers = {WorkflowControllerTest.TestController.class, RequestController.class})
+@WebMvcTest(controllers = WorkflowControllerTest.TestController.class)
 @AutoConfigureMockMvc(addFilters = false)
 @ActiveProfiles("workflow-http-tests")
 @Import(WorkflowControllerTest.TestController.class)
@@ -88,8 +83,6 @@ class WorkflowControllerTest {
 
     @MockitoBean
     private WorkflowRuntime runtime;
-    @MockitoBean
-    private RequestService requestService;
     @Autowired
     private MockMvc mvc;
     @Autowired
@@ -423,7 +416,7 @@ class WorkflowControllerTest {
                 .andExpect(jsonPath("$.errors").isEmpty())
                 .andExpect(content().string(not(containsString("attacker"))))
                 .andExpect(content().string(not(containsString("evil"))));
-        verifyNoInteractions(runtime, requestService);
+        verifyNoInteractions(runtime);
     }
 
     private static Stream<Arguments> trailingContent() {
@@ -460,22 +453,6 @@ class WorkflowControllerTest {
         else if (suffix.endsWith("activate")) verify(runtime).activateInstance("instance-1");
         else verify(runtime).executeTransition(new TransitionCommand("instance-1", "submit", ACTOR, 0));
         verifyNoMoreInteractions(runtime);
-    }
-
-    @Test
-    void leavesSharedMapperAndRequestMessageConversionUnchanged() throws Exception {
-        assertThat(objectMapper.isEnabled(DeserializationFeature.FAIL_ON_TRAILING_TOKENS)).isFalse();
-        CreateRequestDto input = new CreateRequestDto("Repair printer", "Printer is offline", "IT_SUPPORT");
-        UUID id = UUID.fromString("f3bf54b7-fdab-4b45-85dd-94cbd8587a9d");
-        when(requestService.create(input)).thenReturn(new RequestResponse(id, input.title(), input.description(),
-                input.requestType(), RequestStatus.NEW, null, null, 0L, NOW, NOW));
-        mvc.perform(post("/api/v1/requests").contentType(MediaType.APPLICATION_JSON).content("""
-                {"title":"Repair printer","description":"Printer is offline","requestType":"IT_SUPPORT"} {}
-                """))
-                .andExpect(status().isCreated()).andExpect(jsonPath("$.id").value(id.toString()));
-        verify(requestService).create(input);
-        verifyNoMoreInteractions(requestService);
-        verifyNoInteractions(runtime);
     }
 
     private WorkflowInstance initial() {

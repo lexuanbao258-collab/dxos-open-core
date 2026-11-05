@@ -114,104 +114,42 @@ Invoke-RestMethod -Uri 'http://localhost:8080/api/v1/health'
 
 `GET /api/v1/health` trả HTTP 200 với JSON `{"status":"UP"}`. Controller
 không truy vấn database, không có logic nghiệp vụ hoặc phụ thuộc module
-Request/Workflow. Đây là kiểm tra HTTP của ứng dụng, không chứng minh
+Helpdesk/Workflow. Đây là kiểm tra HTTP của ứng dụng, không chứng minh
 PostgreSQL khả dụng. Toàn bộ ứng dụng vẫn cần cấu hình và kết nối PostgreSQL
-để JPA khởi động.
+để backend khởi động.
 
 Actuator chỉ expose `/actuator/health` qua HTTP, không hiển thị details hoặc
 components và không expose endpoint qua JMX. Health tổng hợp của Actuator
 có thể kiểm tra database và trả trạng thái khác health API tùy tình trạng
 PostgreSQL. Không expose `env`, `beans`, `metrics` hoặc endpoint quản trị khác.
 
-## Request API
+## Legacy Request prototype (removed in R25)
 
-Module `request` dùng luồng controller → service → repository → PostgreSQL.
-REST nhận/trả DTO riêng; service quản lý transaction và backend luôn gán `NEW`
-khi tạo. `requestType` là chuỗi do application cung cấp; chưa có danh mục loại yêu cầu.
+The historical `/api/v1/requests/*` routes and `com.tricore.dxos.request` JPA prototype are no longer registered or compiled. The supported Helpdesk Application API is `/api/v1/mvp/requests` (see the Helpdesk integration documentation). The historic Flyway V1/V2 scripts and existing tables remain in the migration history to preserve `flyway validate` on databases already initialized with v0.1.0. Removing these historical objects is outside R25.
 
-| Endpoint | Kết quả |
+## Helpdesk Application API (`it-helpdesk@1`)
+
+The supported application entry point is `/api/v1/mvp/requests` when `dxos.helpdesk.enabled=true`. The workflow is:
+
+`SUBMITTED → TRIAGED → IN_PROGRESS → RESOLVED → CONFIRMED`
+
+Assignment is not a Workflow state: `POST /api/v1/mvp/requests/{id}/assign` records the assignee and increments `assignment_version` (guarded by `expectedAssignmentVersion`) while the request is `TRIAGED`; `POST /api/v1/mvp/requests/{id}/start` performs the `start_work` transition to `IN_PROGRESS`.
+
+`CONFIRMED` is terminal; there is **no** `/close` route or `CLOSED` state in the Helpdesk workflow.
+
+| Method and route | Purpose |
 | --- | --- |
-| `POST /api/v1/requests` | `201 Created`, response DTO và header `Location` |
-| `GET /api/v1/requests` | `200 OK`, mảng response DTO; `[]` nếu chưa có dữ liệu |
-| `GET /api/v1/requests/{id}` | `200 OK`, response DTO; `404` nếu UUID không tồn tại |
+| `POST /api/v1/mvp/requests` | Create a request with `title`, `description`, and `requestType: "IT_HELPDESK"` |
+| `GET /api/v1/mvp/requests` | List authorized requests (cursor pagination) |
+| `GET /api/v1/mvp/requests/{id}` | Read a request visible to the verified caller |
+| `GET /api/v1/mvp/requests/{id}/history` | Read Workflow transition history |
+| `POST /api/v1/mvp/requests/{id}/triage` | Triage, with `expectedVersion` |
+| `POST /api/v1/mvp/requests/{id}/assign` | Assign, with `assigneeId` and `expectedAssignmentVersion` |
+| `POST /api/v1/mvp/requests/{id}/start` | Start work, with `expectedVersion` |
+| `POST /api/v1/mvp/requests/{id}/resolve` | Resolve, with `expectedVersion` and `resolution` |
+| `POST /api/v1/mvp/requests/{id}/confirm` | Requester confirmation, with `expectedVersion` |
 
-Body tạo Request:
-
-```json
-{"title":"Repair printer","description":"Printer is offline","requestType":"IT_SUPPORT"}
-```
-
-Cả ba trường bắt buộc và không được chỉ chứa khoảng trắng. `title` tối đa 200
-ký tự; `requestType` tối đa 100 ký tự. Body có trường khác (kể cả `status`) bị
-từ chối. Response gồm `id` (UUID), `title`, `description`, `requestType`,
-`status`, `assigneeId`, `resolution`, `version`, `createdAt`, `updatedAt` (thời gian UTC).
-Request mới có `assigneeId`/`resolution` null và version 0. List chưa phân trang và
-không cam kết thứ tự.
-
-Lỗi JSON có `status`, `code`, `message`, `errors` (map tên trường → thông báo).
-Validation trả `400 VALIDATION_FAILED`; JSON/body sai trả `400 INVALID_BODY`;
-UUID sai trả `400 INVALID_ID`; không tìm thấy trả `404 REQUEST_NOT_FOUND`.
-
-Flyway tự chạy các migration trong `db/migration` trước JPA khi khởi động,
-dùng cùng datasource `DB_*`. V1 tạo bảng `requests` với UUID primary key,
-`timestamptz`, các trường bắt buộc và CHECK cho sáu trạng thái lifecycle.
-V1 đã merge và không được sửa. V2 thêm `assignee_id` (100 ký tự), `resolution`
-(4000 ký tự), `version` (BIGINT, mặc định 0 cho dữ liệu M1), và bảng history.
-Hibernate vẫn dùng `ddl-auto: none`. Môi trường Issue #3 cần cung cấp database
-và tài khoản có quyền tạo bảng/schema history để migration chạy lần đầu.
-
-Test domain, service (mock repository) và MVC (mock service) chạy bằng
-`.\gradlew.bat test`, không cần PostgreSQL hoặc H2. Chúng chưa chứng minh
-migration/JPA hoạt động trên PostgreSQL thật. Khi có môi trường Issue #3,
-cần xác minh startup, migration và cả ba endpoint, bao gồm dữ liệu còn tồn tại
-sau khi khởi động lại ứng dụng.
-
-## IT Support workflow API
-
-Chỉ có lifecycle `NEW → ASSIGNED → IN_PROGRESS → RESOLVED → CONFIRMED → CLOSED`.
-`CLOSED` là trạng thái cuối. Các method domain kiểm tra trạng thái trước khi đổi
-dữ liệu; action không hợp lệ không đổi Request hoặc timestamp.
-
-Tất cả endpoint dưới đây có prefix `/api/v1/requests/{id}`:
-
-| Endpoint | Body | Transition/action |
-| --- | --- | --- |
-| `POST /assign` | `{"assigneeId":"it-user-001"}` | `NEW → ASSIGNED`, `ASSIGN` |
-| `POST /start` | Không cần | `ASSIGNED → IN_PROGRESS`, `START` |
-| `POST /resolve` | `{"resolution":"Restarted print service"}` | `IN_PROGRESS → RESOLVED`, `RESOLVE` |
-| `POST /confirm` | Không cần | `RESOLVED → CONFIRMED`, `CONFIRM` |
-| `POST /close` | Không cần | `CONFIRMED → CLOSED`, `CLOSE` |
-| `GET /history` | Không cần | Mảng history DTO theo `changedAt ASC, id ASC` |
-
-Action thành công trả `200 OK` với RequestResponse. `assigneeId` bắt buộc,
-nonblank và tối đa 100 ký tự; `resolution` bắt buộc, nonblank và tối đa 4000.
-Body assignment/resolve từ chối trường ngoài contract. API tạo Request từ chối
-`status`, `assigneeId`, `resolution`, `version` do client gửi.
-
-Mỗi action chạy trong một Spring transaction: load → kiểm tra domain → cập nhật
-Request/`updatedAt` → flush Request → insert đúng một history entry → commit.
-Request và history cùng rollback khi có lỗi. History lưu `request_id`,
-`from_status`, `to_status`, `action`, `changed_at` (bằng `updatedAt` mới), có FK
-đến Request, CHECK cặp transition/action hợp lệ và index `(request_id, changed_at, id)`.
-History DTO chỉ gồm `fromStatus`, `toStatus`, `action`, `changedAt`.
-Request tồn tại chưa có action trả `[]`; Request không tồn tại trả `404`.
-
-`@Version` kiểm tra optimistic locking khi update; DTO trả version sau flush.
-Transition không hợp lệ trả `409 INVALID_REQUEST_TRANSITION` kèm trạng thái/action.
-Conflict đồng thời trả `409 REQUEST_CONFLICT`; client cần reload trước khi thử lại.
-Validation/JSON/UUID sai vẫn trả `400`, không tìm thấy trả `404` theo ApiError.
-
-Test bao phủ lifecycle, mọi action sai, history, DTO/validation/errors,
-`@Version` mapping và Spring transaction advice. Transaction manager/repository
-được mock trong các test này; chúng chưa chứng minh rollback hay concurrency
-trên PostgreSQL thật. Không cần database local hoặc H2 để chạy test.
-
-Khi process có đủ `DB_*`, cần chạy ứng dụng, kiểm tra Flyway V2 thành công,
-tạo Request rồi lần lượt assign/start/resolve/confirm/close, và lấy history
-(đúng năm entry). Thử action sai phải trả `409`, detail/history không đổi.
-Khởi động lại rồi GET cùng UUID để xác minh persistence. Kiểm chứng đồng thời
-hai transaction đọc cùng version và rollback khi history insert lỗi vẫn cần
-thực hiện với PostgreSQL thật. Không ghi credentials vào source hoặc log.
+Helpdesk enforces verified identity, tenant/resource authorization, eligibility and versions before committing business and Workflow changes. It uses its own `helpdesk_requests` data and Workflow tables in a deliberately provisioned PostgreSQL schema, **not** the retired Request JPA entity/repository. Consult `HelpdeskController`, `HelpdeskService`, and `HelpdeskHttpPostgresTest` for the exact contract and tested behavior.
 
 ## Workflow PostgreSQL adapter (Issue #25)
 
