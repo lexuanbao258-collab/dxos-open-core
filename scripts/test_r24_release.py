@@ -187,7 +187,7 @@ class R24ReleaseTests(unittest.TestCase):
     def test_stable_v020_source_only_has_exact_tag_and_separate_acceptance(self):
         stable = "v0.2.0"
         self.put("CHANGELOG.md",
-                 "## [Unreleased]\\n\\n## [0.2.0] - 2026-11-06\\n\\n### Added\\n- source-only release\\n")
+                 "## [Unreleased]\n\n## [0.2.0] - 2026-11-06\n\n### Added\n- source-only release\n")
         subprocess.run(["git", "init", "-q"], cwd=self.repo, check=True)
         subprocess.run(["git", "add", "README.md", "LICENSE", "NOTICE", "CHANGELOG.md"],
                        cwd=self.repo, check=True)
