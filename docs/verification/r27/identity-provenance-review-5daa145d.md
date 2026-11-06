@@ -167,3 +167,22 @@ Yến's first-person declaration confirms that she designed Identity requirement
 - **Release:** `ISSUE_138=OPEN`; `PR_142=DRAFT`; `PR_139=DRAFT/BLOCKED`; `RELEASE_AUTHORIZATION=NOT_GRANTED`.
 
 **Verdict:** `HISTORICAL_TO_CANDIDATE_IDENTITY_BLOBS_37_UNCHANGED_1_DOC_LINK_DELTA / R25_EXCEPTION_PATHS_37_OF_37_RECONCILED / SOURCE_RIGHTS_AND_INDEPENDENT_ACCEPTANCE_PENDING`.
+
+## G3/G4 file-by-file source-origin evidence matrix — 2026-11-06
+
+[Open 24-row CSV matrix](identity-g3-g4-per-file-source-origin-matrix-5daa145d.csv). It tracks exactly **G3 ID-12–19 (8 files)** and **Yến-scope G4 ID-20–27 and ID-30–37 (16 files)**; Bảo-associated **ID-28 and ID-29 are deliberately excluded** and remain in his separate declaration/review scope. All 24 records preserve their audited `5daa145d...` Git blob identities and record the observed use of frameworks/tests separately from unknown external origins.
+
+The matrix explicitly separates: (1) repository path and SHA; (2) observed library/API or test fixture; (3) actual external source URL; (4) copying/adaptation classification; (5) third-party attribution/NOTICE; (6) contributor development-method disclosure; (7) independently verified file/portion-level Apache-2.0 rights; (8) evidence and required next actions.
+
+**Rules and cautions:**
+- A Spring Security, Keycloak/OIDC or Nimbus import is an **observed dependency**, not an identified copied upstream snippet and not proof that copying did not occur.
+- `Jwt.withTokenValue`, local example issuers, dynamically signed test JWTs and `OIDC_TEST_ACCESS_TOKEN` are **observations of test sources**, not verified historical origin/ownership of fixtures. The runtime access token is not recorded, and must never be published in the register.
+- All 24 external-source-reference fields and adaptation fields are `UNKNOWN`; all third-party notice obligations, specific file/portion rights and independent clearance remain `UNKNOWN/PENDING`. `NOT_APPLICABLE_TO_TEST_FIXTURES` for a production file only indicates that its row is not a test fixture, not that no external source could exist.
+- The method label `YEN_CONTRIBUTOR_DESIGNED_CHATGPT_CODEX_ASSISTED_SCOPE_LEVEL` describes Yến's **general Identity contribution disclosure**, not a reconstructed per-file AI/manual split or a warranty of originality.
+- Yến's express limited Apache-2.0 consent applies **only to material she can lawfully license**. The CSV's per-file authority remains PENDING and no licensing right is asserted for Bảo, Ánh, AI-generated third-party-derived material or any external source.
+- A public-source similarity check has `NOT_PERFORMED` status; missing attribution markers never imply `NONE`.
+- This CSV is a **technical source-origin questionnaire and evidence queue**, not independent legal clearance or R24 release acceptance. Metadata in `REUSE.toml` makes the CSV lintable without changing its data rows.
+
+**Next evidence gate:** collect source-specific contributor answers (if a known external code example, tutorial or reused fixture exists, record its exact URL, affected file/portion, license/NOTICE and documented permission). If no conclusive supporting evidence exists, leave the relevant field `UNKNOWN/PENDING`. Ask Ánh to review each row's supported observation and classification; never self-mark `APPROVED`.
+
+`G3_G4_MATRIX_ROWS=24`; `EXTERNAL_ORIGIN_CLEARANCE=0_CONFIRMED`; `INDEPENDENT_RIGHTS_APPROVAL=PENDING`; `#138=OPEN`; `#142=DRAFT`; `PUBLIC_RELEASE=BLOCKED`.
