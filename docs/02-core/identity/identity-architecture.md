@@ -86,7 +86,7 @@ Nếu IT Helpdesk và Facility đều tự xác thực, parse JWT và định ng
 | SRC-09 | PR #63, `e12d105` | Helpdesk candidate real Keycloak harness; Draft, integrated E2E chưa được độc lập nghiệm thu |
 
 **Source references**
-- https://github.com/tricore-opentrix/opentrix/blob/main/docs/contracts/identity-core.md
+- https://github.com/tricore-opentrix/opentrix/blob/e06fa429cfd92b032c166eb3ebf32803d13191c2/docs/contracts/identity-core.md
 - https://github.com/tricore-opentrix/opentrix/blob/main/backend/src/main/java/com/tricore/dxos/infrastructure/identity/security/SpringSecurityCurrentPrincipal.java
 - https://github.com/tricore-opentrix/opentrix/blob/main/backend/src/main/java/com/tricore/dxos/infrastructure/identity/security/SecurityConfig.java
 - https://github.com/tricore-opentrix/opentrix/pull/46
