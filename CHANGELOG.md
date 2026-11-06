@@ -19,7 +19,7 @@ User-visible DX-OS Open Core changes are recorded here. The format follows
 
 - R26: Prepare OpenTrix canonical repository identity and update organization links, documentation and setup defaults after the existing repository rename; independent post-cutover acceptance remains pending.
 
-## [0.2.0] - 2026-11-06
+## [0.2.0] - 2026-11-07
 
 ### Added
 
@@ -31,7 +31,7 @@ User-visible DX-OS Open Core changes are recorded here. The format follows
 
 - This is the planned source-only `v0.2.0` release scope, not confirmation that a public release occurred, nor proof of production integration or R12 browser acceptance.
 - Publishing requires independently approved source-origin and Apache-2.0 rights review (#138), exact-source archive evidence and the independent source-only acceptance (#139). No JAR, built Frontend dist, container image or GHCR distribution is authorized.
-- **Target date 2026-11-06 is conditional.** If release gates are not met, defer publication and update this date to the actual release date before freezing the tagged source; never backdate.
+- **Target date 2026-11-07 is conditional.** If release gates are not met, defer publication and update this date to the actual release date before freezing the tagged source; never backdate.
 
 ## [0.1.0] - 2026-11-04
 
