@@ -37,6 +37,7 @@ import { RequestDetail } from "./pages/RequestDetail";
 import { Session, Integration } from "./pages/System";
 import { Empty } from "./components/ui";
 import { AuthPage } from "./pages/Auth";
+import { PortalV4 } from "./design-v4/PortalV4";
 import { HelpdeskPortal } from "./features/helpdesk/HelpdeskPortal";
 import type { MvpHelpdeskRequestPort } from "./services/mvp/helpdeskPortalPort";
 
@@ -268,6 +269,7 @@ export function App({
   return (
     <PortalProvider helpdeskService={helpdeskService}>
       <Routes>
+        <Route path="/design-preview/*" element={<PortalV4 />} />
         <Route path="/login" element={<AuthPage key="login" mode="login" />} />
         <Route
           path="/register"
