@@ -1,0 +1,124 @@
+# R10 isolated CI evidence. Test-only branch; DO NOT MERGE this workflow into main.
+name: R10 PR103 PostgreSQL 17 focused proof
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/r10-pr103-pg17-validation.yml'
+permissions:
+  contents: read
+jobs:
+  r10-pg17:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Fetch immutable PR103 source, not the validation PR's files
+        uses: actions/checkout@v4
+        with:
+          repository: lexuanbao258-collab/dxos-open-core
+          ref: 2c4861eea3da5e6674c655ba02bf47c3d2617d79
+          persist-credentials: false
+      - name: Pin Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Validate immutable source and Docker engine
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = '2c4861eea3da5e6674c655ba02bf47c3d2617d79'
+          test -z "$(git status --porcelain)"
+          docker version --format '{{.Server.Os}}'
+          java -version
+          echo 'R10_SOURCE_SHA=2c4861eea3da5e6674c655ba02bf47c3d2617d79' >> "$GITHUB_STEP_SUMMARY"
+      - name: Run exactly two PostgreSQL 17 focused suites in a fresh disposable container
+        shell: bash
+        working-directory: backend
+        run: |
+          set -euo pipefail
+          pgpass="$(openssl rand -hex 24)"
+          runtimepass="$(openssl rand -hex 24)"
+          echo "::add-mask::$pgpass"
+          echo "::add-mask::$runtimepass"
+          container="dxos-r10-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          docker run -d --rm --name "$container" --label dxos.r10.disposable=true \
+            --publish 127.0.0.1:55439:5432 \
+            --env POSTGRES_USER=helpdesk_test \
+            --env POSTGRES_DB=helpdesk_disposable_test \
+            --env POSTGRES_PASSWORD="$pgpass" \
+            postgres:17.11-alpine >/dev/null
+          ready=0
+          for i in $(seq 1 60); do
+            # pg_isready can report healthy while initdb runs a temporary Unix-socket-only server.
+            # Require successful SQL over TCP in the final initialized database.
+            if docker exec "$container" sh -c 'PGPASSWORD="$POSTGRES_PASSWORD" psql -h 127.0.0.1 -X -At -v ON_ERROR_STOP=1 -U helpdesk_test -d helpdesk_disposable_test -c "SELECT 1"' >/dev/null 2>&1; then ready=1; break; fi
+            sleep 1
+          done
+          test "$ready" -eq 1
+          echo "PostgreSQL version: $(docker exec "$container" psql -X -At -U helpdesk_test -d helpdesk_disposable_test -c 'SHOW server_version;')"
+          printf "CREATE ROLE workflow_runtime_test LOGIN PASSWORD '%s' NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS NOINHERIT;\n" "$runtimepass" \
+            | docker exec -i "$container" psql -X -v ON_ERROR_STOP=1 -U helpdesk_test -d helpdesk_disposable_test >/dev/null
+          export HELPDESK_DISPOSABLE_URL='jdbc:postgresql://127.0.0.1:55439/helpdesk_disposable_test'
+          export HELPDESK_DISPOSABLE_PASSWORD="$pgpass"
+          export WORKFLOW_TEST_JDBC_URL="$HELPDESK_DISPOSABLE_URL"
+          export WORKFLOW_TEST_DB_USER='workflow_runtime_test'
+          export WORKFLOW_TEST_DB_PASSWORD="$runtimepass"
+          export WORKFLOW_TEST_MIGRATION_USER='helpdesk_test'
+          export WORKFLOW_TEST_MIGRATION_PASSWORD="$pgpass"
+          export WORKFLOW_EVENT_GUARD_LOCAL_DISPOSABLE='true'
+          set +e
+          ./gradlew test --no-daemon --rerun-tasks --console=plain \
+            --tests 'com.tricore.dxos.infrastructure.workflow.HelpdeskHttpPostgresTest' \
+            --tests 'com.tricore.dxos.infrastructure.workflow.PostgresWorkflowPersistenceIntegrationTest' \
+            > "$RUNNER_TEMP/r10-gradle.log" 2>&1
+          result=$?
+          set -e
+          tail -n 60 "$RUNNER_TEMP/r10-gradle.log"
+          echo "R10_GRADLE_EXIT=$result" >> "$GITHUB_STEP_SUMMARY"
+          python3 - <<'PY'
+          import json,sys,xml.etree.ElementTree as ET
+          from pathlib import Path
+          root=Path("build/test-results/test")
+          out={"exactHead":"2c4861eea3da5e6674c655ba02bf47c3d2617d79","postgres":"postgres:17.11-alpine","suites":[]}
+          bad=False
+          for clazz in ("HelpdeskHttpPostgresTest","PostgresWorkflowPersistenceIntegrationTest"):
+              matches=list(root.glob("TEST-*."+clazz+".xml"))
+              if len(matches)!=1:
+                  print("R10_MISSING_XML",clazz,len(matches))
+                  bad=True
+                  continue
+              suite=ET.parse(matches[0]).getroot()
+              n={k:int(suite.attrib.get(k,0)) for k in ("tests","failures","errors","skipped")}
+              n["passed"]=n["tests"]-n["failures"]-n["errors"]-n["skipped"]
+              n["class"]=clazz
+              out["suites"].append(n)
+              print("R10_SUITE",json.dumps(n,sort_keys=True))
+              if not n["tests"] or n["failures"] or n["errors"]:bad=True
+              if clazz=="HelpdeskHttpPostgresTest":
+                  match=[x for x in suite.iter("testcase") if x.get("name","").startswith("createWithoutExactAuthorityDeniesBeforeProtectedLookupsAndNeverWrites")]
+                  proof=len(match)==1 and not any(x.find(t) is not None for x in match for t in ("failure","error","skipped"))
+                  out["deniedCreateNegativePassed"]=proof
+                  print("R10_DENIED_CREATE_NEGATIVE", "PASS" if proof else "NOT_PASS")
+                  if not proof:bad=True
+          Path("build/r10-report.json").write_text(json.dumps(out,indent=2),encoding="utf-8")
+          with open(__import__("os").environ["GITHUB_STEP_SUMMARY"],"a",encoding="utf-8") as f:
+              f.write("\n## R10 focused PG17 tests at pinned PR #103 SHA\n")
+              f.write("\n| Class | Tests | Passed | Failed | Errors | Skipped |\n|---|---:|---:|---:|---:|---:|\n")
+              for s in out["suites"]:f.write(f"| {s['class']} | {s['tests']} | {s['passed']} | {s['failures']} | {s['errors']} | {s['skipped']} |\n")
+              f.write(f"\nDenied CREATE negative: **{out.get('deniedCreateNegativePassed','NOT_RUN')}**\n")
+          sys.exit(1 if bad else 0)
+          PY
+          parse_result=$?
+          if [ "$result" -ne 0 ] || [ "$parse_result" -ne 0 ]; then exit 1; fi
+      - name: Preserve JUnit and report from test runner
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: r10-pg17-pr103-${{ github.run_id }}
+          path: |
+            backend/build/r10-report.json
+            backend/build/test-results/test/TEST-*.HelpdeskHttpPostgresTest.xml
+            backend/build/test-results/test/TEST-*.PostgresWorkflowPersistenceIntegrationTest.xml
+          if-no-files-found: warn
+          retention-days: 14
