@@ -9,6 +9,13 @@ SPDX-License-Identifier: Apache-2.0
 
 **Purpose:** This is the Backend/Core portion of the maintained source-origin/rights register requested in [R27 Issue #138](https://github.com/tricore-opentrix/dxos-open-core/issues/138). It is staged in [R24 Draft PR #139](https://github.com/tricore-opentrix/dxos-open-core/pull/139) for independent review and reference, **without filling the release acceptance JSON**. It does not address the separate full Frontend, Portal BFF, site, docs, asset, or dependency-rights inventories.
 
+
+## Exact stable candidate source checkpoint (2026-11-06, not legal clearance)
+
+The earlier 167-file Backend baseline is now reconciled to independently verified `main@187dbd2ea6935966f5c4cceb95ad9c3c53708a2e`. The final candidate Git tree still has **167 Backend blobs**, including the one upstream `backend/gradle/wrapper/gradle-wrapper.jar` excluded from the SOURCE-ONLY archive; **166 Backend text/source files** are packaged. ID-09/ID-11/ID-28/ID-29 Git blobs are unchanged. Two independent `v0.2.0` SOURCE-ONLY tar.gz candidates have matching SHA-256 `93e6e0ba5d708120c6ec494af3e50c8959cccb4c442a8bba9a2e9c617c2d448f`. The [347-path current-source ledger](../verification/r27/v0.2.0-source-only-distribution-rights-scope-187dbd2.md) and [two-run artifact evidence](r24-v0.2.0-source-only-two-run-verification-187dbd2.md) supersede historical *technical source-scope* assumptions, **not** source rights.
+
+**Rights remain pending.** No new file-specific Bảo statement for ID-28/ID-29; no rights/notice clearance for ID-09/ID-11 or Bảo's only own lines in the `fcc45fb` Data overlap. Do not substitute artifact reproducibility or Git histories for legal permission.
+
 ## Evidence and status vocabulary
 
 | Status | Meaning |

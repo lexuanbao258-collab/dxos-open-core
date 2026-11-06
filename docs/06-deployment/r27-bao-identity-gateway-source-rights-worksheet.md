@@ -7,7 +7,7 @@ SPDX-License-Identifier: Apache-2.0
 
 **Status:** Technical path, blob, Git-history and release-boundary crosswalk verified as noted; **new per-file origin/rights attestations NOT obtained**. This is a maintainer-prepared worksheet, not Bảo's personal signature, not an authorization under Apache-2.0 and not independent legal or release clearance. Keep all unknown fields as `UNKNOWN/PENDING`.
 
-**Review baseline:** earlier `5daa145d3b5f20f2f16fe0799c6d0808fd6c3e33`, current `main@92bd46bd8386b07fa4618eac077caa6cd1dbd714` after #136. **Neither is the final frozen source SHA for public `v0.2.0`**; #141 is not yet merged at the time of preparing this worksheet.
+**Current technical archive baseline:** Two independent SOURCE-ONLY candidates for source `main@187dbd2ea6935966f5c4cceb95ad9c3c53708a2e` were inspected: archive SHA-256 `93e6e0ba5d708120c6ec494af3e50c8959cccb4c442a8bba9a2e9c617c2d448f`, reproducibility PASS. All four files remain present at identical Git blob SHAs. Earlier `main@5daa145d` and `main@92bd46b` are *historical comparison baselines*. #141 merged via squash. See [exact final source scope and rights review register](../verification/r27/v0.2.0-source-only-distribution-rights-scope-187dbd2.md). This technical update **does not** sign or clear contributor rights.
 
 ## A. Crosswalk to Identity register #142 and Backend register #139
 
@@ -26,9 +26,9 @@ All four current file headers declare TRICORE contributors as the 2026 copyright
 - ID-29 defines a separate opt-in integration test gated by `OIDC_TEST_ACCESS_TOKEN`; it reads a **runtime environment variable**, does not embed an actual access token in the checked-in source, and assumes locally configured Keycloak and JWKS. The test sources include code for modified-signature and forged-header rejection. This inspection is **not evidence it executed** with a real Keycloak. Whether any sample test code or fixture was adapted from external sources is **UNKNOWN**.
 - Spring Security, JUnit, MockMvc, AssertJ, Mockito APIs are referenced by imports. Imports alone do not prove that snippets were copied from or independently created without third-party sample code.
 
-## C. Source-only boundary (reasoned from actual packaging code, not a final archive audit)
+## C. Source-only boundary (two independent final-SHA candidate archives inspected)
 
-The proposed `v0.2.0` source-only packager in [`scripts/r24-release.py` at #141 HEAD](https://github.com/tricore-opentrix/opentrix/blob/7c2bdbedc89fec96c7136f44254d9a08623cee3b/scripts/r24-release.py) reads `git ls-files --cached -z`, then adds tracked UTF-8 text under `source/`; it excludes binary extensions such as `.jar` and rejects NUL/non-UTF-8 content. All four paths are tracked `.java` files and appear in the `main@92bd46b` tree, so all **are expected** in source-only packages under this logic, including the two test files, regardless of whether their JUnit tests run. This is **not** a claim that a final `v0.2.0` candidate has been built and its archive inspected; that verification remains open until final freeze.
+The proposed `v0.2.0` source-only packager in [`scripts/r24-release.py` at #141 HEAD](https://github.com/tricore-opentrix/opentrix/blob/7c2bdbedc89fec96c7136f44254d9a08623cee3b/scripts/r24-release.py) reads `git ls-files --cached -z`, then adds tracked UTF-8 text under `source/`; it excludes binary extensions such as `.jar` and rejects NUL/non-UTF-8 content. All four paths are tracked `.java` files and appear in the `main@92bd46b` tree, so all **are expected** in source-only packages under this logic, including the two test files, regardless of whether their JUnit tests run. **Updated exact-SHA verification:** Two actual `v0.2.0` SOURCE-ONLY archives at `187dbd2...` were independently downloaded and inspected. Both tar.gz archives have exactly 356 regular members including all 4 files under `source/`, matching SHA256SUMS and MANIFEST and a common SHA-256 digest `93e6e0ba5d708120c6ec494af3e50c8959cccb4c442a8bba9a2e9c617c2d448f`. This is technical distribution-scope evidence only; rights are not granted or cleared.
 
 No JAR, built frontend dist or GHCR images are authorized. Source-only distribution still requires source-origin/rights and attribution verification for the text and relevant assets actually shipped.
 
@@ -51,7 +51,7 @@ For **each** of ID-09, ID-11, ID-28 and ID-29, Bảo must confirm or explicitly 
 | Prior first-person AI report for ID-09 and ID-11 | **REPORTED**; independent rights and external-source review pending |
 | New file-specific method/external-input statement for ID-28 and ID-29 | **NOT SUPPLIED** |
 | Actual Apache-2.0 contribution authorization and any required third-party notices for each of four files | **UNKNOWN/PENDING** |
-| Final `v0.2.0` frozen source SHA, 2x candidate archive comparison and exact distributed file inventory | **PENDING** |
+| Final candidate source SHA, 2x SOURCE-ONLY reproducibility and archive boundary | **TECHNICAL PASS** at `187dbd2...`, exact archive SHA-256 `93e6e0ba...`; contributor rights still PENDING |
 | [#138](https://github.com/tricore-opentrix/opentrix/issues/138) independent rights sign-off and [#139](https://github.com/tricore-opentrix/opentrix/pull/139) independent stable release acceptance | **BLOCKED** |
 
-Historical `main@5daa145d` and current `main@92bd46b` are separate commits from the future frozen stable source. Do **not** promote this technical worksheet into a complete `source_license` or `source_provenance` record. Stable `v0.2.0.json` fields and `reviewed_by` remain empty until all substantive evidence and real reviews exist.
+Historical `main@5daa145d` and `main@92bd46b` remain prior comparisons; the two verified candidate archives are at `main@187dbd2...`. Do **not** promote this technical worksheet into a complete `source_license` or `source_provenance` record. Stable `v0.2.0.json` fields and `reviewed_by` remain empty until all substantive evidence and real reviews exist.
