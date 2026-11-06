@@ -114,3 +114,38 @@ Commit IDs below are shortened for display; the CSV contains full SHAs and links
 | ID-D02 | 8cc03d607 | d87a26b74,a3dee696a,52e599cf0,3fac3bde8 | - | 2b4989054 | Phan Hai Yen |
 
 **Completed commit-evidence rows:** ID-01, ID-02, ID-03, ID-04, ID-05, ID-06, ID-07, ID-08, ID-10, ID-12, ID-13, ID-14, ID-15, ID-16, ID-17, ID-18, ID-19, ID-20, ID-21, ID-22, ID-23, ID-24, ID-25, ID-26, ID-27, ID-30, ID-31, ID-32, ID-33, ID-34, ID-35, ID-36, ID-37, ID-D01, ID-D02. Source rights and Apache-2.0 authorization remain PENDING. The historical document is not in the current source archive. No release approval is asserted.
+
+## G3/G4 targeted static source-origin review — 2026-11-06
+
+**Review method and scope:** Read-only inspection of the exact Java blobs at `main@5daa145d3b5f20f2f16fe0799c6d0808fd6c3e33`; this section does **not** claim that tests were executed, code was compared against public repositories, or that AI-generated output can be certified free from third-party material. The register's existing Git blob SHAs and contributor boundaries are unchanged.
+
+### G3 — Identity infrastructure/security (ID-12–19)
+
+Inspected all **eight** registered paths at `backend/src/main/java/com/tricore/dxos/infrastructure/identity/security/`:
+
+- `AccessTokenTypeValidator.java` (ID-12), `ApiAuthenticationEntryPoint.java` (ID-13), `AudienceValidator.java` (ID-14), `ExpirationValidator.java` (ID-15).
+- `SecurityConfig.java` (ID-16), `SpringSecurityCurrentPrincipal.java` (ID-17), `SubjectValidator.java` (ID-18), `package-info.java` (ID-19).
+
+**Observed:** These files import and use Spring Security OAuth2/JWT and Nimbus JOSE/JWT interfaces; `SecurityConfig.java` wires a Nimbus-based decoder, issuer validation and custom subject/claim validation. The source snippets inspected contain SPDX metadata and no separately identified copied-example URL, upstream copyright notice, tutorial attribution or explicit adaptation comment. Library usage/imports alone do not establish that a code sample was copied, nor do they disprove copying. No public-source similarity search, prompt history reconstruction, dependency-license audit or independent external origin verification was performed.
+
+**Disposition:** `G3_STATIC_PATH_INSPECTION=8_OF_8`; `THIRD_PARTY_EXAMPLE_ORIGIN=UNKNOWN`; `PUBLIC_SOURCE_SIMILARITY=NOT_PERFORMED`; `RIGHTS_AND_NOTICE=UNKNOWN/PENDING`. Ask contributor to identify any known adapted Spring Security, Keycloak, OIDC or Nimbus examples at file/group level; preserve links, licenses and attribution if identified. **Do not infer NONE** from missing notices.
+
+### G4 — Identity tests (ID-20–37)
+
+Inspected all **16 test files in Yến's registered content scope**: `ID-20`–`ID-27` plus `ID-30`–`ID-37`. Inspections are static at the same audited source SHA.
+
+- Core tests `ID-20`–`ID-25`: six JUnit test sources, mainly project-specific contract/model assertions, with no explicit external sample-origin marker identified.
+- Security tests `ID-26`, `ID-27`, `ID-30`, `ID-34`, `ID-35`, `ID-36`, `ID-37`: test-built `Jwt` objects use `test-token`, local issuer strings and sample claims. Their appearance is consistent with synthetic fixtures, but the historical origin of the fixture design is **not independently verified**.
+- `ID-31` / `OidcKeycloakIntegrationTest.java`: tests are conditional on `OIDC_TEST_ACCESS_TOKEN` and local Keycloak issuer configuration. The code reads a runtime environment variable; code inspection alone **does not** prove that integration executed or establish the real token's original issuer or handling.
+- `ID-32` / `RawSubjectJwtDecoderTest.java` and `ID-33` / `RawTimestampJwtDecoderTest.java`: construct serialized signed JWTs inside test helpers to exercise claim typing and invalid-value cases. Example issuer domains and sample claims are visible; no external sample-source URL was identified in the inspected source. This does **not** independently establish the test-helper design's source originality.
+- **Excluded from Yến's personal attribution:** `ID-28` / `GatewayIdentityHandoffHttpTest.java` and `ID-29` / `GatewayKeycloakTokenHttpIntegrationTest.java`. These are Bảo-associated content contributions; Yến's `fa16f30d` was SPDX-only. Their technical test scope is cross-referenced in the Bảo worksheet in Draft PR #139: ID-28 mocks `JwtDecoder`, while ID-29 is env-gated on `OIDC_TEST_ACCESS_TOKEN`. Bảo's **per-file** creation-method, adapted fixture/third-party source and actual rights declarations remain `UNKNOWN/PENDING`.
+
+**Disposition:** `G4_YEN_STATIC_PATH_INSPECTION=16_OF_16`; `G4_BAO_SEPARATE_REVIEW=ID28_AND_ID29`; `SYNTHETIC_FIXTURE_LITERALS=OBSERVED`; `FIXTURE_ORIGIN=UNKNOWN`; `REAL_KEYCLOAK_EXECUTION=NOT_VERIFIED_BY_THIS_REVIEW`; `ADAPTED_EXAMPLE_LICENSES=UNKNOWN/PENDING`.
+
+### Source-rights and release boundary
+
+Yến's first-person declaration confirms that she designed Identity requirements/logic and used **ChatGPT and Codex** to help generate code, then reviewed and modified it; she did **not proactively supply external source code to the AI**. This statement cannot prove the resulting output contains no third-party material and does not constitute Apache-2.0 authorization.
+
+`G3_G4_STATIC_REVIEW=RECORDED`; `SOURCE_ORIGINALITY=UNVERIFIED`; `RIGHTS_CLEARANCE=PENDING`; `ISSUE_138=OPEN`; `PR_142=DRAFT`; `R24_RELEASE_AUTHORIZATION=NOT_GRANTED`.
+
+**REUSE/CI note:** The two provenance artifacts (this report and the register CSV) are annotated in `REUSE.toml` using the repository's existing SPDX metadata convention because the initial PR #142 CI check identified missing metadata. Such labels are metadata only, **not an independent source-rights finding or a grant by the reviewer**.
