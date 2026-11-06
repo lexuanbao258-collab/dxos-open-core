@@ -11,7 +11,7 @@ SPDX-License-Identifier: Apache-2.0
 **Related PR:** [#142](https://github.com/tricore-opentrix/opentrix/pull/142)  
 **Audited source baseline:** `5daa145d3b5f20f2f16fe0799c6d0808fd6c3e33`
 
-**Status: DRAFT — DEVELOPMENT WORKFLOW CONFIRMED / RIGHTS PENDING**
+**Status: DRAFT — DEVELOPMENT WORKFLOW CONFIRMED / LIMITED CONTRIBUTOR AUTHORIZATION CONFIRMED / RIGHTS REVIEW PENDING**
 
 ## 1. Development Method
 
@@ -69,10 +69,13 @@ The remaining source-origin questions must be reviewed at file or file-group lev
 
 ## 5. Copyright and Apache-2.0 Licensing
 
-This declaration does not make a final assertion of exclusive copyright ownership or source-distribution clearance.
+This declaration does not make a final assertion of exclusive copyright ownership or repository-wide source-distribution clearance.
 
-- Contributor authorization under Apache-2.0: `PENDING SEPARATE CONFIRMATION`
-- File-specific licensing authority: `PENDING`
+**My express, scope-limited confirmation:** I agree to OpenTrix distributing under Apache License 2.0 **only those Identity contributions (or parts of contributions) for which I actually possess lawful licensing authority**. This confirmation is not an assertion that I own every line of Identity source code or that every file in the Identity register is wholly covered by my authority. It does not authorize redistribution of content outside my rights, including rights held by other contributors or third parties. The exact file/portion-level application of this authorization, and any legal obligations for AI-assisted, adapted, or third-party material, still require evidence-based review.
+
+- My contributor authorization within the rights I actually control: `CONFIRMED — SCOPE-LIMITED`
+- Verified file/portion-level licensing authority and coverage: `PENDING`
+- AI-assisted output and third-party source-origin assessment: `UNKNOWN/PENDING`
 - Third-party notices and attribution: `UNKNOWN/PENDING`
 - Independent rights review: `PENDING`
 
@@ -90,7 +93,11 @@ No permission is asserted on behalf of Bảo, Ánh, third-party rightsholders or
 
 `EXTERNAL_SOURCE_ORIGINALITY = UNKNOWN`
 
-`APACHE_2_0_AUTHORIZATION = PENDING`
+`APACHE_2_0_CONTRIBUTOR_AUTHORIZATION = CONFIRMED_ONLY_WITHIN_RIGHTS_ACTUALLY_HELD`
+
+`FILE_OR_PORTION_LICENSE_AUTHORITY = PENDING_VERIFICATION`
+
+`REPOSITORY_WIDE_APACHE_2_0_CLEARANCE = NOT_ESTABLISHED`
 
 `INDEPENDENT_RIGHTS_REVIEW = PENDING`
 
@@ -100,4 +107,4 @@ No permission is asserted on behalf of Bảo, Ánh, third-party rightsholders or
 
 `R24_RELEASE_AUTHORIZATION = NOT_GRANTED`
 
-**Final disposition: DEVELOPMENT-METHOD DISCLOSURE CONFIRMED / SOURCE RIGHTS NOT CLEARED.**
+**Final disposition: DEVELOPMENT-METHOD DISCLOSURE CONFIRMED / CONTRIBUTOR'S SCOPE-LIMITED APACHE-2.0 AUTHORIZATION CONFIRMED / FILE-LEVEL RIGHTS AND REPOSITORY DISTRIBUTION NOT CLEARED.**
