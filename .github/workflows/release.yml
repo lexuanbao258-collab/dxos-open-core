@@ -1,0 +1,248 @@
+# SPDX-FileCopyrightText: 2026 TRICORE contributors
+# SPDX-License-Identifier: Apache-2.0
+# R24: PR builds are candidates only; publication is gated on independent clearance.
+name: R24 release candidate and publication
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/release.yml'
+      - 'scripts/r24-release.py'
+      - 'scripts/r24-upstream.py'
+      - 'scripts/test_r24_release.py'
+      - 'scripts/test_r24_upstream.py'
+      - 'infra/release/**'
+      - 'docs/06-deployment/r24-*'
+      - 'CHANGELOG.md'
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  candidate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Validate tag is on main and select candidate version
+        id: meta
+        env:
+          EVENT: ${{ github.event_name }}
+          REF: ${{ github.ref_name }}
+        run: |
+          if [ "$EVENT" = push ]; then
+            if ! [[ "$REF" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-rc\.[1-9][0-9]*)?$ ]]; then
+              echo '::error::Invalid R24 version tag'; exit 1
+            fi
+            git merge-base --is-ancestor HEAD origin/main || {
+              echo '::error::Release tag commit is not in main'; exit 1;
+            }
+            git show "origin/main:docs/06-deployment/r24-acceptances/$REF.json" > /tmp/r24-approved.json || {
+              echo '::error::Accepted R24 release manifest is not on main'; exit 1;
+            }
+            MODE=$(python3 -c "import json; print(json.load(open('/tmp/r24-approved.json')).get('mode', ''))")
+            if [ "$MODE" != binary ] && [ "$MODE" != source-only ]; then
+              echo '::error::Invalid/absent release scope'; exit 1
+            fi
+            echo "tag=$REF" >> "$GITHUB_OUTPUT"
+          else
+            MODE=binary
+            echo 'tag=v0.2.0-rc.1' >> "$GITHUB_OUTPUT"
+            echo '::notice::Validation-only candidate; no publication on pull_request/workflow_dispatch'
+          fi
+          echo "mode=$MODE" >> "$GITHUB_OUTPUT"
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+      - uses: gradle/actions/wrapper-validation@v6
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: gradle
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: R24 release contract tests
+        run: python3 -m unittest discover -s scripts -p 'test_r24_*.py'
+      - name: Build executable jars and runtime CycloneDX SBOMs
+        run: |
+          ./backend/gradlew -p backend bootJar cyclonedxBom --no-daemon
+          ./backend/gradlew -p portal-bff bootJar cyclonedxBom --no-daemon
+      - name: Build frontend and production dependency SBOM
+        working-directory: frontend
+        run: |
+          npm ci
+          npm run build
+          npx --yes @cyclonedx/cyclonedx-npm@6.0.1 --omit dev --output-format JSON --output-file ../frontend-sbom.json
+      - name: Verify R23 license policy and notices snapshot
+        run: |
+          python3 -m unittest discover -s scripts -p 'test_r23_*.py'
+          python3 scripts/r23-compliance.py \
+            --backend backend/build/reports/cyclonedx/bom.json \
+            --portal-bff portal-bff/build/reports/cyclonedx/bom.json \
+            --frontend frontend-sbom.json --output build/r23
+          diff -u THIRD-PARTY-NOTICES.md build/r23/THIRD-PARTY-NOTICES.md
+      - name: Collect original upstream license/NOTICE texts for binary review
+        if: steps.meta.outputs.mode == 'binary'
+        run: |
+          python3 scripts/r24-upstream.py --root . \
+            --inventory build/r23/license-inventory.json \
+            --output build/r24/upstream
+      - name: Package and independently verify candidate archive
+        env:
+          TAG: ${{ steps.meta.outputs.tag }}
+          SOURCE_SHA: ${{ steps.meta.outputs.sha }}
+          MODE: ${{ steps.meta.outputs.mode }}
+        run: |
+          python3 scripts/r24-release.py package --mode "$MODE" \
+            --tag "$TAG" --sha "$SOURCE_SHA" --output dist/r24
+          python3 scripts/r24-release.py verify --archive "dist/r24/dxos-open-core-${TAG#v}.tar.gz" --checksums dist/r24/SHA256SUMS
+          (cd dist/r24 && sha256sum -c SHA256SUMS)
+      - uses: actions/upload-artifact@v4
+        with:
+          name: r24-candidate-${{ github.run_id }}
+          path: dist/r24/
+          if-no-files-found: error
+          retention-days: 30
+      - name: Verify real source-only RC fallback (nonpublishable)
+        if: github.event_name != 'push'
+        env:
+          TAG: ${{ steps.meta.outputs.tag }}
+          SOURCE_SHA: ${{ steps.meta.outputs.sha }}
+        run: |
+          python3 scripts/r24-release.py package --mode source-only \
+            --tag "$TAG" --sha "$SOURCE_SHA" --output dist/r24-source-only
+          python3 scripts/r24-release.py verify \
+            --archive "dist/r24-source-only/dxos-open-core-${TAG#v}.tar.gz" \
+            --checksums dist/r24-source-only/SHA256SUMS
+          (cd dist/r24-source-only && sha256sum -c SHA256SUMS)
+      - uses: actions/upload-artifact@v4
+        if: github.event_name != 'push'
+        with:
+          name: r24-source-only-candidate-${{ github.run_id }}
+          path: dist/r24-source-only/
+          if-no-files-found: error
+          retention-days: 30
+
+  publish:
+    needs: candidate
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    environment: r24-release
+    permissions:
+      contents: write
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/download-artifact@v4
+        with:
+          name: r24-candidate-${{ github.run_id }}
+          path: dist/r24
+      - name: Read reviewed acceptance document from main (not the tagged source commit)
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          mkdir -p /tmp/r24-acceptance
+          git show "origin/main:docs/06-deployment/r24-acceptances/$TAG.json" > /tmp/r24-acceptance/acceptance.json
+      - name: Refuse publication without exact-SHA R24 distribution acceptance
+        id: clearance
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          python3 scripts/r24-release.py gate \
+            --archive "dist/r24/dxos-open-core-${TAG#v}.tar.gz" \
+            --checksums dist/r24/SHA256SUMS \
+            --acceptance /tmp/r24-acceptance/acceptance.json \
+            --release-notes dist/r24/RELEASE-NOTES.md \
+            --tag "$TAG" --sha "$(git rev-parse HEAD)"
+          python3 - <<'PYBASE'
+          import json, os
+          data = json.load(open('/tmp/r24-acceptance/acceptance.json'))
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as out:
+              print('mode=' + data['mode'], file=out)
+              if data['mode'] == 'binary':
+                  print('java_base=' + data['java_base_image'], file=out)
+          PYBASE
+      - name: Stage image inputs from the verified archive
+        if: steps.clearance.outputs.mode == 'binary'
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          mkdir -p image-context/backend image-context/portal-bff
+          tar -xOf "dist/r24/dxos-open-core-${TAG#v}.tar.gz" "dxos-$TAG/backend/application.jar" > image-context/backend/application.jar
+          tar -xOf "dist/r24/dxos-open-core-${TAG#v}.tar.gz" "dxos-$TAG/portal-bff/application.jar" > image-context/portal-bff/application.jar
+      - uses: docker/setup-buildx-action@v3
+        if: steps.clearance.outputs.mode == 'binary'
+      - uses: docker/login-action@v3
+        if: steps.clearance.outputs.mode == 'binary'
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Publish backend image to GHCR
+        id: backend-image
+        if: steps.clearance.outputs.mode == 'binary'
+        uses: docker/build-push-action@v6
+        with:
+          context: image-context/backend
+          file: infra/release/backend.Dockerfile
+          push: true
+          build-args: JAVA_BASE=${{ steps.clearance.outputs.java_base }}
+          tags: ghcr.io/tricore-opentrix/dxos-backend:${{ github.ref_name }}
+          labels: |
+            org.opencontainers.image.source=https://github.com/tricore-opentrix/dxos-open-core
+            org.opencontainers.image.revision=${{ github.sha }}
+      - name: Publish Portal BFF image to GHCR
+        id: bff-image
+        if: steps.clearance.outputs.mode == 'binary'
+        uses: docker/build-push-action@v6
+        with:
+          context: image-context/portal-bff
+          file: infra/release/portal-bff.Dockerfile
+          push: true
+          build-args: JAVA_BASE=${{ steps.clearance.outputs.java_base }}
+          tags: ghcr.io/tricore-opentrix/dxos-portal-bff:${{ github.ref_name }}
+          labels: |
+            org.opencontainers.image.source=https://github.com/tricore-opentrix/dxos-open-core
+            org.opencontainers.image.revision=${{ github.sha }}
+      - name: Use exactly the release notes from the verified archive
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          tar -xOf "dist/r24/dxos-open-core-${TAG#v}.tar.gz" \
+            "dxos-$TAG/RELEASE-NOTES.md" > dist/r24/RELEASE-NOTES.md
+      - name: Record GHCR OCI digests as release evidence
+        if: steps.clearance.outputs.mode == 'binary'
+        env:
+          TAG: ${{ github.ref_name }}
+          BACKEND_DIGEST: ${{ steps.backend-image.outputs.digest }}
+          BFF_DIGEST: ${{ steps.bff-image.outputs.digest }}
+        run: |
+          [[ "$BACKEND_DIGEST" =~ ^sha256:[a-f0-9]{64}$ ]]
+          [[ "$BFF_DIGEST" =~ ^sha256:[a-f0-9]{64}$ ]]
+          printf "ghcr.io/tricore-opentrix/dxos-backend:%s@%s\n" "$TAG" "$BACKEND_DIGEST" > dist/r24/IMAGE-DIGESTS.txt
+          printf "ghcr.io/tricore-opentrix/dxos-portal-bff:%s@%s\n" "$TAG" "$BFF_DIGEST" >> dist/r24/IMAGE-DIGESTS.txt
+      - name: Publish GitHub Release with checksums and release notes
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ github.ref_name }}
+          MODE: ${{ steps.clearance.outputs.mode }}
+        run: |
+          assets=("dist/r24/dxos-open-core-${TAG#v}.tar.gz" "dist/r24/SHA256SUMS")
+          if [ "$MODE" = binary ]; then
+            assets+=("dist/r24/IMAGE-DIGESTS.txt")
+          fi
+          gh release create "$TAG" "${assets[@]}" \
+            --verify-tag --title "DX-OS $TAG" --notes-file dist/r24/RELEASE-NOTES.md
