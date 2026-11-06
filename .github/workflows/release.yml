@@ -51,6 +51,9 @@ jobs:
             if [ "$MODE" != binary ] && [ "$MODE" != source-only ]; then
               echo '::error::Invalid/absent release scope'; exit 1
             fi
+            if [ "$REF" = "v0.2.0" ] && [ "$MODE" != "source-only" ]; then
+              echo '::error::v0.2.0 is SOURCE-ONLY; binary/JAR/GHCR publication is blocked'; exit 1
+            fi
             echo "tag=$REF" >> "$GITHUB_OUTPUT"
           else
             MODE=binary

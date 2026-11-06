@@ -205,6 +205,18 @@ class R24ReleaseTests(unittest.TestCase):
             release.gate(self.archive, self.sums, self.acceptance, stable, SHA,
                          self.output / "RELEASE-NOTES.md")
 
+    def test_stable_v020_binary_publication_is_blocked_even_if_reviewed(self):
+        stable = "v0.2.0"
+        self.put("CHANGELOG.md",
+                 "## [Unreleased]\n\n## [0.2.0] - 2026-11-06\n\n### Added\n- stable release\n")
+        self.make("binary", tag=stable)
+        doc = self.accept(mode="binary")
+        doc["tag"] = stable
+        self.acceptance.write_text(json.dumps(doc))
+        with self.assertRaisesRegex(ValueError, "SOURCE-ONLY"):
+            release.gate(self.archive, self.sums, self.acceptance, stable, SHA,
+                         self.output / "RELEASE-NOTES.md")
+
     def test_invalid_tag_and_checksum_rejected(self):
         with self.assertRaises(ValueError):
             release.package(self.repo, "../../bad", SHA, self.output)
