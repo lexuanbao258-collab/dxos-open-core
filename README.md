@@ -1,8 +1,8 @@
-# DX-OS Open-Core
+# OpenTrix — DX-OS Open-Core
 
 **Reusable Digital Capabilities for Internal Service Applications**
 
-DX-OS Open-Core is TRICORE's modular monolith for exploring reusable capabilities behind internal service applications. The Internal Service Portal / IT Support scenario is the main demonstration target. DX-OS is a digital transformation platform concept, not a computer operating system or a claim about the competition's required product.
+OpenTrix is TRICORE's DX-OS Open-Core implementation, a modular monolith for exploring reusable capabilities behind internal service applications. The Internal Service Portal / IT Support scenario is the main demonstration target. DX-OS is a digital transformation platform concept, not a computer operating system or a claim about the competition's required product.
 
 **Release documentation baseline:** v0.1.0 candidate based on `main@4428346` (PR #103 squash integration). Release acceptance is separate from source and CI verification.
 
@@ -151,8 +151,8 @@ Start Backend, BFF and the configured local HTTPS ingress **following the BFF ru
 From a PowerShell terminal:
 
 ```powershell
-git clone https://github.com/lexuanbao258-collab/dxos-open-core.git
-Set-Location dxos-open-core\backend
+git clone https://github.com/tricore-opentrix/opentrix.git
+Set-Location opentrix\backend
 java -version
 .\gradlew.bat --version
 .\gradlew.bat test --tests 'com.tricore.dxos.core.workflow.*'
@@ -234,7 +234,7 @@ This is a high-level map, not a claim that every package is fully implemented.
 - Architecture and workflow source documentation: browse the current `docs/` directory; consolidated navigation is tracked in R29.
 - Historical verification: refer to the relevant PR, workflow run and exact commit when reporting evidence.
 - [Glossary](GLOSSARY.md): project terminology.
-- [Issue #38](https://github.com/lexuanbao258-collab/dxos-open-core/issues/38): license, attribution, and SPDX review.
+- [Issue #38](https://github.com/tricore-opentrix/opentrix/issues/38): license, attribution, and SPDX review.
 
 A `PASS` claim should identify its commit, environment, command, result, and limitations. Review the relevant Issues and PRs for work newer than the stated baseline.
 
@@ -264,8 +264,8 @@ Responsibilities do not establish copyright ownership of each contributor's work
 
 ## License and Third-Party Notices
 
-DX-OS original materials covered by the repository's [LICENSE](LICENSE) use **Apache License 2.0 (Apache-2.0)**, with attribution in [NOTICE](NOTICE). Third-party and per-file compliance work is tracked in [Issue #38](https://github.com/lexuanbao258-collab/dxos-open-core/issues/38).
+DX-OS original materials covered by the repository's [LICENSE](LICENSE) use **Apache License 2.0 (Apache-2.0)**, with attribution in [NOTICE](NOTICE). Third-party and per-file compliance work is tracked in [Issue #38](https://github.com/tricore-opentrix/opentrix/issues/38).
 
 Third-party dependencies, the Gradle Wrapper, adapted materials, and externally sourced assets remain subject to their respective licenses and attribution obligations.
 
-Copyright ownership, source-origin verification, NOTICE requirements, and file-level SPDX review are tracked in [Issue #38](https://github.com/lexuanbao258-collab/dxos-open-core/issues/38). Release-level licensing compliance is not claimed until the outstanding requirements have been reviewed and resolved.
+Copyright ownership, source-origin verification, NOTICE requirements, and file-level SPDX review are tracked in [Issue #38](https://github.com/tricore-opentrix/opentrix/issues/38). Release-level licensing compliance is not claimed until the outstanding requirements have been reviewed and resolved.

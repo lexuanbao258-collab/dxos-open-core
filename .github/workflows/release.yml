@@ -51,10 +51,13 @@ jobs:
             if [ "$MODE" != binary ] && [ "$MODE" != source-only ]; then
               echo '::error::Invalid/absent release scope'; exit 1
             fi
+            if [ "$REF" = "v0.2.0" ] && [ "$MODE" != "source-only" ]; then
+              echo '::error::v0.2.0 is SOURCE-ONLY; binary/JAR/GHCR publication is blocked'; exit 1
+            fi
             echo "tag=$REF" >> "$GITHUB_OUTPUT"
           else
             MODE=binary
-            echo 'tag=v0.2.0-rc.1' >> "$GITHUB_OUTPUT"
+            echo 'tag=v0.2.0' >> "$GITHUB_OUTPUT"
             echo '::notice::Validation-only candidate; no publication on pull_request/workflow_dispatch'
           fi
           echo "mode=$MODE" >> "$GITHUB_OUTPUT"
@@ -112,7 +115,7 @@ jobs:
           path: dist/r24/
           if-no-files-found: error
           retention-days: 30
-      - name: Verify real source-only RC fallback (nonpublishable)
+      - name: Verify source-only v0.2.0 candidate (nonpublishable)
         if: github.event_name != 'push'
         env:
           TAG: ${{ steps.meta.outputs.tag }}
@@ -202,7 +205,7 @@ jobs:
           build-args: JAVA_BASE=${{ steps.clearance.outputs.java_base }}
           tags: ghcr.io/tricore-opentrix/dxos-backend:${{ github.ref_name }}
           labels: |
-            org.opencontainers.image.source=https://github.com/tricore-opentrix/dxos-open-core
+            org.opencontainers.image.source=https://github.com/tricore-opentrix/opentrix
             org.opencontainers.image.revision=${{ github.sha }}
       - name: Publish Portal BFF image to GHCR
         id: bff-image
@@ -215,7 +218,7 @@ jobs:
           build-args: JAVA_BASE=${{ steps.clearance.outputs.java_base }}
           tags: ghcr.io/tricore-opentrix/dxos-portal-bff:${{ github.ref_name }}
           labels: |
-            org.opencontainers.image.source=https://github.com/tricore-opentrix/dxos-open-core
+            org.opencontainers.image.source=https://github.com/tricore-opentrix/opentrix
             org.opencontainers.image.revision=${{ github.sha }}
       - name: Use exactly the release notes from the verified archive
         env:
@@ -245,4 +248,4 @@ jobs:
             assets+=("dist/r24/IMAGE-DIGESTS.txt")
           fi
           gh release create "$TAG" "${assets[@]}" \
-            --verify-tag --title "DX-OS $TAG" --notes-file dist/r24/RELEASE-NOTES.md
+            --verify-tag --title "OpenTrix — DX-OS Open-Core $TAG" --notes-file dist/r24/RELEASE-NOTES.md

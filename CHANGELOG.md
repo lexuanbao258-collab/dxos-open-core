@@ -15,16 +15,23 @@ User-visible DX-OS Open Core changes are recorded here. The format follows
 
 - R24 tag-triggered release-candidate packaging (Java jars, frontend, SBOM/NOTICE inventory, SHA256SUMS), with independent distribution-acceptance gate before GitHub Release/GHCR publication.
 
-## [0.2.0-rc.1] - 2026-11-05
+### Changed
+
+- R26: Prepare OpenTrix canonical repository identity and update organization links, documentation and setup defaults after the existing repository rename; independent post-cutover acceptance remains pending.
+
+## [0.2.0] - 2026-11-07
 
 ### Added
 
-- R24 source and binary candidate packaging, archive checksums and versioned release-note generation.
+- R24 reproducible release tooling, source-only packaging, archive checksums and versioned release-note generation; binary build candidates remain nonpublishable without separate clearance.
 - A fail-closed independent release acceptance gate; candidate builds do not imply redistribution clearance.
+- R26 canonical OpenTrix repository links and documentation alignment (PR #136).
 
 ### Known verification limitations
 
-- This is a release-candidate documentation baseline, not a claim of production integration, R12 browser acceptance or permission to publish binary artifacts.
+- This is the planned source-only `v0.2.0` release scope, not confirmation that a public release occurred, nor proof of production integration or R12 browser acceptance.
+- Publishing requires independently approved source-origin and Apache-2.0 rights review (#138), exact-source archive evidence and the independent source-only acceptance (#139). No JAR, built Frontend dist, container image or GHCR distribution is authorized.
+- **Target date 2026-11-07 is conditional.** If release gates are not met, defer publication and update this date to the actual release date before freezing the tagged source; never backdate.
 
 ## [0.1.0] - 2026-11-04
 
@@ -61,4 +68,4 @@ User-visible DX-OS Open Core changes are recorded here. The format follows
 
 - The separate Issue #23 workflow; its security gates run in shared CI.
 
-[0.1.0]: https://github.com/lexuanbao258-collab/dxos-open-core/releases/tag/v0.1.0
+[0.1.0]: https://github.com/tricore-opentrix/opentrix/releases/tag/v0.1.0

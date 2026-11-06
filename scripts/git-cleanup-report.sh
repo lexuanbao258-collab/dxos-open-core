@@ -10,7 +10,7 @@
 # Requires git and an authenticated GitHub CLI (gh).
 set -euo pipefail
 
-REPO="${REPO:-lexuanbao258-collab/dxos-open-core}"
+REPO="${REPO:-tricore-opentrix/opentrix}"
 STALE_DAYS="${STALE_DAYS:-7}"
 
 git fetch --prune origin >/dev/null 2>&1

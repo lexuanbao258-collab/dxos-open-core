@@ -124,7 +124,7 @@ Diagram arrows represent **logical invocation/implementation**, not Java import 
 
 **Selected architecture target:** private PostgreSQL 17 for relational state, local Docker MinIO for object storage, and Keycloak for identity. MinIO uses an S3-compatible protocol; this is not AWS S3 deployment. Supabase Storage and filesystem-only object storage are excluded from the new implementation scope. Core remains provider-neutral, but no provider substitution has been demonstrated.
 
-**Source baseline:** at e06fa429cfd92b032c166eb3ebf32803d13191c2, the Core contract and in-memory fake exist; no production object-storage adapter exists in infrastructure.storage. [PR #34](https://github.com/lexuanbao258-collab/dxos-open-core/pull/34) is an unmerged Draft MinIO candidate; its description reports real MinIO integration tests NOT VERIFIED. [PR #35](https://github.com/lexuanbao258-collab/dxos-open-core/pull/35) and [PR #43](https://github.com/lexuanbao258-collab/dxos-open-core/pull/43) are closed without merge and remain historical context, not alternate MVP targets.
+**Source baseline:** at e06fa429cfd92b032c166eb3ebf32803d13191c2, the Core contract and in-memory fake exist; no production object-storage adapter exists in infrastructure.storage. [PR #34](https://github.com/tricore-opentrix/opentrix/pull/34) is an unmerged Draft MinIO candidate; its description reports real MinIO integration tests NOT VERIFIED. [PR #35](https://github.com/tricore-opentrix/opentrix/pull/35) and [PR #43](https://github.com/tricore-opentrix/opentrix/pull/43) are closed without merge and remain historical context, not alternate MVP targets.
 
 The selected adapter must be bound explicitly and fail closed if absent or ambiguous. Keep bucket access private and credentials outside Git. Do not invent a configuration key or infer that changing one property migrates stored objects. Any future provider transition needs a separate decision, data inventory, integrity check, cutover and rollback evidence.
 
@@ -212,9 +212,9 @@ Passing unit tests does not substitute for restart, concurrent writer, failure/r
 | Data ownership baseline | [`docs/architecture/data-persistence-boundaries.md`](../../architecture/data-persistence-boundaries.md) | Current architecture boundary |
 | Workflow persistence contract | [`docs/contracts/workflow-core.md`](../../contracts/workflow-core.md) | Separate owner and atomicity guarantees |
 | In-memory fake and tests | `backend/src/test/java/com/tricore/dxos/core/data/` | Contract-level test coverage, not real-provider proof |
-| MinIO candidate | [PR #34](https://github.com/lexuanbao258-collab/dxos-open-core/pull/34) | Unmerged Draft; real MinIO integration NOT VERIFIED |
-| Supabase candidate | [PR #35](https://github.com/lexuanbao258-collab/dxos-open-core/pull/35) | Closed without merge; historical, excluded from new scope |
-| Filesystem candidate | [PR #43](https://github.com/lexuanbao258-collab/dxos-open-core/pull/43) | Closed without merge; historical, excluded from new scope |
+| MinIO candidate | [PR #34](https://github.com/tricore-opentrix/opentrix/pull/34) | Unmerged Draft; real MinIO integration NOT VERIFIED |
+| Supabase candidate | [PR #35](https://github.com/tricore-opentrix/opentrix/pull/35) | Closed without merge; historical, excluded from new scope |
+| Filesystem candidate | [PR #43](https://github.com/tricore-opentrix/opentrix/pull/43) | Closed without merge; historical, excluded from new scope |
 
 ## 16. Decision and review sign-off
 

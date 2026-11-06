@@ -324,7 +324,7 @@ Không chạy `smoke` lại với run-id cũ: runner từ chối replay trước
 
 ### Kết nối Supabase PostgreSQL mặc định cho Issue #25
 
-Theo [Issue #25 cập nhật ngày 2026-10-14](https://github.com/lexuanbao258-collab/dxos-open-core/issues/25),
+Theo [Issue #25 cập nhật ngày 2026-10-14](https://github.com/tricore-opentrix/opentrix/issues/25),
 dùng Direct Connection của project như pgAdmin: `db.<project-ref>.supabase.co`, port
 `5432`, database `postgres`, tài khoản `postgres` và mật khẩu database hiện có.
 Máy phát triển cần IPv6; PostgreSQL local ở trên vẫn chạy độc lập với Supabase/WARP.

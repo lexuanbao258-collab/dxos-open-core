@@ -13,7 +13,7 @@ SPDX-License-Identifier: Apache-2.0
 
 Data Core owns ObjectStoragePort, keys, metadata, write modes, content lifetime and normalized errors. An Infrastructure MinIO adapter implements the port and depends inward on Core. Its S3-compatible SDK/protocol is an implementation detail, not an AWS S3 deployment.
 
-The baseline has the Core contract and an in-memory test fake. The infrastructure.storage package has no production adapter. [PR #34](https://github.com/lexuanbao258-collab/dxos-open-core/pull/34) is an unmerged Draft MinIO candidate. Its description reports Java compilation and unit/configuration tests, while **real MinIO integration tests were NOT VERIFIED**. Supabase and filesystem-only implementations are outside the new MVP implementation scope.
+The baseline has the Core contract and an in-memory test fake. The infrastructure.storage package has no production adapter. [PR #34](https://github.com/tricore-opentrix/opentrix/pull/34) is an unmerged Draft MinIO candidate. Its description reports Java compilation and unit/configuration tests, while **real MinIO integration tests were NOT VERIFIED**. Supabase and filesystem-only implementations are outside the new MVP implementation scope.
 
 ## Selected local target
 

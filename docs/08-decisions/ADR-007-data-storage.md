@@ -15,7 +15,7 @@ DX-OS is a Java 21 / Spring Boot modular monolith with Hexagonal Architecture. D
 
 The selected MVP runtime uses **private PostgreSQL 17** for relational data, **local Docker MinIO** for object content, and **Keycloak** for identity. The MinIO adapter implements the existing Data Core port in Infrastructure. MinIO uses an S3-compatible protocol; this decision does **not** select AWS S3 deployment or assert tested AWS compatibility. Supabase Storage and filesystem-only object storage are excluded from the new implementation scope. Historical PRs remain historical.
 
-At the PR #73 base (e06fa429cfd92b032c166eb3ebf32803d13191c2), source contains the Core contract and an in-memory test fake; infrastructure.storage has no production adapter. [PR #34](https://github.com/lexuanbao258-collab/dxos-open-core/pull/34) is an unmerged Draft candidate at 90558efc9dc356b7e94db09fcc77b19625ea97cc. Its description reports compilation and unit/configuration tests but **real MinIO integration tests NOT VERIFIED**.
+At the PR #73 base (e06fa429cfd92b032c166eb3ebf32803d13191c2), source contains the Core contract and an in-memory test fake; infrastructure.storage has no production adapter. [PR #34](https://github.com/tricore-opentrix/opentrix/pull/34) is an unmerged Draft candidate at 90558efc9dc356b7e94db09fcc77b19625ea97cc. Its description reports compilation and unit/configuration tests but **real MinIO integration tests NOT VERIFIED**.
 
 ## Consequences and acceptance
 
