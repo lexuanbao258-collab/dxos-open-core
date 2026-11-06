@@ -9,9 +9,9 @@ Automation owner: Bảo (@lexuanbao258-collab). Compliance/release acceptance co
 
 ## Candidate and naming
 
-- Output: **dxos-open-core-<version>.tar.gz**, e.g. dxos-open-core-0.2.0-rc.1.tar.gz, plus SHA256SUMS and RELEASE-NOTES.md.
+- Output: **dxos-open-core-<version>.tar.gz**, e.g. dxos-open-core-0.2.0.tar.gz, plus SHA256SUMS and RELEASE-NOTES.md.
 - Accept vMAJOR.MINOR.PATCH and vMAJOR.MINOR.PATCH-rc.N (N >= 1) tags. A matching CHANGELOG [<version>] section with nonempty release notes is required.
-- Each PR/manual workflow run builds a nonpublishable candidate. The tag workflow selects release scope from the independently reviewed acceptance JSON on main; tagged commit must be an ancestor of main. **No tag is created by PR #134.**
+- PR/manual workflow runs build nonpublishable candidates for `v0.2.0`; binary CI validation artifacts are NOT distribution authorization. Publish mode is selected exclusively from the independently accepted manifest on main. The tag workflow selects release scope from the independently reviewed acceptance JSON on main; tagged commit must be an ancestor of main. **No tag is created by PR #134.**
 - Archive metadata are reproducible. SHA256SUMS and MANIFEST.json cover candidate bytes. The clearance gate additionally requires independently reviewed archive_sha256 in the acceptance JSON and verifies standalone release notes match the archive member. Publication extracts the verified archive notes.
 
 ## Binary scope
@@ -22,9 +22,9 @@ The upstream collector reads matched Gradle-cache JAR META-INF LICENSE/NOTICE an
 
 One independently accepted **permissive license group** may cover Apache-2.0, MIT, BSD-2-Clause, BSD-3-Clause, ISC and 0BSD. Actual bundled components still require upstream license bytes in the archive. Any non-group license (e.g. EPL, GPL+Classpath, OFL and CC0) needs individual evidence/choice in the exceptions list. The inventory determines those exceptions, including logback and jakarta.annotation-api where shipped; no blanket permission is inferred from the license name. The gate blocks missing/unchecked files and all unresolved source, NOTICE, asset, JRE and OCI obligations.
 
-## Source-only RC fallback
+## Source-only `v0.2.0` (planned; fail-closed)
 
-Mode source-only archives Git-tracked source, LICENSE, NOTICE, CHANGELOG, release notes, three runtime SBOMs and notices inventory. It **excludes JARs, frontend dist and GHCR images**. The SBOM records resolved build/runtime dependencies, not distributed binaries. An independent source provenance/licensing review is still required; source-only clearance does not satisfy later binary release obligations. The team may use this narrow fallback for v0.2.0, keeping binary/GHCR distribution for a later independently accepted release.
+Mode source-only archives Git-tracked source, LICENSE, NOTICE, CHANGELOG, release notes, three runtime SBOMs and notices inventory. It **excludes JARs, frontend dist and GHCR images**. The SBOM records resolved build/runtime dependencies, not distributed binaries. An independent source provenance/licensing review is still required; source-only clearance does not satisfy later binary release obligations. The 2026-11-06 target is conditional: the first public `v0.2.0` release, if independently cleared, is SOURCE-ONLY. Do not publish `v0.2.0-rc.1` publicly. No JAR, built frontend dist or GHCR image is authorized. If #138/#139 or checksum evidence is incomplete, postpone the public tag/release and update CHANGELOG to the eventual actual date before source freeze.
 
 ## Independent acceptance and protected publishing
 
@@ -43,8 +43,8 @@ GHCR image tags and GitHub Releases are non-atomic: partial publishing requires 
 
 1. Run python3 -m unittest discover -s scripts -p 'test_r24_*.py'.
 2. Produce the R23 SBOMs and inventory; run python3 scripts/r24-upstream.py --root . --inventory build/r23/license-inventory.json --output build/r24/upstream.
-3. Run python3 scripts/r24-release.py package --mode binary --tag v0.2.0-rc.1 --sha <full-source-SHA> --output dist/r24. For source-only use --mode source-only.
-4. Run python3 scripts/r24-release.py verify --archive dist/r24/dxos-open-core-0.2.0-rc.1.tar.gz --checksums dist/r24/SHA256SUMS and, from dist/r24, sha256sum -c SHA256SUMS.
+3. Run python3 scripts/r24-release.py package --mode source-only --tag v0.2.0 --sha <full-source-SHA> --output dist/r24.
+4. Run python3 scripts/r24-release.py verify --archive dist/r24/dxos-open-core-0.2.0.tar.gz --checksums dist/r24/SHA256SUMS and, from dist/r24, sha256sum -c SHA256SUMS. After the final planned source SHA is frozen, run **two** workflow_dispatch source-only candidates on that same SHA, and independently compare their archive digest, MANIFEST tag/source SHA/mode, SHA256SUMS and notes.
 5. After merge, source SHA freeze, independent acceptance, Yến's environment/tag readiness and approved tag publication, verify real release assets, GHCR image digests (binary only), and the exact archive hash.
 
-**R24 implementation Done** requires independent review, green CI and merge. **Full R24 binary distribution Done** additionally requires successful protected RC tag publication, accepted binary obligations, assets and both images, checksum -c and recorded image digests. Source-only RC is a narrower milestone, not binary distribution Done.
+**R24 implementation Done** requires independent review, green CI and merge. **Full R24 source-only release Done** requires #138 rights clearance, exact-source #139 acceptance and review, protected `v0.2.0` tag publication, GitHub Release source-only assets and an independently verified downloaded SHA256SUMS. **Binary/JAR/GHCR distribution remains BLOCKED** until separately authorized; none of its obligations are waived.
