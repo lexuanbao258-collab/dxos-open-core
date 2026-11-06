@@ -15,6 +15,10 @@ User-visible DX-OS Open Core changes are recorded here. The format follows
 
 - R24 tag-triggered release-candidate packaging (Java jars, frontend, SBOM/NOTICE inventory, SHA256SUMS), with independent distribution-acceptance gate before GitHub Release/GHCR publication.
 
+### Changed
+
+- R26: Prepare OpenTrix canonical repository identity and update organization links, documentation and setup defaults after the existing repository rename; independent post-cutover acceptance remains pending.
+
 ## [0.2.0-rc.1] - 2026-11-05
 
 ### Added
@@ -61,4 +65,4 @@ User-visible DX-OS Open Core changes are recorded here. The format follows
 
 - The separate Issue #23 workflow; its security gates run in shared CI.
 
-[0.1.0]: https://github.com/lexuanbao258-collab/dxos-open-core/releases/tag/v0.1.0
+[0.1.0]: https://github.com/tricore-opentrix/opentrix/releases/tag/v0.1.0

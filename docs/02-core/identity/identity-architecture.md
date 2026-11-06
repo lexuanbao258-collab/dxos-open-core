@@ -86,12 +86,12 @@ Nếu IT Helpdesk và Facility đều tự xác thực, parse JWT và định ng
 | SRC-09 | PR #63, `e12d105` | Helpdesk candidate real Keycloak harness; Draft, integrated E2E chưa được độc lập nghiệm thu |
 
 **Source references**
-- https://github.com/lexuanbao258-collab/dxos-open-core/blob/main/docs/contracts/identity-core.md
-- https://github.com/lexuanbao258-collab/dxos-open-core/blob/main/backend/src/main/java/com/tricore/dxos/infrastructure/identity/security/SpringSecurityCurrentPrincipal.java
-- https://github.com/lexuanbao258-collab/dxos-open-core/blob/main/backend/src/main/java/com/tricore/dxos/infrastructure/identity/security/SecurityConfig.java
-- https://github.com/lexuanbao258-collab/dxos-open-core/pull/46
-- https://github.com/lexuanbao258-collab/dxos-open-core/pull/56
-- https://github.com/lexuanbao258-collab/dxos-open-core/pull/70
+- https://github.com/tricore-opentrix/opentrix/blob/e06fa429cfd92b032c166eb3ebf32803d13191c2/docs/contracts/identity-core.md
+- https://github.com/tricore-opentrix/opentrix/blob/main/backend/src/main/java/com/tricore/dxos/infrastructure/identity/security/SpringSecurityCurrentPrincipal.java
+- https://github.com/tricore-opentrix/opentrix/blob/main/backend/src/main/java/com/tricore/dxos/infrastructure/identity/security/SecurityConfig.java
+- https://github.com/tricore-opentrix/opentrix/pull/46
+- https://github.com/tricore-opentrix/opentrix/pull/56
+- https://github.com/tricore-opentrix/opentrix/pull/70
 
 **Điểm chưa xác minh:** Không đưa ra khẳng định full-stack UI/BFF/Backend/DB PASS, provider thứ hai PASS, quyền bị revoke tức thời, hoặc IdP migration đã hoạt động.
 
