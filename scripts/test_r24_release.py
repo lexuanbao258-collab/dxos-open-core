@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: 2026 TRICORE contributors
 # SPDX-License-Identifier: Apache-2.0
-"""R24 contract tests: candidate integrity, authorization boundaries, and RC modes."""
+"""R24 contract tests: candidate integrity, authorization boundaries, and release modes."""
 import importlib.util
 import json
 import subprocess
@@ -183,6 +183,39 @@ class R24ReleaseTests(unittest.TestCase):
         self.make("source-only")
         self.assertEqual(first, release.digest(self.archive.read_bytes()))
         release.verify(self.archive, self.sums)
+
+    def test_stable_v020_source_only_has_exact_tag_and_separate_acceptance(self):
+        stable = "v0.2.0"
+        self.put("CHANGELOG.md",
+                 "## [Unreleased]\n\n## [0.2.0] - 2026-11-07\n\n### Added\n- source-only release\n")
+        subprocess.run(["git", "init", "-q"], cwd=self.repo, check=True)
+        subprocess.run(["git", "add", "README.md", "LICENSE", "NOTICE", "CHANGELOG.md"],
+                       cwd=self.repo, check=True)
+        self.make("source-only", tag=stable)
+        doc = self.accept(mode="source-only")
+        doc["tag"] = stable
+        self.acceptance.write_text(json.dumps(doc))
+        self.assertEqual(
+            release.gate(self.archive, self.sums, self.acceptance, stable, SHA,
+                         self.output / "RELEASE-NOTES.md"),
+            "source-only")
+        doc["tag"] = "v0.2.0-rc.1"
+        self.acceptance.write_text(json.dumps(doc))
+        with self.assertRaisesRegex(ValueError, "exact tag"):
+            release.gate(self.archive, self.sums, self.acceptance, stable, SHA,
+                         self.output / "RELEASE-NOTES.md")
+
+    def test_stable_v020_binary_publication_is_blocked_even_if_reviewed(self):
+        stable = "v0.2.0"
+        self.put("CHANGELOG.md",
+                 "## [Unreleased]\n\n## [0.2.0] - 2026-11-07\n\n### Added\n- stable release\n")
+        self.make("binary", tag=stable)
+        doc = self.accept(mode="binary")
+        doc["tag"] = stable
+        self.acceptance.write_text(json.dumps(doc))
+        with self.assertRaisesRegex(ValueError, "SOURCE-ONLY"):
+            release.gate(self.archive, self.sums, self.acceptance, stable, SHA,
+                         self.output / "RELEASE-NOTES.md")
 
     def test_invalid_tag_and_checksum_rejected(self):
         with self.assertRaises(ValueError):

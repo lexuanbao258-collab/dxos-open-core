@@ -208,6 +208,9 @@ def gate(archive, checksums, acceptance, tag, sha, notes_file=None):
                 "standalone release notes mismatch verified archive")
     require(manifest["tag"] == tag and manifest["source_sha"] == sha,
             "release candidate identity differs from tag/commit")
+    if tag == "v0.2.0":
+        require(manifest["mode"] == "source-only",
+                "v0.2.0 is SOURCE-ONLY; binary/JAR/GHCR publication BLOCKED")
     path = Path(acceptance)
     require(path.is_file(), "R24 distribution acceptance file is absent: publication BLOCKED")
     accepted = json.loads(path.read_text())
