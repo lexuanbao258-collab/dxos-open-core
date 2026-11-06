@@ -128,3 +128,18 @@ path = [
 precedence = "closest"
 SPDX-FileCopyrightText = "2026 TRICORE contributors"
 SPDX-License-Identifier = "Apache-2.0"
+
+# R27 Identity provenance evidence files.
+# Metadata classification follows existing repository labels only.
+# R27 Issue #138 independently tracks actual copyright ownership,
+# source-origin attribution and redistribution authorization as PENDING.
+# Keep the evidence report and CSV bytes unchanged.
+
+[[annotations]]
+path = [
+  "docs/verification/r27/identity-provenance-review-5daa145d.md",
+  "docs/verification/r27/identity-source-origin-register-5daa145d.csv"
+]
+precedence = "closest"
+SPDX-FileCopyrightText = "2026 TRICORE contributors"
+SPDX-License-Identifier = "Apache-2.0"
