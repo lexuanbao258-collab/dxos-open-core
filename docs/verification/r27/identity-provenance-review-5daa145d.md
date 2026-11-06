@@ -29,6 +29,17 @@
 - **Contributor licensing authority:** PENDING; conditional statements and SPDX metadata do not establish rights over every file.
 - **Independent rights review:** PENDING.
 - **R24 release acceptance:** BLOCKED. This report is not approval to distribute.
+
+## Content commits and SPDX metadata commits
+
+The register now separates Git accounts associated with source content from those associated only with SPDX metadata. These are commit associations, not proof of who created copyrightable expression or who can license it. General AI-assistance disclosures do not establish the creation method or external origin of any particular file. Scope-specific origin and licensing authority remain pending.
+
+For `ID-29` (`GatewayKeycloakTokenHttpIntegrationTest.java`), Bảo-associated [`e5793ef`](https://github.com/tricore-opentrix/dxos-open-core/commit/e5793efbef1fb7f5017d841d455fc29dda49ab70) introduced the test (112 lines). Bảo-associated [`8905e00`](https://github.com/tricore-opentrix/dxos-open-core/commit/8905e00d013c46061ca77223ac3baa5f948c9dcd) registered its test-only probe controller, and [`f0b71c8`](https://github.com/tricore-opentrix/dxos-open-core/commit/f0b71c88bb3b4c62de7997745c27fe487b502d4b) qualified the nested probe type. Yến-associated [`fa16f30`](https://github.com/tricore-opentrix/dxos-open-core/commit/fa16f30d5c67a49186b1c36f2babe58d54a15e38) added only the SPDX header. All four commits precede the frozen SHA. `ID29_TECHNICAL_PROVENANCE=VERIFIED`; content origin and rights remain `PENDING`.
+
+The same separation applies to `ID-09` and `ID-11` (the two Identity `package-info.java` files introduced by Bảo-associated `d53a273`) and `ID-28` (the Gateway handoff test with Bảo-associated content commits). Yến-associated `fa16f30` added SPDX headers to all four. Each still needs Bảo's file-specific origin and licensing-authority statement and independent review. The historical document `ID-D02` has no SPDX-only commit in this register; its deletion commit is recorded separately and it is outside the current archive.
+
+`SPDX_METADATA_PROVENANCE=VERIFIED`; `CONTENT_ORIGIN_AND_RIGHTS=PENDING`; `APACHE_2_0_AUTHORIZATION=PENDING`.
+
 ## Open compliance questions
 
 - Yến: latest `MIXED / NO_KNOWN_NOT_VERIFIED / RIGHTS_UNSURE` alongside historical conditional consent for parts she can lawfully license; exact file-group origin, external sources, AI role and actual rights are not established.
