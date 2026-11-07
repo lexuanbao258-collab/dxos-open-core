@@ -15,7 +15,9 @@ SPDX-License-Identifier: Apache-2.0
 **Tracking issue:** [#138](https://github.com/tricore-opentrix/opentrix/issues/138)  
 **Document PR:** [#143](https://github.com/tricore-opentrix/opentrix/pull/143)  
 **R24 source-only candidate:** `187dbd2ea6935966f5c4cceb95ad9c3c53708a2e`  
-**Metadata boundary:** these labels route this document only; original claims, reviewer decisions and source-rights obligations are unchanged.# R27 — contributor-rights source statements and routing (RECONSTRUCTED; NOT SIGNED)
+**Metadata boundary:** these labels route this document only; original claims, reviewer decisions and source-rights obligations are unchanged.
+
+# R27 — contributor-rights source statements and routing (RECONSTRUCTED; NOT SIGNED)
 
 **Scope and evidence baseline.** This is a new documentation-only reconstruction, **not the four lost uncommitted originals**, not a release authorization, and not a first-person attestation created on a contributor's behalf. Use the exact source-only Git baseline [`187dbd2ea6935966f5c4cceb95ad9c3c53708a2e`](https://github.com/tricore-opentrix/opentrix/tree/187dbd2ea6935966f5c4cceb95ad9c3c53708a2e), two independently verified R24 candidate archives ([run 42244683510](https://github.com/tricore-opentrix/opentrix/actions/runs/42244683510), [run 42245290247](https://github.com/tricore-opentrix/opentrix/actions/runs/42245290247)) and the [reconstructed register](r27-rights-remediation-register-187dbd2.csv). The source archive has 346 tracked text/source files plus 10 metadata members; the original Git tree has 347 tracked paths because one upstream Gradle Wrapper JAR was **excluded**.
 
