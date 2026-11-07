@@ -1,0 +1,14 @@
+{
+  "tag": "v0.2.0",
+  "mode": "source-only",
+  "source_sha": null,
+  "archive_sha256": null,
+  "reviewed_by": [],
+  "evidence": {
+    "source_provenance": null,
+    "source_license": null,
+    "sbom_source_boundary": null,
+    "archive_and_checksums": null,
+    "release_notes": null
+  }
+}

@@ -128,3 +128,11 @@ path = [
 precedence = "closest"
 SPDX-FileCopyrightText = "2026 TRICORE contributors"
 SPDX-License-Identifier = "Apache-2.0"
+
+# R24 acceptance evidence JSON cannot contain source-code comment headers.
+# These are repository SPDX metadata, not independent distribution/legal sign-off.
+[[annotations]]
+path = "docs/06-deployment/r24-acceptances/v0.2.0.json"
+precedence = "closest"
+SPDX-FileCopyrightText = "2026 TRICORE contributors"
+SPDX-License-Identifier = "Apache-2.0"
