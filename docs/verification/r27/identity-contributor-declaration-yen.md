@@ -11,6 +11,8 @@ SPDX-License-Identifier: Apache-2.0
 **Related PR:** [#142](https://github.com/tricore-opentrix/opentrix/pull/142)  
 **Audited source baseline:** `5daa145d3b5f20f2f16fe0799c6d0808fd6c3e33`
 
+**Source-only release candidate under current rights review:** `187dbd2ea6935966f5c4cceb95ad9c3c53708a2e` — file/portion rights at this SHA remain `PENDING`.
+
 **Status: DRAFT — DEVELOPMENT WORKFLOW CONFIRMED / LIMITED CONTRIBUTOR AUTHORIZATION CONFIRMED / RIGHTS REVIEW PENDING**
 
 ## 1. Development Method
@@ -21,6 +23,7 @@ I confirm that my contributions to the Identity component involved:
 2. Using **ChatGPT and Codex** to assist in generating implementation code.
 3. Reviewing the AI-assisted implementation.
 4. Modifying the code based on the requirements and my review.
+5. Testing the resulting implementation.
 
 **Development classification:** `CONTRIBUTOR_DESIGNED_AI_ASSISTED_IMPLEMENTATION`
 
@@ -30,13 +33,14 @@ I do not claim that I manually authored every line of implementation code.
 
 ## 2. External Source Inputs
 
-I confirm that I did not proactively provide external source code from repositories, websites or tutorials to AI tools during my Identity development work.
+To the best of my recollection, I did not proactively provide third-party source code or test fixtures to AI tools during my Identity development work. I consulted technical documentation; the exact documents, any copied or adapted material, and the historical origin of AI output or test fixtures have not been established.
 
 This statement describes my own actions. It does not certify that the resulting AI-generated code contains no third-party material.
 
 **External source status:**
 
-- Proactively supplied external code: `NO — CONTRIBUTOR DECLARED`
+- Proactively supplied external code or test fixtures: `NO_TO_BEST_OF_RECOLLECTION — CONTRIBUTOR DECLARED`
+- Technical documentation consultation: `YES — CONTRIBUTOR DECLARED; EXACT SOURCES UNKNOWN`
 - External material potentially incorporated through AI output: `UNKNOWN`
 - Copied or adapted external examples: `NOT FULLY VERIFIED`
 - Public-source similarity review: `NOT PERFORMED`
