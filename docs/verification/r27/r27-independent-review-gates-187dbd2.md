@@ -15,7 +15,9 @@ SPDX-License-Identifier: Apache-2.0
 **Tracking issue:** [#138](https://github.com/tricore-opentrix/opentrix/issues/138)  
 **Document PR:** [#143](https://github.com/tricore-opentrix/opentrix/pull/143)  
 **R24 source-only candidate:** `187dbd2ea6935966f5c4cceb95ad9c3c53708a2e`  
-**Metadata boundary:** these labels route this document only; original claims, reviewer decisions and source-rights obligations are unchanged.# R27 — reconstructed package validation and independent review gates
+**Metadata boundary:** these labels route this document only; original claims, reviewer decisions and source-rights obligations are unchanged.
+
+# R27 — reconstructed package validation and independent review gates
 
 **Scope:** four new documentation artifacts (CSV register, CSV REUSE sidecar, contributor routing/declaration notes, this checklist) reconstructed from previously verified R24 candidate archives and independently read GitHub R27 statements. **Not the missing uncommitted originals.** This Draft PR records documentation evidence only; it is **not** a contributor signature, rights clearance, merger authorization, public release approval, tag or source/binary publication.
 
