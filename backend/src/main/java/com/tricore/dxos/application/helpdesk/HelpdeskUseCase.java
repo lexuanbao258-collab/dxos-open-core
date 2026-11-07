@@ -50,7 +50,7 @@ public sealed interface HelpdeskUseCase permits HelpdeskUseCase.Create, Helpdesk
 
     record Triage(UUID requestId, long expectedVersion) implements HelpdeskUseCase {
         public Triage {
-            requestId = requestId(requestId);
+          requestId = HelpdeskUseCase.requestId(requestId);
             expectedVersion = version(expectedVersion);
         }
     }
@@ -58,7 +58,7 @@ public sealed interface HelpdeskUseCase permits HelpdeskUseCase.Create, Helpdesk
     record Assign(UUID requestId, String assigneeId, long expectedAssignmentVersion)
             implements HelpdeskUseCase {
         public Assign {
-            requestId = requestId(requestId);
+           requestId = HelpdeskUseCase.requestId(requestId);
             assigneeId = text(assigneeId, "assigneeId", 1024);
             expectedAssignmentVersion = version(expectedAssignmentVersion);
         }
@@ -66,7 +66,7 @@ public sealed interface HelpdeskUseCase permits HelpdeskUseCase.Create, Helpdesk
 
     record Start(UUID requestId, long expectedVersion) implements HelpdeskUseCase {
         public Start {
-            requestId = requestId(requestId);
+           requestId = HelpdeskUseCase.requestId(requestId);
             expectedVersion = version(expectedVersion);
         }
     }
@@ -74,7 +74,7 @@ public sealed interface HelpdeskUseCase permits HelpdeskUseCase.Create, Helpdesk
     record Resolve(UUID requestId, long expectedVersion, String resolution)
             implements HelpdeskUseCase {
         public Resolve {
-            requestId = requestId(requestId);
+          requestId = HelpdeskUseCase.requestId(requestId);
             expectedVersion = version(expectedVersion);
             resolution = text(resolution, "resolution", 4000);
         }
@@ -82,7 +82,7 @@ public sealed interface HelpdeskUseCase permits HelpdeskUseCase.Create, Helpdesk
 
     record Confirm(UUID requestId, long expectedVersion) implements HelpdeskUseCase {
         public Confirm {
-            requestId = requestId(requestId);
+          requestId = HelpdeskUseCase.requestId(requestId);
             expectedVersion = version(expectedVersion);
         }
     }
