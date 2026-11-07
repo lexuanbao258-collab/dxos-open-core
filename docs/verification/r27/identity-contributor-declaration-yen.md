@@ -3,7 +3,20 @@ SPDX-FileCopyrightText: 2026 TRICORE contributors
 SPDX-License-Identifier: Apache-2.0
 -->
 
-# R27 — Identity Contributor Source-Origin Declaration
+
+
+**Document ID:** `R27-DEC-001`  
+**Document version:** `0.1.0` (metadata baseline; existing evidence retained)  
+**Document status:** `In Review` (Draft PR #142)  
+**Evidence verification:** `PARTIAL` — only explicitly described technical checks may be treated as PASS  
+**Rights disposition:** `PENDING` — no file/portion clearance or public release approval  
+**Evidence owner:** Yến — personal contributor statement  
+**Independent reviewer:** Ánh — independent scope review  
+**Tracking issue:** [#138](https://github.com/tricore-opentrix/opentrix/issues/138)  
+**Document PR:** [#142](https://github.com/tricore-opentrix/opentrix/pull/142)  
+**R24 source-only candidate:** `187dbd2ea6935966f5c4cceb95ad9c3c53708a2e`  
+**Historical Identity baseline:** `5daa145d3b5f20f2f16fe0799c6d0808fd6c3e33`  
+**Metadata boundary:** these labels route this document only; original claims, reviewer decisions and source-rights obligations are unchanged.# R27 — Identity Contributor Source-Origin Declaration
 
 **Contributor:** Phan Hai Yen (`phanyen06ym-ien`)  
 **Project:** OpenTrix / DX-OS Open-Core  
@@ -93,7 +106,7 @@ No permission is asserted on behalf of Bảo, Ánh, third-party rightsholders or
 
 `AI_TOOLS = CHATGPT_AND_CODEX`
 
-`PROACTIVE_EXTERNAL_CODE_INPUT = NO_CONTRIBUTOR_DECLARED`
+`PROACTIVE_EXTERNAL_CODE_OR_FIXTURE_INPUT = NO_TO_BEST_OF_RECOLLECTION_CONTRIBUTOR_DECLARED`
 
 `EXTERNAL_SOURCE_ORIGINALITY = UNKNOWN`
 
