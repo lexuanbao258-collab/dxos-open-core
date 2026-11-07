@@ -46,6 +46,8 @@ SPDX-License-Identifier: Apache-2.0
 | Gradle scripts/properties **included**; upstream JAR **excluded** | Bảo (technical upstream evidence) | Yến | Preserve original Gradle contributor copyright headers, check Apache-2.0/upstream NOTICE and excluded JAR SHA/origin separately. |
 | Root docs/config, repository governance, R24 tooling and generated metadata | Yến (evidence coordination) | Bảo | Map actual contributors and referenced external templates, authorization of `TRICORE contributors` label, 37 historical exceptions and third-party notices. |
 
+**Ánh's detailed routing handoff:** The [109-path handoff](https://github.com/tricore-opentrix/opentrix/issues/138#issuecomment-6702734422) at `187dbd2` covers 107 code/config/asset paths plus two current Data documents, including the nine-contract/two-test mapping, Bảo's separate `fcc45fb` hunks and package boundaries, and exclusion of the two deleted historical Data documents. It records technical mapping, not source-rights clearance; unresolved contribution mapping, external origins, rights and NOTICE remain `UNKNOWN/PENDING`.
+
 ## Disposition process and non-invention rule
 
 1. Contributor confirms only **what they actually remember**, with exact affected path/hunk, optional URL and original license if known. Unknown source or model output lineage stays `UNKNOWN`; provide neither fabricated links nor `NONE` without evidence.
