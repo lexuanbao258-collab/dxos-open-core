@@ -16,6 +16,12 @@ The earlier 167-file Backend baseline is now reconciled to independently verifie
 
 **Rights remain pending.** Bảo now directly reports 'chủ yếu AI' for both named ID-28/ID-29 Gateway tests (2026-11-06, #138); external snippets, fixture origins and rights remain UNKNOWN/PENDING; no rights/notice clearance for ID-09/ID-11 or Bảo's only own lines in the `fcc45fb` Data overlap. Do not substitute artifact reproducibility or Git histories for legal permission.
 
+## Contributor evidence checkpoint for final R24 source (2026-11-07 status)
+
+The [Bảo Backend/Core/Gateway checkpoint](../verification/r27/bao-backend-core-gateway-evidence-checkpoint-187dbd2.md) consolidates exact Git blob identities, the 166 shipped Backend files vs one excluded upstream Gradle Wrapper JAR, four Identity/Gateway IDs and their reported primary AI-assisted methods, and the `fcc45fb` Data/Storage overlap. A later direct response **“hmm không nhớ rõ”** on whether Bảo supplied external samples/fixtures to AI for **ID-28/ID-29** is recorded as **UNKNOWN / NOT RECALLED**, not as proof that no third-party materials were used.
+
+**Per-file/portion rights and attribution remain UNKNOWN/PENDING.** This note does not add a Bảo-signed copyright declaration, third-party source clearance, NOTICE disposition, or license grant. The full 347-file source-only ledger remains a review queue, not a rights certificate.
+
 ## Evidence and status vocabulary
 
 | Status | Meaning |
