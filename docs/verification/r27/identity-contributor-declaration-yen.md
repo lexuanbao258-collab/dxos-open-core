@@ -16,7 +16,9 @@ SPDX-License-Identifier: Apache-2.0
 **Document PR:** [#142](https://github.com/tricore-opentrix/opentrix/pull/142)  
 **R24 source-only candidate:** `187dbd2ea6935966f5c4cceb95ad9c3c53708a2e`  
 **Historical Identity baseline:** `5daa145d3b5f20f2f16fe0799c6d0808fd6c3e33`  
-**Metadata boundary:** these labels route this document only; original claims, reviewer decisions and source-rights obligations are unchanged.# R27 — Identity Contributor Source-Origin Declaration
+**Metadata boundary:** these labels route this document only; original claims, reviewer decisions and source-rights obligations are unchanged.
+
+# R27 — Identity Contributor Source-Origin Declaration
 
 **Contributor:** Phan Hai Yen (`phanyen06ym-ien`)  
 **Project:** OpenTrix / DX-OS Open-Core  
