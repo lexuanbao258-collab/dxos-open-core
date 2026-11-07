@@ -5,7 +5,9 @@ SPDX-License-Identifier: Apache-2.0
 
 # R27 — reconstructed package validation and independent review gates
 
-**Scope:** four new documentation artifacts (CSV register, CSV REUSE sidecar, contributor routing/declaration notes, this checklist) reconstructed from previously verified R24 candidate archives and independently read GitHub R27 statements. **Not the missing uncommitted originals.** **No GitHub write, merge, tag or publication is part of this package.**
+**Scope:** four new documentation artifacts (CSV register, CSV REUSE sidecar, contributor routing/declaration notes, this checklist) reconstructed from previously verified R24 candidate archives and independently read GitHub R27 statements. **Not the missing uncommitted originals.** This Draft PR records documentation evidence only; it is **not** a contributor signature, rights clearance, merger authorization, public release approval, tag or source/binary publication.
+
+**Review status:** The ten checks below concern **technical integrity and routing of this documentation package**, not independent clearance of the underlying source rights. At the original PR HEAD `7c458be171135554a85c7ea02e624d8a0cdfcb1e`, [CI run 42346124296](https://github.com/tricore-opentrix/opentrix/actions/runs/42346124296) passed all five jobs (`backend`, `frontend`, `portal-bff`, `r23-compliance`, `repo-hygiene`). This is **commit-specific evidence**; any later commit requires fresh CI verification. No independent contributor-rights verdict is recorded merely by these technical checks. The `TRICORE contributors` SPDX copyright label on this new documentation also requires confirmation of actual attribution authority; its presence does not license or clear the source files inventoried in the register.
 
 ## File identities
 
