@@ -32,6 +32,12 @@ The proposed `v0.2.0` source-only packager in [`scripts/r24-release.py` at #141 
 
 No JAR, built frontend dist or GHCR images are authorized. Source-only distribution still requires source-origin/rights and attribution verification for the text and relevant assets actually shipped.
 
+### Bảo's additional ID-28 / ID-29 input recollection (2026-11-06; narrowly scoped)
+
+In a direct chat follow-up specifically concerning **ID-28 and ID-29**, Bảo was asked whether he had proactively provided external GitHub/Stack Overflow/tutorial code, JWT/Keycloak examples or test fixtures as AI inputs. His answer was **“hmm không nhớ rõ”** (does not clearly remember). Accordingly, **file-specific supplied external inputs = `UNKNOWN / NOT_RECALLED` for both tests**, not `NONE`, `NO_EXTERNAL_SOURCE` or `RIGHTS_CLEARED`. This does not establish whether a model's output resembles or incorporates third-party content.
+
+The earlier, separately recorded **“chủ yếu AI”** method report for each test remains valid. The direct recollection statement is not a license grant, source-originality certification or confirmation of fixture provenance. See [consolidated Backend/Core/Gateway checkpoint](../verification/r27/bao-backend-core-gateway-evidence-checkpoint-187dbd2.md) for the scope and independent-review tasks.
+
 ## D. Contributor follow-up — require direct, per-file answers
 
 For **each** of ID-09, ID-11, ID-28 and ID-29, Bảo must confirm or explicitly say `UNKNOWN` for:
