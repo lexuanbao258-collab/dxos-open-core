@@ -16,7 +16,9 @@ SPDX-License-Identifier: Apache-2.0
 **Tracking issue:** [#138](https://github.com/tricore-opentrix/opentrix/issues/138)  
 **Document PR:** [#144](https://github.com/tricore-opentrix/opentrix/pull/144)  
 **R24 source-only candidate:** `187dbd2ea6935966f5c4cceb95ad9c3c53708a2e`  
-**Metadata boundary:** these labels route this document only; original claims, reviewer decisions and source-rights obligations are unchanged.# R27 / Issue #138 — Ánh contribution and source-rights disposition queue
+**Metadata boundary:** these labels route this document only; original claims, reviewer decisions and source-rights obligations are unchanged.
+
+# R27 / Issue #138 — Ánh contribution and source-rights disposition queue
 
 **Status:** TECHNICAL INVENTORY CHECKED / ORIGIN PARTIAL / RIGHTS AND NOTICES PENDING  
 **Owner of this contributor scope:** Ánh (`@ngang02012007-crypto`).  
