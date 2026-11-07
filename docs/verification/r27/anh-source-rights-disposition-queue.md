@@ -4,7 +4,19 @@ SPDX-FileCopyrightText: 2026 TRICORE contributors
 SPDX-License-Identifier: Apache-2.0
 -->
 
-# R27 / Issue #138 — Ánh contribution and source-rights disposition queue
+
+
+**Document ID:** `R27-EVD-004`  
+**Document version:** `0.1.0` (metadata baseline; existing evidence retained)  
+**Document status:** `In Review` (Draft PR #144)  
+**Evidence verification:** `PARTIAL` — only explicitly described technical checks may be treated as PASS  
+**Rights disposition:** `PENDING` — no file/portion clearance or public release approval  
+**Evidence owner:** Ánh — contributor scope / decision queue  
+**Independent reviewer:** Yến — technical review completed; rights disposition pending  
+**Tracking issue:** [#138](https://github.com/tricore-opentrix/opentrix/issues/138)  
+**Document PR:** [#144](https://github.com/tricore-opentrix/opentrix/pull/144)  
+**R24 source-only candidate:** `187dbd2ea6935966f5c4cceb95ad9c3c53708a2e`  
+**Metadata boundary:** these labels route this document only; original claims, reviewer decisions and source-rights obligations are unchanged.# R27 / Issue #138 — Ánh contribution and source-rights disposition queue
 
 **Status:** TECHNICAL INVENTORY CHECKED / ORIGIN PARTIAL / RIGHTS AND NOTICES PENDING  
 **Owner of this contributor scope:** Ánh (`@ngang02012007-crypto`).  
