@@ -3,7 +3,19 @@ SPDX-FileCopyrightText: 2026 TRICORE contributors
 SPDX-License-Identifier: Apache-2.0
 -->
 
-# R27 / #138 — Bảo Backend/Core/Gateway source-origin evidence checkpoint (UNSIGNED / RIGHTS PENDING)
+
+
+**Document ID:** `R27-EVD-003`  
+**Document version:** `0.1.0` (metadata baseline; existing evidence retained)  
+**Document status:** `In Review` (Draft PR #139)  
+**Evidence verification:** `PARTIAL` — only explicitly described technical checks may be treated as PASS  
+**Rights disposition:** `PENDING` — no file/portion clearance or public release approval  
+**Evidence owner:** Bảo — evidence coordination (NOT a personal signed declaration)  
+**Independent reviewer:** Yến — independent evidence review  
+**Tracking issue:** [#138](https://github.com/tricore-opentrix/opentrix/issues/138)  
+**Document PR:** [#139](https://github.com/tricore-opentrix/opentrix/pull/139)  
+**R24 source-only candidate:** `187dbd2ea6935966f5c4cceb95ad9c3c53708a2e`  
+**Metadata boundary:** these labels route this document only; original claims, reviewer decisions and source-rights obligations are unchanged.# R27 / #138 — Bảo Backend/Core/Gateway source-origin evidence checkpoint (UNSIGNED / RIGHTS PENDING)
 
 **Review state:** technical Git/source-only scope PASS; contributor method partly reported; **third-party source origin, fixture lineage, per-portion licensing authority and attribution NOT CLEARED**. This is a *maintainer-prepared factual evidence index*, **not Bảo's signed declaration, a transfer or grant of rights, a plagiarism search, a legal opinion, or a reviewer approval**. Do not mark any UNKNOWN as NONE.
 
